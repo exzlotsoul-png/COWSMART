@@ -1,19 +1,19 @@
 :root {
-  --primary-color: #4F46E5;
-  --primary-hover: #4338CA;
-  --bg-color: #F3F4F6;
-  --sidebar-bg: #111827;
-  --sidebar-hover: #1F2937;
-  --sidebar-text: #D1D5DB;
-  --sidebar-active-bg: #374151;
-  --sidebar-active-text: #FFFFFF;
+  --primary-color: #2d5a43;
+  --primary-hover: #1e3d2d;
+  --bg-color: #f7f6f2;
+  --sidebar-bg: #162a1f;
+  --sidebar-hover: #244031;
+  --sidebar-text: #e2ebd9;
+  --sidebar-active-bg: #335f47;
+  --sidebar-active-text: #fcfdfd;
   --header-bg: #FFFFFF;
-  --text-main: #111827;
-  --text-muted: #6B7280;
-  --border-color: #E5E7EB;
+  --text-main: #242d27;
+  --text-muted: #65756a;
+  --border-color: #e1e6e2;
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --danger-color: #EF4444;
+  --danger-color: #c85a5a;
 }
 
 body {
@@ -266,7 +266,7 @@ body {
 
 .action-btn.edit:hover {
   color: var(--primary-color);
-  background-color: #EEF2FF;
+  background-color: #E8EFEA;
 }
 
 .action-btn.delete:hover {
@@ -300,7 +300,7 @@ body {
 .form-control:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  box-shadow: 0 0 0 3px rgba(45, 90, 67, 0.1);
 }
 
 /* Modal */

@@ -36,7 +36,7 @@ const Dashboard = () => {
   const { summary, latest_reports, top_diseases, popular_breeds, health_status } = data;
 
   // --- Process Breed Data ---
-  const breedColors = ['#5b8c6b', '#8c5b3d', '#e67e22', '#34495e'];
+  const breedColors = ['#5b8c6b', '#c97d60', '#8c6239', '#2d5a43'];
   let totalBreedCount = 0;
   const breedData = popular_breeds.map((item, index) => {
     totalBreedCount += item.count;
@@ -75,9 +75,9 @@ const Dashboard = () => {
   }
 
   const healthData = [
-    { name: 'สุขภาพดี', value: healthy, color: '#a7f3d0' }, // light green
-    { name: 'ป่วย/บาดเจ็บ', value: sick, color: '#fecdd3' }, // light red
-    { name: 'ท้อง', value: pregnant, color: '#fef08a' } // light yellow
+    { name: 'สุขภาพดี', value: healthy, color: '#a3c9a8' }, // muted green
+    { name: 'ป่วย/บาดเจ็บ', value: sick, color: '#e29578' }, // muted rust/clay
+    { name: 'ท้อง', value: pregnant, color: '#edd18b' } // muted straw/honey
   ];
 
   // Helper for issue report icons/colors
