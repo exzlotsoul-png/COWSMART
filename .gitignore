@@ -1,9 +1,19 @@
-# Ignore node_modules สำหรับ admin-web หรือ api
+# ถอนโฟลเดอร์รวมพวก package ต่างๆ ของ admin-web และ api (Node)
 **/node_modules/
 
-# Ignore build files สำหรับ cowsmart (Flutter/Dart)
+# ถอนไฟล์ vendor ของ PHP / Laravel ใน api
+**/vendor/
+
+# ถอนไฟล์แวดล้อมที่เป็นความลับ (เช่น รหัสผ่านฐานข้อมูล)
+**/.env
+**.env.local
+
+# ถอนไฟล์จากการ Build ของฝั่ง cowsmart (Flutter/Dart)
 **/build/
 **/.dart_tool/
+**/.pub-cache/
+**/.generated/
 
-# Ignore environment variables เพื่อความปลอดภัย
-**/.env
+# ไฟล์ระบบของคอมพิวเตอร์ที่ไม่จำเป็น
+.DS_Store
+Thumbs.db
