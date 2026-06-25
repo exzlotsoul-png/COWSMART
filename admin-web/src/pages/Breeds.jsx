@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search } from 'lucide-react';
 import api from '../lib/axios';
+import Pagination from '../components/layout/Pagination';
 
 const Breeds = () => {
   const [breeds, setBreeds] = useState([]);
@@ -8,6 +9,8 @@ const Breeds = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentBreed, setCurrentBreed] = useState({ breed_id: '', name: '', description: '' });
   const [isEditing, setIsEditing] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchBreeds();
@@ -18,6 +21,7 @@ const Breeds = () => {
       const response = await api.get('/breeds');
       // The API might return { data: [...] } or just an array depending on Laravel Resource
       setBreeds(response.data.data || response.data);
+      setCurrentPage(1);
     } catch (error) {
       console.error("Error fetching breeds:", error);
     } finally {
@@ -89,43 +93,53 @@ const Breeds = () => {
         {loading ? (
           <p>กำลังโหลดข้อมูล...</p>
         ) : (
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>รหัสสายพันธุ์</th>
-                  <th>ชื่อสายพันธุ์</th>
-                  <th>รายละเอียด</th>
-                  <th>จัดการ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {breeds.length > 0 ? (
-                  breeds.map((breed) => (
-                    <tr key={breed.breed_id}>
-                      <td>{breed.breed_id}</td>
-                      <td>{breed.name}</td>
-                      <td>{breed.description}</td>
-                      <td>
-                        <div className="action-links">
-                          <button className="action-btn edit" onClick={() => handleOpenModal(breed)}>
-                            <Edit size={16} />
-                          </button>
-                          <button className="action-btn delete" onClick={() => handleDelete(breed.breed_id)}>
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
+          <>
+            <div className="table-container">
+              <table className="data-table">
+                <thead>
                   <tr>
-                    <td colSpan="4" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>
+                    <th>รหัสสายพันธุ์</th>
+                    <th>ชื่อสายพันธุ์</th>
+                    <th>รายละเอียด</th>
+                    <th>จัดการ</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {breeds.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).length > 0 ? (
+                    breeds.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((breed) => (
+                      <tr key={breed.breed_id}>
+                        <td>{breed.breed_id}</td>
+                        <td>{breed.name}</td>
+                        <td>{breed.description}</td>
+                        <td>
+                          <div className="action-links">
+                            <button className="action-btn edit" onClick={() => handleOpenModal(breed)}>
+                              <Edit size={16} />
+                            </button>
+                            <button className="action-btn delete" onClick={() => handleDelete(breed.breed_id)}>
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(breeds.length / itemsPerPage)}
+              onPageChange={setCurrentPage}
+              totalItems={breeds.length}
+              itemsPerPage={itemsPerPage}
+            />
+          </>
         )}
       </div>
 

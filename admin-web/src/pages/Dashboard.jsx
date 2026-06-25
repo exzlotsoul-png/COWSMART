@@ -9,6 +9,16 @@ import './Dashboard.css';
 const Dashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [diseaseMonth, setDiseaseMonth] = useState('มิถุนายน');
+  const [diseaseYear, setDiseaseYear] = useState('2569');
+  const [healthMonth, setHealthMonth] = useState('มิถุนายน');
+  const [healthYear, setHealthYear] = useState('2569');
+
+  const months = [
+    'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+    'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+  ];
+  const years = ['2567', '2568', '2569', '2570'];
 
   useEffect(() => {
     fetchDashboardData();
@@ -34,6 +44,58 @@ const Dashboard = () => {
   }
 
   const { summary, latest_reports, top_diseases, popular_breeds, health_status } = data;
+
+  // Mock data for latest reports
+  const mockReports = [
+    {
+      id: 101,
+      topic: "ปัญหาการบันทึกข้อมูลน้ำนม",
+      description: "กดบันทึกน้ำนมดิบแล้วระบบหมุนค้างและขึ้น Error 500 ครับ",
+      first_name: "สมชาย",
+      last_name: "ใจดี",
+      email: "somchai@gmail.com",
+      created_at: new Date(Date.now() - 3600000 * 2).toISOString()
+    },
+    {
+      id: 102,
+      topic: "ข้อเสนอแนะ: อยากให้ออกรายงาน PDF ได้",
+      description: "อยากให้เพิ่มปุ่มส่งออกข้อมูลประวัติการรักษาของวัวเป็นไฟล์ PDF เพื่อพิมพ์ใช้งานในฟาร์ม",
+      first_name: "สมหญิง",
+      last_name: "รักดี",
+      email: "somying@farm.com",
+      created_at: new Date(Date.now() - 3600000 * 5).toISOString()
+    },
+    {
+      id: 103,
+      topic: "ปัญหา: หน้าจอสแกนแท็กหูช้ามาก",
+      description: "สแกน RFID แท็กหูวัวแล้วใช้เวลาโหลด 5-10 วินาที กว่าจะขึ้นข้อมูล",
+      first_name: "วิชัย",
+      last_name: "มุ่งมั่น",
+      email: "wichai@cowsmart.com",
+      created_at: new Date(Date.now() - 3600000 * 12).toISOString()
+    },
+    {
+      id: 104,
+      topic: "บัญชี: สอบถามเรื่องการเพิ่มจำนวนฟาร์ม",
+      description: "ตอนนี้ใช้แพ็กเกจฟรีอยู่ ต้องการเพิ่มฟาร์มที่สองต้องทำอย่างไรบ้างครับ",
+      first_name: "กิตติ",
+      last_name: "สงบ",
+      email: "kitti@cowland.com",
+      created_at: new Date(Date.now() - 3600000 * 24).toISOString()
+    }
+  ];
+
+  // Mock data for top diseases
+  const mockTopDiseases = [
+    { disease_name: "โรคปากและเท้าเปื่อย (FMD)", count: 28 },
+    { disease_name: "โรคเต้านมอักเสบ (Mastitis)", count: 18 },
+    { disease_name: "โรคพยาธิในเลือด (Anaplasmosis)", count: 12 },
+    { disease_name: "โรคกีบอักเสบ (Foot Rot)", count: 8 },
+    { disease_name: "โรคปอดบวม (Pneumonia)", count: 5 }
+  ];
+
+  const reportsToDisplay = latest_reports && latest_reports.length > 0 ? latest_reports : mockReports;
+  const diseasesToDisplay = top_diseases && top_diseases.length > 0 ? top_diseases : mockTopDiseases;
 
   // --- Process Breed Data ---
   const breedColors = ['#5b8c6b', '#c97d60', '#8c6239', '#2d5a43'];
@@ -107,7 +169,6 @@ const Dashboard = () => {
   return (
     <div className="dashboard-container">
       <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: '0 0 4px 0', color: 'var(--text-main)' }}>หน้าแรก</h1>
         <h2 style={{ fontSize: '2rem', fontWeight: 'bold', margin: 0, color: 'var(--text-main)' }}>แดชบอร์ดภาพรวม</h2>
       </div>
 
@@ -174,8 +235,8 @@ const Dashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {latest_reports && latest_reports.length > 0 ? (
-                    latest_reports.map(report => {
+                  {reportsToDisplay && reportsToDisplay.length > 0 ? (
+                    reportsToDisplay.map(report => {
                       const tag = getIssueTag(report.topic);
                       return (
                         <tr key={report.id}>
@@ -183,7 +244,7 @@ const Dashboard = () => {
                           <td>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                               <div className="user-avatar-small">
-                                {(report.first_name?.[0] || report.email[0]).toUpperCase()}
+                                {(report.first_name?.[0] || report.email?.[0] || 'U').toUpperCase()}
                               </div>
                               <div>
                                 <div style={{ fontWeight: '500' }}>{report.first_name ? `${report.first_name} ${report.last_name || ''}` : report.email}</div>
@@ -215,11 +276,20 @@ const Dashboard = () => {
 
           {/* Top Diseases */}
           <div className="db-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
               <h3 className="db-card-title" style={{ margin: 0 }}>สถิติแยกตามประเภทโรค (Top 5)</h3>
-              <select className="db-select">
-                <option>มกราคม 2569</option>
-              </select>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <select className="db-select" value={diseaseMonth} onChange={(e) => setDiseaseMonth(e.target.value)}>
+                  {months.map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+                <select className="db-select" value={diseaseYear} onChange={(e) => setDiseaseYear(e.target.value)}>
+                  {years.map((y) => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </div>
             </div>
             
             <div className="db-table-container">
@@ -233,10 +303,10 @@ const Dashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {top_diseases && top_diseases.length > 0 ? (
-                    top_diseases.map((disease, idx) => {
+                  {diseasesToDisplay && diseasesToDisplay.length > 0 ? (
+                    diseasesToDisplay.map((disease, idx) => {
                       // Mocking trend and status for display purposes based on index
-                      const percent = Math.max(10, Math.floor((disease.count / (top_diseases[0].count || 1)) * 100));
+                      const percent = Math.max(10, Math.floor((disease.count / (diseasesToDisplay[0].count || 1)) * 100));
                       const isHigh = idx === 0;
                       const isWarning = idx === 1;
                       
@@ -320,9 +390,16 @@ const Dashboard = () => {
 
           {/* Health Proportion Chart */}
           <div className="db-card">
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
-              <select className="db-select" style={{ fontSize: '0.75rem', padding: '4px 8px' }}>
-                <option>มกราคม 2569</option>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px', gap: '8px' }}>
+              <select className="db-select" style={{ fontSize: '0.75rem', padding: '4px 8px' }} value={healthMonth} onChange={(e) => setHealthMonth(e.target.value)}>
+                {months.map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+              <select className="db-select" style={{ fontSize: '0.75rem', padding: '4px 8px' }} value={healthYear} onChange={(e) => setHealthYear(e.target.value)}>
+                {years.map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
               </select>
             </div>
             <h3 className="db-card-title" style={{ textAlign: 'left', marginBottom: '16px' }}>สัดส่วนสุขภาพวัว</h3>

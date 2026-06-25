@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import api from '../lib/axios';
+import Pagination from '../components/layout/Pagination';
 
 const Vaccines = () => {
   const [vaccines, setVaccines] = useState([]);
@@ -10,6 +11,8 @@ const Vaccines = () => {
     vaccine_id: '', category: '', name: '', indications: '', dosage_usage: ''
   });
   const [isEditing, setIsEditing] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchVaccines();
@@ -19,6 +22,7 @@ const Vaccines = () => {
     try {
       const response = await api.get('/vaccines');
       setVaccines(response.data.data || response.data);
+      setCurrentPage(1);
     } catch (error) {
       console.error("Error fetching vaccines:", error);
     } finally {
@@ -90,47 +94,57 @@ const Vaccines = () => {
         {loading ? (
           <p>กำลังโหลดข้อมูล...</p>
         ) : (
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>รหัสวัคซีน</th>
-                  <th>หมวดหมู่</th>
-                  <th>ชื่อวัคซีน</th>
-                  <th>ข้อบ่งใช้</th>
-                  <th>จัดการ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {vaccines.length > 0 ? (
-                  vaccines.map((vaccine) => (
-                    <tr key={vaccine.vaccine_id}>
-                      <td>{vaccine.vaccine_id}</td>
-                      <td>{vaccine.category}</td>
-                      <td>{vaccine.name}</td>
-                      <td style={{ maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {vaccine.indications}
-                      </td>
-                      <td>
-                        <div className="action-links">
-                          <button className="action-btn edit" onClick={() => handleOpenModal(vaccine)}>
-                            <Edit size={16} />
-                          </button>
-                          <button className="action-btn delete" onClick={() => handleDelete(vaccine.vaccine_id)}>
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
+          <>
+            <div className="table-container">
+              <table className="data-table">
+                <thead>
                   <tr>
-                    <td colSpan="5" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>
+                    <th>รหัสวัคซีน</th>
+                    <th>หมวดหมู่</th>
+                    <th>ชื่อวัคซีน</th>
+                    <th>ข้อบ่งใช้</th>
+                    <th>จัดการ</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {vaccines.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).length > 0 ? (
+                    vaccines.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((vaccine) => (
+                      <tr key={vaccine.vaccine_id}>
+                        <td>{vaccine.vaccine_id}</td>
+                        <td>{vaccine.category}</td>
+                        <td>{vaccine.name}</td>
+                        <td style={{ maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {vaccine.indications}
+                        </td>
+                        <td>
+                          <div className="action-links">
+                            <button className="action-btn edit" onClick={() => handleOpenModal(vaccine)}>
+                              <Edit size={16} />
+                            </button>
+                            <button className="action-btn delete" onClick={() => handleDelete(vaccine.vaccine_id)}>
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="5" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(vaccines.length / itemsPerPage)}
+              onPageChange={setCurrentPage}
+              totalItems={vaccines.length}
+              itemsPerPage={itemsPerPage}
+            />
+          </>
         )}
       </div>
 
