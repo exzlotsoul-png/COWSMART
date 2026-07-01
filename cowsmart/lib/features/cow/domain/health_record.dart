@@ -8,6 +8,7 @@ class HealthRecord {
   final String? vacId;
   final double? cost;
   final String? adminName;
+  final String? note;
   // Display names from joined tables
   final String? diseaseName;
   final String? medicineName;
@@ -23,6 +24,7 @@ class HealthRecord {
     this.vacId,
     this.cost,
     this.adminName,
+    this.note,
     this.diseaseName,
     this.medicineName,
     this.vaccineName,
@@ -39,6 +41,7 @@ class HealthRecord {
       vacId: json['vac_id'],
       cost: json['cost'] != null ? double.parse(json['cost'].toString()) : null,
       adminName: json['admin_name'],
+      note: json['note'],
       diseaseName: json['disease_name'],
       medicineName: json['medicine_name'],
       vaccineName: json['vaccine_name'],
@@ -56,6 +59,7 @@ class HealthRecord {
       'vac_id': vacId,
       'cost': cost,
       'admin_name': adminName,
+      'note': note,
     };
   }
 }

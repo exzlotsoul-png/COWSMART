@@ -10,6 +10,8 @@ import 'package:cowsmart/features/cow/providers/breed_provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cowsmart/core/widgets/image_picker_widget.dart';
 import 'package:cowsmart/core/services/image_upload_service.dart';
+import 'package:cowsmart/features/farm/providers/zone_provider.dart';
+import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 
 class EditCowScreen extends ConsumerStatefulWidget {
   final Cow cow;
@@ -25,6 +27,9 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
   late TextEditingController _nameController;
   late TextEditingController _tagController;
   String? _selectedBreedId;
+  String? _selectedZoneId;
+  String? _selectedFatherId;
+  String? _selectedMotherId;
 
   late DateTime _selectedDate;
   late String _selectedGender;
@@ -44,6 +49,16 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
     _selectedGender = widget.cow.gender;
     _selectedType = widget.cow.type;
     _selectedStatus = widget.cow.status;
+    _selectedZoneId = widget.cow.zoneId.isEmpty ? null : widget.cow.zoneId;
+    _selectedFatherId = widget.cow.fatherId;
+    _selectedMotherId = widget.cow.motherId;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final currentFarm = ref.read(farmProvider).currentFarm;
+      if (currentFarm != null) {
+        ref.read(zoneProvider.notifier).fetchZones(currentFarm.id);
+      }
+    });
   }
 
   @override
@@ -73,14 +88,22 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
     setState(() => _isSaving = true);
 
     try {
-      final updatedCow = widget.cow.copyWith(
+      final updatedCow = Cow(
+        id: widget.cow.id,
+        farmId: widget.cow.farmId,
+        zoneId: _selectedZoneId ?? '',
         name: _nameController.text,
         tagNumber: _tagController.text,
         birthDate: _selectedDate,
         gender: _selectedGender,
         type: _selectedType,
         breed: _selectedBreedId ?? widget.cow.breed,
+        latestWeight: widget.cow.latestWeight,
         status: _selectedStatus,
+        fatherId: _selectedFatherId,
+        motherId: _selectedMotherId,
+        imageUrl: widget.cow.imageUrl,
+        imageFullUrl: widget.cow.imageFullUrl,
       );
 
       await ref.read(cowProvider.notifier).updateCow(updatedCow);
@@ -331,6 +354,109 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                       if (newValue != null) _selectedType = newValue;
                     });
                   },
+                ),
+                // Zone Selection
+                Text(
+                  'ที่อยู่ (โซน)',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primaryDark,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Consumer(
+                  builder: (context, ref, child) {
+                    final zoneState = ref.watch(zoneProvider);
+                    final zones = zoneState.zones;
+
+                    return DropdownButtonFormField<String>(
+                      value: _selectedZoneId,
+                      decoration: const InputDecoration(
+                        labelText: 'เลือกโซน',
+                        hintText: 'กรุณาเลือกโซน (ถ้ามี)',
+                        prefixIcon: Icon(Icons.fence_outlined),
+                      ),
+                      items: [
+                        const DropdownMenuItem(
+                          value: null,
+                          child: Text('ไม่ระบุโซน'),
+                        ),
+                        ...zones.map((zone) {
+                          return DropdownMenuItem(
+                            value: zone.id,
+                            child: Text(zone.name),
+                          );
+                        }),
+                      ],
+                      onChanged: (val) => setState(() => _selectedZoneId = val),
+                    );
+                  },
+                ),
+                const SizedBox(height: 24),
+
+                // Bloodline Info
+                Text(
+                  'สายเลือด (พ่อ/แม่)',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primaryDark,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedFatherId,
+                        decoration: const InputDecoration(
+                          labelText: 'เลือกพ่อพันธุ์ (Sire)',
+                          prefixIcon: Icon(Icons.male),
+                        ),
+                        items: [
+                          const DropdownMenuItem(
+                            value: null,
+                            child: Text('ไม่ระบุพ่อพันธุ์'),
+                          ),
+                          ...cowState.allCows
+                              .where((c) => c.gender == 'M' && c.id != widget.cow.id)
+                              .map((cow) {
+                            return DropdownMenuItem(
+                              value: cow.id,
+                              child: Text(cow.name.isNotEmpty ? '${cow.name} (${cow.tagNumber})' : cow.tagNumber),
+                            );
+                          }),
+                        ],
+                        onChanged: (val) =>
+                            setState(() => _selectedFatherId = val),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedMotherId,
+                        decoration: const InputDecoration(
+                          labelText: 'เลือกแม่พันธุ์ (Dam)',
+                          prefixIcon: Icon(Icons.female),
+                        ),
+                        items: [
+                          const DropdownMenuItem(
+                            value: null,
+                            child: Text('ไม่ระบุแม่พันธุ์'),
+                          ),
+                          ...cowState.allCows
+                              .where((c) => c.gender == 'F' && c.id != widget.cow.id)
+                              .map((cow) {
+                            return DropdownMenuItem(
+                              value: cow.id,
+                              child: Text(cow.name.isNotEmpty ? '${cow.name} (${cow.tagNumber})' : cow.tagNumber),
+                            );
+                          }),
+                        ],
+                        onChanged: (val) =>
+                            setState(() => _selectedMotherId = val),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 24),
 

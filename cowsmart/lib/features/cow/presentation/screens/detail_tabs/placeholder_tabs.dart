@@ -284,6 +284,14 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                             color: AppColors.textSecondary,
                           ),
                         ),
+                      if (record.note != null && record.note!.isNotEmpty)
+                        Text(
+                          'รายละเอียด: ${record.note}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -332,6 +340,7 @@ class _HealthRecordDialog extends StatefulWidget {
 class _HealthRecordDialogState extends State<_HealthRecordDialog> {
   final costController = TextEditingController();
   final adminController = TextEditingController();
+  final noteController = TextEditingController();
   DateTime selectedDate = DateTime.now();
   String selectedType = 'CT01';
   String? selectedVaccineId;
@@ -343,6 +352,14 @@ class _HealthRecordDialogState extends State<_HealthRecordDialog> {
     {'id': 'CT02', 'name': 'ฉีดวัคซีน'},
     {'id': 'CT03', 'name': 'ให้ยารักษา'},
   ];
+
+  @override
+  void dispose() {
+    costController.dispose();
+    adminController.dispose();
+    noteController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -457,6 +474,16 @@ class _HealthRecordDialogState extends State<_HealthRecordDialog> {
             ],
             const SizedBox(height: 16),
             TextField(
+              controller: noteController,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                labelText: 'รายละเอียดเพิ่มเติม / หมายเหตุ',
+                hintText: 'กรอกรายละเอียดหรือข้อมูลเพิ่มเติม (ถ้ามี)',
+                prefixIcon: Icon(Icons.description),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
               controller: costController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
@@ -503,6 +530,9 @@ class _HealthRecordDialogState extends State<_HealthRecordDialog> {
                           adminName: adminController.text.trim().isEmpty
                               ? null
                               : adminController.text.trim(),
+                          note: noteController.text.trim().isEmpty
+                              ? null
+                              : noteController.text.trim(),
                         );
                         widget.onSave(record);
                         Navigator.pop(context);

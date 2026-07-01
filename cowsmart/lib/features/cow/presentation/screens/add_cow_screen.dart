@@ -29,6 +29,8 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
   final _weightController = TextEditingController();
   String? _selectedBreedId;
   String? _selectedZoneId;
+  String? _selectedFatherId;
+  String? _selectedMotherId;
 
   XFile? _pendingImageFile;
   bool _isSaving = false;
@@ -89,6 +91,8 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
         breed: _selectedBreedId ?? '',
         latestWeight: initialWeight,
         status: _selectedStatus,
+        fatherId: _selectedFatherId,
+        motherId: _selectedMotherId,
       );
 
       await ref.read(cowProvider.notifier).addCow(newCow);
@@ -404,6 +408,72 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                       onChanged: (val) => setState(() => _selectedZoneId = val),
                     );
                   },
+                ),
+                const SizedBox(height: 24),
+
+                // Bloodline Info
+                Text(
+                  'สายเลือด (พ่อ/แม่)',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primaryDark,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedFatherId,
+                        decoration: const InputDecoration(
+                          labelText: 'เลือกพ่อพันธุ์ (Sire)',
+                          prefixIcon: Icon(Icons.male),
+                        ),
+                        items: [
+                          const DropdownMenuItem(
+                            value: null,
+                            child: Text('ไม่ระบุพ่อพันธุ์'),
+                          ),
+                          ...cowState.allCows
+                              .where((c) => c.gender == 'M')
+                              .map((cow) {
+                            return DropdownMenuItem(
+                              value: cow.id,
+                              child: Text(cow.name.isNotEmpty ? '${cow.name} (${cow.tagNumber})' : cow.tagNumber),
+                            );
+                          }),
+                        ],
+                        onChanged: (val) =>
+                            setState(() => _selectedFatherId = val),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedMotherId,
+                        decoration: const InputDecoration(
+                          labelText: 'เลือกแม่พันธุ์ (Dam)',
+                          prefixIcon: Icon(Icons.female),
+                        ),
+                        items: [
+                          const DropdownMenuItem(
+                            value: null,
+                            child: Text('ไม่ระบุแม่พันธุ์'),
+                          ),
+                          ...cowState.allCows
+                              .where((c) => c.gender == 'F')
+                              .map((cow) {
+                            return DropdownMenuItem(
+                              value: cow.id,
+                              child: Text(cow.name.isNotEmpty ? '${cow.name} (${cow.tagNumber})' : cow.tagNumber),
+                            );
+                          }),
+                        ],
+                        onChanged: (val) =>
+                            setState(() => _selectedMotherId = val),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 24),
 

@@ -193,6 +193,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     if (user != null) {
       _firstNameController.text = user['first_name'] ?? '';
       _lastNameController.text = user['last_name'] ?? '';
+      _phoneController.text = user['phone'] ?? '';
     }
   }
 
@@ -210,10 +211,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     setState(() => _isSaving = true);
 
     try {
+      final user = ref.read(authProvider).user;
+
       // 1. Upload image if there's a pending one
       if (_pendingImageFile != null) {
         final uploadService = ref.read(imageUploadServiceProvider);
-        final user = ref.read(authProvider).user;
         await uploadService.uploadImage(
           type: 'avatar',
           entityId: user?['email'] ?? '',
@@ -222,7 +224,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       }
 
       // 2. Update profile data
-      // TODO: Call API to update first_name, last_name when endpoint is ready
+      if (user != null) {
+        final api = ref.read(apiClientProvider);
+        final email = user['email'];
+        await api.put('/users/$email', data: {
+          'first_name': _firstNameController.text.trim(),
+          'last_name': _lastNameController.text.trim(),
+          'phone': _phoneController.text.trim(),
+        });
+      }
 
       // 3. Refresh user data
       await ref.read(authProvider.notifier).refreshUser();
