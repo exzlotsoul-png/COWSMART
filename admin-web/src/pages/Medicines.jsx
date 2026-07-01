@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, ArrowUpDown } from 'lucide-react';
 import api from '../lib/axios';
 
 const Medicines = () => {
   const [medicines, setMedicines] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState('newest');
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const uniqueCategories = Array.from(new Set(medicines.map(m => m.category).filter(Boolean)));
   const [currentMedicine, setCurrentMedicine] = useState({
     medicine_id: '', category: '', name: '', indications: '', dosage_usage: ''
   });
@@ -86,6 +90,40 @@ const Medicines = () => {
             เพิ่มยา
           </button>
         </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', flexWrap: 'wrap', gap: '16px' }}>
+          <div style={{ display: 'flex', gap: '12px', flexGrow: 1, maxWidth: '700px', flexWrap: 'wrap' }}>
+            <div className="search-box" style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f3f4f6', padding: '8px 12px', borderRadius: '8px', width: '250px', flexGrow: 1, maxWidth: '350px' }}>
+              <Search size={18} style={{ color: '#9ca3af', marginRight: '8px' }} />
+              <input 
+                type="text" 
+                placeholder="ค้นหา..." 
+                style={{ border: 'none', backgroundColor: 'transparent', outline: 'none', width: '100%' }}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#fff', color: 'var(--text-main)', fontSize: '0.875rem' }}
+            >
+              <option value="all">ทุกหมวดหมู่</option>
+              {uniqueCategories.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
+          <button 
+            className="btn btn-outline" 
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+            onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
+          >
+            <ArrowUpDown size={16} />
+            {sortOrder === 'newest' ? 'เรียง: ใหม่ไปเก่า' : 'เรียง: เก่าไปใหม่'}
+          </button>
+        </div>
+
 
         {loading ? (
           <p>กำลังโหลดข้อมูล...</p>
@@ -102,9 +140,26 @@ const Medicines = () => {
                 </tr>
               </thead>
               <tbody>
-                {medicines.length > 0 ? (
-                  medicines.map((medicine) => (
-                    <tr key={medicine.medicine_id}>
+                {(() => {
+                  const filteredAndSorted = medicines
+                    .filter(item => {
+                      const matchSearch = 
+                        (item.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+                        String(item.medicine_id || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+                        (item.indications || '').toLowerCase().includes(searchTerm.toLowerCase());
+                      
+                      const matchCategory = categoryFilter === 'all' || item.category === categoryFilter;
+
+                      return matchSearch && matchCategory;
+                    })
+                    .sort((a, b) => {
+                      const compare = String(b.medicine_id || '').localeCompare(String(a.medicine_id || ''));
+                      return sortOrder === 'newest' ? compare : -compare;
+                    });
+                  
+                  if (filteredAndSorted.length > 0) {
+                    return filteredAndSorted.map((medicine) => (
+                      <tr key={medicine.medicine_id}>
                       <td>{medicine.medicine_id}</td>
                       <td>{medicine.category}</td>
                       <td>{medicine.name}</td>
@@ -122,12 +177,15 @@ const Medicines = () => {
                         </div>
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="5" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>
-                  </tr>
-                )}
+                    ));
+                  } else {
+                    return (
+                      <tr>
+                        <td colSpan="5" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>
+                      </tr>
+                    );
+                  }
+                })()}
               </tbody>
             </table>
           </div>

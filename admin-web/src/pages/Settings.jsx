@@ -62,15 +62,15 @@ const Settings = () => {
 
   return (
     <div>
-      <div className="card" style={{ maxWidth: '600px', margin: '0 auto' }}>
+      <div className="card" style={{ maxWidth: '700px', margin: '0 auto' }}>
         <div className="card-header">
           <h2 className="card-title">กำหนดการคำนวณวันคลอด</h2>
         </div>
 
         {loading ? (
-          <p>กำลังโหลดข้อมูล...</p>
+          <p style={{ padding: '24px' }}>กำลังโหลดข้อมูล...</p>
         ) : (
-          <form onSubmit={handleSave} style={{ padding: '20px 0' }}>
+          <form onSubmit={handleSave} style={{ padding: '24px' }}>
             {message && (
               <div style={{ 
                 padding: '10px 15px', 

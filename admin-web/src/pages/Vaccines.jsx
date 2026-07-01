@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, ArrowUpDown } from 'lucide-react';
 import api from '../lib/axios';
 import Pagination from '../components/layout/Pagination';
 
 const Vaccines = () => {
   const [vaccines, setVaccines] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState('newest');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentVaccine, setCurrentVaccine] = useState({
@@ -13,6 +16,8 @@ const Vaccines = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  const uniqueCategories = Array.from(new Set(vaccines.map(v => v.category).filter(Boolean)));
 
   useEffect(() => {
     fetchVaccines();
@@ -80,6 +85,20 @@ const Vaccines = () => {
     }
   };
 
+  const filteredVaccines = vaccines.filter(v => {
+    const matchSearch = 
+      (v.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+      (v.vaccine_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (v.indications || '').toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchCategory = categoryFilter === 'all' || v.category === categoryFilter;
+
+    return matchSearch && matchCategory;
+  }).sort((a, b) => {
+    const compare = (b.vaccine_id || '').localeCompare(a.vaccine_id || '');
+    return sortOrder === 'newest' ? compare : -compare;
+  });
+
   return (
     <div>
       <div className="card">
@@ -90,6 +109,40 @@ const Vaccines = () => {
             เพิ่มวัคซีน
           </button>
         </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', flexWrap: 'wrap', gap: '16px' }}>
+          <div style={{ display: 'flex', gap: '12px', flexGrow: 1, maxWidth: '700px', flexWrap: 'wrap' }}>
+            <div className="search-box" style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f3f4f6', padding: '8px 12px', borderRadius: '8px', width: '250px', flexGrow: 1, maxWidth: '350px' }}>
+              <Search size={18} style={{ color: '#9ca3af', marginRight: '8px' }} />
+              <input 
+                type="text" 
+                placeholder="ค้นหา..." 
+                style={{ border: 'none', backgroundColor: 'transparent', outline: 'none', width: '100%' }}
+                value={searchTerm}
+                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              />
+            </div>
+            
+            <select
+              value={categoryFilter}
+              onChange={(e) => { setCategoryFilter(e.target.value); setCurrentPage(1); }}
+              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#fff', color: 'var(--text-main)', fontSize: '0.875rem' }}
+            >
+              <option value="all">ทุกหมวดหมู่</option>
+              {uniqueCategories.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
+          <button 
+            className="btn btn-outline" 
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+            onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
+          >
+            <ArrowUpDown size={16} />
+            {sortOrder === 'newest' ? 'เรียง: ใหม่ไปเก่า' : 'เรียง: เก่าไปใหม่'}
+          </button>
+        </div>
+
 
         {loading ? (
           <p>กำลังโหลดข้อมูล...</p>
@@ -107,8 +160,8 @@ const Vaccines = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {vaccines.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).length > 0 ? (
-                    vaccines.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((vaccine) => (
+                  {filteredVaccines.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).length > 0 ? (
+                    filteredVaccines.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((vaccine) => (
                       <tr key={vaccine.vaccine_id}>
                         <td>{vaccine.vaccine_id}</td>
                         <td>{vaccine.category}</td>
@@ -139,9 +192,9 @@ const Vaccines = () => {
 
             <Pagination
               currentPage={currentPage}
-              totalPages={Math.ceil(vaccines.length / itemsPerPage)}
+              totalPages={Math.ceil(filteredVaccines.length / itemsPerPage) || 1}
               onPageChange={setCurrentPage}
-              totalItems={vaccines.length}
+              totalItems={filteredVaccines.length}
               itemsPerPage={itemsPerPage}
             />
           </>

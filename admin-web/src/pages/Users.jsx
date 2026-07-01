@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ToggleLeft, ToggleRight, Trash2 } from 'lucide-react';
+import { ToggleLeft, ToggleRight, Trash2, Search, ArrowUpDown } from 'lucide-react';
 import api from '../lib/axios';
 import { useAuth } from '../contexts/AuthContext';
 import Pagination from '../components/layout/Pagination';
@@ -7,6 +7,11 @@ import Pagination from '../components/layout/Pagination';
 const Users = () => {
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState('newest');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const uniqueRoles = Array.from(new Set(users.map(u => u.role).filter(Boolean)));
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -39,11 +44,30 @@ const Users = () => {
   };
 
   // Pagination calculations
-  const totalItems = users.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const filteredAndSorted = users
+    .filter(item => {
+      const matchSearch = 
+        (item.first_name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+        (item.last_name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+        (item.email || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+        (item.role || '').toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchRole = roleFilter === 'all' || item.role === roleFilter;
+      const matchStatus = statusFilter === 'all' || 
+        (statusFilter === 'active' && item.is_active) || 
+        (statusFilter === 'inactive' && !item.is_active);
+
+      return matchSearch && matchRole && matchStatus;
+    })
+    .sort((a, b) => {
+      const compare = (b.email || '').localeCompare(a.email || '');
+      return sortOrder === 'newest' ? compare : -compare;
+    });
+  const totalItems = filteredAndSorted.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentUsers = users.slice(indexOfFirstItem, indexOfLastItem);
+  const currentUsers = filteredAndSorted.slice(indexOfFirstItem, indexOfLastItem);
 
   return (
     <div>
@@ -51,6 +75,50 @@ const Users = () => {
         <div className="card-header">
           <h2 className="card-title">จัดการผู้ใช้งาน</h2>
         </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', flexWrap: 'wrap', gap: '16px' }}>
+          <div style={{ display: 'flex', gap: '12px', flexGrow: 1, maxWidth: '700px', flexWrap: 'wrap' }}>
+            <div className="search-box" style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f3f4f6', padding: '8px 12px', borderRadius: '8px', width: '250px', flexGrow: 1, maxWidth: '350px' }}>
+              <Search size={18} style={{ color: '#9ca3af', marginRight: '8px' }} />
+              <input 
+                type="text" 
+                placeholder="ค้นหา..." 
+                style={{ border: 'none', backgroundColor: 'transparent', outline: 'none', width: '100%' }}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            
+            <select
+              value={roleFilter}
+              onChange={(e) => { setRoleFilter(e.target.value); setCurrentPage(1); }}
+              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#fff', color: 'var(--text-main)', fontSize: '0.875rem' }}
+            >
+              <option value="all">ทุกบทบาท</option>
+              {uniqueRoles.map(role => (
+                <option key={role} value={role}>{role}</option>
+              ))}
+            </select>
+
+            <select
+              value={statusFilter}
+              onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#fff', color: 'var(--text-main)', fontSize: '0.875rem' }}
+            >
+              <option value="all">ทุกสถานะ</option>
+              <option value="active">เปิดใช้งาน</option>
+              <option value="inactive">ปิดใช้งาน</option>
+            </select>
+          </div>
+          <button 
+            className="btn btn-outline" 
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+            onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
+          >
+            <ArrowUpDown size={16} />
+            {sortOrder === 'newest' ? 'เรียง: ใหม่ไปเก่า' : 'เรียง: เก่าไปใหม่'}
+          </button>
+        </div>
+
 
         {loading ? (
           <p>กำลังโหลดข้อมูล...</p>

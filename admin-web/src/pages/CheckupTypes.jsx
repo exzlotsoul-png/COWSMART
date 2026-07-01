@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, ArrowUpDown } from 'lucide-react';
 import api from '../lib/axios';
 
 const CheckupTypes = () => {
@@ -8,6 +8,8 @@ const CheckupTypes = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentCheckupType, setCurrentCheckupType] = useState({ checkup_types_id: '', type_name: '' });
   const [isEditing, setIsEditing] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState('newest');
 
   useEffect(() => {
     fetchCheckupTypes();
@@ -85,6 +87,27 @@ const CheckupTypes = () => {
           </button>
         </div>
 
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', flexWrap: 'wrap', gap: '16px' }}>
+          <div className="search-box" style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f3f4f6', padding: '8px 12px', borderRadius: '8px', width: '300px', flexGrow: 1, maxWidth: '400px' }}>
+            <Search size={18} style={{ color: '#9ca3af', marginRight: '8px' }} />
+            <input 
+              type="text" 
+              placeholder="ค้นหา..." 
+              style={{ border: 'none', backgroundColor: 'transparent', outline: 'none', width: '100%' }}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <button 
+            className="btn btn-outline" 
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+            onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
+          >
+            <ArrowUpDown size={16} />
+            {sortOrder === 'newest' ? 'เรียง: ใหม่ไปเก่า' : 'เรียง: เก่าไปใหม่'}
+          </button>
+        </div>
+
         {loading ? (
           <p>กำลังโหลดข้อมูล...</p>
         ) : (
@@ -98,10 +121,21 @@ const CheckupTypes = () => {
                 </tr>
               </thead>
               <tbody>
-                {checkupTypes.length > 0 ? (
-                  checkupTypes.map((type) => (
-                    <tr key={type.checkup_types_id}>
-                      <td>{type.checkup_types_id}</td>
+                {(() => {
+                  const filteredAndSorted = checkupTypes
+                    .filter(t => 
+                      (t.type_name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+                      (t.checkup_types_id || '').toLowerCase().includes(searchTerm.toLowerCase())
+                    )
+                    .sort((a, b) => {
+                      const compare = (b.checkup_types_id || '').localeCompare(a.checkup_types_id || '');
+                      return sortOrder === 'newest' ? compare : -compare;
+                    });
+                  
+                  if (filteredAndSorted.length > 0) {
+                    return filteredAndSorted.map((type) => (
+                      <tr key={type.checkup_types_id}>
+                        <td>{type.checkup_types_id}</td>
                       <td>{type.type_name}</td>
                       <td>
                         <div className="action-links">
@@ -113,13 +147,16 @@ const CheckupTypes = () => {
                           </button>
                         </div>
                       </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="3" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>
-                  </tr>
-                )}
+                      </tr>
+                    ));
+                  } else {
+                    return (
+                      <tr>
+                        <td colSpan="3" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>
+                      </tr>
+                    );
+                  }
+                })()}
               </tbody>
             </table>
           </div>

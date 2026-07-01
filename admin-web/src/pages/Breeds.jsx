@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Search } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, ArrowUpDown } from 'lucide-react';
 import api from '../lib/axios';
 import Pagination from '../components/layout/Pagination';
 
@@ -11,6 +11,8 @@ const Breeds = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState('newest');
 
   useEffect(() => {
     fetchBreeds();
@@ -90,6 +92,27 @@ const Breeds = () => {
           </button>
         </div>
 
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', flexWrap: 'wrap', gap: '16px' }}>
+          <div className="search-box" style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f3f4f6', padding: '8px 12px', borderRadius: '8px', width: '300px', flexGrow: 1, maxWidth: '400px' }}>
+            <Search size={18} style={{ color: '#9ca3af', marginRight: '8px' }} />
+            <input 
+              type="text" 
+              placeholder="ค้นหา..." 
+              style={{ border: 'none', backgroundColor: 'transparent', outline: 'none', width: '100%' }}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <button 
+            className="btn btn-outline" 
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+            onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
+          >
+            <ArrowUpDown size={16} />
+            {sortOrder === 'newest' ? 'เรียง: ใหม่ไปเก่า' : 'เรียง: เก่าไปใหม่'}
+          </button>
+        </div>
+
         {loading ? (
           <p>กำลังโหลดข้อมูล...</p>
         ) : (
@@ -105,8 +128,22 @@ const Breeds = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {breeds.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).length > 0 ? (
-                    breeds.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((breed) => (
+                  {(() => {
+                    const filteredAndSorted = breeds
+                      .filter(b => 
+                        (b.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+                        (b.breed_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        (b.description || '').toLowerCase().includes(searchTerm.toLowerCase())
+                      )
+                      .sort((a, b) => {
+                        const compare = (b.breed_id || '').localeCompare(a.breed_id || '');
+                        return sortOrder === 'newest' ? compare : -compare;
+                      });
+                    
+                    const currentItems = filteredAndSorted.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+                    
+                    if (currentItems.length > 0) {
+                      return currentItems.map((breed) => (
                       <tr key={breed.breed_id}>
                         <td>{breed.breed_id}</td>
                         <td>{breed.name}</td>
@@ -123,20 +160,33 @@ const Breeds = () => {
                         </td>
                       </tr>
                     ))
-                  ) : (
-                    <tr>
-                      <td colSpan="4" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>
-                    </tr>
-                  )}
+                    } else {
+                      return (
+                        <tr>
+                          <td colSpan="4" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>
+                        </tr>
+                      );
+                    }
+                  })()}
                 </tbody>
               </table>
             </div>
 
             <Pagination
               currentPage={currentPage}
-              totalPages={Math.ceil(breeds.length / itemsPerPage)}
+              totalPages={Math.ceil(breeds
+                .filter(b => 
+                  (b.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+                  (b.breed_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  (b.description || '').toLowerCase().includes(searchTerm.toLowerCase())
+                ).length / itemsPerPage) || 1}
               onPageChange={setCurrentPage}
-              totalItems={breeds.length}
+              totalItems={breeds
+                .filter(b => 
+                  (b.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+                  (b.breed_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  (b.description || '').toLowerCase().includes(searchTerm.toLowerCase())
+                ).length}
               itemsPerPage={itemsPerPage}
             />
           </>

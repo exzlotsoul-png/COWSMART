@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, Trash2 } from 'lucide-react';
+import { CheckCircle, Trash2, Search, ArrowUpDown } from 'lucide-react';
 import api from '../lib/axios';
 import Pagination from '../components/layout/Pagination';
 
 const IssueReports = () => {
   const [reports, setReports] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState('newest');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -114,13 +118,33 @@ const IssueReports = () => {
   };
 
   const reportsToDisplay = reports.length > 0 ? reports : mockReports;
+  const uniqueTypes = Array.from(new Set(reportsToDisplay.map(r => r.issue_type).filter(Boolean)));
 
   // Pagination calculation
-  const totalItems = reportsToDisplay.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const filteredAndSorted = reportsToDisplay
+    .filter(item => {
+      const matchSearch = 
+        (item.issue_type || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+        (item.description || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+        (item.user_id || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+        (item.status || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+        String(item.report_id || '').toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchType = typeFilter === 'all' || item.issue_type === typeFilter;
+      const matchStatus = statusFilter === 'all' || item.status === statusFilter;
+
+      return matchSearch && matchType && matchStatus;
+    })
+    .sort((a, b) => {
+      const compare = String(b.report_id || '').localeCompare(String(a.report_id || ''));
+      return sortOrder === 'newest' ? compare : -compare;
+    });
+
+  const totalItems = filteredAndSorted.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentReports = reportsToDisplay.slice(indexOfFirstItem, indexOfLastItem);
+  const currentReports = filteredAndSorted.slice(indexOfFirstItem, indexOfLastItem);
 
   return (
     <div>
@@ -128,6 +152,50 @@ const IssueReports = () => {
         <div className="card-header">
           <h2 className="card-title">จัดการรายงานการใช้งาน</h2>
         </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', flexWrap: 'wrap', gap: '16px' }}>
+          <div style={{ display: 'flex', gap: '12px', flexGrow: 1, maxWidth: '700px', flexWrap: 'wrap' }}>
+            <div className="search-box" style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f3f4f6', padding: '8px 12px', borderRadius: '8px', width: '250px', flexGrow: 1, maxWidth: '350px' }}>
+              <Search size={18} style={{ color: '#9ca3af', marginRight: '8px' }} />
+              <input 
+                type="text" 
+                placeholder="ค้นหา..." 
+                style={{ border: 'none', backgroundColor: 'transparent', outline: 'none', width: '100%' }}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            
+            <select
+              value={typeFilter}
+              onChange={(e) => { setTypeFilter(e.target.value); setCurrentPage(1); }}
+              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#fff', color: 'var(--text-main)', fontSize: '0.875rem' }}
+            >
+              <option value="all">ทุกประเภทปัญหา</option>
+              {uniqueTypes.map(t => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+
+            <select
+              value={statusFilter}
+              onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#fff', color: 'var(--text-main)', fontSize: '0.875rem' }}
+            >
+              <option value="all">ทุกสถานะ</option>
+              <option value="pending">รอดำเนินการ</option>
+              <option value="resolved">แก้ไขแล้ว</option>
+            </select>
+          </div>
+          <button 
+            className="btn btn-outline" 
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+            onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
+          >
+            <ArrowUpDown size={16} />
+            {sortOrder === 'newest' ? 'เรียง: ใหม่ไปเก่า' : 'เรียง: เก่าไปใหม่'}
+          </button>
+        </div>
+
 
         {loading ? (
           <p>กำลังโหลดข้อมูล...</p>
