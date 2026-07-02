@@ -12,6 +12,7 @@ class AuthState {
   final String? errorMessage;
   final String? token;
   final Map<String, dynamic>? user;
+  final bool isNewUser;
 
   AuthState({
     this.isLoading = false,
@@ -19,6 +20,7 @@ class AuthState {
     this.errorMessage,
     this.token,
     this.user,
+    this.isNewUser = false,
   });
 
   AuthState copyWith({
@@ -27,6 +29,7 @@ class AuthState {
     String? errorMessage,
     String? token,
     Map<String, dynamic>? user,
+    bool? isNewUser,
   }) {
     return AuthState(
       isLoading: isLoading ?? this.isLoading,
@@ -34,6 +37,7 @@ class AuthState {
       errorMessage: errorMessage,
       token: token ?? this.token,
       user: user ?? this.user,
+      isNewUser: isNewUser ?? this.isNewUser,
     );
   }
 }
@@ -64,6 +68,7 @@ class AuthNotifier extends Notifier<AuthState> {
         isAuthenticated: true,
         token: token,
         user: userData,
+        isNewUser: false,
       );
     }
   }
@@ -92,6 +97,7 @@ class AuthNotifier extends Notifier<AuthState> {
         isAuthenticated: true,
         token: token,
         user: userData,
+        isNewUser: false,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
@@ -133,6 +139,7 @@ class AuthNotifier extends Notifier<AuthState> {
         isAuthenticated: true,
         token: token,
         user: userData,
+        isNewUser: true,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());

@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -94,6 +95,85 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'เปลี่ยนรหัสผ่านสำเร็จ',
+        ]);
+    }
+
+    public function forgotPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'ไม่พบผู้ใช้นี้ในระบบ',
+            ], 404);
+        }
+
+        // Generate 6-digit OTP
+        $otp = (string) rand(100000, 999999);
+        Cache::put('otp_' . $request->email, $otp, now()->addMinutes(10));
+
+        // Return OTP in response for local testing
+        return response()->json([
+            'message' => 'ส่งรหัส OTP เรียบร้อยแล้ว (โปรดดูรหัส OTP ในการตอบกลับนี้)',
+            'otp' => $otp,
+        ]);
+    }
+
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'otp' => 'required|string|size:6',
+        ]);
+
+        $cachedOtp = Cache::get('otp_' . $request->email);
+
+        if (!$cachedOtp || $cachedOtp !== $request->otp) {
+            return response()->json([
+                'message' => 'รหัส OTP ไม่ถูกต้องหรือหมดอายุ',
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => 'ยืนยันรหัส OTP สำเร็จ',
+        ]);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'otp' => 'required|string|size:6',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $cachedOtp = Cache::get('otp_' . $request->email);
+
+        if (!$cachedOtp || $cachedOtp !== $request->otp) {
+            return response()->json([
+                'message' => 'รหัส OTP ไม่ถูกต้องหรือหมดอายุ',
+            ], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'ไม่พบผู้ใช้นี้ในระบบ',
+            ], 404);
+        }
+
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        Cache::forget('otp_' . $request->email);
+
+        return response()->json([
+            'message' => 'รีเซ็ตรหัสผ่านสำเร็จ',
         ]);
     }
 }

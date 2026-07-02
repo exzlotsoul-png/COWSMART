@@ -275,7 +275,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                               : null;
 
                           return DropdownButtonFormField<String>(
-                            initialValue: safeValue,
+                            value: safeValue,
                             decoration: const InputDecoration(
                               labelText: 'สายพันธุ์',
                               prefixIcon: Icon(Icons.category),

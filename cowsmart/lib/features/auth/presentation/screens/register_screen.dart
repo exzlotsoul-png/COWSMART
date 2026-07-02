@@ -70,7 +70,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     // Watch for success or error
     ref.listen(authProvider, (previous, next) {
       if (next.isAuthenticated) {
-        context.go('/dashboard');
+        context.go('/create_farm');
       }
       if (next.errorMessage != null &&
           next.errorMessage != previous?.errorMessage) {

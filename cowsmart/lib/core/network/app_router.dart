@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../features/auth/presentation/screens/login_screen.dart';
-import '../../features/auth/presentation/screens/register_screen.dart';
-import '../../features/auth/presentation/screens/otp_screen.dart';
+import 'package:cowsmart/features/auth/presentation/screens/login_screen.dart';
+import 'package:cowsmart/features/auth/presentation/screens/register_screen.dart';
+import 'package:cowsmart/features/auth/presentation/screens/otp_screen.dart';
+import 'package:cowsmart/features/auth/presentation/screens/forgot_password_screen.dart';
+import 'package:cowsmart/features/auth/presentation/screens/reset_password_screen.dart';
 import '../../features/farm/presentation/screens/create_farm_screen.dart';
 import '../../features/farm/presentation/screens/edit_farm_screen.dart';
 import '../../features/farm/domain/farm.dart';
@@ -35,7 +37,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isLoggingIn =
           state.matchedLocation == '/login' ||
           state.matchedLocation == '/register' ||
-          state.matchedLocation == '/otp';
+          state.matchedLocation == '/otp' ||
+          state.matchedLocation == '/forgot-password' ||
+          state.matchedLocation == '/reset-password';
 
       if (!authState.isAuthenticated) {
         return isLoggingIn ? null : '/login';
@@ -56,8 +60,23 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/otp',
         builder: (context, state) {
-          final email = state.extra as String? ?? '';
-          return OtpScreen(email: email);
+          final extra = state.extra as Map<String, dynamic>? ?? {};
+          final email = extra['email'] as String? ?? '';
+          final isForgotPassword = extra['isForgotPassword'] as bool? ?? false;
+          return OtpScreen(email: email, isForgotPassword: isForgotPassword);
+        },
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>? ?? {};
+          final email = extra['email'] as String? ?? '';
+          final otp = extra['otp'] as String? ?? '';
+          return ResetPasswordScreen(email: email, otp: otp);
         },
       ),
       GoRoute(

@@ -6,6 +6,7 @@ import '../../../../core/constants/app_constants.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
+import 'package:cowsmart/features/auth/providers/auth_provider.dart';
 
 class SelectFarmScreen extends ConsumerStatefulWidget {
   const SelectFarmScreen({super.key});
@@ -40,6 +41,8 @@ class _SelectFarmScreenState extends ConsumerState<SelectFarmScreen> {
   @override
   Widget build(BuildContext context) {
     final farmState = ref.watch(farmProvider);
+    final authState = ref.watch(authProvider);
+    final isNewUser = authState.isNewUser;
 
     return Scaffold(
       appBar: AppBar(title: const Text('เลือกฟาร์มของคุณ'), centerTitle: true),
@@ -50,7 +53,7 @@ class _SelectFarmScreenState extends ConsumerState<SelectFarmScreen> {
           children: [
             const SizedBox(height: 16),
             Text(
-              'ยินดีต้อนรับกลับมา!',
+              isNewUser ? 'ยินดีต้อนรับ!' : 'ยินดีต้อนรับกลับมา!',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 color: AppColors.primary,
                 fontWeight: FontWeight.bold,
@@ -159,10 +162,20 @@ class _SelectFarmScreenState extends ConsumerState<SelectFarmScreen> {
               ),
 
             if (farmState.farms.isNotEmpty)
-              TextButton.icon(
-                onPressed: () => context.push('/create_farm'),
-                icon: const Icon(Icons.add),
-                label: const Text('สร้างฟาร์มเพิ่ม'),
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: ElevatedButton.icon(
+                  onPressed: () => context.push('/create_farm'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.add, size: 24),
+                  label: const Text('สร้างฟาร์มเพิ่ม'),
+                ),
               ),
           ],
         ),

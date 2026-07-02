@@ -269,7 +269,7 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                               : null;
 
                           return DropdownButtonFormField<String>(
-                            initialValue: safeValue,
+                            value: safeValue,
                             decoration: const InputDecoration(
                               labelText: 'สายพันธุ์',
                               prefixIcon: Icon(Icons.category),

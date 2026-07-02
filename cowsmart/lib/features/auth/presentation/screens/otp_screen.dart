@@ -1,19 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
+import 'package:cowsmart/core/network/api_client.dart';
 
-class OtpScreen extends StatefulWidget {
+class OtpScreen extends ConsumerStatefulWidget {
   final String email;
+  final bool isForgotPassword;
   
-  const OtpScreen({super.key, required this.email});
+  const OtpScreen({
+    super.key,
+    required this.email,
+    this.isForgotPassword = false,
+  });
 
   @override
-  State<OtpScreen> createState() => _OtpScreenState();
+  ConsumerState<OtpScreen> createState() => _OtpScreenState();
 }
 
-class _OtpScreenState extends State<OtpScreen> {
+class _OtpScreenState extends ConsumerState<OtpScreen> {
   final _otpController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -21,11 +29,53 @@ class _OtpScreenState extends State<OtpScreen> {
     super.dispose();
   }
 
-  void _verifyOtp() {
-    // TODO: Implement OTP verification logic
-    print('Verifying OTP: ${_otpController.text}');
-    // If successful, navigate to Create Farm flow
-    context.go('/create_farm');
+  Future<void> _verifyOtp() async {
+    final otp = _otpController.text.trim();
+    if (otp.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('กรุณากรอกรหัส OTP ให้ครบ 6 หลัก')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      if (widget.isForgotPassword) {
+        final api = ref.read(apiClientProvider);
+        await api.post('/verify-otp', data: {
+          'email': widget.email,
+          'otp': otp,
+        });
+
+        if (mounted) {
+          context.go('/reset-password', extra: {
+            'email': widget.email,
+            'otp': otp,
+          });
+        }
+      } else {
+        // Registration flow
+        // Standard mockup verify OTP
+        await Future.delayed(const Duration(seconds: 1));
+        if (mounted) {
+          context.go('/create_farm');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -41,7 +91,7 @@ class _OtpScreenState extends State<OtpScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 24),
-              Icon(
+              const Icon(
                 Icons.mark_email_read_outlined,
                 size: 80,
                 color: AppColors.primary,
@@ -77,8 +127,17 @@ class _OtpScreenState extends State<OtpScreen> {
               const SizedBox(height: 32),
               
               ElevatedButton(
-                onPressed: _verifyOtp,
-                child: const Text('ยืนยัน OTP'),
+                onPressed: _isLoading ? null : _verifyOtp,
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text('ยืนยัน OTP'),
               ),
               const SizedBox(height: 24),
               
@@ -91,9 +150,9 @@ class _OtpScreenState extends State<OtpScreen> {
                   ),
                   TextButton(
                     onPressed: () {
-                      // TODO: Implement resend OTP
+                      // Implement resend OTP if needed
                     },
-                    child: Text(
+                    child: const Text(
                       'ส่งรหัสอีกครั้ง',
                       style: TextStyle(
                         color: AppColors.primary,
