@@ -198,6 +198,26 @@ class CowDetailNotifier extends Notifier<CowDetailState> {
     }
   }
 
+  Future<void> deleteBreedingRecord(String id) async {
+    state = state.copyWith(isSaving: true, error: null, isSuccess: false);
+    try {
+      final api = ref.read(apiClientProvider);
+      print('[DELETE] กำลังลบการผสมพันธุ์: $id');
+      await api.delete('/breeding_records/$id');
+
+      final updated = state.breedingRecords.where((r) => r.id != id).toList();
+      state = state.copyWith(
+        breedingRecords: updated,
+        isSaving: false,
+        isSuccess: true,
+      );
+      print('[SUCCESS] ลบการผสมพันธุ์สำเร็จ: $id');
+    } catch (e) {
+      print('[ERROR] ลบการผสมพันธุ์ไม่สำเร็จ: $e');
+      state = state.copyWith(isSaving: false, error: e.toString());
+    }
+  }
+
   void clearFlags() {
     state = state.copyWith(isSuccess: false, error: null);
   }

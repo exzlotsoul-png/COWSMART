@@ -6,11 +6,12 @@ import '../../../domain/breeding_record.dart';
 import '../../../providers/cow_detail_provider.dart';
 import '../../../providers/cow_provider.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:go_router/go_router.dart';
 
 // Provider to get male cows (bulls) for breeding
 final bullsProvider = Provider<List<Cow>>((ref) {
   final cowState = ref.watch(cowProvider);
-  return cowState.allCows.where((c) => c.gender == 'M').toList();
+  return cowState.allCows.where((c) => c.gender == 'M' && c.type == CowType.breederMale).toList();
 });
 
 class BreedTab extends ConsumerStatefulWidget {
@@ -23,6 +24,35 @@ class BreedTab extends ConsumerStatefulWidget {
 
 class _BreedTabState extends ConsumerState<BreedTab> {
   void _showMenu() {
+    final records = ref.read(cowDetailProvider).breedingRecords;
+    
+    // Find active breeding cycle
+    final activeRecords = records
+        .where(
+          (r) =>
+              r.heatDate != null &&
+              r.calvingDate == null &&
+              r.pregnancyResult != 'ไม่ตั้งท้อง',
+        )
+        .toList();
+
+    bool canRecordHeat = activeRecords.isEmpty;
+    bool canRecordMating = false;
+    bool canRecordPregnancyCheck = false;
+    bool canRecordCalving = false;
+
+    if (activeRecords.isNotEmpty) {
+      activeRecords.sort((a, b) => b.heatDate!.compareTo(a.heatDate!));
+      final current = activeRecords.first;
+      if (current.matingDate == null) {
+        canRecordMating = true;
+      } else if (current.pregnancyResult == null || current.pregnancyResult == 'รอตรวจ') {
+        canRecordPregnancyCheck = true;
+      } else if (current.pregnancyResult == 'ตั้งท้อง') {
+        canRecordCalving = true;
+      }
+    }
+
     showModalBottomSheet(
       context: context,
       builder: (ctx) => SafeArea(
@@ -33,6 +63,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
               leading: const Icon(Icons.favorite, color: Colors.pink),
               title: const Text('บันทึกเป็นสัด'),
               subtitle: const Text('บันทึกวันที่วัวเป็นสัด'),
+              enabled: canRecordHeat,
               onTap: () {
                 Navigator.pop(ctx);
                 _showHeatDialog();
@@ -42,6 +73,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
               leading: const Icon(Icons.pets, color: AppColors.primary),
               title: const Text('บันทึกผสมพันธุ์'),
               subtitle: const Text('เลือกพ่อพันธุ์และบันทึกการผสม'),
+              enabled: canRecordMating,
               onTap: () {
                 Navigator.pop(ctx);
                 _showMatingDialog();
@@ -51,6 +83,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
               leading: const Icon(Icons.medical_services, color: Colors.orange),
               title: const Text('บันทึกตรวจท้อง'),
               subtitle: const Text('บันทึกผลการตรวจท้อง'),
+              enabled: canRecordPregnancyCheck,
               onTap: () {
                 Navigator.pop(ctx);
                 _showPregnancyCheckDialog();
@@ -60,6 +93,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
               leading: const Icon(Icons.child_care, color: Colors.teal),
               title: const Text('บันทึกการคลอด'),
               subtitle: const Text('บันทึกผลการคลอดและลูกวัว'),
+              enabled: canRecordCalving,
               onTap: () {
                 Navigator.pop(ctx);
                 _showCalvingDialog();
@@ -73,64 +107,80 @@ class _BreedTabState extends ConsumerState<BreedTab> {
 
   // Step 1: Record Heat
   void _showHeatDialog() {
-    DateTime? heatDate = DateTime.now();
+    DateTime heatDate = DateTime.now();
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('บันทึกเป็นสัด'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.calendar_today),
-              title: const Text('วันที่เป็นสัด'),
-              subtitle: Text(DateFormat('dd/MM/yyyy').format(heatDate!)),
-              onTap: () async {
-                final picked = await showDatePicker(
-                  context: ctx,
-                  initialDate: heatDate,
-                  firstDate: DateTime(2020),
-                  lastDate: DateTime.now(),
-                );
-                if (picked != null) {
-                  setState(() => heatDate = picked);
-                }
-              },
-            ),
-          ],
-        ),
-        actions: [
-          Row(
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('บันทึกเป็นสัด'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('ยกเลิก'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    final record = BreedingRecord(
-                      id: 'BR${DateTime.now().millisecondsSinceEpoch % 1000000}',
-                      damId: widget.cow.id,
-                      heatDate: heatDate,
-                      calvingDate: null,
-                      calvingResult: null,
-                      calfId: null,
+              ListTile(
+                leading: const Icon(Icons.calendar_today),
+                title: const Text('วันที่และเวลาที่เป็นสัด'),
+                subtitle: Text(DateFormat('dd/MM/yyyy HH:mm น.').format(heatDate)),
+                onTap: () async {
+                  final pickedDate = await showDatePicker(
+                    context: ctx,
+                    initialDate: heatDate,
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime.now(),
+                  );
+                  if (pickedDate != null) {
+                    final pickedTime = await showTimePicker(
+                      context: ctx,
+                      initialTime: TimeOfDay.fromDateTime(heatDate),
                     );
-                    ref
-                        .read(cowDetailProvider.notifier)
-                        .addBreedingRecord(record);
-                    Navigator.pop(ctx);
-                  },
-                  child: const Text('บันทึก'),
-                ),
+                    if (pickedTime != null) {
+                      setDialogState(() {
+                        heatDate = DateTime(
+                          pickedDate.year,
+                          pickedDate.month,
+                          pickedDate.day,
+                          pickedTime.hour,
+                          pickedTime.minute,
+                        );
+                      });
+                    }
+                  }
+                },
               ),
             ],
           ),
-        ],
+          actions: [
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('ยกเลิก'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      final record = BreedingRecord(
+                        id: 'BR${DateTime.now().millisecondsSinceEpoch % 1000000}',
+                        damId: widget.cow.id,
+                        heatDate: heatDate,
+                        calvingDate: null,
+                        calvingResult: null,
+                        calfId: null,
+                      );
+                      ref
+                          .read(cowDetailProvider.notifier)
+                          .addBreedingRecord(record);
+                      Navigator.pop(ctx);
+                    },
+                    child: const Text('บันทึก'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -217,21 +267,35 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                   onChanged: (v) => setDialogState(() => selectedBull = v),
                 ),
                 const SizedBox(height: 16),
-                // Mating Date
+                 // Mating Date
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.calendar_today),
-                  title: const Text('วันที่ผสม'),
-                  subtitle: Text(DateFormat('dd/MM/yyyy').format(matingDate)),
+                  title: const Text('วันที่และเวลาที่ผสม'),
+                  subtitle: Text(DateFormat('dd/MM/yyyy HH:mm น.').format(matingDate)),
                   onTap: () async {
-                    final picked = await showDatePicker(
+                    final pickedDate = await showDatePicker(
                       context: ctx,
                       initialDate: matingDate,
                       firstDate: DateTime(2020),
                       lastDate: DateTime.now(),
                     );
-                    if (picked != null) {
-                      setDialogState(() => matingDate = picked);
+                    if (pickedDate != null) {
+                      final pickedTime = await showTimePicker(
+                        context: ctx,
+                        initialTime: TimeOfDay.fromDateTime(matingDate),
+                      );
+                      if (pickedTime != null) {
+                        setDialogState(() {
+                          matingDate = DateTime(
+                            pickedDate.year,
+                            pickedDate.month,
+                            pickedDate.day,
+                            pickedTime.hour,
+                            pickedTime.minute,
+                          );
+                        });
+                      }
                     }
                   },
                 ),
@@ -340,17 +404,31 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.calendar_today),
-                  title: const Text('วันที่คลอด'),
-                  subtitle: Text(DateFormat('dd/MM/yyyy').format(calvingDate)),
+                  title: const Text('วันที่และเวลาที่คลอด'),
+                  subtitle: Text(DateFormat('dd/MM/yyyy HH:mm น.').format(calvingDate)),
                   onTap: () async {
-                    final picked = await showDatePicker(
+                    final pickedDate = await showDatePicker(
                       context: ctx,
                       initialDate: calvingDate,
                       firstDate: DateTime(2020),
                       lastDate: DateTime.now(),
                     );
-                    if (picked != null) {
-                      setDialogState(() => calvingDate = picked);
+                    if (pickedDate != null) {
+                      final pickedTime = await showTimePicker(
+                        context: ctx,
+                        initialTime: TimeOfDay.fromDateTime(calvingDate),
+                      );
+                      if (pickedTime != null) {
+                        setDialogState(() {
+                          calvingDate = DateTime(
+                            pickedDate.year,
+                            pickedDate.month,
+                            pickedDate.day,
+                            pickedTime.hour,
+                            pickedTime.minute,
+                          );
+                        });
+                      }
                     }
                   },
                 ),
@@ -404,7 +482,17 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                             ref
                                 .read(cowDetailProvider.notifier)
                                 .addBreedingRecord(record);
+                            
+                            final result = calvingResult;
                             Navigator.pop(ctx);
+
+                            if (result == 'คลอดปกติ' || result == 'แฝด') {
+                              Future.delayed(const Duration(milliseconds: 300), () {
+                                if (mounted) {
+                                  _showAddCalfPrompt(record);
+                                }
+                              });
+                            }
                           },
                     child: const Text('บันทึก'),
                   ),
@@ -413,6 +501,63 @@ class _BreedTabState extends ConsumerState<BreedTab> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showAddCalfPrompt(BreedingRecord record) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.child_care, color: Colors.teal),
+            SizedBox(width: 8),
+            Text('ลงทะเบียนลูกวัวแรกเกิด'),
+          ],
+        ),
+        content: const Text(
+          'บันทึกการคลอดสำเร็จเรียบร้อยแล้ว!\nคุณต้องการย้ายไปหน้าลงทะเบียนเพิ่มข้อมูลลูกวัวตัวใหม่ในระบบทันทีเลยหรือไม่?',
+        ),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: const Text('ไว้ทีหลัง'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    context.push(
+                      '/add_cow',
+                      extra: {
+                        'mother_id': widget.cow.id,
+                        'father_id': record.sireId,
+                        'breed_id': widget.cow.breed,
+                        'birth_date': record.calvingDate ?? DateTime.now(),
+                        'type': CowType.calf,
+                      },
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: const Text('ลงทะเบียนลูกวัว'),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -584,19 +729,23 @@ class _BreedTabState extends ConsumerState<BreedTab> {
       return const Center(child: CircularProgressIndicator());
     }
 
+    final isMale = widget.cow.gender == 'M';
+
     return Stack(
       children: [
         ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
           children: [
-            _buildCurrentStatusCard(context, records),
-            const SizedBox(height: 16),
-            _buildSummaryCard(context, records),
-            const SizedBox(height: 24),
+            if (!isMale) ...[
+              _buildCurrentStatusCard(context, records),
+              const SizedBox(height: 16),
+              _buildSummaryCard(context, records),
+              const SizedBox(height: 24),
+            ],
             Row(
               children: [
                 Text(
-                  'ประวัติการผสมพันธุ์',
+                  isMale ? 'ประวัติการทำหน้าที่พ่อพันธุ์' : 'ประวัติการผสมพันธุ์',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -613,16 +762,16 @@ class _BreedTabState extends ConsumerState<BreedTab> {
             ),
             const SizedBox(height: 12),
             if (records.isEmpty)
-              const Center(
+              Center(
                 child: Padding(
-                  padding: EdgeInsets.all(32),
+                  padding: const EdgeInsets.all(32),
                   child: Column(
                     children: [
-                      Icon(Icons.pets_outlined, size: 48, color: Colors.grey),
-                      SizedBox(height: 16),
+                      const Icon(Icons.pets_outlined, size: 48, color: Colors.grey),
+                      const SizedBox(height: 16),
                       Text(
-                        'ยังไม่มีประวัติการผสมพันธุ์',
-                        style: TextStyle(color: AppColors.textSecondary),
+                        isMale ? 'ยังไม่มีประวัติการผสมกับแม่พันธุ์' : 'ยังไม่มีประวัติการผสมพันธุ์',
+                        style: const TextStyle(color: AppColors.textSecondary),
                       ),
                     ],
                   ),
@@ -632,15 +781,16 @@ class _BreedTabState extends ConsumerState<BreedTab> {
               ...records.map((r) => _buildBreedingCard(r)),
           ],
         ),
-        Positioned(
-          bottom: 16,
-          right: 16,
-          child: FloatingActionButton(
-            onPressed: _showMenu,
-            backgroundColor: AppColors.primary,
-            child: const Icon(Icons.add, color: Colors.white),
+        if (!isMale)
+          Positioned(
+            bottom: 16,
+            right: 16,
+            child: FloatingActionButton(
+              onPressed: _showMenu,
+              backgroundColor: AppColors.primary,
+              child: const Icon(Icons.add, color: Colors.white),
+            ),
           ),
-        ),
       ],
     );
   }
@@ -888,13 +1038,71 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                       label: 'พ่อพันธุ์: $sireId',
                     ),
                   ],
-                  if (detail != null) ...[
-                    const SizedBox(height: 8),
-                    _buildInfoChip(
-                      icon: Icons.lightbulb_outline,
-                      label: detail,
-                      fullWidth: true,
-                    ),
+                   if (detail != null) ...[
+                    const SizedBox(height: 12),
+                    if (title == 'รอคลอด')
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: color.withOpacity(0.15),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.child_care,
+                                color: color,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'กำหนดคลอดโดยประมาณ',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: color.withOpacity(0.8),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    detail.replaceAll('คลอดประมาณ: ', ''),
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: color,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      _buildInfoChip(
+                        icon: Icons.lightbulb_outline,
+                        label: detail,
+                        fullWidth: true,
+                      ),
                   ],
                 ],
               ),
@@ -1005,7 +1213,88 @@ class _BreedTabState extends ConsumerState<BreedTab> {
     );
   }
 
+  void _confirmDelete(BreedingRecord record) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('ยืนยันการลบ'),
+        content: const Text('คุณต้องการลบข้อมูลประวัติการผสมพันธุ์นี้ใช่หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('ยกเลิก'),
+          ),
+          TextButton(
+            onPressed: () {
+              ref.read(cowDetailProvider.notifier).deleteBreedingRecord(record.id);
+              Navigator.pop(ctx);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('ลบ'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBreedingCard(BreedingRecord record) {
+    final isMale = widget.cow.gender == 'M';
+
+    if (isMale) {
+      final stageColor = record.pregnancyResult == 'ตั้งท้อง'
+          ? Colors.green
+          : record.pregnancyResult == 'ไม่ตั้งท้อง'
+          ? Colors.red
+          : Colors.orange;
+
+      return Card(
+        margin: const EdgeInsets.only(bottom: 12),
+        child: ListTile(
+          leading: CircleAvatar(
+            backgroundColor: stageColor.withOpacity(0.1),
+            child: Icon(Icons.female, color: stageColor),
+          ),
+          title: Text(
+            'ผสมกับแม่พันธุ์: ${record.damId}',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (record.matingDate != null)
+                Text(
+                  'วันที่ผสม: ${DateFormat('dd/MM/yyyy HH:mm น.').format(record.matingDate!)}',
+                ),
+              Text(
+                'ผลตรวจท้อง: ${record.pregnancyResult ?? "รอตรวจ"}',
+                style: TextStyle(color: stageColor, fontWeight: FontWeight.bold),
+              ),
+              if (record.calvingDate != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  'คลอดจริง: ${DateFormat('dd/MM/yyyy HH:mm น.').format(record.calvingDate!)}',
+                  style: TextStyle(
+                    color: !['แท้ง', 'ลูกตาย'].contains(record.calvingResult)
+                        ? Colors.teal
+                        : Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'ผลการคลอด: ${record.calvingResult}',
+                  style: TextStyle(
+                    color: !['แท้ง', 'ลูกตาย'].contains(record.calvingResult)
+                        ? Colors.teal
+                        : Colors.red,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
+
     final stage = record.pregnancyResult != null
         ? 'ตรวจท้อง: ${record.pregnancyResult}'
         : record.matingDate != null
@@ -1033,16 +1322,20 @@ class _BreedTabState extends ConsumerState<BreedTab> {
           stage,
           style: TextStyle(fontWeight: FontWeight.bold, color: stageColor),
         ),
+        trailing: IconButton(
+          icon: Icon(Icons.delete_outline, color: Colors.red[300]),
+          onPressed: () => _confirmDelete(record),
+        ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (record.heatDate != null)
               Text(
-                'เป็นสัด: ${DateFormat('dd/MM/yyyy').format(record.heatDate!)}',
+                'เป็นสัด: ${DateFormat('dd/MM/yyyy HH:mm น.').format(record.heatDate!)}',
               ),
             if (record.matingDate != null)
               Text(
-                'ผสม: ${DateFormat('dd/MM/yyyy').format(record.matingDate!)} พ่อ: ${record.sireId ?? '-'}',
+                'ผสม: ${DateFormat('dd/MM/yyyy HH:mm น.').format(record.matingDate!)} พ่อ: ${record.sireId ?? '-'}',
               ),
             if (record.expectedCalving != null)
               Text(
@@ -1051,7 +1344,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
             if (record.calvingDate != null) ...[
               const SizedBox(height: 4),
               Text(
-                'คลอดจริง: ${DateFormat('dd/MM/yyyy').format(record.calvingDate!)}',
+                'คลอดจริง: ${DateFormat('dd/MM/yyyy HH:mm น.').format(record.calvingDate!)}',
                 style: TextStyle(
                   color: !['แท้ง', 'ลูกตาย'].contains(record.calvingResult)
                       ? Colors.teal
@@ -1067,6 +1360,33 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                       : Colors.red,
                 ),
               ),
+              if (record.calfId == null && (record.calvingResult == 'คลอดปกติ' || record.calvingResult == 'แฝด')) ...[
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 32,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      context.push(
+                        '/add_cow',
+                        extra: {
+                          'mother_id': widget.cow.id,
+                          'father_id': record.sireId,
+                          'breed_id': widget.cow.breed,
+                          'birth_date': record.calvingDate,
+                          'type': CowType.calf,
+                        },
+                      );
+                    },
+                    icon: const Icon(Icons.add, size: 14),
+                    label: const Text('ลงทะเบียนลูกวัว', style: TextStyle(fontSize: 11)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.teal,
+                      side: const BorderSide(color: Colors.teal),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ],
         ),

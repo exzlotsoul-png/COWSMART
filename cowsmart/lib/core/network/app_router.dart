@@ -108,7 +108,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/add_cow',
-        builder: (context, state) => const AddCowScreen(),
+        builder: (context, state) {
+          final initData = state.extra as Map<String, dynamic>?;
+          return AddCowScreen(initialData: initData);
+        },
       ),
       GoRoute(
         path: '/cow_detail',

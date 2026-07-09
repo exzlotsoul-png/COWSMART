@@ -12,7 +12,12 @@ class BreedingRecordController extends Controller
     {
         $query = BreedingRecord::query();
         if ($request->has('cow_id')) {
-            $query->where('dam_id', $request->cow_id);
+            $cow = \App\Models\Cow::find($request->cow_id);
+            if ($cow && $cow->gender === 'M') {
+                $query->where('sire_id', $request->cow_id);
+            } else {
+                $query->where('dam_id', $request->cow_id);
+            }
         }
         return response()->json($query->orderBy('created_at', 'desc')->get());
     }
