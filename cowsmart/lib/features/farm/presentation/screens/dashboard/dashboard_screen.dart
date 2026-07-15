@@ -577,7 +577,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           icon: Icons.delete_sweep_outlined,
           label: 'คัดทิ้งกลุ่ม',
           color: AppColors.error,
-          onTap: () => context.push('/culling_history'),
+          onTap: () => context.push('/group_cull'),
         ),
         _buildActionCard(
           context,

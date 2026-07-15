@@ -1,3 +1,5 @@
+import 'cow.dart';
+
 class CullingRecord {
   final String id;
   final String cowId;
@@ -5,6 +7,7 @@ class CullingRecord {
   final int status; // 0=Sold, 1=Deceased, 2=Removed
   final double price;
   final String note;
+  final Cow? cow; // Nested cow object from backend index eager loading
 
   CullingRecord({
     required this.id,
@@ -13,6 +16,7 @@ class CullingRecord {
     required this.status,
     this.price = 0.0,
     this.note = '',
+    this.cow,
   });
 
   String get statusLabel {
@@ -36,6 +40,7 @@ class CullingRecord {
       status: int.tryParse(json['status'].toString()) ?? 0,
       price: double.tryParse(json['price']?.toString() ?? '0') ?? 0.0,
       note: json['note']?.toString() ?? '',
+      cow: json['cow'] != null ? Cow.fromJson(json['cow']) : null,
     );
   }
 
@@ -47,6 +52,7 @@ class CullingRecord {
       'status': status,
       'price': price,
       'note': note,
+      if (cow != null) 'cow': cow!.toJson(),
     };
   }
 }

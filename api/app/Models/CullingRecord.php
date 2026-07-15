@@ -13,4 +13,9 @@ class CullingRecord extends Model
     protected $keyType = 'string';
     public $incrementing = false;
     protected $guarded = [];
+
+    public function cow()
+    {
+        return $this->belongsTo(Cow::class, 'cow_id', 'cow_id');
+    }
 }

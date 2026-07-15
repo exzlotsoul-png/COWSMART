@@ -555,6 +555,13 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
       case CowStatus.sold:
         bgColor = AppColors.textHint;
         break;
+      case CowStatus.deceased:
+        bgColor = AppColors.error;
+        break;
+      case CowStatus.removed:
+        bgColor = AppColors.warning;
+        textColor = AppColors.textPrimary;
+        break;
     }
 
     return Container(

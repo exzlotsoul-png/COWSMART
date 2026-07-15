@@ -237,6 +237,56 @@ class CowNotifier extends Notifier<CowState> {
     }
   }
 
+  Future<void> restoreCulledCow(String cullingRecordId, Cow cow) async {
+    state = state.copyWith(
+      isLoading: true,
+      errorMessage: null,
+      isSuccess: false,
+    );
+    try {
+      print('[RESTORE] กำลังกู้คืนวัว: ${cow.tagNumber}...');
+      await _api.delete('/culling_records/$cullingRecordId');
+
+      final restoredCow = cow.copyWith(status: CowStatus.normal);
+
+      print('[SUCCESS] กู้คืนวัวสำเร็จ');
+      state = state.copyWith(
+        allCows: [...state.allCows, restoredCow],
+        isLoading: false,
+        isSuccess: true,
+      );
+    } catch (e) {
+      print('[ERROR] กู้คืนวัวไม่สำเร็จ: $e');
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+    }
+  }
+
+  Future<void> cullCowsGroup(List<CullingRecord> records) async {
+    state = state.copyWith(
+      isLoading: true,
+      errorMessage: null,
+      isSuccess: false,
+    );
+    try {
+      print('[CREATE] กำลังบันทึกการคัดทิ้งแบบกลุ่ม: ${records.length} ตัว...');
+      final payload = {
+        'records': records.map((r) => r.toJson()).toList(),
+      };
+      await _api.post('/culling_records', data: payload);
+
+      print('[SUCCESS] บันทึกการคัดทิ้งแบบกลุ่มสำเร็จ');
+      final recordCowIds = records.map((r) => r.cowId).toSet();
+      state = state.copyWith(
+        allCows: state.allCows.where((c) => !recordCowIds.contains(c.id)).toList(),
+        isLoading: false,
+        isSuccess: true,
+      );
+    } catch (e) {
+      print('[ERROR] บันทึกการคัดทิ้งแบบกลุ่มไม่สำเร็จ: $e');
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+    }
+  }
+
   Future<void> deleteCow(String cowId) async {
     state = state.copyWith(
       isLoading: true,

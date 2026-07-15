@@ -19,7 +19,11 @@ class CowController extends Controller
 
         $userFarmIds = Farm::where('email', $user->email)->pluck('farm_id');
 
-        $query = Cow::query()->whereIn('farm_id', $userFarmIds);
+        $query = Cow::query()->whereIn('farm_id', $userFarmIds)
+            ->where(function ($q) {
+                $q->whereNotIn('status', ['sold', 'deceased', 'removed'])
+                  ->orWhereNull('status');
+            });
 
         // Allow specific farm filtering if provided
         if ($request->has('farm_id')) {

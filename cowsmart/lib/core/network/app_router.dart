@@ -18,6 +18,7 @@ import '../../features/cow/presentation/screens/cow_detail_screen.dart';
 import '../../features/cow/presentation/screens/edit_cow_screen.dart';
 import '../../features/cow/presentation/screens/cull_cow_screen.dart';
 import '../../features/cow/presentation/screens/culling_history_screen.dart';
+import '../../features/cow/presentation/screens/group_cull_screen.dart';
 import '../../features/finance/presentation/screens/finance_overview_screen.dart';
 import '../../features/market/presentation/screens/market_price_screen.dart';
 import '../../features/notifications/presentation/screens/notification_screen.dart';
@@ -156,6 +157,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/culling_history',
         builder: (context, state) => const CullingHistoryScreen(),
+      ),
+      GoRoute(
+        path: '/group_cull',
+        builder: (context, state) => const GroupCullScreen(),
       ),
     ],
   );

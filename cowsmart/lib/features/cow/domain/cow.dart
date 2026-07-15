@@ -3,7 +3,9 @@ enum CowStatus {
   sick('ป่วย', 'error'),
   pregnant('ตั้งท้อง', 'info'),
   recovering('พักฟื้น', 'warning'),
-  sold('ขายแล้ว', 'secondary');
+  sold('ขายแล้ว', 'secondary'),
+  deceased('ตาย', 'error'),
+  removed('คัดออก', 'warning');
 
   final String label;
   final String colorType;
