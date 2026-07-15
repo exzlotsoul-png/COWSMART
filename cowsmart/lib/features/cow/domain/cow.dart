@@ -36,6 +36,7 @@ class Cow {
   final CowType type;
   final String breed;
   final double latestWeight; // in kg
+  final double purchasePrice; // in THB
   final String? fatherId;
   final String? motherId;
   final CowStatus status;
@@ -53,6 +54,7 @@ class Cow {
     required this.type,
     required this.breed,
     this.latestWeight = 0.0,
+    this.purchasePrice = 0.0,
     this.fatherId,
     this.motherId,
     this.status = CowStatus.normal,
@@ -72,6 +74,7 @@ class Cow {
       type: CowType.fromId(json['cow_type_id'] ?? ''),
       breed: (json['breed_id'] ?? json['breed'] ?? 'Unknown').toString(),
       latestWeight: double.tryParse(json['latest_weight']?.toString() ?? '0') ?? 0.0,
+      purchasePrice: double.tryParse(json['purchase_price']?.toString() ?? '0') ?? 0.0,
       fatherId: json['sire_id'],
       motherId: json['dam_id'],
       status: CowStatus.values.firstWhere((e) => e.name == json['status'], orElse: () => CowStatus.normal),
@@ -93,6 +96,7 @@ class Cow {
       'breed_id': breed,
       'status': status.name,
       'latest_weight': latestWeight,
+      'purchase_price': purchasePrice,
       'image_url': imageUrl,
       'sire_id': fatherId,
       'dam_id': motherId,
@@ -117,6 +121,7 @@ class Cow {
     CowType? type,
     String? breed,
     double? latestWeight,
+    double? purchasePrice,
     String? fatherId,
     String? motherId,
     CowStatus? status,
@@ -133,6 +138,7 @@ class Cow {
       type: type ?? this.type,
       breed: breed ?? this.breed,
       latestWeight: latestWeight ?? this.latestWeight,
+      purchasePrice: purchasePrice ?? this.purchasePrice,
       fatherId: fatherId ?? this.fatherId,
       motherId: motherId ?? this.motherId,
       status: status ?? this.status,

@@ -738,8 +738,6 @@ class _BreedTabState extends ConsumerState<BreedTab> {
           children: [
             if (!isMale) ...[
               _buildCurrentStatusCard(context, records),
-              const SizedBox(height: 16),
-              _buildSummaryCard(context, records),
               const SizedBox(height: 24),
             ],
             Row(

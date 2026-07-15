@@ -38,6 +38,7 @@ class FeedCategory {
 class FeedItem {
   final String id;
   final String farmId;
+  final String? zoneId;
   final String name;
   final FeedCategory category;
   final double quantity; // ปริมาณที่บันทึก
@@ -48,6 +49,7 @@ class FeedItem {
   FeedItem({
     required this.id,
     required this.farmId,
+    this.zoneId,
     required this.name,
     required this.category,
     required this.quantity,
@@ -60,6 +62,7 @@ class FeedItem {
     return FeedItem(
       id: json['feed_inventory_id'] ?? json['id'] ?? '',
       farmId: json['farm_id'] ?? json['farmId'] ?? '',
+      zoneId: json['zone_id'] ?? json['zoneId'],
       name: json['name'] ?? '',
       category: FeedCategory.fromString(json['category'] ?? 'other'),
       quantity:
@@ -76,17 +79,20 @@ class FeedItem {
     return {
       'feed_inventory_id': id.isEmpty ? null : id,
       'farm_id': farmId,
+      'zone_id': zoneId,
       'name': name,
       'category': category.apiValue,
       'stock_quantity': quantity,
       'cost_per_kg': cost,
       'notes': notes,
+      'created_at': recordedAt.toIso8601String(),
     };
   }
 
   FeedItem copyWith({
     String? id,
     String? farmId,
+    String? zoneId,
     String? name,
     FeedCategory? category,
     double? quantity,
@@ -97,6 +103,7 @@ class FeedItem {
     return FeedItem(
       id: id ?? this.id,
       farmId: farmId ?? this.farmId,
+      zoneId: zoneId ?? this.zoneId,
       name: name ?? this.name,
       category: category ?? this.category,
       quantity: quantity ?? this.quantity,

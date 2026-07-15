@@ -32,6 +32,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UnitController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\CowCostController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
@@ -74,6 +75,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('farms', FarmController::class);
     Route::apiResource('zones', ZoneController::class);
     Route::apiResource('cows', CowController::class);
+    Route::get('/cow_costs/{cowId}', [CowCostController::class, 'show']);
     Route::apiResource('growth_records', GrowthRecordController::class);
     Route::apiResource('culling_records', CullingRecordController::class);
     Route::apiResource('health_records', HealthRecordController::class);

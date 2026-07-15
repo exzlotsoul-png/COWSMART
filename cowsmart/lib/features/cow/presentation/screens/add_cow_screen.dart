@@ -28,6 +28,7 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
   final _nameController = TextEditingController();
   final _tagController = TextEditingController();
   final _weightController = TextEditingController();
+  final _purchasePriceController = TextEditingController();
   String? _selectedBreedId;
   String? _selectedZoneId;
   String? _selectedFatherId;
@@ -69,6 +70,7 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
     _nameController.dispose();
     _tagController.dispose();
     _weightController.dispose();
+    _purchasePriceController.dispose();
     super.dispose();
   }
 
@@ -101,6 +103,7 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
 
     try {
       final initialWeight = double.tryParse(_weightController.text) ?? 0.0;
+      final purchasePrice = double.tryParse(_purchasePriceController.text) ?? 0.0;
       final cowId = 'C${DateTime.now().millisecondsSinceEpoch % 1000000}';
 
       final newCow = Cow(
@@ -114,6 +117,7 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
         type: _selectedType,
         breed: _selectedBreedId ?? '',
         latestWeight: initialWeight,
+        purchasePrice: purchasePrice,
         status: _selectedStatus,
         fatherId: _selectedFatherId,
         motherId: _selectedMotherId,
@@ -322,6 +326,27 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                           prefixIcon: Icon(Icons.scale),
                         ),
                       ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _purchasePriceController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'ราคาที่ซื้อมา (บาท)',
+                          prefixIcon: Icon(Icons.payments),
+                          hintText: '0.00',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: SizedBox(), // Placeholder spacer
                     ),
                   ],
                 ),

@@ -26,7 +26,12 @@ class FeedInventoryController extends Controller
         // ID format: F-XXXXXX (1+1+6 = 8 chars, within 10 char limit)
         $data['feed_inventory_id'] = 'F-' . strtoupper(Str::random(6));
         
-        $feedInventory = FeedInventory::create($data);
+        $feedInventory = new FeedInventory($data);
+        if ($request->has('created_at')) {
+            $feedInventory->created_at = $request->created_at;
+        }
+        $feedInventory->save();
+
         return response()->json($feedInventory, 201);
     }
 
@@ -38,7 +43,12 @@ class FeedInventoryController extends Controller
     public function update(Request $request, $id)
     {
         $feedInventory = FeedInventory::findOrFail($id);
-        $feedInventory->update($request->all());
+        $feedInventory->fill($request->all());
+        if ($request->has('created_at')) {
+            $feedInventory->created_at = $request->created_at;
+        }
+        $feedInventory->save();
+
         return response()->json($feedInventory);
     }
 
