@@ -26,6 +26,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _tagController;
+  late TextEditingController _purchasePriceController;
   String? _selectedBreedId;
   String? _selectedZoneId;
   String? _selectedFatherId;
@@ -44,6 +45,9 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
     super.initState();
     _nameController = TextEditingController(text: widget.cow.name);
     _tagController = TextEditingController(text: widget.cow.tagNumber);
+    _purchasePriceController = TextEditingController(
+      text: widget.cow.purchasePrice > 0 ? widget.cow.purchasePrice.toString() : '',
+    );
     _selectedBreedId = widget.cow.breed;
     _selectedDate = widget.cow.birthDate;
     _selectedGender = widget.cow.gender;
@@ -65,6 +69,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
   void dispose() {
     _nameController.dispose();
     _tagController.dispose();
+    _purchasePriceController.dispose();
     super.dispose();
   }
 
@@ -88,6 +93,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
     setState(() => _isSaving = true);
 
     try {
+      final purchasePrice = double.tryParse(_purchasePriceController.text) ?? 0.0;
       final updatedCow = Cow(
         id: widget.cow.id,
         farmId: widget.cow.farmId,
@@ -99,6 +105,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
         type: _selectedType,
         breed: _selectedBreedId ?? widget.cow.breed,
         latestWeight: widget.cow.latestWeight,
+        purchasePrice: purchasePrice,
         status: _selectedStatus,
         fatherId: _selectedFatherId,
         motherId: _selectedMotherId,
@@ -296,7 +303,28 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _purchasePriceController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'ราคาที่ซื้อมา (บาท)',
+                          prefixIcon: Icon(Icons.payments),
+                          hintText: '0.00',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: SizedBox(), // Spacer placeholder
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
 
                 InkWell(
                   onTap: () => _selectDate(context),

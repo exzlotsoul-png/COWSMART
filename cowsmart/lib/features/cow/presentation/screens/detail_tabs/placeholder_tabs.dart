@@ -1419,10 +1419,20 @@ class _CostTabState extends ConsumerState<CostTab> {
   }
 
   Widget _buildFeedDetailCard(Map<String, dynamic> f) {
-    final date = f['feed_date'] ?? '-';
-    final feedType = f['feed_type'] ?? 'อาหาร';
+    final rawDate = f['date'] ?? '-';
+    final feedType = f['type'] ?? 'อาหาร';
     final costPerCow = _parseDouble(f['cost_per_cow']);
     final totalCost = _parseDouble(f['cost']);
+
+    String displayDate = rawDate.toString();
+    if (rawDate != '-') {
+      try {
+        final parsedDate = DateTime.parse(rawDate.toString());
+        displayDate = DateFormat('dd/MM/yyyy').format(parsedDate);
+      } catch (e) {
+        // Fallback to raw string if parsing fails
+      }
+    }
 
     return Card(
       elevation: 1,
@@ -1443,7 +1453,7 @@ class _CostTabState extends ConsumerState<CostTab> {
           children: [
             Icon(Icons.calendar_today, size: 14, color: Colors.grey[500]),
             const SizedBox(width: 4),
-            Text(date, style: TextStyle(fontSize: 13, color: Colors.grey[600], fontWeight: FontWeight.w500)),
+            Text(displayDate, style: TextStyle(fontSize: 13, color: Colors.grey[600], fontWeight: FontWeight.w500)),
             const SizedBox(width: 8),
             Text(
               '(ทั้งโซน ${NumberFormat('#,##0').format(totalCost)} ฿)',

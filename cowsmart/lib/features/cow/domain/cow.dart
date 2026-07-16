@@ -128,6 +128,7 @@ class Cow {
     String? motherId,
     CowStatus? status,
     String? imageUrl,
+    String? imageFullUrl,
   }) {
     return Cow(
       id: id ?? this.id,
@@ -145,6 +146,7 @@ class Cow {
       motherId: motherId ?? this.motherId,
       status: status ?? this.status,
       imageUrl: imageUrl ?? this.imageUrl,
+      imageFullUrl: imageFullUrl ?? this.imageFullUrl,
     );
   }
 }
