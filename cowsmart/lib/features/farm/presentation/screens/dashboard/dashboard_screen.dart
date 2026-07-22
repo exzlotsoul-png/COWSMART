@@ -97,17 +97,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 const Text(
                   'เริ่มต้นด้วยการสร้างฟาร์มใหม่เพื่อจัดการข้อมูลวัวของคุณ',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.textSecondary),
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
                 ),
                 const SizedBox(height: 32),
                 ElevatedButton.icon(
                   onPressed: () => context.push('/create_farm'),
                   icon: const Icon(Icons.add),
-                  label: const Text('สร้างฟาร์มแรกของคุณ'),
+                  label: const Text('สร้างฟาร์มแรกของคุณ', style: TextStyle(fontSize: 16)),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
-                      vertical: 12,
+                      vertical: 14,
                     ),
                   ),
                 ),
@@ -128,20 +128,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       appBar: AppBar(
         title: const Text(
           'COWSMART ฟาร์ม',
-          style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 0.5),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+            fontSize: 20,
+          ),
         ),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
+        toolbarHeight: 60,
         leading: IconButton(
-          icon: const Icon(Icons.swap_horiz_outlined),
+          icon: const Icon(Icons.swap_horiz_outlined, size: 28),
           onPressed: () => context.go('/select-farm'),
           tooltip: 'เปลี่ยนฟาร์ม',
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.calendar_month_outlined),
+            icon: const Icon(Icons.calendar_month_outlined, size: 26),
             onPressed: () => context.push('/calendar'),
             tooltip: 'ปฏิทินกิจกรรม',
           ),
@@ -152,7 +157,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 alignment: Alignment.center,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.notifications_none),
+                    icon: const Icon(Icons.notifications_none, size: 26),
                     onPressed: () => context.push('/notifications'),
                   ),
                   if (unread > 0)
@@ -160,20 +165,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       top: 8,
                       right: 8,
                       child: Container(
-                        padding: const EdgeInsets.all(3),
+                        padding: const EdgeInsets.all(4),
                         decoration: const BoxDecoration(
                           color: Colors.red,
                           shape: BoxShape.circle,
                         ),
                         constraints: const BoxConstraints(
-                          minWidth: 16,
-                          minHeight: 16,
+                          minWidth: 18,
+                          minHeight: 18,
                         ),
                         child: Text(
                           unread > 99 ? '99+' : '$unread',
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 9,
+                            fontSize: 10,
                             fontWeight: FontWeight.bold,
                           ),
                           textAlign: TextAlign.center,
@@ -201,24 +206,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   cowState.allCows.length,
                   totalValue,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
                 // 2. Financial Summary Card
                 _buildFinancialSummary(context, ref),
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
 
                 // 3. Zone Overview List
                 _buildZoneOverview(context, ref),
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
 
                 // 4. Quick Actions (Chatbot, Health, Cull)
-                Text(
+                const Text(
                   'เมนูหลัก',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
                 _buildQuickActions(context),
                 const SizedBox(height: 80), // Padding for bottom nav bar
               ],
@@ -237,26 +244,37 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   ) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
+        gradient: const LinearGradient(
+          colors: [AppColors.surface, Color(0xFFF0EDE4)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: AppColors.border, width: 1),
         boxShadow: [
           BoxShadow(
-            color: AppColors.secondaryDark.withOpacity(0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: AppColors.secondaryDark.withValues(alpha: 0.10),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(18.0),
         child: Row(
           children: [
             Container(
-              width: 85,
-              height: 85,
+              width: 90,
+              height: 90,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.12),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
                 image: DecorationImage(
                   image: farm.imageFullUrl != null && farm.imageFullUrl!.isNotEmpty
                       ? NetworkImage(farm.imageFullUrl!)
@@ -274,25 +292,27 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 children: [
                   Text(
                     farm.name,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
+                      fontSize: 22,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'เจ้าของ: ${farm.ownerEmail}',
                     style: const TextStyle(
-                      fontSize: 11,
+                      fontSize: 14,
                       color: AppColors.textSecondary,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
 
                   // Stats Row
                   Row(
                     children: [
                       _buildMiniStat(context, Icons.pets, '$totalCows ตัว'),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 16),
                       _buildMiniStat(
                         context,
                         Icons.payments_outlined,
@@ -303,10 +323,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ],
               ),
             ),
-            IconButton(
-              icon: const Icon(Icons.settings_outlined),
-              onPressed: () => context.push('/edit_farm', extra: farm),
-              tooltip: 'แก้ไขข้อมูลฟาร์ม',
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.settings_outlined, size: 24),
+                onPressed: () => context.push('/edit_farm', extra: farm),
+                tooltip: 'แก้ไขข้อมูลฟาร์ม',
+                color: AppColors.primary,
+              ),
             ),
           ],
         ),
@@ -325,17 +352,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     return InkWell(
       onTap: () => context.push('/finance'),
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(22),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(22),
         decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 93, 117, 80),
-          borderRadius: BorderRadius.circular(20),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF5D7552), Color(0xFF4A6040)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(22),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primaryDark.withOpacity(0.35),
-              blurRadius: 14,
-              offset: const Offset(0, 6),
+              color: AppColors.primaryDark.withValues(alpha: 0.35),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
@@ -345,41 +376,97 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'สรุปธุรกรรมในฟาร์ม',
-                  style: TextStyle(color: Colors.white70, fontSize: 16),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.account_balance_wallet_outlined, color: Colors.white, size: 22),
+                    ),
+                    const SizedBox(width: 10),
+                    const Text(
+                      'สรุปธุรกรรมในฟาร์ม',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
-                const Icon(
-                  Icons.arrow_forward_ios,
-                  color: Colors.white,
-                  size: 16,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'ดูทั้งหมด',
+                        style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                      ),
+                      SizedBox(width: 4),
+                      Icon(Icons.arrow_forward_ios, color: Colors.white, size: 12),
+                    ],
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             Text(
               '฿ ${formatter.format(balance)}',
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 28,
+                fontSize: 34,
                 fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
               ),
             ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildFinanceMiniStat(
-                  'รายรับ',
-                  '฿${formatter.format(income)}',
-                  const Color.fromARGB(205, 123, 245, 98),
-                ),
-                _buildFinanceMiniStat(
-                  'รายจ่าย',
-                  '฿${formatter.format(expense)}',
-                  const Color.fromARGB(255, 248, 36, 36),
-                ),
-              ],
+            const SizedBox(height: 4),
+            Text(
+              'ยอดคงเหลือเดือนนี้',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.65),
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 18),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _buildFinanceMiniStat(
+                      'รายรับ',
+                      '฿${formatter.format(income)}',
+                      const Color(0xFF7BF562),
+                      Icons.trending_up,
+                    ),
+                  ),
+                  Container(
+                    width: 1,
+                    height: 40,
+                    color: Colors.white.withValues(alpha: 0.2),
+                  ),
+                  Expanded(
+                    child: _buildFinanceMiniStat(
+                      'รายจ่าย',
+                      '฿${formatter.format(expense)}',
+                      const Color(0xFFFF6B6B),
+                      Icons.trending_down,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -387,18 +474,31 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildFinanceMiniStat(String label, String amount, Color color) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildFinanceMiniStat(String label, String amount, Color color, IconData icon) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(label, style: const TextStyle(color: Colors.white70)),
-        Text(
-          amount,
-          style: TextStyle(
-            color: color,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
+        Icon(icon, color: color, size: 20),
+        const SizedBox(width: 8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.7),
+                fontSize: 13,
+              ),
+            ),
+            Text(
+              amount,
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.bold,
+                fontSize: 17,
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -414,49 +514,52 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
+            const Text(
               'โซนในฟาร์ม',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                color: AppColors.textPrimary,
+              ),
             ),
-            TextButton(
+            TextButton.icon(
               onPressed: () {
                 context.push('/create_zone');
               },
-              child: const Text('จัดการโซน'),
+              icon: const Icon(Icons.tune, size: 18),
+              label: const Text('จัดการโซน', style: TextStyle(fontSize: 15)),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         zoneState.isLoading
             ? Container(
-                height: 100,
+                height: 120,
                 decoration: BoxDecoration(
                   color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(18),
                   border: Border.all(color: AppColors.border),
                 ),
                 child: const Center(child: CircularProgressIndicator()),
               )
             : zones.isEmpty
             ? Container(
-                height: 100,
+                height: 120,
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(18),
                   border: Border.all(color: AppColors.border),
                 ),
                 child: const Center(
                   child: Text(
                     'ยังไม่มีข้อมูลโซน',
-                    style: TextStyle(color: AppColors.textSecondary),
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
                   ),
                 ),
               )
             : SizedBox(
-                height: 110,
+                height: 130,
                 child: ScrollConfiguration(
                   behavior: ScrollConfiguration.of(context).copyWith(
                     dragDevices: {
@@ -471,34 +574,34 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         return InkWell(
                           onTap: () =>
                               context.push('/zone_detail', extra: zone),
-                          borderRadius: BorderRadius.circular(18),
+                          borderRadius: BorderRadius.circular(20),
                           child: Container(
-                            width: 130,
-                            margin: const EdgeInsets.only(right: 12),
+                            width: 140,
+                            margin: const EdgeInsets.only(right: 14),
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 8,
+                              horizontal: 14,
+                              vertical: 12,
                             ),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
                                   AppColors.surface,
-                                  const Color.fromARGB(255, 248, 244, 238),
+                                  const Color(0xFFF5F0E6),
                                 ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
-                              borderRadius: BorderRadius.circular(18),
+                              borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: AppColors.primary.withOpacity(0.2),
+                                color: AppColors.primary.withValues(alpha: 0.2),
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.secondaryDark.withOpacity(
-                                    0.08,
+                                  color: AppColors.secondaryDark.withValues(
+                                    alpha: 0.10,
                                   ),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
                                 ),
                               ],
                             ),
@@ -506,33 +609,33 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.all(6),
+                                  padding: const EdgeInsets.all(10),
                                   decoration: BoxDecoration(
-                                    color: AppColors.primary.withOpacity(0.12),
+                                    color: AppColors.primary.withValues(alpha: 0.12),
                                     shape: BoxShape.circle,
                                   ),
                                   child: const Icon(
                                     Icons.grass,
                                     color: AppColors.primary,
-                                    size: 18,
+                                    size: 24,
                                   ),
                                 ),
-                                const SizedBox(height: 4),
+                                const SizedBox(height: 8),
                                 Text(
                                   zone.name,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: AppColors.textPrimary,
-                                    fontSize: 12,
+                                    fontSize: 15,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                const SizedBox(height: 1),
+                                const SizedBox(height: 3),
                                 Text(
                                   '${zone.cowCount} ตัว',
                                   style: const TextStyle(
-                                    fontSize: 11,
+                                    fontSize: 14,
                                     color: AppColors.textSecondary,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -557,6 +660,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 14,
       crossAxisSpacing: 14,
+      childAspectRatio: 0.9,
       children: [
         _buildActionCard(
           context,
@@ -575,7 +679,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         _buildActionCard(
           context,
           icon: Icons.delete_sweep_outlined,
-          label: 'คัดทิ้งกลุ่ม',
+          label: 'จำหน่าย/คัดออก',
           color: AppColors.error,
           onTap: () => context.push('/group_cull'),
         ),
@@ -613,17 +717,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: color.withOpacity(0.25), width: 1.5),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withValues(alpha: 0.25), width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.12),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
+              color: color.withValues(alpha: 0.12),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -631,22 +735,27 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.15),
+                color: color.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: color, size: 26),
+              child: Icon(icon, color: color, size: 30),
             ),
-            const SizedBox(height: 10),
-            Text(
-              label,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -655,19 +764,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Widget _buildMiniStat(BuildContext context, IconData icon, String label) {
-    return Row(
-      children: [
-        Icon(icon, size: 14, color: AppColors.primary),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: AppColors.primary),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

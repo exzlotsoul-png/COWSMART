@@ -25,17 +25,25 @@ final _cullingHistoryProvider = FutureProvider.autoDispose<List<CullingRecord>>(
   },
 );
 
-class CullingHistoryScreen extends ConsumerWidget {
+class CullingHistoryScreen extends ConsumerStatefulWidget {
   const CullingHistoryScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CullingHistoryScreen> createState() => _CullingHistoryScreenState();
+}
+
+class _CullingHistoryScreenState extends ConsumerState<CullingHistoryScreen> {
+  CowType? _filterCowType;
+
+  @override
+  Widget build(BuildContext context) {
     final asyncData = ref.watch(_cullingHistoryProvider);
+    final allCows = ref.watch(cowProvider).allCows;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('ประวัติการคัดทิ้ง'),
+        title: const Text('ประวัติการจำหน่ายและคัดออก'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -68,7 +76,7 @@ class CullingHistoryScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    'ยังไม่มีประวัติการคัดทิ้ง',
+                    'ยังไม่มีประวัติการจำหน่ายและคัดออก',
                     style: TextStyle(
                       fontSize: 16,
                       color: AppColors.textSecondary,
@@ -79,6 +87,12 @@ class CullingHistoryScreen extends ConsumerWidget {
             );
           }
 
+          final filteredRecords = records.where((r) {
+            if (_filterCowType == null) return true;
+            final cow = r.cow ?? allCows.cast<Cow?>().firstWhere((c) => c?.id == r.cowId, orElse: () => null);
+            return cow?.type == _filterCowType;
+          }).toList();
+
           final sold = records.where((r) => r.status == 0).length;
           final dead = records.where((r) => r.status == 1).length;
           final removed = records.where((r) => r.status == 2).length;
@@ -86,24 +100,62 @@ class CullingHistoryScreen extends ConsumerWidget {
           return Column(
             children: [
               _buildSummaryBar(context, records.length, sold, dead, removed),
-              Expanded(
-                child: ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: records.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
-                  itemBuilder: (context, index) {
-                    final r = records[index];
-                    final cow = ref
-                        .read(cowProvider)
-                        .allCows
-                        .cast<Cow?>()
-                        .firstWhere(
-                          (c) => c?.id == r.cowId,
-                          orElse: () => null,
-                        );
-                    return _CullingCard(record: r, cow: cow);
-                  },
+              const SizedBox(height: 8),
+              // Cow Type Filter Chips
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    ChoiceChip(
+                      label: const Text('ประเภท: ทั้งหมด'),
+                      selected: _filterCowType == null,
+                      selectedColor: AppColors.primary.withValues(alpha: 0.2),
+                      onSelected: (selected) {
+                        if (selected) setState(() => _filterCowType = null);
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    ...CowType.values.map((type) {
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ChoiceChip(
+                          label: Text(type.label),
+                          selected: _filterCowType == type,
+                          selectedColor: AppColors.primary.withValues(alpha: 0.2),
+                          onSelected: (selected) {
+                            setState(() {
+                              _filterCowType = selected ? type : null;
+                            });
+                          },
+                        ),
+                      );
+                    }),
+                  ],
                 ),
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: filteredRecords.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'ไม่พบประวัติการจำหน่ายและคัดออกในประเภทนี้',
+                          style: TextStyle(color: AppColors.textSecondary),
+                        ),
+                      )
+                    : ListView.separated(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: filteredRecords.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final r = filteredRecords[index];
+                          final cow = allCows.cast<Cow?>().firstWhere(
+                                (c) => c?.id == r.cowId,
+                                orElse: () => null,
+                              );
+                          return _CullingCard(record: r, cow: cow);
+                        },
+                      ),
               ),
             ],
           );
@@ -137,15 +189,15 @@ class CullingHistoryScreen extends ConsumerWidget {
           ),
           const SizedBox(width: 8),
           _SummaryChip(
-            label: 'ตาย',
-            value: '$dead ตัว',
-            color: AppColors.error,
-          ),
-          const SizedBox(width: 8),
-          _SummaryChip(
             label: 'คัดออก',
             value: '$removed ตัว',
             color: AppColors.warning,
+          ),
+          const SizedBox(width: 8),
+          _SummaryChip(
+            label: 'ตาย',
+            value: '$dead ตัว',
+            color: AppColors.error,
           ),
         ],
       ),
@@ -387,7 +439,7 @@ class _CullingCard extends ConsumerWidget {
                 ),
               ],
             ),
-            if (displayCow != null) ...[
+            if (displayCow != null && record.status != 1) ...[
               const SizedBox(height: 10),
               const Divider(height: 1, color: AppColors.border),
               const SizedBox(height: 4),

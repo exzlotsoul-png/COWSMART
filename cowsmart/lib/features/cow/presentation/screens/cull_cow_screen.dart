@@ -116,7 +116,7 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('บันทึกการคัดทิ้ง')),
+      appBar: AppBar(title: const Text('บันทึกการจำหน่ายและคัดออก')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppConstants.defaultPadding),
         child: Form(
@@ -162,7 +162,7 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
 
               // Cull Type Selection
               Text(
-                'รูปแบบการคัดทิ้ง',
+                'รูปแบบการจำหน่าย/คัดออก',
                 style: Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),

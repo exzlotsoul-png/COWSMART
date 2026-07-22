@@ -44,15 +44,26 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen> {
           headerSliverBuilder: (context, innerBoxIsScrolled) {
             return [
               SliverAppBar(
-                expandedHeight: 250,
+                expandedHeight: 280,
                 pinned: true,
-                title: Text(currentCow.tagNumber),
+                title: Text(
+                  '${currentCow.name} (${currentCow.tagNumber})',
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
                 actions: [
-                  IconButton(
-                    icon: const Icon(Icons.edit),
-                    onPressed: () {
-                      context.push('/edit_cow', extra: currentCow);
-                    },
+                  Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.edit, size: 22),
+                      onPressed: () {
+                        context.push('/edit_cow', extra: currentCow);
+                      },
+                      tooltip: 'แก้ไขข้อมูล',
+                    ),
                   ),
                 ],
                 flexibleSpace: FlexibleSpaceBar(
@@ -65,17 +76,26 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen> {
                               fit: BoxFit.cover,
                             )
                           : Container(
-                              color: AppColors.primary.withOpacity(0.1),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    AppColors.primary.withValues(alpha: 0.15),
+                                    AppColors.primaryLight.withValues(alpha: 0.08),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                              ),
                               child: const Center(
-                                child: Icon(Icons.pets, size: 80, color: AppColors.textHint),
+                                child: Icon(Icons.pets, size: 90, color: AppColors.textHint),
                               ),
                             ),
-                      // Add a dark gradient at the top so the AppBar text is readable
+                      // Dark gradient at top
                       const Positioned(
                         top: 0,
                         left: 0,
                         right: 0,
-                        height: 100,
+                        height: 110,
                         child: DecoratedBox(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
@@ -86,12 +106,12 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen> {
                           ),
                         ),
                       ),
-                      // Add a dark gradient at the bottom so the TabBar text is readable
+                      // Dark gradient at bottom
                       const Positioned(
                         bottom: 0,
                         left: 0,
                         right: 0,
-                        height: 80,
+                        height: 90,
                         child: DecoratedBox(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
@@ -108,9 +128,16 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen> {
                 bottom: const TabBar(
                   isScrollable: true,
                   indicatorColor: Colors.white,
+                  indicatorWeight: 3,
                   labelColor: Colors.white,
                   unselectedLabelColor: Colors.white70,
-                  labelStyle: TextStyle(fontWeight: FontWeight.bold),
+                  labelStyle: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                  unselectedLabelStyle: TextStyle(
+                    fontSize: 14,
+                  ),
                   tabs: [
                     Tab(text: 'ข้อมูลทั่วไป'),
                     Tab(text: 'สุขภาพ'),

@@ -168,6 +168,20 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
               print('[ERROR] บันทึกน้ำหนักเริ่มต้นไม่สำเร็จ: $e');
             }
           }
+
+          // Link calf_id back to breeding record if registered from breeding tab
+          if (widget.initialData?['breeding_record_id'] != null) {
+            try {
+              final api = ref.read(apiClientProvider);
+              final breedingRecordId = widget.initialData!['breeding_record_id'];
+              await api.put('/breeding_records/$breedingRecordId', data: {
+                'calf_id': createdCow.id,
+              });
+              print('[SUCCESS] ผูกลูกวัว ID ${createdCow.id} กับประวัติผสมพันธุ์ $breedingRecordId สำเร็จ');
+            } catch (e) {
+              print('[ERROR] อัปเดต calf_id ใน breeding_record ไม่สำเร็จ: $e');
+            }
+          }
         }
 
         if (mounted) {
@@ -250,7 +264,7 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                       child: TextFormField(
                         controller: _tagController,
                         decoration: const InputDecoration(
-                          labelText: 'หมายเลข (เบอร์หู)',
+                          labelText: 'หมายเลขประจำตัว (Tag/NFC)',
                           prefixIcon: Icon(Icons.tag),
                         ),
                         validator: (value) => value == null || value.isEmpty

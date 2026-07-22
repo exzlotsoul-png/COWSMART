@@ -46,6 +46,14 @@ class CowController extends Controller
         }
 
         $data = $request->all();
+
+        if (isset($data['cow_type_id']) && !empty($data['cow_type_id'])) {
+            \App\Models\CowType::firstOrCreate(
+                ['cow_type_id' => $data['cow_type_id']],
+                ['cow_type_name' => $data['cow_type_id'] == 'T004' ? 'ลูกวัว' : $data['cow_type_id']]
+            );
+        }
+
         // Generate unique cow_id (max 10 chars)
         $data['cow_id'] = 'C-' . substr(md5(uniqid(mt_rand(), true)), 0, 8);
 

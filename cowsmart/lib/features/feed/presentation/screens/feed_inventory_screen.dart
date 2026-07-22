@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
 import 'package:cowsmart/features/feed/providers/feed_provider.dart';
 import 'package:cowsmart/features/feed/domain/feed.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
+import 'package:cowsmart/features/farm/domain/zone.dart';
 
 /// หน้าบันทึกคลังอาหารอย่างง่าย - ไม่มีระบบสต็อกอัตโนมัติ
 class FeedInventoryScreen extends ConsumerStatefulWidget {
@@ -17,9 +19,6 @@ class FeedInventoryScreen extends ConsumerStatefulWidget {
 }
 
 class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
-  DateTime? _filterStartDate;
-  DateTime? _filterEndDate;
-  String? _filterCategory;
 
   @override
   void initState() {
@@ -33,30 +32,6 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
     });
   }
 
-  List<FeedItem> _applyFilters(List<FeedItem> items) {
-    var filtered = items.toList();
-    if (_filterStartDate != null) {
-      filtered = filtered
-          .where((item) =>
-              !item.recordedAt.isBefore(DateTime(_filterStartDate!.year, _filterStartDate!.month, _filterStartDate!.day)))
-          .toList();
-    }
-    if (_filterEndDate != null) {
-      final endOfDay = DateTime(_filterEndDate!.year, _filterEndDate!.month, _filterEndDate!.day, 23, 59, 59);
-      filtered = filtered
-          .where((item) => !item.recordedAt.isAfter(endOfDay))
-          .toList();
-    }
-    if (_filterCategory != null) {
-      filtered = filtered
-          .where((item) => item.category.apiValue == _filterCategory)
-          .toList();
-    }
-    // Sort from newest to oldest
-    filtered.sort((a, b) => b.recordedAt.compareTo(a.recordedAt));
-    return filtered;
-  }
-
   @override
   Widget build(BuildContext context) {
     final feedState = ref.watch(feedProvider);
@@ -64,7 +39,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'บันทึกคลังอาหาร',
+          'อาหาร',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: AppColors.primary,
@@ -92,14 +67,13 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
     }
 
     final allItems = state.inventory;
-    final filteredItems = _applyFilters(allItems);
 
-    // Calculate totals for filtered items
-    final totalQuantity = filteredItems.fold<double>(
+    // Calculate totals for all items
+    final totalQuantity = allItems.fold<double>(
       0,
       (sum, item) => sum + item.quantity,
     );
-    final totalCost = filteredItems.fold<double>(
+    final totalCost = allItems.fold<double>(
       0,
       (sum, item) => sum + item.cost,
     );
@@ -107,7 +81,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
     // Category breakdown from all items
     final categoryMap = <String, double>{};
     final categoryCostMap = <String, double>{};
-    for (final item in filteredItems) {
+    for (final item in allItems) {
       final catName = item.category.name;
       categoryMap[catName] = (categoryMap[catName] ?? 0) + item.quantity;
       categoryCostMap[catName] = (categoryCostMap[catName] ?? 0) + item.cost;
@@ -122,7 +96,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
             Expanded(
               child: _buildSummaryCard(
                 title: 'รายการทั้งหมด',
-                value: '${filteredItems.length} รายการ',
+                value: '${allItems.length} รายการ',
                 icon: Icons.list_alt,
                 color: Colors.deepPurple,
               ),
@@ -179,206 +153,62 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
           const SizedBox(height: 20),
         ],
 
-        // Date Filter
-        _buildDateFilter(context),
-        const SizedBox(height: 16),
-
         // Feed List Header
         Row(
           children: [
             Text(
-              'รายการอาหาร',
+              'ประวัติการให้อาหาร',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: AppColors.textPrimary,
               ),
             ),
             const Spacer(),
-            Text(
-              '${filteredItems.length} รายการ',
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 13,
-              ),
+            TextButton.icon(
+              onPressed: () => context.push('/feed_history'),
+              icon: const Icon(Icons.history, size: 16),
+              label: const Text('ดูประวัติทั้งหมด', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
 
-        if (filteredItems.isEmpty)
+        if (allItems.isEmpty)
           Center(
             child: Padding(
               padding: const EdgeInsets.all(32),
               child: Column(
                 children: [
-                  Icon(Icons.search_off, size: 48, color: Colors.grey[400]),
+                  Icon(Icons.inventory_2_outlined, size: 48, color: Colors.grey[400]),
                   const SizedBox(height: 16),
                   const Text(
-                    'ไม่พบรายการอาหารในช่วงวันที่เลือก',
+                    'ยังไม่มีบันทึกประวัติการให้อาหาร',
                     style: TextStyle(color: AppColors.textSecondary),
-                  ),
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _filterStartDate = null;
-                        _filterEndDate = null;
-                        _filterCategory = null;
-                      });
-                    },
-                    child: const Text('ล้างตัวกรอง'),
                   ),
                 ],
               ),
             ),
           )
-        else
-          ...filteredItems.map((item) => _buildFeedCard(item)),
+        else ...[
+          ...allItems.take(5).map((item) => _buildFeedCard(item)),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: () => context.push('/feed_history'),
+            icon: const Icon(Icons.arrow_forward, size: 16),
+            label: Text(
+              allItems.length > 5
+                  ? 'ดูประวัติทั้งหมด (${allItems.length} รายการ)'
+                  : 'ดูประวัติและการกรองทั้งหมด',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 46),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              side: const BorderSide(color: AppColors.primary),
+            ),
+          ),
+        ],
       ],
-    );
-  }
-
-  Widget _buildDateFilter(BuildContext context) {
-    return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.filter_alt_outlined, size: 18, color: AppColors.primary),
-                const SizedBox(width: 6),
-                const Text(
-                  'กรองข้อมูล',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const Spacer(),
-                if (_filterStartDate != null || _filterEndDate != null || _filterCategory != null)
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _filterStartDate = null;
-                        _filterEndDate = null;
-                        _filterCategory = null;
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.red[50],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.clear, size: 14, color: Colors.red[400]),
-                          const SizedBox(width: 4),
-                          Text('ล้าง', style: TextStyle(fontSize: 11, color: Colors.red[400])),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: InkWell(
-                    onTap: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: _filterStartDate ?? DateTime.now(),
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime.now().add(const Duration(days: 365)),
-                      );
-                      if (picked != null) setState(() => _filterStartDate = picked);
-                    },
-                    child: InputDecorator(
-                      decoration: const InputDecoration(
-                        labelText: 'ตั้งแต่วันที่',
-                        prefixIcon: Icon(Icons.calendar_today, size: 18),
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        isDense: true,
-                      ),
-                      child: Text(
-                        _filterStartDate != null
-                            ? DateFormat('dd/MM/yyyy').format(_filterStartDate!)
-                            : 'ทั้งหมด',
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                    ),
-                  ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: Text('–', style: TextStyle(color: AppColors.textSecondary)),
-                ),
-                Expanded(
-                  child: InkWell(
-                    onTap: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: _filterEndDate ?? DateTime.now(),
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime.now().add(const Duration(days: 365)),
-                      );
-                      if (picked != null) setState(() => _filterEndDate = picked);
-                    },
-                    child: InputDecorator(
-                      decoration: const InputDecoration(
-                        labelText: 'ถึงวันที่',
-                        prefixIcon: Icon(Icons.calendar_today, size: 18),
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        isDense: true,
-                      ),
-                      child: Text(
-                        _filterEndDate != null
-                            ? DateFormat('dd/MM/yyyy').format(_filterEndDate!)
-                            : 'ทั้งหมด',
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            // Category filter chips
-            Wrap(
-              spacing: 8,
-              children: [
-                _buildFilterChip('ทั้งหมด', null),
-                _buildFilterChip('หญ้า', 'หญ้า'),
-                _buildFilterChip('ข้น', 'ข้น'),
-                _buildFilterChip('เสริม', 'เสริม'),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterChip(String label, String? value) {
-    final isSelected = _filterCategory == value;
-    return ChoiceChip(
-      label: Text(label, style: TextStyle(fontSize: 12, color: isSelected ? Colors.white : AppColors.textPrimary)),
-      selected: isSelected,
-      selectedColor: AppColors.primary,
-      backgroundColor: Colors.grey[100],
-      onSelected: (_) => setState(() => _filterCategory = value),
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      visualDensity: VisualDensity.compact,
     );
   }
 
@@ -506,6 +336,14 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
   }
 
   Widget _buildFeedCard(FeedItem item) {
+    final zones = ref.watch(zoneProvider).zones;
+    final zoneObj = (item.zoneId != null && item.zoneId!.isNotEmpty)
+        ? zones.cast<Zone?>().firstWhere((z) => z?.id == item.zoneId, orElse: () => null)
+        : null;
+    final zoneText = zoneObj != null
+        ? zoneObj.name
+        : (item.zoneId != null && item.zoneId!.isNotEmpty ? item.zoneId! : 'ทุกโซน / ไม่ได้ระบุ');
+
     Color categoryColor;
     IconData categoryIcon;
     switch (item.category.id) {
@@ -559,13 +397,40 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Text(
-                        item.category.name,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: categoryColor,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            item.category.name,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: categoryColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.location_on, size: 12, color: AppColors.primary),
+                                const SizedBox(width: 2),
+                                Text(
+                                  'โซน: $zoneText',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

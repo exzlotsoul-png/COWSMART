@@ -62,12 +62,16 @@ class ImageUploadService {
 
     // Build multipart form data
     final bytes = await imageFile.readAsBytes();
+    final filename = imageFile.name.isNotEmpty && imageFile.name.contains('.') 
+        ? imageFile.name 
+        : 'image_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
     final formData = FormData.fromMap({
       'type': type,
       'entity_id': entityId,
       'image': MultipartFile.fromBytes(
         bytes,
-        filename: imageFile.name,
+        filename: filename,
       ),
     });
 

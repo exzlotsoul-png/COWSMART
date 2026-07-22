@@ -379,7 +379,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   }
 }
 
-class _EventCard extends StatelessWidget {
+class _EventCard extends ConsumerWidget {
   final CalendarEvent event;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -391,7 +391,7 @@ class _EventCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -442,16 +442,25 @@ class _EventCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ],
-            if (event.cowId != null) ...[
+            if (event.cowId != null && event.cowId!.isNotEmpty) ...[
               const SizedBox(height: 4),
-              Row(children: [
-                const Icon(Icons.pets, size: 12, color: AppColors.textHint),
-                const SizedBox(width: 4),
-                Text(
-                  'วัว: ${event.cowId}',
-                  style: const TextStyle(fontSize: 11, color: AppColors.textHint),
-                ),
-              ]),
+              Builder(builder: (context) {
+                final allCows = ref.watch(cowProvider).allCows;
+                final matches = allCows.where((c) => c.id == event.cowId || c.tagNumber == event.cowId || c.name == event.cowId).toList();
+                final cowText = matches.isNotEmpty
+                    ? (matches.first.name.isNotEmpty && matches.first.tagNumber.isNotEmpty && matches.first.name != matches.first.tagNumber
+                        ? '${matches.first.name} (${matches.first.tagNumber})'
+                        : (matches.first.name.isNotEmpty ? matches.first.name : matches.first.tagNumber))
+                    : event.cowId;
+                return Row(children: [
+                  const Icon(Icons.pets, size: 12, color: AppColors.textHint),
+                  const SizedBox(width: 4),
+                  Text(
+                    'วัว: $cowText',
+                    style: const TextStyle(fontSize: 11, color: AppColors.textHint),
+                  ),
+                ]);
+              }),
             ],
             if (event.reminderSetting != null) ...[
               const SizedBox(height: 2),

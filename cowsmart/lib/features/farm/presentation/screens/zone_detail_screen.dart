@@ -279,7 +279,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                             ],
                           ),
                           subtitle: Text(
-                            'เบอร์: ${cow.tagNumber} | ${cow.type.label}',
+                            'แท็ก: ${cow.tagNumber} | ${cow.type.label}',
                           ),
                           secondary: CircleAvatar(
                             backgroundColor: AppColors.primary.withOpacity(0.1),
@@ -538,7 +538,7 @@ class _CowCard extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          'เบอร์: ${cow.tagNumber}',
+                          'แท็ก: ${cow.tagNumber}',
                           style: const TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 12,

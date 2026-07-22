@@ -37,6 +37,7 @@ class DatabaseSeeder extends Seeder
         CowType::create(['cow_type_id' => 'T001', 'cow_type_name' => 'พ่อพันธุ์']);
         CowType::create(['cow_type_id' => 'T002', 'cow_type_name' => 'แม่พันธุ์']);
         CowType::create(['cow_type_id' => 'T003', 'cow_type_name' => 'วัวขุน']);
+        CowType::create(['cow_type_id' => 'T004', 'cow_type_name' => 'ลูกวัว']);
 
         CheckupType::create(['checkup_types_id' => 'CT01', 'type_name' => 'ตรวจสุขภาพประจำปี']);
         CheckupType::create(['checkup_types_id' => 'CT02', 'type_name' => 'ฉีดวัคซีน']);

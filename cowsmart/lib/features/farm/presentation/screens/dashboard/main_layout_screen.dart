@@ -71,7 +71,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
           NavigationDestination(
             icon: Icon(Icons.grass_outlined),
             selectedIcon: Icon(Icons.grass),
-            label: 'คลังอาหาร',
+            label: 'อาหาร',
           ),
           NavigationDestination(
             icon: Icon(Icons.account_circle_outlined),

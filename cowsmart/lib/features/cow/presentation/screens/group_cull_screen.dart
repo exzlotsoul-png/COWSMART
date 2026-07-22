@@ -38,6 +38,7 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
   DateTime _selectedDate = DateTime.now();
   final Set<String> _selectedCowIds = {};
   String _searchQuery = '';
+  CowType? _filterType;
 
   @override
   void dispose() {
@@ -65,7 +66,7 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
     if (_selectedCowIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('กรุณาเลือกวัวอย่างน้อย 1 ตัวที่ต้องการคัดทิ้ง'),
+          content: Text('กรุณาเลือกวัวอย่างน้อย 1 ตัวที่ต้องการจำหน่าย/คัดออก'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -135,21 +136,22 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
   Widget build(BuildContext context) {
     final cowState = ref.watch(cowProvider);
     
-    // Filter active cows by search query
+    // Filter active cows by search query and cow type
     final activeCows = cowState.allCows.where((cow) {
-      if (_searchQuery.isEmpty) return true;
-      final q = _searchQuery.toLowerCase();
-      return cow.name.toLowerCase().contains(q) ||
-          cow.tagNumber.toLowerCase().contains(q);
+      final matchesQuery = _searchQuery.isEmpty ||
+          cow.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          cow.tagNumber.toLowerCase().contains(_searchQuery.toLowerCase());
+      final matchesType = _filterType == null || cow.type == _filterType;
+      return matchesQuery && matchesType;
     }).toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('คัดทิ้งกลุ่ม'),
+        title: const Text('จำหน่าย/คัดออก (กลุ่ม)'),
         actions: [
           IconButton(
             icon: const Icon(Icons.history, color: Colors.white),
-            tooltip: 'ประวัติการคัดทิ้ง',
+            tooltip: 'ประวัติการจำหน่ายและคัดออก',
             onPressed: () => context.push('/culling_history'),
           ),
         ],
@@ -167,7 +169,7 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                   children: [
                     // Cull Type Selection
                     Text(
-                      'รูปแบบการคัดทิ้ง',
+                      'รูปแบบการจำหน่าย/คัดออก',
                       style: Theme.of(context)
                           .textTheme
                           .titleMedium
@@ -253,7 +255,7 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                           padding: EdgeInsets.only(bottom: 24),
                           child: Icon(Icons.note_alt_outlined, size: 20),
                         ),
-                        hintText: 'เช่น คัดทิ้งเนื่องจากอายุมาก, ย้ายออก, ฯลฯ',
+                        hintText: 'เช่น ขาย, คัดออกเนื่องจากอายุมาก, ย้ายออก, ตาย ฯลฯ',
                         alignLabelWithHint: true,
                       ),
                       style: const TextStyle(fontSize: 15),
@@ -265,7 +267,7 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'เลือกวัวที่จะคัดทิ้ง (${_selectedCowIds.length} ตัว)',
+                          'เลือกวัวที่จะจำหน่าย/คัดออก (${_selectedCowIds.length} ตัว)',
                           style: Theme.of(context)
                               .textTheme
                               .titleMedium
@@ -300,11 +302,45 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                     ),
                     const SizedBox(height: 8),
 
+                    // Cow Type Filter Chips
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          ChoiceChip(
+                            label: const Text('ทั้งหมด'),
+                            selected: _filterType == null,
+                            selectedColor: AppColors.primary.withValues(alpha: 0.2),
+                            onSelected: (selected) {
+                              if (selected) setState(() => _filterType = null);
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          ...CowType.values.map((type) {
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: ChoiceChip(
+                                label: Text(type.label),
+                                selected: _filterType == type,
+                                selectedColor: AppColors.primary.withValues(alpha: 0.2),
+                                onSelected: (selected) {
+                                  setState(() {
+                                    _filterType = selected ? type : null;
+                                  });
+                                },
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
                     // Search Bar
                     TextField(
                       controller: _searchController,
                       decoration: InputDecoration(
-                        hintText: 'ค้นหาด้วยชื่อ หรือ เบอร์หู...',
+                        hintText: 'ค้นหาด้วยชื่อ หรือ แท็ก/NFC...',
                         prefixIcon: const Icon(Icons.search, size: 20),
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
@@ -460,8 +496,8 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                       ? const CircularProgressIndicator(color: Colors.white)
                       : Text(
                           _selectedCowIds.isEmpty
-                              ? 'กรุณาเลือกวัวที่ต้องการคัดทิ้ง'
-                              : 'ยืนยันคัดทิ้งวัว ${_selectedCowIds.length} ตัว (${_selectedType.label})',
+                              ? 'กรุณาเลือกวัวที่ต้องการจำหน่าย/คัดออก'
+                              : 'ยืนยันจำหน่าย/คัดออกวัว ${_selectedCowIds.length} ตัว (${_selectedType.label})',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

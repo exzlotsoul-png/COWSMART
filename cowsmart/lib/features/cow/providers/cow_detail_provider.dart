@@ -198,6 +198,58 @@ class CowDetailNotifier extends Notifier<CowDetailState> {
     }
   }
 
+  Future<void> updateGrowthRecord(GrowthRecord record) async {
+    state = state.copyWith(isSaving: true, error: null, isSuccess: false);
+    try {
+      final api = ref.read(apiClientProvider);
+      final response = await api.put('/growth_records/${record.id}', data: record.toJson());
+      final updatedRecord = GrowthRecord.fromJson(response.data);
+
+      final updated = state.growthRecords.map((r) => r.id == record.id ? updatedRecord : r).toList();
+      state = state.copyWith(growthRecords: updated, isSaving: false, isSuccess: true);
+    } catch (e) {
+      state = state.copyWith(isSaving: false, error: e.toString());
+    }
+  }
+
+  Future<void> deleteGrowthRecord(String id) async {
+    state = state.copyWith(isSaving: true, error: null, isSuccess: false);
+    try {
+      final api = ref.read(apiClientProvider);
+      await api.delete('/growth_records/$id');
+      final updated = state.growthRecords.where((r) => r.id != id).toList();
+      state = state.copyWith(growthRecords: updated, isSaving: false, isSuccess: true);
+    } catch (e) {
+      state = state.copyWith(isSaving: false, error: e.toString());
+    }
+  }
+
+  Future<void> updateHealthRecord(HealthRecord record) async {
+    state = state.copyWith(isSaving: true, error: null, isSuccess: false);
+    try {
+      final api = ref.read(apiClientProvider);
+      final response = await api.put('/health_records/${record.id}', data: record.toJson());
+      final updatedRecord = HealthRecord.fromJson(response.data);
+
+      final updated = state.healthRecords.map((r) => r.id == record.id ? updatedRecord : r).toList();
+      state = state.copyWith(healthRecords: updated, isSaving: false, isSuccess: true);
+    } catch (e) {
+      state = state.copyWith(isSaving: false, error: e.toString());
+    }
+  }
+
+  Future<void> deleteHealthRecord(String id) async {
+    state = state.copyWith(isSaving: true, error: null, isSuccess: false);
+    try {
+      final api = ref.read(apiClientProvider);
+      await api.delete('/health_records/$id');
+      final updated = state.healthRecords.where((r) => r.id != id).toList();
+      state = state.copyWith(healthRecords: updated, isSaving: false, isSuccess: true);
+    } catch (e) {
+      state = state.copyWith(isSaving: false, error: e.toString());
+    }
+  }
+
   Future<void> deleteBreedingRecord(String id) async {
     state = state.copyWith(isSaving: true, error: null, isSuccess: false);
     try {

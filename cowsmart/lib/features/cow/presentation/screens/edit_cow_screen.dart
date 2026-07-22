@@ -240,7 +240,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                       child: TextFormField(
                         controller: _tagController,
                         decoration: const InputDecoration(
-                          labelText: 'หมายเลข (เบอร์หู)',
+                          labelText: 'หมายเลขประจำตัว (Tag/NFC)',
                           prefixIcon: Icon(Icons.tag),
                         ),
                         validator: (value) => value == null || value.isEmpty

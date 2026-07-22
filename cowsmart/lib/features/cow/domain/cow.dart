@@ -110,6 +110,31 @@ class Cow {
     return (now.year - birthDate.year) * 12 + now.month - birthDate.month;
   }
 
+  String get ageDetailed {
+    final now = DateTime.now();
+    int years = now.year - birthDate.year;
+    int months = now.month - birthDate.month;
+    int days = now.day - birthDate.day;
+
+    if (days < 0) {
+      months -= 1;
+      // Get days in previous month
+      final prevMonth = DateTime(now.year, now.month, 0);
+      days += prevMonth.day;
+    }
+    if (months < 0) {
+      years -= 1;
+      months += 12;
+    }
+
+    final parts = <String>[];
+    if (years > 0) parts.add('$years ปี');
+    if (months > 0) parts.add('$months เดือน');
+    if (days > 0 || parts.isEmpty) parts.add('$days วัน');
+
+    return parts.join(' ');
+  }
+
   double get estimatedValue => latestWeight * 120.0; // Mock current market price 120 THB/kg
 
   Cow copyWith({
