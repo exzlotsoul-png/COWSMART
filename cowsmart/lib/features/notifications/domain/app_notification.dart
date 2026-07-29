@@ -4,6 +4,7 @@ class AppNotification {
   final String title;
   final String message;
   final DateTime? notifyDatetime;
+  final DateTime? createdAt;
   final bool isRead;
 
   AppNotification({
@@ -12,6 +13,7 @@ class AppNotification {
     required this.title,
     required this.message,
     this.notifyDatetime,
+    this.createdAt,
     this.isRead = false,
   });
 
@@ -24,6 +26,9 @@ class AppNotification {
       notifyDatetime: json['notify_datetime'] != null
           ? DateTime.tryParse(json['notify_datetime'])
           : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'])
+          : null,
       isRead: (json['is_read'] ?? 0) == 1,
     );
   }
@@ -35,6 +40,7 @@ class AppNotification {
       title: title,
       message: message,
       notifyDatetime: notifyDatetime,
+      createdAt: createdAt,
       isRead: isRead ?? this.isRead,
     );
   }

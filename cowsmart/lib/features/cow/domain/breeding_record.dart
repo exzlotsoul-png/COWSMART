@@ -11,6 +11,7 @@ class BreedingRecord {
   final DateTime? calvingDate;
   final String? calvingResult;
   final String? calfId;
+  final String? reminderSetting;
 
   BreedingRecord({
     required this.id,
@@ -24,6 +25,7 @@ class BreedingRecord {
     this.calvingDate,
     this.calvingResult,
     this.calfId,
+    this.reminderSetting,
   });
 
   factory BreedingRecord.fromJson(Map<String, dynamic> json) {
@@ -49,6 +51,7 @@ class BreedingRecord {
           : null,
       calvingResult: json['calving_result'],
       calfId: json['calf_id']?.toString(),
+      reminderSetting: json['reminder_setting'],
     );
   }
 
@@ -65,6 +68,7 @@ class BreedingRecord {
       'calving_date': calvingDate?.toIso8601String(),
       'calving_result': calvingResult,
       'calf_id': calfId,
+      'reminder_setting': reminderSetting,
     };
   }
 }

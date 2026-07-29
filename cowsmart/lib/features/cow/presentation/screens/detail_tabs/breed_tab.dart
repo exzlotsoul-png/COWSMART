@@ -197,11 +197,19 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                     initialDate: heatDate,
                     firstDate: DateTime(2020),
                     lastDate: DateTime.now(),
+                    helpText: 'เลือกวันที่',
+                    cancelText: 'ยกเลิก',
+                    confirmText: 'ตกลง',
                   );
                   if (pickedDate != null) {
                     final pickedTime = await showTimePicker(
                       context: ctx,
                       initialTime: TimeOfDay.fromDateTime(heatDate),
+                      helpText: 'ระบุเวลา',
+                      cancelText: 'ยกเลิก',
+                      confirmText: 'ตกลง',
+                      hourLabelText: 'ชั่วโมง',
+                      minuteLabelText: 'นาที',
                     );
                     if (pickedTime != null) {
                       setDialogState(() {
@@ -394,11 +402,19 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                       initialDate: matingDate,
                       firstDate: DateTime(2020),
                       lastDate: DateTime.now(),
+                      helpText: 'เลือกวันที่',
+                      cancelText: 'ยกเลิก',
+                      confirmText: 'ตกลง',
                     );
                     if (pickedDate != null) {
                       final pickedTime = await showTimePicker(
                         context: ctx,
                         initialTime: TimeOfDay.fromDateTime(matingDate),
+                        helpText: 'ระบุเวลา',
+                        cancelText: 'ยกเลิก',
+                        confirmText: 'ตกลง',
+                        hourLabelText: 'ชั่วโมง',
+                        minuteLabelText: 'นาที',
                       );
                       if (pickedTime != null) {
                         setDialogState(() {
@@ -507,6 +523,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
 
     String? result = activeMating.pregnancyResult == 'แท้ง' ? 'แท้งลูก' : activeMating.pregnancyResult;
     DateTime? expectedCalving = activeMating.expectedCalving;
+    String selectedCalvingReminder = activeMating.reminderSetting ?? 'ก่อน 7 วัน';
 
     showDialog(
       context: context,
@@ -599,9 +616,34 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                         initialDate: expectedCalving ?? DateTime.now().add(const Duration(days: 283)),
                         firstDate: DateTime.now(),
                         lastDate: DateTime.now().add(const Duration(days: 365)),
+                        helpText: 'เลือกวันที่กำหนดคลอด',
+                        cancelText: 'ยกเลิก',
+                        confirmText: 'ตกลง',
                       );
                       if (picked != null) {
                         setDialogState(() => expectedCalving = picked);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    value: selectedCalvingReminder,
+                    decoration: const InputDecoration(
+                      labelText: 'แจ้งเตือนล่วงหน้า (กำหนดคลอด)',
+                      labelStyle: TextStyle(fontSize: 15),
+                      prefixIcon: Icon(Icons.notifications_active_outlined),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'ก่อน 1 วัน', child: Text('ก่อน 1 วัน', style: TextStyle(fontSize: 15))),
+                      DropdownMenuItem(value: 'ก่อน 3 วัน', child: Text('ก่อน 3 วัน', style: TextStyle(fontSize: 15))),
+                      DropdownMenuItem(value: 'ก่อน 7 วัน', child: Text('ก่อน 7 วัน (แนะนำ)', style: TextStyle(fontSize: 15))),
+                      DropdownMenuItem(value: 'ก่อน 14 วัน', child: Text('ก่อน 14 วัน', style: TextStyle(fontSize: 15))),
+                      DropdownMenuItem(value: 'ก่อน 30 วัน', child: Text('ก่อน 30 วัน', style: TextStyle(fontSize: 15))),
+                      DropdownMenuItem(value: 'ไม่แจ้งเตือน', child: Text('ไม่แจ้งเตือน', style: TextStyle(fontSize: 15))),
+                    ],
+                    onChanged: (v) {
+                      if (v != null) {
+                        setDialogState(() => selectedCalvingReminder = v);
                       }
                     },
                   ),
@@ -636,6 +678,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                               calvingDate: null,
                               calvingResult: null,
                               calfId: null,
+                              reminderSetting: selectedCalvingReminder,
                             );
                             ref
                                 .read(cowDetailProvider.notifier)
@@ -762,11 +805,19 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                       initialDate: calvingDate,
                       firstDate: DateTime(2020),
                       lastDate: DateTime.now(),
+                      helpText: 'เลือกวันที่',
+                      cancelText: 'ยกเลิก',
+                      confirmText: 'ตกลง',
                     );
                     if (pickedDate != null) {
                       final pickedTime = await showTimePicker(
                         context: ctx,
                         initialTime: TimeOfDay.fromDateTime(calvingDate),
+                        helpText: 'ระบุเวลา',
+                        cancelText: 'ยกเลิก',
+                        confirmText: 'ตกลง',
+                        hourLabelText: 'ชั่วโมง',
+                        minuteLabelText: 'นาที',
                       );
                       if (pickedTime != null) {
                         setDialogState(() {

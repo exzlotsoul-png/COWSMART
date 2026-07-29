@@ -6,6 +6,7 @@ class CalendarEvent {
   final String? description;
   final String? reminderSetting;
   final String? cowId;
+  final String eventType; // 'general', 'health', 'breeding'
 
   CalendarEvent({
     required this.id,
@@ -15,6 +16,7 @@ class CalendarEvent {
     this.description,
     this.reminderSetting,
     this.cowId,
+    this.eventType = 'general',
   });
 
   factory CalendarEvent.fromJson(Map<String, dynamic> json) {
@@ -26,6 +28,7 @@ class CalendarEvent {
       description: json['description']?.toString(),
       reminderSetting: json['reminder_setting']?.toString(),
       cowId: json['cow_id']?.toString(),
+      eventType: json['event_type']?.toString() ?? 'general',
     );
   }
 
@@ -36,6 +39,7 @@ class CalendarEvent {
         'description': description,
         'reminder_setting': reminderSetting,
         'cow_id': cowId,
+        'event_type': eventType,
       };
 
   CalendarEvent copyWith({
@@ -44,6 +48,7 @@ class CalendarEvent {
     String? description,
     String? reminderSetting,
     String? cowId,
+    String? eventType,
   }) {
     return CalendarEvent(
       id: id,
@@ -53,6 +58,7 @@ class CalendarEvent {
       description: description ?? this.description,
       reminderSetting: reminderSetting ?? this.reminderSetting,
       cowId: cowId ?? this.cowId,
+      eventType: eventType ?? this.eventType,
     );
   }
 }

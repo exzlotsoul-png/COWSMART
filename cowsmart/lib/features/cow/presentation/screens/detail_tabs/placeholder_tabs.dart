@@ -9,6 +9,9 @@ import 'package:cowsmart/core/services/image_upload_service.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
 import 'package:cowsmart/features/cow/domain/health_record.dart';
 import 'package:cowsmart/features/cow/domain/growth_record.dart';
+import 'package:cowsmart/features/calendar/domain/calendar_event.dart';
+import 'package:cowsmart/features/calendar/providers/calendar_provider.dart';
+import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import '../../../providers/cow_detail_provider.dart';
 import '../../../../health/providers/master_data_provider.dart';
 import 'package:cowsmart/core/network/api_client.dart';
@@ -53,6 +56,218 @@ class _HealthTabState extends ConsumerState<HealthTab> {
     );
   }
 
+  void _showAddHealthAppointmentDialog() {
+    final titleCtrl = TextEditingController(text: 'นัดหมายฉีดวัคซีน/ตรวจสุขภาพ');
+    final descCtrl = TextEditingController();
+    DateTime selectedDate = DateTime.now().add(const Duration(days: 7));
+    TimeOfDay selectedTime = const TimeOfDay(hour: 9, minute: 0);
+    String selectedReminder = 'ก่อน 1 วัน';
+    String selectedType = 'ฉีดวัคซีน/ถ่ายพยาธิ';
+
+    final types = [
+      'ฉีดวัคซีน/ถ่ายพยาธิ',
+      'ตรวจสุขภาพประจำปี/ประจำเดือน',
+      'ตรวจระบบสืบพันธุ์',
+      'ติดตามผลการรักษา',
+      'อื่นๆ',
+    ];
+
+    final reminderOptions = [
+      'ตรงเวลาที่บันทึก',
+      'ก่อน 15 นาที',
+      'ก่อน 1 ชั่วโมง',
+      'ก่อน 1 วัน',
+      'ก่อน 3 วัน',
+      'ก่อน 7 วัน',
+      'ไม่แจ้งเตือน'
+    ];
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Icon(Icons.medical_services_outlined, color: Colors.orange[800], size: 24),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'นัดหมายตรวจสุขภาพ / ฉีดวัคซีน / ถ่ายพยาธิ',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String>(
+                  initialValue: selectedType,
+                  style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
+                  decoration: const InputDecoration(
+                    labelText: 'ประเภทนัดหมาย *',
+                    labelStyle: TextStyle(fontSize: 15),
+                    prefixIcon: Icon(Icons.category),
+                  ),
+                  items: types.map((t) => DropdownMenuItem(value: t, child: Text(t, style: const TextStyle(fontSize: 15)))).toList(),
+                  onChanged: (v) {
+                    if (v != null) {
+                      setDialogState(() {
+                        selectedType = v;
+                        titleCtrl.text = 'นัดหมาย: $v';
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: titleCtrl,
+                  style: const TextStyle(fontSize: 15),
+                  decoration: const InputDecoration(
+                    labelText: 'หัวข้อการนัดหมาย *',
+                    labelStyle: TextStyle(fontSize: 15),
+                    prefixIcon: Icon(Icons.title),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.calendar_today, color: AppColors.primary),
+                  title: const Text('วันนัดหมาย', style: TextStyle(fontSize: 15)),
+                  subtitle: Text(DateFormat('dd MMM yyyy').format(selectedDate), style: const TextStyle(fontSize: 14)),
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: ctx,
+                      initialDate: selectedDate,
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime(2030),
+                      helpText: 'เลือกวันที่',
+                      cancelText: 'ยกเลิก',
+                      confirmText: 'ตกลง',
+                    );
+                    if (picked != null) setDialogState(() => selectedDate = picked);
+                  },
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.access_time, color: AppColors.primary),
+                  title: const Text('เวลานัดหมาย', style: TextStyle(fontSize: 15)),
+                  subtitle: Text(selectedTime.format(ctx), style: const TextStyle(fontSize: 14)),
+                  onTap: () async {
+                    final picked = await showTimePicker(
+                      context: ctx,
+                      initialTime: selectedTime,
+                      helpText: 'ระบุเวลา',
+                      cancelText: 'ยกเลิก',
+                      confirmText: 'ตกลง',
+                      hourLabelText: 'ชั่วโมง',
+                      minuteLabelText: 'นาที',
+                    );
+                    if (picked != null) setDialogState(() => selectedTime = picked);
+                  },
+                ),
+                const SizedBox(height: 4),
+                TextField(
+                  controller: descCtrl,
+                  maxLines: 2,
+                  style: const TextStyle(fontSize: 15),
+                  decoration: const InputDecoration(
+                    labelText: 'รายละเอียด/หมายเหตุ (ไม่บังคับ)',
+                    labelStyle: TextStyle(fontSize: 15),
+                    prefixIcon: Icon(Icons.notes),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: selectedReminder,
+                  style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
+                  decoration: const InputDecoration(
+                    labelText: 'แจ้งเตือนล่วงหน้า',
+                    labelStyle: TextStyle(fontSize: 15),
+                    prefixIcon: Icon(Icons.notifications_active_outlined),
+                  ),
+                  items: reminderOptions.map((r) => DropdownMenuItem(value: r, child: Text(r, style: const TextStyle(fontSize: 15)))).toList(),
+                  onChanged: (v) {
+                    if (v != null) {
+                      setDialogState(() => selectedReminder = v);
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            Row(children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
+                  child: const Text('ยกเลิก', style: TextStyle(fontSize: 15)),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange[800],
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  onPressed: () async {
+                    final title = titleCtrl.text.trim();
+                    if (title.isEmpty) return;
+
+                    final dt = DateTime(
+                      selectedDate.year,
+                      selectedDate.month,
+                      selectedDate.day,
+                      selectedTime.hour,
+                      selectedTime.minute,
+                    );
+
+                    Navigator.pop(ctx);
+
+                    try {
+                      final api = ref.read(apiClientProvider);
+                      final farmId = ref.read(farmProvider).currentFarm?.id ?? '';
+                      await api.post('/health_appointments', data: {
+                        'cow_id': widget.cow.id,
+                        'appoint_datetime': dt.toIso8601String(),
+                        'description': '$title ${descCtrl.text.trim()}'.trim(),
+                        'reminder_setting': selectedReminder,
+                        'status': 0,
+                      });
+
+                      if (farmId.isNotEmpty) {
+                        ref.read(calendarProvider.notifier).fetchEvents(farmId);
+                      }
+
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('บันทึกวันนัดหมายสุขภาพและการแจ้งเตือนลงปฏิทินแล้ว', style: TextStyle(fontSize: 15)),
+                          backgroundColor: AppColors.success,
+                        ));
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text('เกิดข้อผิดพลาดในการบันทึกนัดหมาย: $e', style: const TextStyle(fontSize: 14)),
+                          backgroundColor: AppColors.error,
+                        ));
+                      }
+                    }
+                  },
+                  child: const Text('บันทึกนัดหมาย', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+                ),
+              ),
+            ]),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final detailState = ref.watch(cowDetailProvider);
@@ -88,65 +303,63 @@ class _HealthTabState extends ConsumerState<HealthTab> {
     return Stack(
       children: [
         ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 150),
           children: [
             _buildSummaryCard(context, records),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Icon(
-                  Icons.history,
-                  size: 22,
-                  color: AppColors.primaryDark,
-                ),
-                const SizedBox(width: 8),
                 const Text(
-                  'ประวัติการรักษาและฉีดวัคซีน',
+                  'ประวัติการรักษาและตรวจสุขภาพ',
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
                     fontSize: 18,
+                    fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
                   ),
                 ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '${records.length} รายการ',
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
+                Text(
+                  '${records.length} รายการ',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
             if (records.isEmpty)
-              Center(
+              Card(
+                elevation: 0,
+                color: AppColors.surface,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: const BorderSide(color: AppColors.border),
+                ),
                 child: Padding(
-                  padding: const EdgeInsets.all(40),
+                  padding: const EdgeInsets.all(32),
                   child: Column(
                     children: [
                       Icon(
-                        Icons.health_and_safety_outlined,
-                        size: 64,
-                        color: Colors.grey[350],
+                        Icons.medical_services_outlined,
+                        size: 48,
+                        color: AppColors.textHint,
                       ),
                       const SizedBox(height: 12),
                       const Text(
-                        'ยังไม่มีข้อมูลประวัติสุขภาพ',
+                        'ยังไม่มีประวัติการรักษา',
                         style: TextStyle(
-                          color: AppColors.textSecondary,
                           fontSize: 16,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'กดปุ่มด้านล่างเพื่อเพิ่มประวัติหรือวันนัดหมาย',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textHint,
                         ),
                       ),
                     ],
@@ -160,27 +373,49 @@ class _HealthTabState extends ConsumerState<HealthTab> {
         Positioned(
           bottom: 16,
           right: 16,
-          child: FloatingActionButton.extended(
-            onPressed: detailState.isSaving ? null : _showAddHealthRecordDialog,
-            backgroundColor: AppColors.primary,
-            icon: detailState.isSaving
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  )
-                : const Icon(Icons.add, color: Colors.white, size: 24),
-            label: const Text(
-              'บันทึกการรักษา',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              FloatingActionButton.extended(
+                heroTag: 'add_health_appt_fab',
+                onPressed: _showAddHealthAppointmentDialog,
+                backgroundColor: Colors.orange[800],
+                icon: const Icon(Icons.event_available, color: Colors.white, size: 22),
+                label: const Text(
+                  'นัดหมายสุขภาพ / ฉีดวัคซีน',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(height: 10),
+              FloatingActionButton.extended(
+                heroTag: 'add_health_record_fab',
+                onPressed: detailState.isSaving ? null : _showAddHealthRecordDialog,
+                backgroundColor: AppColors.primary,
+                icon: detailState.isSaving
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Icon(Icons.add, color: Colors.white, size: 24),
+                label: const Text(
+                  'บันทึกการรักษา',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ],

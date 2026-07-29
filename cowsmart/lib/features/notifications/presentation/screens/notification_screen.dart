@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart' hide TextDirection;
 import 'package:cowsmart/core/theme/app_colors.dart';
 import '../../providers/notification_provider.dart';
 import '../../domain/app_notification.dart';
@@ -75,23 +76,51 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     if (!notif.isRead) {
       ref.read(notificationProvider.notifier).markAsRead(notif.id);
     }
+    final isCalendarNotif = notif.title.contains('ปฏิทิน') ||
+        notif.message.contains('[ref:cal_') ||
+        notif.title.contains('กิจกรรม');
+
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(notif.title),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(
+              isCalendarNotif ? Icons.calendar_month : Icons.notifications_active,
+              color: AppColors.primary,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                notif.title,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(notif.message),
+            Text(
+              notif.message.replaceAll(RegExp(r'\[ref:.*?\]'), '').trim(),
+              style: const TextStyle(fontSize: 15, height: 1.4),
+            ),
             if (notif.notifyDatetime != null) ...[
-              const SizedBox(height: 12),
-              Text(
-                DateFormat('dd MMM yyyy HH:mm').format(notif.notifyDatetime!),
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  const Icon(Icons.access_time, size: 16, color: AppColors.textHint),
+                  const SizedBox(width: 4),
+                  Text(
+                    DateFormat('dd MMM yyyy HH:mm').format(notif.notifyDatetime!),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
               ),
             ],
           ],
@@ -99,10 +128,29 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         actions: [
           Row(
             children: [
+              if (isCalendarNotif) ...[
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      context.push('/calendar');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    icon: const Icon(Icons.calendar_month, size: 18),
+                    label: const Text('เปิดดูในปฏิทิน', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
               Expanded(
-                child: ElevatedButton(
+                child: OutlinedButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('ปิด'),
+                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
+                  child: const Text('ปิด', style: TextStyle(fontSize: 15)),
                 ),
               ),
             ],
@@ -125,12 +173,12 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
           const SizedBox(height: 16),
           const Text(
             'ไม่มีการแจ้งเตือน',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           const Text(
             'การแจ้งเตือนใหม่จะแสดงที่นี่',
-            style: TextStyle(color: AppColors.textHint, fontSize: 13),
+            style: TextStyle(color: AppColors.textHint, fontSize: 14),
           ),
           const SizedBox(height: 24),
           OutlinedButton.icon(
@@ -143,6 +191,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                   SnackBar(
                     content: Text(
                       ok ? 'สร้างการแจ้งเตือนทดสอบแล้ว' : 'เกิดข้อผิดพลาด',
+                      style: const TextStyle(fontSize: 15),
                     ),
                     backgroundColor: ok ? AppColors.success : AppColors.error,
                   ),
@@ -150,7 +199,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
               }
             },
             icon: const Icon(Icons.science_outlined),
-            label: const Text('ทดสอบการแจ้งเตือน'),
+            label: const Text('ทดสอบการแจ้งเตือน', style: TextStyle(fontSize: 15)),
           ),
         ],
       ),
@@ -179,35 +228,25 @@ class _NotificationTile extends StatelessWidget {
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
         color: AppColors.error,
-        child: const Icon(Icons.delete_outline, color: Colors.white),
+        child: const Icon(Icons.delete, color: Colors.white),
       ),
       child: ListTile(
         onTap: onTap,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         leading: Stack(
-          clipBehavior: Clip.none,
           children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: notification.isRead
-                    ? AppColors.border
-                    : AppColors.primary.withOpacity(0.12),
-                shape: BoxShape.circle,
-              ),
+            CircleAvatar(
+              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
               child: Icon(
                 _iconForTitle(notification.title),
-                color: notification.isRead
-                    ? AppColors.textHint
-                    : AppColors.primary,
+                color: AppColors.primary,
                 size: 22,
               ),
             ),
             if (!notification.isRead)
               Positioned(
-                top: 0,
                 right: 0,
+                top: 0,
                 child: Container(
                   width: 10,
                   height: 10,
@@ -225,7 +264,7 @@ class _NotificationTile extends StatelessWidget {
             fontWeight: notification.isRead
                 ? FontWeight.normal
                 : FontWeight.bold,
-            fontSize: 14,
+            fontSize: 16,
             color: AppColors.textPrimary,
           ),
         ),
@@ -234,32 +273,35 @@ class _NotificationTile extends StatelessWidget {
           children: [
             const SizedBox(height: 2),
             Text(
-              notification.message,
+              notification.message.replaceAll(RegExp(r'\[ref:.*?\]'), '').trim(),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                fontSize: 13,
+                fontSize: 14,
                 color: AppColors.textSecondary,
               ),
             ),
-            if (notification.notifyDatetime != null) ...[
+            if (notification.createdAt != null || notification.notifyDatetime != null) ...[
               const SizedBox(height: 4),
               Text(
-                _timeAgo(notification.notifyDatetime!),
-                style: const TextStyle(fontSize: 11, color: AppColors.textHint),
+                _timeAgo(notification.createdAt ?? notification.notifyDatetime!),
+                style: const TextStyle(fontSize: 12, color: AppColors.textHint),
               ),
             ],
           ],
         ),
         tileColor: notification.isRead
             ? null
-            : AppColors.primary.withOpacity(0.03),
+            : AppColors.primary.withValues(alpha: 0.03),
       ),
     );
   }
 
   IconData _iconForTitle(String title) {
     final t = title.toLowerCase();
+    if (t.contains('ปฏิทิน') || t.contains('กิจกรรม') || t.contains('calendar')) {
+      return Icons.calendar_month_outlined;
+    }
     if (t.contains('สุขภาพ') || t.contains('ป่วย') || t.contains('health')) {
       return Icons.medical_services_outlined;
     }
@@ -279,10 +321,12 @@ class _NotificationTile extends StatelessWidget {
   }
 
   String _timeAgo(DateTime dt) {
-    final diff = DateTime.now().difference(dt);
+    final localDt = dt.isUtc ? dt.toLocal() : dt;
+    final diff = DateTime.now().difference(localDt);
+    if (diff.isNegative || diff.inSeconds < 60) return 'เมื่อสักครู่';
     if (diff.inMinutes < 60) return '${diff.inMinutes} นาทีที่แล้ว';
     if (diff.inHours < 24) return '${diff.inHours} ชั่วโมงที่แล้ว';
     if (diff.inDays < 7) return '${diff.inDays} วันที่แล้ว';
-    return DateFormat('dd MMM yyyy').format(dt);
+    return DateFormat('dd MMM yyyy').format(localDt);
   }
 }

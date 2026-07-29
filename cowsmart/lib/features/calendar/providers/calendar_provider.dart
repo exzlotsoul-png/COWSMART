@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cowsmart/core/network/api_client.dart';
+import '../../notifications/providers/notification_provider.dart';
 import '../domain/calendar_event.dart';
 
 class CalendarState {
@@ -7,17 +8,24 @@ class CalendarState {
   final bool isLoading;
   final bool isSaving;
   final String? errorMessage;
+  final String selectedCategory; // 'all', 'general', 'health', 'breeding'
 
   CalendarState({
     this.events = const [],
     this.isLoading = false,
     this.isSaving = false,
     this.errorMessage,
+    this.selectedCategory = 'all',
   });
+
+  List<CalendarEvent> get filteredEvents {
+    if (selectedCategory == 'all') return events;
+    return events.where((e) => e.eventType == selectedCategory).toList();
+  }
 
   Map<DateTime, List<CalendarEvent>> get eventsByDay {
     final map = <DateTime, List<CalendarEvent>>{};
-    for (final e in events) {
+    for (final e in filteredEvents) {
       final day = DateTime(
         e.eventDatetime.year,
         e.eventDatetime.month,
@@ -38,12 +46,14 @@ class CalendarState {
     bool? isLoading,
     bool? isSaving,
     String? errorMessage,
+    String? selectedCategory,
   }) {
     return CalendarState(
       events: events ?? this.events,
       isLoading: isLoading ?? this.isLoading,
       isSaving: isSaving ?? this.isSaving,
       errorMessage: errorMessage ?? this.errorMessage,
+      selectedCategory: selectedCategory ?? this.selectedCategory,
     );
   }
 }
@@ -55,6 +65,10 @@ class CalendarNotifier extends Notifier<CalendarState> {
   CalendarState build() {
     _api = ref.watch(apiClientProvider);
     return CalendarState();
+  }
+
+  void setCategory(String cat) {
+    state = state.copyWith(selectedCategory: cat);
   }
 
   Future<void> fetchEvents(String farmId) async {
@@ -86,6 +100,8 @@ class CalendarNotifier extends Notifier<CalendarState> {
         events: [...state.events, created],
         isSaving: false,
       );
+      // Trigger notification refresh
+      ref.read(notificationProvider.notifier).fetchNotifications();
       return true;
     } catch (e) {
       state = state.copyWith(isSaving: false, errorMessage: e.toString());
@@ -107,6 +123,8 @@ class CalendarNotifier extends Notifier<CalendarState> {
             .toList(),
         isSaving: false,
       );
+      // Trigger notification refresh
+      ref.read(notificationProvider.notifier).fetchNotifications();
       return true;
     } catch (e) {
       state = state.copyWith(isSaving: false, errorMessage: e.toString());
@@ -120,6 +138,8 @@ class CalendarNotifier extends Notifier<CalendarState> {
       state = state.copyWith(
         events: state.events.where((e) => e.id != id).toList(),
       );
+      // Trigger notification refresh
+      ref.read(notificationProvider.notifier).fetchNotifications();
       return true;
     } catch (e) {
       state = state.copyWith(errorMessage: e.toString());

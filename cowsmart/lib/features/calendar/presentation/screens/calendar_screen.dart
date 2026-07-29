@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' hide TextDirection;
 import 'package:cowsmart/core/theme/app_colors.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
@@ -43,15 +43,29 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              final farmId = ref.read(farmProvider).currentFarm?.id;
+              if (farmId != null) {
+                ref.read(calendarProvider.notifier).fetchEvents(farmId);
+              }
+            },
+            tooltip: 'รีเฟรชข้อมูล',
+          ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddEventDialog(context),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.add),
+        label: const Text('เพิ่มกิจกรรม', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: Column(
         children: [
+          _buildFilterChips(calState),
           _buildCalendar(calState),
           const Divider(height: 1),
           Expanded(
@@ -60,6 +74,58 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 : _buildEventList(selectedEvents),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChips(CalendarState calState) {
+    final categories = [
+      {'key': 'all', 'label': 'ทั้งหมด', 'icon': Icons.apps, 'color': AppColors.primary},
+      {'key': 'general', 'label': 'กิจกรรมทั่วไป', 'icon': Icons.event_note, 'color': AppColors.primary},
+      {'key': 'health', 'label': 'นัดหมายสุขภาพ', 'icon': Icons.medical_services_outlined, 'color': Colors.orange[800]},
+      {'key': 'breeding', 'label': 'กำหนดคลอด', 'icon': Icons.favorite_outline, 'color': Colors.purple},
+    ];
+
+    return Container(
+      color: AppColors.surface,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: categories.map((cat) {
+            final isSelected = calState.selectedCategory == cat['key'];
+            final color = cat['color'] as Color?;
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ChoiceChip(
+                showCheckmark: false,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                avatar: Icon(
+                  cat['icon'] as IconData,
+                  size: 18,
+                  color: isSelected ? Colors.white : color,
+                ),
+                label: Text(
+                  cat['label'] as String,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                    color: isSelected ? Colors.white : AppColors.textPrimary,
+                  ),
+                ),
+                selected: isSelected,
+                selectedColor: color ?? AppColors.primary,
+                backgroundColor: (color ?? AppColors.primary).withValues(alpha: 0.1),
+                side: BorderSide(
+                  color: isSelected ? (color ?? AppColors.primary) : (color ?? AppColors.primary).withValues(alpha: 0.3),
+                ),
+                onSelected: (_) {
+                  ref.read(calendarProvider.notifier).setCategory(cat['key'] as String);
+                },
+              ),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
@@ -83,7 +149,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           });
         },
         onFormatChanged: (format) => setState(() => _calendarFormat = format),
-        onPageChanged: (focused) => setState(() => _focusedDay = focused),
+        onPageChanged: (focused) {
+          setState(() {
+            _focusedDay = focused;
+            _selectedDay = focused;
+          });
+        },
         calendarStyle: CalendarStyle(
           outsideDaysVisible: false,
           selectedDecoration: const BoxDecoration(
@@ -91,30 +162,53 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             shape: BoxShape.circle,
           ),
           todayDecoration: BoxDecoration(
-            color: AppColors.primaryLight.withOpacity(0.5),
+            color: AppColors.primaryLight.withValues(alpha: 0.5),
             shape: BoxShape.circle,
           ),
-          markerDecoration: const BoxDecoration(
-            color: AppColors.secondary,
-            shape: BoxShape.circle,
-          ),
-          markersMaxCount: 3,
-          weekendTextStyle: const TextStyle(color: AppColors.error),
+          weekendTextStyle: const TextStyle(color: AppColors.error, fontSize: 15),
+          defaultTextStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
           selectedTextStyle: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
+            fontSize: 16,
           ),
         ),
         headerStyle: const HeaderStyle(
           formatButtonShowsNext: false,
           titleCentered: true,
+          titleTextStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
           formatButtonDecoration: BoxDecoration(
             border: Border.fromBorderSide(
               BorderSide(color: AppColors.primary),
             ),
             borderRadius: BorderRadius.all(Radius.circular(12)),
           ),
-          formatButtonTextStyle: TextStyle(color: AppColors.primary),
+          formatButtonTextStyle: TextStyle(color: AppColors.primary, fontSize: 13, fontWeight: FontWeight.bold),
+        ),
+        calendarBuilders: CalendarBuilders(
+          markerBuilder: (context, date, events) {
+            if (events.isEmpty) return const SizedBox();
+            return Positioned(
+              bottom: 4,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: events.take(3).map((e) {
+                  Color dotColor = AppColors.primary;
+                  if (e.eventType == 'health') dotColor = Colors.orange[800]!;
+                  if (e.eventType == 'breeding') dotColor = Colors.purple;
+                  return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: dotColor,
+                      shape: BoxShape.circle,
+                    ),
+                  );
+                }).toList(),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -126,16 +220,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.event_available, size: 52, color: AppColors.textHint),
+            Icon(Icons.event_available, size: 56, color: AppColors.textHint),
             const SizedBox(height: 12),
-            Text(
-              'ไม่มีกิจกรรมวันนี้',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
+            const Text(
+              'ไม่มีกิจกรรมในหมวดนี้สำหรับวันนี้',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 16, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 6),
             Text(
               DateFormat('dd MMMM yyyy').format(_selectedDay),
-              style: TextStyle(color: AppColors.textHint, fontSize: 13),
+              style: const TextStyle(color: AppColors.textHint, fontSize: 14),
             ),
           ],
         ),
@@ -143,9 +237,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
       itemCount: events.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
       itemBuilder: (context, index) {
         final event = events[index];
         return _EventCard(
@@ -162,6 +256,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   }
 
   void _showEditEventDialog(BuildContext context, CalendarEvent event) {
+    if (event.eventType == 'breeding') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('กำหนดวันคลอดคำนวณจากการผสมพันธุ์แม่วัว หากต้องการแก้ไขให้จัดการที่ประวัติแม่วัวตัวนั้นๆ', style: TextStyle(fontSize: 14)),
+        ),
+      );
+      return;
+    }
     _showEventDialog(context, event);
   }
 
@@ -175,23 +277,47 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         ? TimeOfDay.fromDateTime(existing.eventDatetime)
         : const TimeOfDay(hour: 8, minute: 0);
     String? selectedCowId = existing?.cowId;
-    String? selectedReminder = existing?.reminderSetting;
+    String? selectedReminder = existing?.reminderSetting ?? 'ก่อน 1 วัน';
 
-    final reminderOptions = ['ก่อน 1 วัน', 'ก่อน 3 วัน', 'ก่อน 7 วัน', 'ไม่แจ้งเตือน'];
+    final reminderOptions = [
+      'ตรงเวลาที่บันทึก',
+      'ก่อน 15 นาที',
+      'ก่อน 1 ชั่วโมง',
+      'ก่อน 1 วัน',
+      'ก่อน 3 วัน',
+      'ก่อน 7 วัน',
+      'ไม่แจ้งเตือน'
+    ];
 
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          title: Text(existing == null ? 'เพิ่มกิจกรรม' : 'แก้ไขกิจกรรม'),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Icon(
+                existing == null ? Icons.add_task : Icons.edit_calendar,
+                color: AppColors.primary,
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                existing == null ? 'เพิ่มกิจกรรมปฏิทิน' : 'แก้ไขกิจกรรมปฏิทิน',
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: titleCtrl,
+                  style: const TextStyle(fontSize: 16),
                   decoration: const InputDecoration(
                     labelText: 'ชื่อกิจกรรม *',
+                    labelStyle: TextStyle(fontSize: 15),
                     prefixIcon: Icon(Icons.event_note),
                   ),
                 ),
@@ -199,14 +325,17 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.calendar_today, color: AppColors.primary),
-                  title: const Text('วันที่'),
-                  subtitle: Text(DateFormat('dd MMM yyyy').format(selectedDate)),
+                  title: const Text('วันที่', style: TextStyle(fontSize: 16)),
+                  subtitle: Text(DateFormat('dd MMM yyyy').format(selectedDate), style: const TextStyle(fontSize: 14)),
                   onTap: () async {
                     final picked = await showDatePicker(
                       context: ctx,
                       initialDate: selectedDate,
                       firstDate: DateTime(2020),
                       lastDate: DateTime(2030),
+                      helpText: 'เลือกวันที่',
+                      cancelText: 'ยกเลิก',
+                      confirmText: 'ตกลง',
                     );
                     if (picked != null) setDialogState(() => selectedDate = picked);
                   },
@@ -214,12 +343,17 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.access_time, color: AppColors.primary),
-                  title: const Text('เวลา'),
-                  subtitle: Text(selectedTime.format(ctx)),
+                  title: const Text('เวลา', style: TextStyle(fontSize: 16)),
+                  subtitle: Text(selectedTime.format(ctx), style: const TextStyle(fontSize: 14)),
                   onTap: () async {
                     final picked = await showTimePicker(
                       context: ctx,
                       initialTime: selectedTime,
+                      helpText: 'ระบุเวลา',
+                      cancelText: 'ยกเลิก',
+                      confirmText: 'ตกลง',
+                      hourLabelText: 'ชั่วโมง',
+                      minuteLabelText: 'นาที',
                     );
                     if (picked != null) setDialogState(() => selectedTime = picked);
                   },
@@ -228,8 +362,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 TextField(
                   controller: descCtrl,
                   maxLines: 2,
+                  style: const TextStyle(fontSize: 16),
                   decoration: const InputDecoration(
                     labelText: 'รายละเอียด (ไม่บังคับ)',
+                    labelStyle: TextStyle(fontSize: 15),
                     prefixIcon: Icon(Icons.notes),
                   ),
                 ),
@@ -237,15 +373,17 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 if (cows.isNotEmpty)
                   DropdownButtonFormField<String>(
                     value: selectedCowId,
+                    style: const TextStyle(fontSize: 16, color: AppColors.textPrimary),
                     decoration: const InputDecoration(
                       labelText: 'เกี่ยวข้องกับวัว (ไม่บังคับ)',
+                      labelStyle: TextStyle(fontSize: 15),
                       prefixIcon: Icon(Icons.pets),
                     ),
                     items: [
-                      const DropdownMenuItem(value: null, child: Text('ไม่ระบุ')),
+                      const DropdownMenuItem(value: null, child: Text('ไม่ระบุ', style: TextStyle(fontSize: 15))),
                       ...cows.map((c) => DropdownMenuItem(
                             value: c.id,
-                            child: Text('${c.name} (${c.tagNumber})'),
+                            child: Text('${c.name} (${c.tagNumber})', style: const TextStyle(fontSize: 15)),
                           )),
                     ],
                     onChanged: (v) => setDialogState(() => selectedCowId = v),
@@ -253,17 +391,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   value: selectedReminder,
+                  style: const TextStyle(fontSize: 16, color: AppColors.textPrimary),
                   decoration: const InputDecoration(
                     labelText: 'การแจ้งเตือนล่วงหน้า',
-                    prefixIcon: Icon(Icons.notifications_outlined),
+                    labelStyle: TextStyle(fontSize: 15),
+                    prefixIcon: Icon(Icons.notifications_active_outlined),
                   ),
-                  items: [
-                    const DropdownMenuItem(value: null, child: Text('ไม่ระบุ')),
-                    ...reminderOptions.map((r) => DropdownMenuItem(
-                          value: r,
-                          child: Text(r),
-                        )),
-                  ],
+                  items: reminderOptions.map((r) => DropdownMenuItem(
+                        value: r,
+                        child: Text(r, style: const TextStyle(fontSize: 15)),
+                      )).toList(),
                   onChanged: (v) => setDialogState(() => selectedReminder = v),
                 ),
               ],
@@ -274,12 +411,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text('ยกเลิก'),
+                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
+                  child: const Text('ยกเลิก', style: TextStyle(fontSize: 16)),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
                   onPressed: () async {
                     final title = titleCtrl.text.trim();
                     if (title.isEmpty) return;
@@ -306,6 +445,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                             : descCtrl.text.trim(),
                         reminderSetting: selectedReminder,
                         cowId: selectedCowId,
+                        eventType: 'general',
                       );
                       ok = await ref.read(calendarProvider.notifier).addEvent(event);
                     } else {
@@ -324,12 +464,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text(ok ? 'บันทึกกิจกรรมแล้ว' : 'เกิดข้อผิดพลาด'),
+                        content: Text(ok ? 'บันทึกกิจกรรมและการแจ้งเตือนแล้ว' : 'เกิดข้อผิดพลาดในการบันทึก', style: const TextStyle(fontSize: 15)),
                         backgroundColor: ok ? AppColors.success : AppColors.error,
                       ));
                     }
                   },
-                  child: const Text('บันทึก'),
+                  child: const Text('บันทึก', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
             ]),
@@ -340,17 +480,25 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   }
 
   void _confirmDelete(BuildContext context, CalendarEvent event) {
+    if (event.eventType == 'breeding') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('กำหนดวันคลอดคำนวณจากการผสมพันธุ์แม่วัว หากต้องการลบให้จัดการที่ประวัติแม่วัวตัวนั้นๆ', style: TextStyle(fontSize: 14)),
+        ),
+      );
+      return;
+    }
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('ลบกิจกรรม'),
-        content: Text('ต้องการลบ "${event.title}" ใช่หรือไม่?'),
+        title: const Text('ลบกิจกรรม/นัดหมาย', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        content: Text('ต้องการลบ "${event.title}" ใช่หรือไม่? (การแจ้งเตือนที่เกี่ยวข้องจะถูกลบออกด้วย)', style: const TextStyle(fontSize: 16)),
         actions: [
           Row(children: [
             Expanded(
               child: OutlinedButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('ยกเลิก'),
+                child: const Text('ยกเลิก', style: TextStyle(fontSize: 16)),
               ),
             ),
             const SizedBox(width: 12),
@@ -364,12 +512,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       .deleteEvent(event.id);
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(ok ? 'ลบกิจกรรมแล้ว' : 'เกิดข้อผิดพลาด'),
+                      content: Text(ok ? 'ลบการนัดหมายและการแจ้งเตือนแล้ว' : 'เกิดข้อผิดพลาดในการลบ', style: const TextStyle(fontSize: 15)),
                       backgroundColor: ok ? AppColors.success : AppColors.error,
                     ));
                   }
                 },
-                child: const Text('ลบ'),
+                child: const Text('ลบ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
           ]),
@@ -392,50 +540,93 @@ class _EventCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    Color typeColor = AppColors.primary;
+    IconData typeIcon = Icons.event_note;
+    String typeLabel = 'กิจกรรมปฏิทิน';
+
+    if (event.eventType == 'health') {
+      typeColor = Colors.orange[800]!;
+      typeIcon = Icons.medical_services_outlined;
+      typeLabel = 'นัดหมายสุขภาพ';
+    } else if (event.eventType == 'breeding') {
+      typeColor = Colors.purple;
+      typeIcon = Icons.favorite_outline;
+      typeLabel = 'กำหนดคลอด';
+    }
+
     return Card(
-      elevation: 0,
+      elevation: 1,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: AppColors.border),
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: typeColor.withValues(alpha: 0.3)),
       ),
       color: AppColors.surface,
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         leading: Container(
-          width: 44,
-          height: 44,
+          width: 52,
+          height: 52,
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
-            shape: BoxShape.circle,
+            color: typeColor.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(12),
           ),
-          child: Center(
-            child: Text(
-              DateFormat('HH:mm').format(event.eventDatetime),
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primary,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(typeIcon, color: typeColor, size: 22),
+              const SizedBox(height: 2),
+              Text(
+                DateFormat('HH:mm').format(event.eventDatetime),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: typeColor,
+                ),
               ),
-            ),
+            ],
           ),
         ),
-        title: Text(
-          event.title,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-            color: AppColors.textPrimary,
-          ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: typeColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                typeLabel,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: typeColor,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                event.title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: AppColors.textPrimary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (event.description != null && event.description!.isNotEmpty) ...[
-              const SizedBox(height: 2),
+              const SizedBox(height: 4),
               Text(
                 event.description!,
                 style: const TextStyle(
-                  fontSize: 12,
+                  fontSize: 14,
                   color: AppColors.textSecondary,
                 ),
                 maxLines: 2,
@@ -453,42 +644,46 @@ class _EventCard extends ConsumerWidget {
                         : (matches.first.name.isNotEmpty ? matches.first.name : matches.first.tagNumber))
                     : event.cowId;
                 return Row(children: [
-                  const Icon(Icons.pets, size: 12, color: AppColors.textHint),
+                  const Icon(Icons.pets, size: 14, color: AppColors.textHint),
                   const SizedBox(width: 4),
                   Text(
                     'วัว: $cowText',
-                    style: const TextStyle(fontSize: 11, color: AppColors.textHint),
+                    style: const TextStyle(fontSize: 13, color: AppColors.textHint, fontWeight: FontWeight.w500),
                   ),
                 ]);
               }),
             ],
-            if (event.reminderSetting != null) ...[
-              const SizedBox(height: 2),
+            if (event.reminderSetting != null && event.reminderSetting != 'ไม่แจ้งเตือน') ...[
+              const SizedBox(height: 4),
               Row(children: [
-                const Icon(Icons.notifications_outlined, size: 12, color: AppColors.textHint),
+                Icon(Icons.notifications_active_outlined, size: 14, color: typeColor),
                 const SizedBox(width: 4),
                 Text(
                   'แจ้งเตือน ${event.reminderSetting}',
-                  style: const TextStyle(fontSize: 11, color: AppColors.textHint),
+                  style: TextStyle(fontSize: 12, color: typeColor, fontWeight: FontWeight.bold),
                 ),
               ]),
             ],
           ],
         ),
-        trailing: PopupMenuButton<String>(
-          onSelected: (v) {
-            if (v == 'edit') onEdit();
-            if (v == 'delete') onDelete();
-          },
-          itemBuilder: (_) => const [
-            PopupMenuItem(value: 'edit', child: Text('แก้ไข')),
-            PopupMenuItem(
-              value: 'delete',
-              child: Text('ลบ', style: TextStyle(color: AppColors.error)),
-            ),
-          ],
-        ),
+        trailing: (event.eventType == 'general' || event.eventType == 'health')
+            ? PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert, size: 22, color: AppColors.textSecondary),
+                onSelected: (v) {
+                  if (v == 'edit') onEdit();
+                  if (v == 'delete') onDelete();
+                },
+                itemBuilder: (_) => const [
+                  PopupMenuItem(value: 'edit', child: Text('แก้ไข', style: TextStyle(fontSize: 15))),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text('ลบ', style: TextStyle(color: AppColors.error, fontSize: 15)),
+                  ),
+                ],
+              )
+            : null,
       ),
     );
   }
 }
+
