@@ -4,13 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/constants/app_constants.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
 import 'package:cowsmart/features/finance/providers/finance_provider.dart';
 import 'package:cowsmart/features/market/providers/market_price_provider.dart';
 import 'package:cowsmart/features/notifications/providers/notification_provider.dart';
+import 'package:cowsmart/features/auth/providers/auth_provider.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -97,13 +97,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 const Text(
                   'เริ่มต้นด้วยการสร้างฟาร์มใหม่เพื่อจัดการข้อมูลวัวของคุณ',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 16,
+                  ),
                 ),
                 const SizedBox(height: 32),
                 ElevatedButton.icon(
                   onPressed: () => context.push('/create_farm'),
                   icon: const Icon(Icons.add),
-                  label: const Text('สร้างฟาร์มแรกของคุณ', style: TextStyle(fontSize: 16)),
+                  label: const Text(
+                    'สร้างฟาร์มแรกของคุณ',
+                    style: TextStyle(fontSize: 16),
+                  ),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
@@ -125,111 +131,249 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text(
-          'COWSMART ฟาร์ม',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            letterSpacing: 0.5,
-            fontSize: 20,
-          ),
-        ),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        toolbarHeight: 60,
-        leading: IconButton(
-          icon: const Icon(Icons.swap_horiz_outlined, size: 28),
-          onPressed: () => context.go('/select-farm'),
-          tooltip: 'เปลี่ยนฟาร์ม',
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.calendar_month_outlined, size: 26),
-            onPressed: () => context.push('/calendar'),
-            tooltip: 'ปฏิทินกิจกรรม',
-          ),
-          Consumer(
-            builder: (context, ref, _) {
-              final unread = ref.watch(notificationProvider).unreadCount;
-              return Stack(
-                alignment: Alignment.center,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.notifications_none, size: 26),
-                    onPressed: () => context.push('/notifications'),
-                  ),
-                  if (unread > 0)
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 18,
-                          minHeight: 18,
-                        ),
-                        child: Text(
-                          unread > 99 ? '99+' : '$unread',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
       body: SafeArea(
+        top: false,
         child: RefreshIndicator(
           onRefresh: _refreshData,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppConstants.defaultPadding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // 1. Farm Overview Header
-                _buildFarmOverview(
-                  context,
-                  currentFarm,
-                  cowState.allCows.length,
-                  totalValue,
-                ),
-                const SizedBox(height: 20),
+          color: AppColors.primary,
+          child: CustomScrollView(
+            slivers: [
+              // ── Header Bar with Gradient ──
+              SliverToBoxAdapter(
+                child: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [AppColors.primaryDark, AppColors.primary],
+                    ),
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(28),
+                      bottomRight: Radius.circular(28),
+                    ),
+                  ),
+                  child: SafeArea(
+                    bottom: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Top Action Bar
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              // Swap Farm Button
+                              Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () => context.go('/select-farm'),
+                                  borderRadius: BorderRadius.circular(14),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.15,
+                                      ),
+                                      borderRadius: BorderRadius.circular(14),
+                                      border: Border.all(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.2,
+                                        ),
+                                      ),
+                                    ),
+                                    child: const Row(
+                                      children: [
+                                        Icon(
+                                          Icons.swap_horiz_rounded,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                        SizedBox(width: 6),
+                                        Text(
+                                          'สลับฟาร์ม',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
 
-                // 2. Financial Summary Card
-                _buildFinancialSummary(context, ref),
-                const SizedBox(height: 28),
+                              // Right Actions (Calendar & Notifications)
+                              Row(
+                                children: [
+                                  // Calendar Button
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.15,
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: IconButton(
+                                      icon: const Icon(
+                                        Icons.calendar_month_rounded,
+                                        color: Colors.white,
+                                        size: 22,
+                                      ),
+                                      onPressed: () =>
+                                          context.push('/calendar'),
+                                      tooltip: 'ปฏิทินกิจกรรม',
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
 
-                // 3. Zone Overview List
-                _buildZoneOverview(context, ref),
-                const SizedBox(height: 28),
+                                  // Notification Badge
+                                  Consumer(
+                                    builder: (context, ref, _) {
+                                      final unread = ref
+                                          .watch(notificationProvider)
+                                          .unreadCount;
+                                      return Stack(
+                                        alignment: Alignment.center,
+                                        children: [
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withValues(
+                                                alpha: 0.15,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            child: IconButton(
+                                              icon: const Icon(
+                                                Icons.notifications_outlined,
+                                                color: Colors.white,
+                                                size: 22,
+                                              ),
+                                              onPressed: () => context.push(
+                                                '/notifications',
+                                              ),
+                                              tooltip: 'การแจ้งเตือน',
+                                            ),
+                                          ),
+                                          if (unread > 0)
+                                            Positioned(
+                                              top: 6,
+                                              right: 6,
+                                              child: Container(
+                                                padding: const EdgeInsets.all(
+                                                  4,
+                                                ),
+                                                decoration: const BoxDecoration(
+                                                  color: AppColors.error,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                constraints:
+                                                    const BoxConstraints(
+                                                      minWidth: 18,
+                                                      minHeight: 18,
+                                                    ),
+                                                child: Text(
+                                                  unread > 99
+                                                      ? '99+'
+                                                      : '$unread',
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
 
-                // 4. Quick Actions (Chatbot, Health, Cull)
-                const Text(
-                  'เมนูหลัก',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                    color: AppColors.textPrimary,
+                          // Welcome Text
+                          Builder(
+                            builder: (context) {
+                              final user = ref.watch(authProvider).user;
+                              final userName = user != null
+                                  ? '${user['first_name'] ?? ''}'
+                                  : 'ผู้ใช้งาน';
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'สวัสดี, $userName',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'ภาพรวมฟาร์มของคุณในวันนี้',
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.75,
+                                      ),
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 14),
-                _buildQuickActions(context),
-                const SizedBox(height: 80), // Padding for bottom nav bar
-              ],
-            ),
+              ),
+
+              // ── Main Content Body ──
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // 1. Farm Overview Header
+                      _buildFarmOverview(
+                        context,
+                        currentFarm,
+                        cowState.allCows.length,
+                        totalValue,
+                      ),
+                      const SizedBox(height: 20),
+
+                      // 2. Financial Summary Card
+                      _buildFinancialSummary(context, ref),
+                      const SizedBox(height: 24),
+
+                      // 3. Zone Overview List
+                      _buildZoneOverview(context, ref),
+                      const SizedBox(height: 24),
+
+                      // 4. Quick Actions
+                      const _DashboardSectionTitle(title: 'เมนูหลัก'),
+                      const SizedBox(height: 12),
+                      _buildQuickActions(context),
+                      const SizedBox(height: 80), // Padding for bottom nav bar
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -276,7 +420,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                 ],
                 image: DecorationImage(
-                  image: farm.imageFullUrl != null && farm.imageFullUrl!.isNotEmpty
+                  image:
+                      farm.imageFullUrl != null && farm.imageFullUrl!.isNotEmpty
                       ? NetworkImage(farm.imageFullUrl!)
                       : const NetworkImage(
                           'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1500&q=80',
@@ -299,12 +444,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'เจ้าของ: ${farm.ownerEmail}',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
-                    ),
+                  Builder(
+                    builder: (context) {
+                      final user = ref.watch(authProvider).user;
+                      final ownerName = (user != null)
+                          ? '${user['first_name'] ?? ''} ${user['last_name'] ?? ''}'
+                                .trim()
+                          : farm.ownerEmail;
+                      return Text(
+                        'เจ้าของ: $ownerName',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      );
+                    },
                   ),
                   const SizedBox(height: 12),
 
@@ -384,7 +540,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.account_balance_wallet_outlined, color: Colors.white, size: 22),
+                      child: const Icon(
+                        Icons.account_balance_wallet_outlined,
+                        color: Colors.white,
+                        size: 22,
+                      ),
                     ),
                     const SizedBox(width: 10),
                     const Text(
@@ -398,7 +558,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ],
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
@@ -408,10 +571,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     children: [
                       Text(
                         'ดูทั้งหมด',
-                        style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       SizedBox(width: 4),
-                      Icon(Icons.arrow_forward_ios, color: Colors.white, size: 12),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        color: Colors.white,
+                        size: 12,
+                      ),
                     ],
                   ),
                 ),
@@ -474,7 +645,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildFinanceMiniStat(String label, String amount, Color color, IconData icon) {
+  Widget _buildFinanceMiniStat(
+    String label,
+    String amount,
+    Color color,
+    IconData icon,
+  ) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -514,20 +690,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'โซนในฟาร์ม',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-                color: AppColors.textPrimary,
-              ),
-            ),
+            const _DashboardSectionTitle(title: 'โซนในฟาร์ม'),
             TextButton.icon(
               onPressed: () {
                 context.push('/create_zone');
               },
-              icon: const Icon(Icons.tune, size: 18),
-              label: const Text('จัดการโซน', style: TextStyle(fontSize: 15)),
+              icon: const Icon(
+                Icons.tune_rounded,
+                size: 16,
+                color: AppColors.primary,
+              ),
+              label: const Text(
+                'จัดการโซน',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ),
@@ -554,7 +734,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 child: const Center(
                   child: Text(
                     'ยังไม่มีข้อมูลโซน',
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               )
@@ -611,7 +794,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(10),
                                   decoration: BoxDecoration(
-                                    color: AppColors.primary.withValues(alpha: 0.12),
+                                    color: AppColors.primary.withValues(
+                                      alpha: 0.12,
+                                    ),
                                     shape: BoxShape.circle,
                                   ),
                                   child: const Icon(
@@ -779,6 +964,40 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DashboardSectionTitle extends StatelessWidget {
+  final String title;
+
+  const _DashboardSectionTitle({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 18,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
             ),
           ),

@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -30,9 +32,18 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
+            'message' => 'เข้าสู่ระบบสำเร็จ',
+            'user' => $user,
+            'token' => $token,
             'access_token' => $token,
             'token_type' => 'Bearer',
-            'user' => $user,
+        ]);
+    }
+
+    public function me(Request $request)
+    {
+        return response()->json([
+            'user' => $request->user(),
         ]);
     }
 
@@ -72,6 +83,38 @@ class AuthController extends Controller
         ], 201);
     }
 
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'nullable|string|max:20',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $user->name = $request->name;
+
+        if ($request->has('phone')) {
+            $user->phone = $request->phone;
+        }
+
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $user->avatar = $path;
+        }
+
+        $user->save();
+
+        return response()->json([
+            'message' => 'อัปเดตข้อมูลส่วนตัวสำเร็จ',
+            'user' => $user,
+        ]);
+    }
+
     public function changePassword(Request $request)
     {
         $request->validate([
@@ -86,6 +129,14 @@ class AuthController extends Controller
             return response()->json([
                 'message' => 'รหัสผ่านปัจจุบันไม่ถูกต้อง',
                 'errors' => ['current_password' => ['รหัสผ่านปัจจุบันไม่ถูกต้อง']],
+            ], 422);
+        }
+
+        // Check if new password is the same as current password
+        if (Hash::check($request->new_password, $user->password)) {
+            return response()->json([
+                'message' => 'รหัสผ่านใหม่ต้องไม่ตรงกับรหัสผ่านเดิม',
+                'errors' => ['new_password' => ['รหัสผ่านใหม่ต้องไม่ตรงกับรหัสผ่านเดิม']],
             ], 422);
         }
 
@@ -116,11 +167,46 @@ class AuthController extends Controller
         $otp = (string) rand(100000, 999999);
         Cache::put('otp_' . $request->email, $otp, now()->addMinutes(10));
 
-        // Return OTP in response for local testing
-        return response()->json([
-            'message' => 'ส่งรหัส OTP เรียบร้อยแล้ว (โปรดดูรหัส OTP ในการตอบกลับนี้)',
-            'otp' => $otp,
-        ]);
+        $mailSent = false;
+        $errorMessage = '';
+        try {
+            Mail::send([], [], function ($message) use ($request, $otp) {
+                $message->to($request->email)
+                    ->subject('รหัส OTP สำหรับรีเซ็ตรหัสผ่าน - COWSMART')
+                    ->html("
+                        <div style='font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e0e0e0; border-radius: 12px; background-color: #ffffff;'>
+                            <div style='text-align: center; margin-bottom: 24px;'>
+                                <h2 style='color: #2E7D32; margin: 0; font-size: 26px; font-weight: bold;'>COWSMART</h2>
+                                <p style='color: #666; font-size: 14px; margin-top: 4px;'>ระบบบริหารจัดการฟาร์มวัว</p>
+                            </div>
+                            <div style='background-color: #F1F8E9; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 24px; border: 1px solid #C8E6C9;'>
+                                <p style='margin: 0 0 10px 0; color: #2E7D32; font-size: 16px; font-weight: 500;'>รหัส OTP สำหรับรีเซ็ตรหัสผ่านของคุณคือ:</p>
+                                <h1 style='color: #1B5E20; font-size: 40px; letter-spacing: 6px; margin: 12px 0; font-family: monospace;'>{$otp}</h1>
+                                <p style='margin: 0; color: #558B2F; font-size: 13px;'>⏱️ รหัสนี้มีอายุใช้งาน 10 นาที</p>
+                            </div>
+                            <p style='color: #666; font-size: 14px; line-height: 1.6;'>หากคุณไม่ได้เป็นผู้ร้องขอการรีเซ็ตรหัสผ่าน โปรดข้ามอีเมลฉบับนี้</p>
+                            <hr style='border: none; border-top: 1px solid #eee; margin: 24px 0;'>
+                            <p style='color: #aaa; font-size: 12px; text-align: center; margin: 0;'>© COWSMART Farm Management System</p>
+                        </div>
+                    ");
+            });
+            $mailSent = true;
+        } catch (\Throwable $e) {
+            Log::error('Failed to send OTP email to ' . $request->email . ': ' . $e->getMessage());
+            $errorMessage = $e->getMessage();
+        }
+
+        $res = [
+            'message' => $mailSent
+                ? 'ส่งรหัส OTP ไปยังอีเมล ' . $request->email . ' เรียบร้อยแล้ว'
+                : 'สร้างรหัส OTP เรียบร้อยแล้ว (ไม่สามารถส่งอีเมลได้: ' . $errorMessage . ')',
+        ];
+
+        if (!$mailSent) {
+            $res['otp'] = $otp;
+        }
+
+        return response()->json($res);
     }
 
     public function verifyOtp(Request $request)
@@ -165,6 +251,14 @@ class AuthController extends Controller
             return response()->json([
                 'message' => 'ไม่พบผู้ใช้นี้ในระบบ',
             ], 404);
+        }
+
+        // Check if new password is the same as current password
+        if (Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'message' => 'รหัสผ่านใหม่ต้องไม่ตรงกับรหัสผ่านเดิม',
+                'errors' => ['password' => ['รหัสผ่านใหม่ต้องไม่ตรงกับรหัสผ่านเดิม']],
+            ], 422);
         }
 
         $user->password = Hash::make($request->password);

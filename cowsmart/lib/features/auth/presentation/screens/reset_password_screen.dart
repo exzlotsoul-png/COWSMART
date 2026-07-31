@@ -23,6 +23,8 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   @override
   void dispose() {
@@ -129,22 +131,44 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               
               TextField(
                 controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
+                obscureText: _obscurePassword,
+                decoration: InputDecoration(
                   labelText: 'รหัสผ่านใหม่',
                   hintText: 'กรอกรหัสผ่านใหม่อย่างน้อย 8 ตัวอักษร',
-                  prefixIcon: Icon(Icons.lock_outline),
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      color: AppColors.textSecondary,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
               
               TextField(
                 controller: _confirmPasswordController,
-                obscureText: true,
-                decoration: const InputDecoration(
+                obscureText: _obscureConfirmPassword,
+                decoration: InputDecoration(
                   labelText: 'ยืนยันรหัสผ่านใหม่',
                   hintText: 'กรอกรหัสผ่านใหม่อีกครั้งเพื่อยืนยัน',
-                  prefixIcon: Icon(Icons.lock_outline),
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                      color: AppColors.textSecondary,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscureConfirmPassword = !_obscureConfirmPassword;
+                      });
+                    },
+                  ),
                 ),
               ),
               const SizedBox(height: 32),

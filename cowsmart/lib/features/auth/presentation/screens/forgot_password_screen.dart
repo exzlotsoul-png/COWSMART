@@ -41,26 +41,64 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
       final data = response.data;
       final otp = data['otp']?.toString() ?? '';
+      final msg = data['message']?.toString() ?? 'ระบบส่งรหัส OTP ไปยังอีเมลของคุณเรียบร้อยแล้ว';
 
       if (mounted) {
-        // Show a dialog with the OTP for ease of local testing
         showDialog(
           context: context,
           barrierDismissible: false,
           builder: (context) => AlertDialog(
-            title: const Text('รหัส OTP (สำหรับทดสอบ)'),
-            content: Text('ระบบส่งรหัส OTP เรียบร้อยแล้ว\n\nรหัส OTP ของคุณคือ: $otp'),
+            title: const Row(
+              children: [
+                Icon(Icons.mark_email_read_outlined, color: AppColors.primary),
+                SizedBox(width: 8),
+                Text('ส่งรหัส OTP แล้ว', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'ระบบได้ส่งรหัส OTP สำหรับตั้งรหัสผ่านใหม่ไปยังอีเมล:\n$email เรียบร้อยแล้ว',
+                  style: const TextStyle(fontSize: 15, height: 1.4),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'โปรดเช็คกล่องข้อความ (Inbox) หรืออีเมลขยะ (Spam)',
+                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                ),
+                if (otp.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.amber),
+                    ),
+                    child: Text(
+                      'โหมดทดสอบ/สำรอง OTP: $otp',
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.brown),
+                    ),
+                  ),
+                ],
+              ],
+            ),
             actions: [
-              TextButton(
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                ),
                 onPressed: () {
                   Navigator.pop(context); // Close dialog
-                  // Go to OTP verification page
                   context.go('/otp', extra: {
                     'email': email,
                     'isForgotPassword': true,
                   });
                 },
-                child: const Text('ตกลง'),
+                child: const Text('กรอกรหัส OTP', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
               ),
             ],
           ),

@@ -82,8 +82,8 @@ class AuthNotifier extends Notifier<AuthState> {
       );
 
       final data = response.data;
-      final token = data['access_token'];
-      final userData = data['user'];
+      final token = (data['access_token'] ?? data['token'])?.toString() ?? '';
+      final userData = data['user'] as Map<String, dynamic>? ?? {};
 
       _api.setToken(token);
 
@@ -124,8 +124,8 @@ class AuthNotifier extends Notifier<AuthState> {
       );
 
       final data = response.data;
-      final token = data['access_token'];
-      final userData = data['user'];
+      final token = (data['access_token'] ?? data['token'])?.toString() ?? '';
+      final userData = data['user'] as Map<String, dynamic>? ?? {};
 
       _api.setToken(token);
 

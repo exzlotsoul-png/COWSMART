@@ -62,8 +62,44 @@ class FarmController extends Controller
         $farm = Farm::where('farm_id', $id)
                     ->where('email', $user->email)
                     ->firstOrFail();
-                    
-        $farm->delete();
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($farm, $id) {
+            // Collect all cow identifiers in this farm
+            $cows = \App\Models\Cow::where('farm_id', $id)->get();
+            $cowIds = [];
+            foreach ($cows as $c) {
+                if ($c->id) $cowIds[] = (string)$c->id;
+                if ($c->cow_id) $cowIds[] = (string)$c->cow_id;
+                if ($c->tag_number) $cowIds[] = (string)$c->tag_number;
+            }
+            $cowIds = array_unique(array_filter($cowIds));
+
+            if (!empty($cowIds)) {
+                \App\Models\HealthAppointment::whereIn('cow_id', $cowIds)->delete();
+                \App\Models\HealthRecord::whereIn('cow_id', $cowIds)->delete();
+                \App\Models\BreedingRecord::whereIn('dam_id', $cowIds)->orWhereIn('sire_id', $cowIds)->delete();
+                \App\Models\CalvingRecord::whereIn('cow_id', $cowIds)->delete();
+                \App\Models\GrowthRecord::whereIn('cow_id', $cowIds)->delete();
+                \App\Models\FeedingRecord::whereIn('cow_id', $cowIds)->delete();
+                \App\Models\CullingRecord::whereIn('cow_id', $cowIds)->delete();
+                \App\Models\Cow::where('farm_id', $id)->delete();
+            }
+
+            // Delete zones, calendar events, feed inventory, financial records
+            \App\Models\Zone::where('farm_id', $id)->delete();
+            \App\Models\CalendarEvent::where('farm_id', $id)->delete();
+            \App\Models\FeedInventory::where('farm_id', $id)->delete();
+            \App\Models\FinancialRecord::where('farm_id', $id)->delete();
+
+            // Delete farm image file if exists locally
+            if ($farm->image_url && !\Illuminate\Support\Str::startsWith($farm->image_url, 'http')) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($farm->image_url);
+            }
+
+            // Delete farm
+            $farm->delete();
+        });
+
         return response()->json(null, 204);
     }
 }

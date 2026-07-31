@@ -239,9 +239,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('บันทึกข้อมูลสำเร็จ'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                SizedBox(width: 10),
+                Text('บันทึกข้อมูลสำเร็จ'),
+              ],
+            ),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
         Navigator.pop(context);
@@ -251,7 +260,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('เกิดข้อผิดพลาด: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
@@ -260,97 +272,259 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     }
   }
 
+  InputDecoration _inputDecoration({
+    required String label,
+    required IconData icon,
+    Color? iconColor,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+      prefixIcon: Container(
+        margin: const EdgeInsets.only(left: 12, right: 8),
+        child: Icon(icon, color: iconColor ?? AppColors.primary, size: 22),
+      ),
+      prefixIconConstraints: const BoxConstraints(minWidth: 44, minHeight: 0),
+      filled: true,
+      fillColor: AppColors.surface,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: AppColors.error),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(authProvider).user;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('แก้ไขข้อมูลส่วนตัว'),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.textPrimary,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
-              Center(
-                child: ImagePickerWidget(
-                  currentImageUrl: user?['avatar_full_url'],
-                  uploadType: 'avatar',
-                  entityId: user?['email'] ?? '',
-                  size: 120,
-                  placeholderIcon: Icons.person,
-                  showConfirmButtons: false, // Parent handles save
-                  onImagePicked: (file) {
-                    _pendingImageFile = file;
-                  },
-                  onImageCancelled: () {
-                    _pendingImageFile = null;
-                  },
+      backgroundColor: AppColors.background,
+      body: CustomScrollView(
+        slivers: [
+          // ── Gradient Header with Avatar ──
+          SliverToBoxAdapter(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [AppColors.primaryDark, AppColors.primary],
+                ),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(32),
+                  bottomRight: Radius.circular(32),
                 ),
               ),
-              const SizedBox(height: 32),
-              TextFormField(
-                controller: _firstNameController,
-                decoration: const InputDecoration(
-                  labelText: 'ชื่อ',
-                  prefixIcon: Icon(Icons.person_outline),
-                ),
-                validator: (v) => v?.isEmpty ?? true ? 'กรุณากรอกชื่อ' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _lastNameController,
-                decoration: const InputDecoration(
-                  labelText: 'นามสกุล',
-                  prefixIcon: Icon(Icons.person_outline),
-                ),
-                validator: (v) =>
-                    v?.isEmpty ?? true ? 'กรุณากรอกนามสกุล' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _phoneController,
-                decoration: const InputDecoration(
-                  labelText: 'เบอร์โทรศัพท์',
-                  prefixIcon: Icon(Icons.phone_outlined),
-                ),
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isSaving ? null : _saveProfile,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: _isSaving
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 4, 16, 28),
+                  child: Column(
+                    children: [
+                      // ── Top bar ──
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white, size: 20),
+                            onPressed: () => Navigator.pop(context),
                           ),
-                        )
-                      : const Text('บันทึก'),
+                          const Expanded(
+                            child: Text(
+                              'แก้ไขข้อมูลส่วนตัว',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 48), // Balance the back button
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // ── Avatar ──
+                      ImagePickerWidget(
+                        currentImageUrl: user?['avatar_full_url'],
+                        uploadType: 'avatar',
+                        entityId: user?['email'] ?? '',
+                        size: 110,
+                        placeholderIcon: Icons.person_rounded,
+                        showConfirmButtons: false,
+                        borderColor: Colors.white.withValues(alpha: 0.6),
+                        borderWidth: 3,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.2),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                        onImagePicked: (file) {
+                          setState(() {
+                            _pendingImageFile = file;
+                          });
+                        },
+                        onImageCancelled: () {
+                          setState(() {
+                            _pendingImageFile = null;
+                          });
+                        },
+                      ),
+                      if (_pendingImageFile == null) ...[
+                        const SizedBox(height: 10),
+                        Text(
+                          'แตะเพื่อเปลี่ยนรูปโปรไฟล์',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.7),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+
+          // ── Form Body ──
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Section label
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4, bottom: 14),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 4,
+                            height: 18,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'ข้อมูลส่วนตัว',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Form card
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: _firstNameController,
+                            decoration: _inputDecoration(label: 'ชื่อ', icon: Icons.person_outline_rounded),
+                            validator: (v) => v?.isEmpty ?? true ? 'กรุณากรอกชื่อ' : null,
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _lastNameController,
+                            decoration: _inputDecoration(label: 'นามสกุล', icon: Icons.badge_outlined),
+                            validator: (v) => v?.isEmpty ?? true ? 'กรุณากรอกนามสกุล' : null,
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _phoneController,
+                            decoration: _inputDecoration(
+                              label: 'เบอร์โทรศัพท์',
+                              icon: Icons.phone_outlined,
+                              iconColor: AppColors.info,
+                            ),
+                            keyboardType: TextInputType.phone,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    // ── Save Button ──
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton.icon(
+                        onPressed: _isSaving ? null : _saveProfile,
+                        icon: _isSaving
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                              )
+                            : const Icon(Icons.check_rounded, size: 22),
+                        label: Text(
+                          _isSaving ? 'กำลังบันทึก...' : 'บันทึกข้อมูล',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 0.3),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor: AppColors.primaryLight,
+                          elevation: 2,
+                          shadowColor: AppColors.primary.withValues(alpha: 0.4),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
+
 
 class ChangePasswordScreen extends ConsumerStatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -382,9 +556,18 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
 
     if (_newPasswordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('รหัสผ่านใหม่ไม่ตรงกัน'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.white, size: 20),
+              SizedBox(width: 10),
+              Text('รหัสผ่านใหม่ไม่ตรงกัน'),
+            ],
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
         ),
       );
       return;
@@ -409,8 +592,17 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(response.data['message'] ?? 'เปลี่ยนรหัสผ่านสำเร็จ'),
-            backgroundColor: Colors.green,
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 10),
+                Text(response.data['message'] ?? 'เปลี่ยนรหัสผ่านสำเร็จ'),
+              ],
+            ),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
         Navigator.pop(context);
@@ -419,7 +611,6 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       if (mounted) {
         String errorMsg = 'เกิดข้อผิดพลาด';
         if (e.response?.statusCode == 422) {
-          // Validation error (wrong current password)
           final data = e.response?.data;
           if (data is Map && data['message'] != null) {
             errorMsg = data['message'];
@@ -428,7 +619,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMsg),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
@@ -437,7 +631,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('เกิดข้อผิดพลาด: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
@@ -446,100 +643,315 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     }
   }
 
+  InputDecoration _pwInputDecoration({
+    required String label,
+    required bool obscure,
+    required VoidCallback onToggle,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+      prefixIcon: Container(
+        margin: const EdgeInsets.only(left: 12, right: 8),
+        child: const Icon(Icons.lock_outline_rounded, color: AppColors.primary, size: 22),
+      ),
+      prefixIconConstraints: const BoxConstraints(minWidth: 44, minHeight: 0),
+      suffixIcon: IconButton(
+        icon: Icon(
+          obscure ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+          color: AppColors.textHint,
+          size: 22,
+        ),
+        onPressed: onToggle,
+      ),
+      filled: true,
+      fillColor: AppColors.surface,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: AppColors.error),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('เปลี่ยนรหัสผ่าน'),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.textPrimary,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: _currentPasswordController,
-                obscureText: _obscureCurrent,
-                decoration: InputDecoration(
-                  labelText: 'รหัสผ่านปัจจุบัน',
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureCurrent ? Icons.visibility_off : Icons.visibility,
-                    ),
-                    onPressed: () =>
-                        setState(() => _obscureCurrent = !_obscureCurrent),
-                  ),
+      backgroundColor: AppColors.background,
+      body: CustomScrollView(
+        slivers: [
+          // ── Gradient Header ──
+          SliverToBoxAdapter(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [AppColors.primaryDark, AppColors.primary],
                 ),
-                validator: (v) =>
-                    v?.isEmpty ?? true ? 'กรุณากรอกรหัสผ่านปัจจุบัน' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _newPasswordController,
-                obscureText: _obscureNew,
-                decoration: InputDecoration(
-                  labelText: 'รหัสผ่านใหม่',
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureNew ? Icons.visibility_off : Icons.visibility,
-                    ),
-                    onPressed: () => setState(() => _obscureNew = !_obscureNew),
-                  ),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(32),
+                  bottomRight: Radius.circular(32),
                 ),
-                validator: (v) => (v?.length ?? 0) < 6
-                    ? 'รหัสผ่านต้องมีอย่างน้อย 6 ตัว'
-                    : null,
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _confirmPasswordController,
-                obscureText: _obscureConfirm,
-                decoration: InputDecoration(
-                  labelText: 'ยืนยันรหัสผ่านใหม่',
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureConfirm ? Icons.visibility_off : Icons.visibility,
-                    ),
-                    onPressed: () =>
-                        setState(() => _obscureConfirm = !_obscureConfirm),
-                  ),
-                ),
-                validator: (v) =>
-                    v?.isEmpty ?? true ? 'กรุณายืนยันรหัสผ่าน' : null,
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _changePassword,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 4, 16, 32),
+                  child: Column(
+                    children: [
+                      // ── Top bar ──
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white, size: 20),
+                            onPressed: () => Navigator.pop(context),
                           ),
-                        )
-                      : const Text('เปลี่ยนรหัสผ่าน'),
+                          const Expanded(
+                            child: Text(
+                              'เปลี่ยนรหัสผ่าน',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 48),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // ── Shield Icon ──
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.15),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
+                        ),
+                        child: const Icon(Icons.shield_rounded, size: 40, color: Colors.white),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'เปลี่ยนรหัสผ่านเพื่อความปลอดภัย',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+
+          // ── Form Body ──
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Section label
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4, bottom: 14),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 4,
+                            height: 18,
+                            decoration: BoxDecoration(
+                              color: AppColors.warning,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'รหัสผ่านปัจจุบัน',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Current password card
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: TextFormField(
+                        controller: _currentPasswordController,
+                        obscureText: _obscureCurrent,
+                        decoration: _pwInputDecoration(
+                          label: 'กรอกรหัสผ่านปัจจุบัน',
+                          obscure: _obscureCurrent,
+                          onToggle: () => setState(() => _obscureCurrent = !_obscureCurrent),
+                        ),
+                        validator: (v) => v?.isEmpty ?? true ? 'กรุณากรอกรหัสผ่านปัจจุบัน' : null,
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Section label
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4, bottom: 14),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 4,
+                            height: 18,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'ตั้งรหัสผ่านใหม่',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // New password card
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: _newPasswordController,
+                            obscureText: _obscureNew,
+                            decoration: _pwInputDecoration(
+                              label: 'รหัสผ่านใหม่',
+                              obscure: _obscureNew,
+                              onToggle: () => setState(() => _obscureNew = !_obscureNew),
+                            ),
+                            validator: (v) => (v?.length ?? 0) < 6
+                                ? 'รหัสผ่านต้องมีอย่างน้อย 6 ตัว'
+                                : null,
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _confirmPasswordController,
+                            obscureText: _obscureConfirm,
+                            decoration: _pwInputDecoration(
+                              label: 'ยืนยันรหัสผ่านใหม่',
+                              obscure: _obscureConfirm,
+                              onToggle: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                            ),
+                            validator: (v) => v?.isEmpty ?? true ? 'กรุณายืนยันรหัสผ่าน' : null,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Hint
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Row(
+                        children: [
+                          Icon(Icons.info_outline_rounded, size: 14, color: AppColors.textHint),
+                          const SizedBox(width: 6),
+                          Text(
+                            'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร',
+                            style: TextStyle(fontSize: 12, color: AppColors.textHint),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    // ── Change Password Button ──
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton.icon(
+                        onPressed: _isLoading ? null : _changePassword,
+                        icon: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                              )
+                            : const Icon(Icons.lock_reset_rounded, size: 22),
+                        label: Text(
+                          _isLoading ? 'กำลังเปลี่ยน...' : 'เปลี่ยนรหัสผ่าน',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 0.3),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor: AppColors.primaryLight,
+                          elevation: 2,
+                          shadowColor: AppColors.primary.withValues(alpha: 0.4),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -560,98 +972,241 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('ตั้งค่าแอปพลิเคชัน'),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.textPrimary,
-        elevation: 0,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _buildSectionTitle('การแจ้งเตือน'),
-          Card(
-            child: SwitchListTile(
-              title: const Text('เปิดการแจ้งเตือน'),
-              subtitle: const Text('รับการแจ้งเตือนจากแอป'),
-              value: _notifications,
-              onChanged: (v) => setState(() => _notifications = v),
+      backgroundColor: AppColors.background,
+      body: CustomScrollView(
+        slivers: [
+          // ── Gradient Header ──
+          SliverToBoxAdapter(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [AppColors.primaryDark, AppColors.primary],
+                ),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(32),
+                  bottomRight: Radius.circular(32),
+                ),
+              ),
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 4, 16, 32),
+                  child: Column(
+                    children: [
+                      // ── Top Bar ──
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white, size: 20),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                          const Expanded(
+                            child: Text(
+                              'ตั้งค่าแอปพลิเคชัน',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 48),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // ── Icon Badge ──
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.15),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
+                        ),
+                        child: const Icon(Icons.settings_suggest_rounded, size: 42, color: Colors.white),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'ปรับแต่งการทำงานของแอปตามที่คุณต้องการ',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 24),
-          _buildSectionTitle('ธีม'),
-          Card(
-            child: SwitchListTile(
-              title: const Text('โหมดมืด'),
-              subtitle: const Text('ใช้ธีมสีมืด'),
-              value: _darkMode,
-              onChanged: (v) => setState(() => _darkMode = v),
-            ),
-          ),
-          const SizedBox(height: 24),
-          _buildSectionTitle('ภาษา'),
-          Card(
-            child: ListTile(
-              title: const Text('ภาษา'),
-              subtitle: Text(_language),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                showDialog(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: const Text('เลือกภาษา'),
-                    content: Column(
-                      mainAxisSize: MainAxisSize.min,
+
+          // ── Body ──
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Section 1: Notifications ──
+                  const _SettingsSectionHeader(
+                    title: 'การแจ้งเตือน',
+                    barColor: AppColors.primary,
+                  ),
+                  const SizedBox(height: 10),
+                  _SettingsCard(
+                    child: SwitchListTile(
+                      activeThumbColor: AppColors.primary,
+                      title: const Text(
+                        'การแจ้งเตือนในแอป',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                      ),
+                      subtitle: const Text(
+                        'รับการแจ้งเตือนกำหนดการคาวและสุขภาพ',
+                        style: TextStyle(fontSize: 12, color: AppColors.textHint),
+                      ),
+                      secondary: _buildTileIcon(Icons.notifications_active_rounded, const Color(0xFFE8F0E4), AppColors.primary),
+                      value: _notifications,
+                      onChanged: (v) => setState(() => _notifications = v),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // ── Section 2: Theme ──
+                  const _SettingsSectionHeader(
+                    title: 'การแสดงผล',
+                    barColor: AppColors.info,
+                  ),
+                  const SizedBox(height: 10),
+                  _SettingsCard(
+                    child: SwitchListTile(
+                      activeThumbColor: AppColors.primary,
+                      title: const Text(
+                        'โหมดมืด (Dark Mode)',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                      ),
+                      subtitle: const Text(
+                        'เปลี่ยนโทนสีแอปเป็นสีมืดเพื่อถนอมสายตา',
+                        style: TextStyle(fontSize: 12, color: AppColors.textHint),
+                      ),
+                      secondary: _buildTileIcon(Icons.dark_mode_rounded, const Color(0xFFE3F2FD), AppColors.info),
+                      value: _darkMode,
+                      onChanged: (v) => setState(() => _darkMode = v),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // ── Section 3: Language ──
+                  const _SettingsSectionHeader(
+                    title: 'ภาษา / Language',
+                    barColor: AppColors.warning,
+                  ),
+                  const SizedBox(height: 10),
+                  _SettingsCard(
+                    child: ListTile(
+                      onTap: () => _showLanguageDialog(context),
+                      leading: _buildTileIcon(Icons.language_rounded, const Color(0xFFFFF3E0), AppColors.warning),
+                      title: const Text(
+                        'ภาษาของแอปพลิเคชัน',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                      ),
+                      subtitle: Text(
+                        _language,
+                        style: const TextStyle(fontSize: 12, color: AppColors.textHint),
+                      ),
+                      trailing: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceAlt,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _language,
+                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primary),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.primary),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // ── Section 4: System ──
+                  const _SettingsSectionHeader(
+                    title: 'ระบบ & ข้อมูล',
+                    barColor: AppColors.secondary,
+                  ),
+                  const SizedBox(height: 10),
+                  _SettingsCard(
+                    child: Column(
                       children: [
                         ListTile(
-                          title: const Text('ไทย'),
-                          leading: _language == 'ไทย'
-                              ? const Icon(Icons.check)
-                              : null,
-                          onTap: () {
-                            setState(() => _language = 'ไทย');
-                            Navigator.pop(ctx);
-                          },
+                          leading: _buildTileIcon(Icons.info_outline_rounded, const Color(0xFFF5F1E8), AppColors.secondary),
+                          title: const Text(
+                            'เวอร์ชันแอปพลิเคชัน',
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                          ),
+                          trailing: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Text(
+                              'v1.0.0',
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primary),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 60),
+                          child: Divider(height: 1, color: AppColors.divider.withValues(alpha: 0.5)),
                         ),
                         ListTile(
-                          title: const Text('English'),
-                          leading: _language == 'English'
-                              ? const Icon(Icons.check)
-                              : null,
                           onTap: () {
-                            setState(() => _language = 'English');
-                            Navigator.pop(ctx);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Row(
+                                  children: [
+                                    Icon(Icons.cleaning_services_rounded, color: Colors.white, size: 20),
+                                    SizedBox(width: 10),
+                                    Text('ล้างข้อมูลแคชสำเร็จเรียบร้อยแล้ว'),
+                                  ],
+                                ),
+                                backgroundColor: AppColors.success,
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                margin: const EdgeInsets.all(16),
+                              ),
+                            );
                           },
+                          leading: _buildTileIcon(Icons.cleaning_services_rounded, const Color(0xFFFFEBEE), AppColors.error),
+                          title: const Text(
+                            'ล้างข้อมูลแคช',
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                          ),
+                          subtitle: const Text(
+                            'คืนพื้นที่หน่วยความจำชั่วคราว',
+                            style: TextStyle(fontSize: 12, color: AppColors.textHint),
+                          ),
+                          trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textHint, size: 22),
                         ),
                       ],
                     ),
                   ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 24),
-          _buildSectionTitle('ข้อมูลแอป'),
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  title: const Text('เวอร์ชัน'),
-                  trailing: Text(
-                    '1.0.0',
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                ),
-                ListTile(
-                  title: const Text('ล้างแคช'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('ล้างแคชสำเร็จ')),
-                    );
-                  },
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -659,15 +1214,77 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 8, bottom: 8),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-          color: Colors.grey[600],
+  Widget _buildTileIcon(IconData icon, Color bgColor, Color iconColor) {
+    return Container(
+      width: 42,
+      height: 42,
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Icon(icon, color: iconColor, size: 22),
+    );
+  }
+
+  void _showLanguageDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.language_rounded, color: AppColors.primary),
+            SizedBox(width: 10),
+            Text('เลือกภาษา / Select Language', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildLangTile('ไทย', 'ภาษาไทย', ctx),
+            const SizedBox(height: 8),
+            _buildLangTile('English', 'English (US)', ctx),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLangTile(String code, String label, BuildContext ctx) {
+    final isSelected = _language == code;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          setState(() => _language = code);
+          Navigator.pop(ctx);
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primary.withValues(alpha: 0.08) : AppColors.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? AppColors.primary : AppColors.border.withValues(alpha: 0.5),
+              width: isSelected ? 1.5 : 1,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                ),
+              ),
+              if (isSelected)
+                const Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 20),
+            ],
+          ),
         ),
       ),
     );
@@ -679,107 +1296,219 @@ class HelpScreen extends StatelessWidget {
 
   final List<Map<String, String>> faqs = const [
     {
-      'question': 'วิธีเพิ่มวัวใหม่',
-      'answer': 'ไปที่หน้า "รายชื่อวัว" แล้วกดปุ่ม + ที่มุมขวาล่าง',
+      'question': 'วิธีเพิ่มวัวใหม่เข้าสู่ระบบ',
+      'answer': 'ไปที่เมนู "รายชื่อวัว" บริเวณแถบล่าง แล้วกดปุ่ม + ที่มุมขวาล่าง กรอกข้อมูลวัว สายพันธุ์ และรูปถ่าย จากนั้นกดบันทึก',
     },
     {
-      'question': 'วิธีบันทึกการผสมพันธุ์',
-      'answer':
-          'เข้าไปที่รายละเอียดวัว → แท็ป "ผสมพันธุ์" → กดปุ่ม "บันทึกเป็นสัด"',
+      'question': 'วิธีบันทึกการผสมพันธุ์และตั้งครรภ์',
+      'answer': 'เข้าไปที่รายละเอียดของแม่วัว → เลือกแท็บ "การผสมพันธุ์" → กดปุ่ม "บันทึกผสมพันธุ์" ระบบจะคำนวณวันคลอดและสร้างแจ้งเตือนให้อัตโนมัติ',
     },
     {
-      'question': 'วิธีบันทึกน้ำหนัก',
-      'answer':
-          'เข้าไปที่รายละเอียดวัว → แท็ป "น้ำหนัก" → กดปุ่ม "บันทึกน้ำหนัก"',
+      'question': 'วิธีบันทึกน้ำหนักและการเติบโต',
+      'answer': 'เข้าไปที่รายละเอียดวัว → เลือกแท็บ "น้ำหนัก" → กดปุ่ม "บันทึกน้ำหนัก" ระบบจะคำนวณอัตราการเจริญเติบโต (ADG) ให้อัตโนมัติ',
     },
     {
       'question': 'ลืมรหัสผ่านทำอย่างไร',
-      'answer': 'กด "ลืมรหัสผ่าน" ที่หน้าเข้าสู่ระบบ แล้วทำตามขั้นตอน',
+      'answer': 'ในหน้าเข้าสู่ระบบ กดลิงก์ "ลืมรหัสผ่าน" กรอกอีเมลของคุณ ระบบจะส่งรหัส OTP 6 หลักไปยังอีเมลจริงของคุณเพื่อตั้งรหัสผ่านใหม่',
     },
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('ช่วยเหลือ'),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.textPrimary,
-        elevation: 0,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Icon(Icons.help_outline, size: 48, color: AppColors.primary),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'ต้องการความช่วยเหลือ?',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      backgroundColor: AppColors.background,
+      body: CustomScrollView(
+        slivers: [
+          // ── Gradient Header ──
+          SliverToBoxAdapter(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [AppColors.primaryDark, AppColors.primary],
+                ),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(32),
+                  bottomRight: Radius.circular(32),
+                ),
+              ),
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 4, 16, 32),
+                  child: Column(
+                    children: [
+                      // ── Top Bar ──
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white, size: 20),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                          const Expanded(
+                            child: Text(
+                              'ช่วยเหลือ & แนะนำ',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 48),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // ── Icon Badge ──
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.15),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
+                        ),
+                        child: const Icon(Icons.headset_mic_rounded, size: 40, color: Colors.white),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'ศูนย์ช่วยเหลือและคำถามที่พบบ่อย COWSMART',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'ดูคำถามที่พบบ่อยด้านล่าง หรือติดต่อเรา',
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 24),
-          const Padding(
-            padding: EdgeInsets.only(left: 8, bottom: 8),
-            child: Text(
-              'คำถามที่พบบ่อย',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ),
-          ...faqs.map(
-            (faq) => Card(
-              margin: const EdgeInsets.only(bottom: 12),
-              child: ExpansionTile(
-                title: Text(faq['question']!),
+
+          // ── Body ──
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    child: Text(
-                      faq['answer']!,
-                      style: TextStyle(color: Colors.grey[700]),
+                  // ── FAQ Section ──
+                  const _SettingsSectionHeader(
+                    title: 'คำถามที่พบบ่อย (FAQ)',
+                    barColor: AppColors.primary,
+                  ),
+                  const SizedBox(height: 10),
+                  ...faqs.map(
+                    (faq) => Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Theme(
+                        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                        child: ExpansionTile(
+                          leading: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(Icons.quiz_rounded, color: AppColors.primary, size: 20),
+                          ),
+                          title: Text(
+                            faq['question']!,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                              child: Text(
+                                faq['answer']!,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.textSecondary,
+                                  height: 1.5,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // ── Contact Section ──
+                  const _SettingsSectionHeader(
+                    title: 'ช่องทางติดต่อเรา',
+                    barColor: AppColors.info,
+                  ),
+                  const SizedBox(height: 10),
+                  _SettingsCard(
+                    child: Column(
+                      children: [
+                        ListTile(
+                          leading: Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE8F0E4),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.email_rounded, color: AppColors.primary, size: 22),
+                          ),
+                          title: const Text(
+                            'อีเมลฝ่ายสนับสนุน',
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                          ),
+                          subtitle: const Text('support@cowsmart.com', style: TextStyle(fontSize: 12, color: AppColors.textHint)),
+                          trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.textHint),
+                          onTap: () {},
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 60),
+                          child: Divider(height: 1, color: AppColors.divider.withValues(alpha: 0.5)),
+                        ),
+                        ListTile(
+                          leading: Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE3F2FD),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.phone_in_talk_rounded, color: AppColors.info, size: 22),
+                          ),
+                          title: const Text(
+                            'ศูนย์บริการลูกค้า',
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                          ),
+                          subtitle: const Text('02-123-4567 (จันทร์-ศุกร์ 8:30 - 17:30)', style: TextStyle(fontSize: 12, color: AppColors.textHint)),
+                          trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.textHint),
+                          onTap: () {},
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          const Padding(
-            padding: EdgeInsets.only(left: 8, bottom: 8),
-            child: Text(
-              'ติดต่อเรา',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ),
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  leading: Icon(Icons.email, color: AppColors.primary),
-                  title: const Text('อีเมล'),
-                  subtitle: const Text('support@cowsmart.com'),
-                  onTap: () {},
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: Icon(Icons.phone, color: AppColors.primary),
-                  title: const Text('โทรศัพท์'),
-                  subtitle: const Text('02-123-4567'),
-                  onTap: () {},
-                ),
-              ],
             ),
           ),
         ],
@@ -787,3 +1516,72 @@ class HelpScreen extends StatelessWidget {
     );
   }
 }
+
+// ── Shared Helper Components for Settings Screens ──
+
+class _SettingsSectionHeader extends StatelessWidget {
+  final String title;
+  final Color barColor;
+
+  const _SettingsSectionHeader({
+    required this.title,
+    required this.barColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 18,
+            decoration: BoxDecoration(
+              color: barColor,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SettingsCard extends StatelessWidget {
+  final Widget child;
+
+  const _SettingsCard({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: child,
+      ),
+    );
+  }
+}
+

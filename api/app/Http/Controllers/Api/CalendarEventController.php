@@ -34,60 +34,80 @@ class CalendarEventController extends Controller
             return response()->json($manualEvents);
         }
 
-        // Get all cows for this farm
+        // Get all cows for this farm and collect all possible identifiers
         $farmCows = Cow::where('farm_id', $farmId)->get();
+        $farmCowIds = [];
+        foreach ($farmCows as $c) {
+            if ($c->id) $farmCowIds[] = (string)$c->id;
+            if ($c->cow_id) $farmCowIds[] = (string)$c->cow_id;
+            if ($c->tag_number) $farmCowIds[] = (string)$c->tag_number;
+            if ($c->name) $farmCowIds[] = (string)$c->name;
+        }
+        $farmCowIds = array_unique(array_filter($farmCowIds));
 
-        // 2. Synthesize Health Appointments into calendar events
+        // 2. Synthesize Health Appointments into calendar events (only for cows in this farm)
         $healthEvents = [];
-        $appts = HealthAppointment::whereNotNull('appoint_datetime')->get();
-        foreach ($appts as $appt) {
-            $cow = $this->findCow($appt->cow_id, $farmCows, $farmId);
-            $cowName = $cow ? ($cow->name ?: ($cow->tag_number ?: $cow->cow_id)) : $appt->cow_id;
-            $dt = Carbon::parse($appt->appoint_datetime)->toIso8601String();
-            $calEventId = str_starts_with($appt->health_appointment_id, 'HA-')
-                ? $appt->health_appointment_id
-                : 'HA-' . $appt->health_appointment_id;
+        if (!empty($farmCowIds)) {
+            $appts = HealthAppointment::whereNotNull('appoint_datetime')
+                ->whereIn('cow_id', $farmCowIds)
+                ->get();
 
-            $healthEvents[] = [
-                'calendar_event_id' => $calEventId,
-                'farm_id' => $farmId,
-                'title' => 'นัดหมายสุขภาพ: ' . ($cowName ? $cowName : 'วัว'),
-                'event_datetime' => $dt,
-                'description' => $appt->description ?: 'นัดหมายตรวจสุขภาพ / ฉีดวัคซีน / ถ่ายพยาธิ',
-                'reminder_setting' => $appt->reminder_setting ?: 'ก่อน 1 วัน',
-                'cow_id' => $cow ? $cow->cow_id : $appt->cow_id,
-                'event_type' => 'health',
-            ];
+            foreach ($appts as $appt) {
+                $cow = $this->findCow($appt->cow_id, $farmCows, $farmId);
+                if (!$cow) continue; // Skip if cow doesn't belong to this farm
+
+                $cowName = $cow->name ?: ($cow->tag_number ?: $cow->cow_id);
+                $dt = Carbon::parse($appt->appoint_datetime)->toIso8601String();
+                $calEventId = str_starts_with($appt->health_appointment_id, 'HA-')
+                    ? $appt->health_appointment_id
+                    : 'HA-' . $appt->health_appointment_id;
+
+                $healthEvents[] = [
+                    'calendar_event_id' => $calEventId,
+                    'farm_id' => $farmId,
+                    'title' => 'นัดหมายสุขภาพ: ' . $cowName,
+                    'event_datetime' => $dt,
+                    'description' => $appt->description ?: 'นัดหมายตรวจสุขภาพ / ฉีดวัคซีน / ถ่ายพยาธิ',
+                    'reminder_setting' => $appt->reminder_setting ?: 'ก่อน 1 วัน',
+                    'cow_id' => $cow->cow_id,
+                    'event_type' => 'health',
+                ];
+            }
         }
 
-        // 3. Synthesize Expected Calvings into calendar events
+        // 3. Synthesize Expected Calvings into calendar events (only for cows in this farm)
         $breedingEvents = [];
-        $records = BreedingRecord::whereNotNull('expected_calving')
-            ->where('expected_calving', '!=', '')
-            ->where(function ($q) {
-                $q->whereNull('calving_date')->orWhere('calving_date', '');
-            })
-            ->get();
+        if (!empty($farmCowIds)) {
+            $records = BreedingRecord::whereNotNull('expected_calving')
+                ->where('expected_calving', '!=', '')
+                ->where(function ($q) {
+                    $q->whereNull('calving_date')->orWhere('calving_date', '');
+                })
+                ->whereIn('dam_id', $farmCowIds)
+                ->get();
 
-        foreach ($records as $rec) {
-            $cow = $this->findCow($rec->dam_id, $farmCows, $farmId);
-            $cowName = $cow ? ($cow->name ?: ($cow->tag_number ?: $cow->cow_id)) : $rec->dam_id;
-            $sireInfo = $rec->sire_id ? " (พ่อพันธุ์: {$rec->sire_id})" : '';
-            $dt = Carbon::parse($rec->expected_calving)->setTime(8, 0)->toIso8601String();
-            $calEventId = str_starts_with($rec->breeding_record_id, 'BR-')
-                ? $rec->breeding_record_id
-                : 'BR-' . $rec->breeding_record_id;
+            foreach ($records as $rec) {
+                $cow = $this->findCow($rec->dam_id, $farmCows, $farmId);
+                if (!$cow) continue; // Skip if cow doesn't belong to this farm
 
-            $breedingEvents[] = [
-                'calendar_event_id' => $calEventId,
-                'farm_id' => $farmId,
-                'title' => 'กำหนดวันคลอด: ' . $cowName,
-                'event_datetime' => $dt,
-                'description' => 'คาดว่าจะคลอดลูกวัว' . $sireInfo,
-                'reminder_setting' => $rec->reminder_setting ?: 'ก่อน 7 วัน',
-                'cow_id' => $cow ? $cow->cow_id : $rec->dam_id,
-                'event_type' => 'breeding',
-            ];
+                $cowName = $cow->name ?: ($cow->tag_number ?: $cow->cow_id);
+                $sireInfo = $rec->sire_id ? " (พ่อพันธุ์: {$rec->sire_id})" : '';
+                $dt = Carbon::parse($rec->expected_calving)->setTime(8, 0)->toIso8601String();
+                $calEventId = str_starts_with($rec->breeding_record_id, 'BR-')
+                    ? $rec->breeding_record_id
+                    : 'BR-' . $rec->breeding_record_id;
+
+                $breedingEvents[] = [
+                    'calendar_event_id' => $calEventId,
+                    'farm_id' => $farmId,
+                    'title' => 'กำหนดวันคลอด: ' . $cowName,
+                    'event_datetime' => $dt,
+                    'description' => 'คาดว่าจะคลอดลูกวัว' . $sireInfo,
+                    'reminder_setting' => $rec->reminder_setting ?: 'ก่อน 7 วัน',
+                    'cow_id' => $cow->cow_id,
+                    'event_type' => 'breeding',
+                ];
+            }
         }
 
         $allEvents = array_merge($manualEvents, $healthEvents, $breedingEvents);

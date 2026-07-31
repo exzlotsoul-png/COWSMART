@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/constants/app_constants.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cowsmart/core/widgets/image_picker_widget.dart';
@@ -57,12 +56,13 @@ class _CreateFarmScreenState extends ConsumerState<CreateFarmScreen> {
               entityId: newFarm.id,
               imageFile: _pendingImageFile!,
             );
-            // We don't strictly need to sync the farm here because it will be refetched
-            // or the user is going to the zone creation screen anyway.
           } catch (e) {
-            print('[ERROR] อัปโหลดรูปภาพฟาร์มไม่สำเร็จ: $e');
+            debugPrint('[ERROR] อัปโหลดรูปภาพฟาร์มไม่สำเร็จ: $e');
           }
         }
+
+        // Re-fetch farms to ensure updated image URLs are synced in Riverpod state
+        await ref.read(farmProvider.notifier).fetchFarms();
 
         if (mounted) {
           context.push('/create_zone');
@@ -87,89 +87,236 @@ class _CreateFarmScreenState extends ConsumerState<CreateFarmScreen> {
     final farmState = ref.watch(farmProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('สร้างฟาร์มใหม่')),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppConstants.defaultPadding * 1.5),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 16),
-              Text(
-                'ข้อมูลฟาร์มของคุณ',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
+      backgroundColor: AppColors.background,
+      body: CustomScrollView(
+        slivers: [
+          // ── Gradient Header ──
+          SliverToBoxAdapter(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [AppColors.primaryDark, AppColors.primary],
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'เพิ่มฟาร์มใหม่เพื่อเริ่มต้นการจัดการ',
-                style: Theme.of(context).textTheme.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-
-              // Farm Image Picker
-              Center(
-                child: ImagePickerWidget(
-                  currentImageUrl: null,
-                  uploadType: 'farm',
-                  entityId: '', // Entity ID will be assigned after creation
-                  size: 140,
-                  placeholderIcon: Icons.agriculture,
-                  showConfirmButtons: false,
-                  onImagePicked: (file) {
-                    _pendingImageFile = file;
-                  },
-                  onImageCancelled: () {
-                    _pendingImageFile = null;
-                  },
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
                 ),
               ),
-              const SizedBox(height: 40),
-
-              TextField(
-                controller: _farmNameController,
-                decoration: const InputDecoration(
-                  labelText: 'ชื่อฟาร์ม',
-                  hintText: 'ฟาร์มวัวเนื้อ...',
-                  prefixIcon: Icon(Icons.home_work_outlined),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              TextField(
-                controller: _addressController,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'ที่อยู่ฟาร์ม',
-                  hintText: 'รายละเอียดที่อยู่...',
-                  prefixIcon: Padding(
-                    padding: EdgeInsets.only(bottom: 48.0),
-                    child: Icon(Icons.location_on_outlined),
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 16, 20),
+                  child: Column(
+                    children: [
+                      // Top Row with Back Button
+                      Row(
+                        children: [
+                          IconButton(
+                            onPressed: () {
+                              if (Navigator.canPop(context)) {
+                                Navigator.pop(context);
+                              } else {
+                                context.go('/select-farm');
+                              }
+                            },
+                            icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 24),
+                          ),
+                          const Expanded(
+                            child: Text(
+                              'สร้างฟาร์มใหม่',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 48), // Balance back button space
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'กรอกข้อมูลเพื่อเริ่มต้นการจัดการฟาร์มของคุณ',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.85),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(height: 48),
-
-              ElevatedButton(
-                onPressed: _isSaving || farmState.isLoading ? null : _createFarm,
-                child: _isSaving || farmState.isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Text('สร้างฟาร์ม และไปต่อ'),
-              ),
-            ],
+            ),
           ),
-        ),
+
+          // ── Body Form Card ──
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text(
+                          'รูปโปรไฟล์ฟาร์ม',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Image Picker Widget
+                        Center(
+                          child: ImagePickerWidget(
+                            currentImageUrl: null,
+                            uploadType: 'farm',
+                            entityId: '',
+                            size: 130,
+                            placeholderIcon: Icons.agriculture_rounded,
+                            showConfirmButtons: false,
+                            onImagePicked: (file) {
+                              _pendingImageFile = file;
+                            },
+                            onImageCancelled: () {
+                              _pendingImageFile = null;
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Farm Name Field
+                        const Text(
+                          'ชื่อฟาร์ม',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _farmNameController,
+                          decoration: InputDecoration(
+                            hintText: 'เช่น ฟาร์มวัวขุนสุขใจ...',
+                            hintStyle: const TextStyle(fontSize: 14, color: AppColors.textHint),
+                            prefixIcon: const Icon(Icons.agriculture_rounded, color: AppColors.primary, size: 22),
+                            filled: true,
+                            fillColor: Colors.white,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.8)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.8)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+
+                        // Address Field
+                        const Text(
+                          'ที่อยู่ฟาร์ม',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _addressController,
+                          maxLines: 3,
+                          decoration: InputDecoration(
+                            hintText: 'รายละเอียดที่อยู่, ตำบล, อำเภอ, จังหวัด...',
+                            hintStyle: const TextStyle(fontSize: 14, color: AppColors.textHint),
+                            prefixIcon: const Padding(
+                              padding: EdgeInsets.only(bottom: 40),
+                              child: Icon(Icons.location_on_rounded, color: AppColors.primary, size: 22),
+                            ),
+                            filled: true,
+                            fillColor: Colors.white,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.8)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.8)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Submit Button
+                  SizedBox(
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      onPressed: _isSaving || farmState.isLoading ? null : _createFarm,
+                      icon: _isSaving || farmState.isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Icon(Icons.arrow_forward_rounded, size: 22),
+                      label: Text(
+                        _isSaving || farmState.isLoading ? 'กำลังบันทึก...' : 'สร้างฟาร์ม และไปต่อ',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 0.3),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        elevation: 2,
+                        shadowColor: AppColors.primary.withValues(alpha: 0.4),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

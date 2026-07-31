@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/constants/app_constants.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
@@ -45,140 +44,296 @@ class _SelectFarmScreenState extends ConsumerState<SelectFarmScreen> {
     final isNewUser = authState.isNewUser;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('เลือกฟาร์มของคุณ'), centerTitle: true),
-      body: Padding(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: 16),
-            Text(
-              isNewUser ? 'ยินดีต้อนรับ!' : 'ยินดีต้อนรับกลับมา!',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'เลือกฟาร์มที่คุณต้องการจัดการในวันนี้',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 32),
-
-            if (farmState.isLoading)
-              const Expanded(child: Center(child: CircularProgressIndicator()))
-            else if (farmState.farms.isEmpty)
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.agriculture,
-                      size: 64,
-                      color: AppColors.textSecondary,
-                    ),
-                    const SizedBox(height: 16),
-                    const Text('ยังไม่มีฟาร์มในระบบ'),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: () => context.go('/create_farm'),
-                      child: const Text('สร้างฟาร์มแรกของคุณ'),
-                    ),
-                  ],
+      backgroundColor: AppColors.background,
+      body: CustomScrollView(
+        slivers: [
+          // ── Gradient Header ──
+          SliverToBoxAdapter(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [AppColors.primaryDark, AppColors.primary],
                 ),
-              )
-            else
-              Expanded(
-                child: ListView.builder(
-                  itemCount: farmState.farms.length,
-                  itemBuilder: (context, index) {
-                    final farm = farmState.farms[index];
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        side: const BorderSide(color: AppColors.border),
-                      ),
-                      elevation: 0,
-                      child: InkWell(
-                        onTap: () => _onSelectFarm(farm),
-                        borderRadius: BorderRadius.circular(16),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 60,
-                                height: 60,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryLight.withOpacity(
-                                    0.2,
-                                  ),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Icon(
-                                  Icons.house_siding,
-                                  color: AppColors.primary,
-                                  size: 32,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      farm.name,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18,
-                                      ),
-                                    ),
-                                    Text(
-                                      'อีเมลเจ้าของ: ${farm.ownerEmail}',
-                                      style: const TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Icon(
-                                Icons.arrow_forward_ios,
-                                size: 16,
-                                color: AppColors.textSecondary,
-                              ),
-                            ],
-                          ),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
+                ),
+              ),
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 18),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'เลือกฟาร์มของคุณ',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    );
-                  },
-                ),
-              ),
-
-            if (farmState.farms.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 16),
-                child: ElevatedButton.icon(
-                  onPressed: () => context.push('/create_farm'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                      const SizedBox(height: 4),
+                      Text(
+                        isNewUser ? 'ยินดีต้อนรับสู่ COWSMART!' : 'ยินดีต้อนรับกลับมา! เลือกฟาร์มที่คุณต้องการจัดการในวันนี้',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.85),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
                   ),
-                  icon: const Icon(Icons.add, size: 24),
-                  label: const Text('สร้างฟาร์มเพิ่ม'),
                 ),
               ),
-          ],
-        ),
+            ),
+          ),
+
+          // ── Body Content ──
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (farmState.isLoading)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 60),
+                      child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                    )
+                  else if (farmState.farms.isEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.agriculture_rounded,
+                              size: 48,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'ยังไม่มีฟาร์มในระบบ',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            'เริ่มต้นด้วยการสร้างฟาร์มแรกของคุณเพื่อจัดการวัว',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton.icon(
+                            onPressed: () => context.go('/create_farm'),
+                            icon: const Icon(Icons.add_rounded, size: 20),
+                            label: const Text('สร้างฟาร์มแรกของคุณ'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else ...[
+                    // Section title
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4, bottom: 12),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 4,
+                            height: 18,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'รายชื่อฟาร์มทั้งหมด (${farmState.farms.length})',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Farm Cards
+                    ...farmState.farms.map((farm) {
+                      final user = authState.user;
+                      final ownerName = (user != null)
+                          ? '${user['first_name'] ?? ''} ${user['last_name'] ?? ''}'.trim()
+                          : farm.ownerEmail;
+                      final imageUrl = farm.imageFullUrl ?? farm.imageUrl;
+
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 14),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.04),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () => _onSelectFarm(farm),
+                            borderRadius: BorderRadius.circular(20),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Row(
+                                children: [
+                                  // ── Farm Image ──
+                                  Container(
+                                    width: 64,
+                                    height: 64,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(16),
+                                      color: AppColors.primary.withValues(alpha: 0.1),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.08),
+                                          blurRadius: 6,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(16),
+                                      child: imageUrl != null && imageUrl.isNotEmpty
+                                          ? Image.network(
+                                              imageUrl,
+                                              width: 64,
+                                              height: 64,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, __, ___) => const Icon(
+                                                Icons.house_siding_rounded,
+                                                color: AppColors.primary,
+                                                size: 32,
+                                              ),
+                                            )
+                                          : const Icon(
+                                              Icons.house_siding_rounded,
+                                              color: AppColors.primary,
+                                              size: 32,
+                                            ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+
+                                  // ── Farm Details ──
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          farm.name,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 17,
+                                            color: AppColors.textPrimary,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            const Icon(Icons.person_outline_rounded, size: 14, color: AppColors.textHint),
+                                            const SizedBox(width: 4),
+                                            Expanded(
+                                              child: Text(
+                                                'เจ้าของ: ${ownerName.isNotEmpty ? ownerName : farm.ownerEmail}',
+                                                style: const TextStyle(
+                                                  color: AppColors.textSecondary,
+                                                  fontSize: 13,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+
+                                  // Chevron
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.surfaceAlt,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.chevron_right_rounded,
+                                      size: 20,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+
+                    const SizedBox(height: 12),
+
+                    // Add Farm Button
+                    SizedBox(
+                      height: 52,
+                      child: ElevatedButton.icon(
+                        onPressed: () => context.push('/create_farm'),
+                        icon: const Icon(Icons.add_rounded, size: 22),
+                        label: const Text(
+                          'สร้างฟาร์มเพิ่ม',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 0.3),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          elevation: 2,
+                          shadowColor: AppColors.primary.withValues(alpha: 0.4),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

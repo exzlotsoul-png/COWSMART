@@ -56,7 +56,7 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
         }
       });
     } catch (e) {
-      print('Error loading existing zones: $e');
+      debugPrint('Error loading existing zones: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -162,7 +162,7 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
       List<String> failedDeletes = [];
       for (final zone in _zonesToDelete) {
         try {
-          print('[DELETE] กำลังลบโซน: ${zone.name}...');
+          debugPrint('[DELETE] กำลังลบโซน: ${zone.name}...');
           await api.delete('/zones/${zone.id}');
         } catch (e) {
           String errMsg = 'ลบไม่สำเร็จ';
@@ -178,7 +178,7 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
         final zoneId = entry.key;
         final newName = entry.value;
         if (!_zonesToDelete.any((z) => z.id == zoneId)) {
-          print('[UPDATE] กำลังแก้ไขชื่อโซน $zoneId -> $newName...');
+          debugPrint('[UPDATE] กำลังแก้ไขชื่อโซน $zoneId -> $newName...');
           await api.put('/zones/$zoneId', data: {'name': newName});
         }
       }
@@ -187,7 +187,7 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
       int newCount = 0;
       for (final zone in _zones) {
         if (zone.id == 'NEW') {
-          print('[CREATE] กำลังสร้างโซนใหม่: ${zone.name}...');
+          debugPrint('[CREATE] กำลังสร้างโซนใหม่: ${zone.name}...');
           await api.post(
             '/zones',
             data: {'farm_id': currentFarm.id, 'name': zone.name},
@@ -356,7 +356,7 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
                               return Card(
                                 margin: const EdgeInsets.symmetric(vertical: 6),
                                 color: isNew
-                                    ? AppColors.primaryLight.withOpacity(0.05)
+                                    ? AppColors.primaryLight.withValues(alpha: 0.05)
                                     : AppColors.surface,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
@@ -368,18 +368,19 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
                                   ),
                                 ),
                                 child: ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                                   leading: CircleAvatar(
+                                    radius: 20,
                                     backgroundColor: isNew
                                         ? AppColors.primary
-                                        : AppColors.primaryLight.withOpacity(
-                                            0.2,
-                                          ),
+                                        : AppColors.primaryLight.withValues(alpha: 0.2),
                                     child: Text(
                                       '${index + 1}',
                                       style: TextStyle(
                                         color: isNew
                                             ? Colors.white
                                             : AppColors.primaryDark,
+                                        fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -387,14 +388,23 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
                                   title: Text(
                                     zone.name,
                                     style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.textPrimary,
                                     ),
                                   ),
-                                  subtitle: Text(
-                                    isNew
-                                        ? 'โซนใหม่ (ยังไม่บันทึก)'
-                                        : 'วัวในโซน: ${zone.cowCount} ตัว',
-                                    style: const TextStyle(fontSize: 10),
+                                  subtitle: Padding(
+                                    padding: const EdgeInsets.only(top: 4),
+                                    child: Text(
+                                      isNew
+                                          ? 'โซนใหม่ (ยังไม่บันทึก)'
+                                          : 'วัวในโซน: ${zone.cowCount} ตัว',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        color: isNew ? AppColors.primary : AppColors.textSecondary,
+                                      ),
+                                    ),
                                   ),
                                   trailing: Row(
                                     mainAxisSize: MainAxisSize.min,
@@ -403,7 +413,7 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
                                         icon: const Icon(
                                           Icons.edit_outlined,
                                           color: AppColors.primary,
-                                          size: 20,
+                                          size: 22,
                                         ),
                                         onPressed: () =>
                                             _showEditZoneDialog(index),
@@ -413,7 +423,7 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
                                         icon: const Icon(
                                           Icons.close,
                                           color: AppColors.textSecondary,
-                                          size: 20,
+                                          size: 22,
                                         ),
                                         onPressed: () =>
                                             _removeLocalZone(index),

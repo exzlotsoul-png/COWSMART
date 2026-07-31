@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cowsmart/core/network/api_client.dart';
 import '../domain/farm.dart';
@@ -44,19 +45,19 @@ class FarmNotifier extends Notifier<FarmState> {
   Future<void> fetchFarms() async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
-      print('[FETCH] กำลังดึงข้อมูลฟาร์ม...');
+      debugPrint('[FETCH] กำลังดึงข้อมูลฟาร์ม...');
       final response = await _api.get('/farms');
       final List<dynamic> data = response.data;
       final List<Farm> farms = data.map((json) => Farm.fromJson(json)).toList();
 
-      print('[SUCCESS] ดึงข้อมูลฟาร์มสำเร็จ: ${farms.length} รายการ');
+      debugPrint('[SUCCESS] ดึงข้อมูลฟาร์มสำเร็จ: ${farms.length} รายการ');
       state = state.copyWith(
         farms: farms,
         currentFarm: farms.isNotEmpty ? farms.first : null,
         isLoading: false,
       );
     } catch (e) {
-      print('[ERROR] ดึงข้อมูลฟาร์มไม่สำเร็จ: $e');
+      debugPrint('[ERROR] ดึงข้อมูลฟาร์มไม่สำเร็จ: $e');
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
@@ -78,10 +79,10 @@ class FarmNotifier extends Notifier<FarmState> {
         currentFarm: newFarm,
         isLoading: false,
       );
-      print('[SUCCESS] สร้างฟาร์มสำเร็จ: ${newFarm.name}');
+      debugPrint('[SUCCESS] สร้างฟาร์มสำเร็จ: ${newFarm.name}');
       return newFarm;
     } catch (e) {
-      print('[ERROR] สร้างฟาร์มไม่สำเร็จ: $e');
+      debugPrint('[ERROR] สร้างฟาร์มไม่สำเร็จ: $e');
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
       return null;
     }
@@ -117,11 +118,26 @@ class FarmNotifier extends Notifier<FarmState> {
             : state.currentFarm,
         isLoading: false,
       );
-      print('[SUCCESS] อัปเดตฟาร์มสำเร็จ: $name');
     } catch (e) {
-      print('[ERROR] อัปเดตฟาร์มไม่สำเร็จ: $e');
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
       rethrow;
+    }
+  }
+
+  Future<bool> deleteFarm(String farmId) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      await _api.delete('/farms/$farmId');
+      final remainingFarms = state.farms.where((f) => f.id != farmId).toList();
+      state = state.copyWith(
+        farms: remainingFarms,
+        currentFarm: remainingFarms.isNotEmpty ? remainingFarms.first : null,
+        isLoading: false,
+      );
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      return false;
     }
   }
 }

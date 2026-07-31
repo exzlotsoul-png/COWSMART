@@ -101,6 +101,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SelectFarmScreen(),
       ),
       GoRoute(
+        path: '/select_farm',
+        builder: (context, state) => const SelectFarmScreen(),
+      ),
+      GoRoute(
         path: '/dashboard',
         builder: (context, state) => const MainLayoutScreen(),
       ),

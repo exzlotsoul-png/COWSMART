@@ -50,6 +50,18 @@ class ImagePickerWidget extends ConsumerStatefulWidget {
   /// Whether the widget is enabled for picking
   final bool enabled;
 
+  /// Optional border color for the image container
+  final Color? borderColor;
+
+  /// Optional border width
+  final double? borderWidth;
+
+  /// Optional box shadow for the image container
+  final List<BoxShadow>? boxShadow;
+
+  /// Optional border radius (when shape is BoxShape.rectangle)
+  final BorderRadius? borderRadius;
+
   const ImagePickerWidget({
     super.key,
     this.currentImageUrl,
@@ -63,6 +75,10 @@ class ImagePickerWidget extends ConsumerStatefulWidget {
     this.onImageCancelled,
     this.showConfirmButtons = true,
     this.enabled = true,
+    this.borderColor,
+    this.borderWidth,
+    this.boxShadow,
+    this.borderRadius,
   });
 
   @override
@@ -123,7 +139,7 @@ class _ImagePickerWidgetState extends ConsumerState<ImagePickerWidget> {
                 leading: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(Icons.photo_library, color: AppColors.primary),
@@ -140,7 +156,7 @@ class _ImagePickerWidgetState extends ConsumerState<ImagePickerWidget> {
                   leading: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.orange.withOpacity(0.1),
+                      color: Colors.orange.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.camera_alt, color: Colors.orange),
@@ -259,6 +275,37 @@ class _ImagePickerWidgetState extends ConsumerState<ImagePickerWidget> {
     }
   }
 
+  Widget _buildImageContent() {
+    if (_hasPendingImage) {
+      return Image.memory(
+        _pendingBytes!,
+        width: widget.size,
+        height: widget.size,
+        fit: BoxFit.cover,
+      );
+    }
+    if (_displayUrl != null) {
+      return Image.network(
+        _displayUrl!,
+        width: widget.size,
+        height: widget.size,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Icon(
+          widget.placeholderIcon,
+          size: widget.size * 0.4,
+          color: AppColors.primary.withValues(alpha: 0.5),
+        ),
+      );
+    }
+    return Center(
+      child: Icon(
+        widget.placeholderIcon,
+        size: widget.size * 0.4,
+        color: AppColors.primary.withValues(alpha: 0.5),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -275,42 +322,22 @@ class _ImagePickerWidgetState extends ConsumerState<ImagePickerWidget> {
                 height: widget.size,
                 decoration: BoxDecoration(
                   shape: widget.shape,
-                  color: AppColors.primary.withOpacity(0.08),
+                  borderRadius: widget.shape == BoxShape.rectangle ? widget.borderRadius : null,
+                  color: AppColors.primary.withValues(alpha: 0.08),
                   border: Border.all(
                     color: _hasPendingImage
                         ? Colors.orange
-                        : AppColors.primary.withOpacity(0.3),
-                    width: _hasPendingImage ? 3 : 2,
+                        : (widget.borderColor ?? AppColors.primary.withValues(alpha: 0.3)),
+                    width: _hasPendingImage ? 3 : (widget.borderWidth ?? 2),
                   ),
+                  boxShadow: widget.boxShadow,
                 ),
-                child: ClipOval(
-                  child: _hasPendingImage
-                      ? Image.memory(
-                          _pendingBytes!,
-                          width: widget.size,
-                          height: widget.size,
-                          fit: BoxFit.cover,
-                        )
-                      : _displayUrl != null
-                          ? Image.network(
-                              _displayUrl!,
-                              width: widget.size,
-                              height: widget.size,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Icon(
-                                widget.placeholderIcon,
-                                size: widget.size * 0.4,
-                                color: AppColors.primary.withOpacity(0.5),
-                              ),
-                            )
-                          : Center(
-                              child: Icon(
-                                widget.placeholderIcon,
-                                size: widget.size * 0.4,
-                                color: AppColors.primary.withOpacity(0.5),
-                              ),
-                            ),
-                ),
+                child: widget.shape == BoxShape.circle
+                    ? ClipOval(child: _buildImageContent())
+                    : ClipRRect(
+                        borderRadius: widget.borderRadius ?? BorderRadius.circular(12),
+                        child: _buildImageContent(),
+                      ),
               ),
 
               // Loading overlay
@@ -320,6 +347,7 @@ class _ImagePickerWidgetState extends ConsumerState<ImagePickerWidget> {
                   height: widget.size,
                   decoration: BoxDecoration(
                     shape: widget.shape,
+                    borderRadius: widget.shape == BoxShape.rectangle ? widget.borderRadius : null,
                     color: Colors.black45,
                   ),
                   child: const Center(
@@ -343,7 +371,7 @@ class _ImagePickerWidgetState extends ConsumerState<ImagePickerWidget> {
                       border: Border.all(color: Colors.white, width: 2),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -360,13 +388,20 @@ class _ImagePickerWidgetState extends ConsumerState<ImagePickerWidget> {
               // "Pending" badge
               if (_hasPendingImage && !_isUploading)
                 Positioned(
-                  top: 0,
-                  left: 0,
+                  top: 2,
+                  left: 2,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       color: Colors.orange,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.25),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: const Text(
                       'ใหม่',
@@ -433,13 +468,28 @@ class _ImagePickerWidgetState extends ConsumerState<ImagePickerWidget> {
 
         // Hint text for form-integrated mode
         if (_hasPendingImage && !_isUploading && !widget.showConfirmButtons) ...[
-          const SizedBox(height: 8),
-          const Text(
-            'เลือกรูปใหม่แล้ว — กด "บันทึก" เพื่ออัปโหลด',
-            style: TextStyle(
-              color: Colors.orange,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.orange.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.orange.withValues(alpha: 0.4)),
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.info_outline_rounded, size: 14, color: Colors.orange),
+                SizedBox(width: 6),
+                Text(
+                  'เลือกรูปใหม่แล้ว — กด "บันทึก" เพื่ออัปโหลด',
+                  style: TextStyle(
+                    color: Colors.orange,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

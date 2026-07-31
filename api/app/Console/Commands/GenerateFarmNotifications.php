@@ -163,7 +163,7 @@ class GenerateFarmNotifications extends Command
                 if ($farm) $userEmail = $farm->email;
             }
             if (!$userEmail) {
-                $userEmail = Notification::value('email') ?? 'admin@cowsmart.com';
+                continue;
             }
 
             $alreadySent = Notification::where('email', $userEmail)

@@ -13,12 +13,21 @@ use Illuminate\Support\Facades\Auth;
 
 class HealthAppointmentController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $appts = HealthAppointment::all();
-        foreach ($appts as $appt) {
-            self::syncNotificationForHealthAppt($appt);
+        $query = HealthAppointment::query();
+        if ($request->has('farm_id')) {
+            $farmCows = Cow::where('farm_id', $request->farm_id)->get();
+            $cowIds = [];
+            foreach ($farmCows as $c) {
+                if ($c->id) $cowIds[] = (string)$c->id;
+                if ($c->cow_id) $cowIds[] = (string)$c->cow_id;
+                if ($c->tag_number) $cowIds[] = (string)$c->tag_number;
+                if ($c->name) $cowIds[] = (string)$c->name;
+            }
+            $query->whereIn('cow_id', array_unique(array_filter($cowIds)));
         }
+        $appts = $query->get();
         return response()->json($appts);
     }
 
@@ -66,10 +75,14 @@ class HealthAppointmentController extends Controller
         }
 
         $cow = Cow::find($appt->cow_id) ?? Cow::where('cow_id', $appt->cow_id)->orWhere('tag_number', $appt->cow_id)->first();
-        $cowName = $cow ? ($cow->name ?: ($cow->tag_number ?: $cow->cow_id)) : $appt->cow_id;
+        if (!$cow) {
+            return;
+        }
+
+        $cowName = $cow->name ?: ($cow->tag_number ?: $cow->cow_id);
 
         $userEmail = null;
-        if ($cow && $cow->farm_id) {
+        if ($cow->farm_id) {
             $farm = Farm::find($cow->farm_id);
             if ($farm && $farm->email) {
                 $userEmail = $farm->email;
@@ -79,7 +92,7 @@ class HealthAppointmentController extends Controller
             $userEmail = Auth::user()->email;
         }
         if (!$userEmail) {
-            $userEmail = Notification::value('email') ?? 'admin@cowsmart.com';
+            return;
         }
 
         $apptDt = Carbon::parse($appt->appoint_datetime);

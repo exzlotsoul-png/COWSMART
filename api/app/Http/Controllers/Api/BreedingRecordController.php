@@ -77,10 +77,14 @@ class BreedingRecordController extends Controller
         }
 
         $cow = Cow::find($record->dam_id) ?? Cow::where('cow_id', $record->dam_id)->orWhere('tag_number', $record->dam_id)->first();
-        $cowName = $cow ? ($cow->name ?: ($cow->tag_number ?: $cow->cow_id)) : $record->dam_id;
+        if (!$cow) {
+            return;
+        }
+
+        $cowName = $cow->name ?: ($cow->tag_number ?: $cow->cow_id);
 
         $userEmail = null;
-        if ($cow && $cow->farm_id) {
+        if ($cow->farm_id) {
             $farm = Farm::find($cow->farm_id);
             if ($farm && $farm->email) {
                 $userEmail = $farm->email;
@@ -90,7 +94,7 @@ class BreedingRecordController extends Controller
             $userEmail = Auth::user()->email;
         }
         if (!$userEmail) {
-            $userEmail = Notification::value('email') ?? 'admin@cowsmart.com';
+            return;
         }
 
         $calvingDt = Carbon::parse($record->expected_calving)->startOfDay();
