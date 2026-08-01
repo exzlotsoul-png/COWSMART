@@ -17,7 +17,7 @@ class AppColors {
   // Background Colors - Warm cream/beige
   static const Color background = Color(0xFFF5F1E8); // Cream background
   static const Color surface = Color(0xFFFAF7F0); // Off-white surface
-  static const Color surfaceAlt = Color(0xFFEDE4D3); // Alt card bg
+  static const Color surfaceAlt = Color(0xFFFBF9F5); // Light warm off-white fill
 
   // Text Colors
   static const Color textPrimary = Color(0xFF3E3528); // Dark brown

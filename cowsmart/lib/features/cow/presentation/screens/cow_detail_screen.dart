@@ -106,18 +106,22 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen> {
                           ),
                         ),
                       ),
-                      // Dark gradient at bottom
-                      const Positioned(
+                      // Dark gradient at bottom for max contrast
+                      // Soft gradient at bottom of header image
+                      Positioned(
                         bottom: 0,
                         left: 0,
                         right: 0,
-                        height: 90,
+                        height: 80,
                         child: DecoratedBox(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.bottomCenter,
                               end: Alignment.topCenter,
-                              colors: [Colors.black54, Colors.transparent],
+                              colors: [
+                                Colors.black.withValues(alpha: 0.4),
+                                Colors.transparent,
+                              ],
                             ),
                           ),
                         ),
@@ -125,26 +129,70 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen> {
                     ],
                   ),
                 ),
-                bottom: const TabBar(
-                  isScrollable: true,
-                  indicatorColor: Colors.white,
-                  indicatorWeight: 3,
-                  labelColor: Colors.white,
-                  unselectedLabelColor: Colors.white70,
-                  labelStyle: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
+                bottom: PreferredSize(
+                  preferredSize: const Size.fromHeight(52),
+                  child: Container(
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      color: AppColors.background,
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 8,
+                          offset: Offset(0, -4),
+                        ),
+                      ],
+                    ),
+                    child: TabBar(
+                      isScrollable: true,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      indicator: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.3),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      labelColor: Colors.white,
+                      unselectedLabelColor: AppColors.textSecondary,
+                      labelStyle: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14.5,
+                      ),
+                      unselectedLabelStyle: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      tabs: const [
+                        Tab(
+                            child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 12),
+                                child: Text('ข้อมูลทั่วไป'))),
+                        Tab(
+                            child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 12),
+                                child: Text('สุขภาพ'))),
+                        Tab(
+                            child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 12),
+                                child: Text('น้ำหนัก'))),
+                        Tab(
+                            child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 12),
+                                child: Text('ผสมพันธุ์'))),
+                        Tab(
+                            child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 12),
+                                child: Text('ค่าใช้จ่าย'))),
+                      ],
+                    ),
                   ),
-                  unselectedLabelStyle: TextStyle(
-                    fontSize: 14,
-                  ),
-                  tabs: [
-                    Tab(text: 'ข้อมูลทั่วไป'),
-                    Tab(text: 'สุขภาพ'),
-                    Tab(text: 'น้ำหนัก'),
-                    Tab(text: 'ผสมพันธุ์'),
-                    Tab(text: 'ค่าใช้จ่าย'),
-                  ],
                 ),
               ),
             ];

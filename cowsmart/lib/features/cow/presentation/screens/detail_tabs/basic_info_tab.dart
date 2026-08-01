@@ -355,12 +355,20 @@ class BasicInfoTab extends ConsumerWidget {
       case CowStatus.sick:
         bgColor = AppColors.error;
         break;
+      case CowStatus.injured:
+        bgColor = const Color(0xFFD97706);
+        textColor = Colors.white;
+        break;
+      case CowStatus.estrous:
+        bgColor = const Color(0xFFEC4899);
+        textColor = Colors.white;
+        break;
       case CowStatus.pregnant:
         bgColor = AppColors.info;
         break;
       case CowStatus.recovering:
-        bgColor = AppColors.warning;
-        textColor = AppColors.textPrimary;
+        bgColor = const Color(0xFF9333EA);
+        textColor = Colors.white;
         break;
       case CowStatus.sold:
         bgColor = AppColors.textHint;

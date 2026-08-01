@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, ArrowUpDown } from 'lucide-react';
 import api from '../lib/axios';
+import Pagination from '../components/layout/Pagination';
 
 const Diseases = () => {
   const [diseases, setDiseases] = useState([]);
@@ -12,6 +13,8 @@ const Diseases = () => {
     disease_id: '', name: '', cause: '', symptoms: '', observation: '', treatment: '', prevention: ''
   });
   const [isEditing, setIsEditing] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchDiseases();
@@ -21,6 +24,7 @@ const Diseases = () => {
     try {
       const response = await api.get('/diseases');
       setDiseases(response.data.data || response.data);
+      setCurrentPage(1);
     } catch (error) {
       console.error("Error fetching diseases:", error);
     } finally {
@@ -78,6 +82,20 @@ const Diseases = () => {
     }
   };
 
+  const filteredAndSorted = diseases
+    .filter(d => 
+      (d.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+      (d.disease_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (d.symptoms || '').toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      const compare = (b.disease_id || '').localeCompare(a.disease_id || '');
+      return sortOrder === 'newest' ? compare : -compare;
+    });
+
+  const totalPages = Math.ceil(filteredAndSorted.length / itemsPerPage) || 1;
+  const currentItems = filteredAndSorted.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
     <div>
       <div className="card">
@@ -96,7 +114,10 @@ const Diseases = () => {
               placeholder="ค้นหา..." 
               style={{ border: 'none', backgroundColor: 'transparent', outline: 'none', width: '100%' }}
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
             />
           </div>
           <button 
@@ -109,49 +130,58 @@ const Diseases = () => {
           </button>
         </div>
 
-
         {loading ? (
-          <p>กำลังโหลดข้อมูล...</p>
+          <p style={{ padding: '24px' }}>กำลังโหลดข้อมูล...</p>
         ) : (
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>รหัสโรค</th>
-                  <th>ชื่อโรค/อาการ</th>
-                  <th>ลักษณะอาการ</th>
-                  <th>จัดการ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {diseases.length > 0 ? (
-                  diseases.map((disease) => (
-                    <tr key={disease.disease_id}>
-                      <td>{disease.disease_id}</td>
-                      <td>{disease.name}</td>
-                      <td style={{ maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {disease.symptoms}
-                      </td>
-                      <td>
-                        <div className="action-links">
-                          <button className="action-btn edit" onClick={() => handleOpenModal(disease)}>
-                            <Edit size={16} />
-                          </button>
-                          <button className="action-btn delete" onClick={() => handleDelete(disease.disease_id)}>
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
+          <>
+            <div className="table-container">
+              <table className="data-table">
+                <thead>
                   <tr>
-                    <td colSpan="4" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>
+                    <th>รหัสโรค</th>
+                    <th>ชื่อโรค/อาการ</th>
+                    <th>ลักษณะอาการ</th>
+                    <th>จัดการ</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {currentItems.length > 0 ? (
+                    currentItems.map((disease) => (
+                      <tr key={disease.disease_id}>
+                        <td>{disease.disease_id}</td>
+                        <td>{disease.name}</td>
+                        <td style={{ maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {disease.symptoms}
+                        </td>
+                        <td>
+                          <div className="action-links">
+                            <button className="action-btn edit" onClick={() => handleOpenModal(disease)}>
+                              <Edit size={16} />
+                            </button>
+                            <button className="action-btn delete" onClick={() => handleDelete(disease.disease_id)}>
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              totalItems={filteredAndSorted.length}
+              itemsPerPage={itemsPerPage}
+            />
+          </>
         )}
       </div>
 

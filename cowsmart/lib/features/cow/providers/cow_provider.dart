@@ -158,6 +158,18 @@ class CowNotifier extends Notifier<CowState> {
     }
   }
 
+  Future<void> updateCowStatus(String cowId, CowStatus newStatus) async {
+    try {
+      final cow = state.allCows.firstWhere((c) => c.id == cowId);
+      if (cow.status != newStatus) {
+        final updatedCow = cow.copyWith(status: newStatus);
+        await updateCow(updatedCow);
+      }
+    } catch (e) {
+      print('[ERROR] อัปเดตสถานะวัวไม่สำเร็จ: $e');
+    }
+  }
+
   Future<void> updateCow(Cow cow) async {
     state = state.copyWith(
       isLoading: true,

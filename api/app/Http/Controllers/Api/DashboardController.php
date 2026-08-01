@@ -48,9 +48,12 @@ class DashboardController extends Controller
                 ->take(4) // fetch top 4 or 3
                 ->get();
 
-            // Health Proportion
+            // Health Proportion (Active cows only)
             $healthStatus = Cow::select('status', DB::raw('count(*) as count'))
-                ->whereNotNull('status')
+                ->where(function ($q) {
+                    $q->whereNotIn('status', ['sold', 'deceased', 'removed', 'ขายแล้ว', 'ตาย', 'คัดทิ้ง'])
+                      ->orWhereNull('status');
+                })
                 ->groupBy('status')
                 ->get();
 

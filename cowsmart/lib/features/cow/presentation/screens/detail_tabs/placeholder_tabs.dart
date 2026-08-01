@@ -12,6 +12,7 @@ import 'package:cowsmart/features/cow/domain/growth_record.dart';
 import 'package:cowsmart/features/calendar/domain/calendar_event.dart';
 import 'package:cowsmart/features/calendar/providers/calendar_provider.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
+import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import '../../../providers/cow_detail_provider.dart';
 import '../../../../health/providers/master_data_provider.dart';
 import 'package:cowsmart/core/network/api_client.dart';
@@ -607,6 +608,19 @@ class _HealthTabState extends ConsumerState<HealthTab> {
 
     final typeColor = getTypeColor();
 
+    String? statusText;
+    Color statusBgColor = AppColors.success;
+    if (record.status == 'normal') {
+      statusText = 'ปกติ';
+      statusBgColor = AppColors.success;
+    } else if (record.status == 'sick') {
+      statusText = 'ป่วย';
+      statusBgColor = AppColors.error;
+    } else if (record.status == 'injured') {
+      statusText = 'บาดเจ็บ';
+      statusBgColor = const Color(0xFFD97706);
+    }
+
     return Card(
       margin: const EdgeInsets.only(bottom: 14),
       elevation: 2,
@@ -637,13 +651,42 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          typeLabels[record.checkupTypeId] ?? 'ตรวจสุขภาพ',
-                          style: const TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                typeLabels[record.checkupTypeId] ?? 'ตรวจสุขภาพ',
+                                style: const TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textPrimary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (statusText != null) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: statusBgColor.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                      color: statusBgColor.withValues(alpha: 0.3)),
+                                ),
+                                child: Text(
+                                  statusText,
+                                  style: TextStyle(
+                                    color: statusBgColor,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                         const SizedBox(height: 2),
                         Row(
@@ -999,6 +1042,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
   final noteController = TextEditingController();
   DateTime selectedDate = DateTime.now();
   String selectedType = 'CT01';
+  CowStatus selectedHealthStatus = CowStatus.normal;
   List<String> selectedVaccineIds = [];
   String? selectedDiseaseId;
   List<String> selectedMedicineIds = [];
@@ -1015,6 +1059,12 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
   @override
   void initState() {
     super.initState();
+    selectedHealthStatus = widget.cow.status;
+    if (selectedHealthStatus != CowStatus.normal &&
+        selectedHealthStatus != CowStatus.sick &&
+        selectedHealthStatus != CowStatus.injured) {
+      selectedHealthStatus = CowStatus.normal;
+    }
     if (widget.initialRecord != null) {
       final r = widget.initialRecord!;
       selectedDate = r.recordDate;
@@ -1095,7 +1145,8 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              initialValue: selectedType,
+              value: selectedType,
+              isExpanded: true,
               style: const TextStyle(
                 fontSize: 15,
                 color: AppColors.textPrimary,
@@ -1111,6 +1162,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                   child: Text(
                     type['name']!,
                     style: const TextStyle(fontSize: 15),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 );
               }).toList(),
@@ -1122,6 +1174,39 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                     selectedDiseaseId = null;
                     selectedMedicineIds = [];
                   });
+                }
+              },
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<CowStatus>(
+              value: selectedHealthStatus,
+              isExpanded: true,
+              style: const TextStyle(
+                fontSize: 15,
+                color: AppColors.textPrimary,
+              ),
+              decoration: const InputDecoration(
+                labelText: 'สถานะสุขภาพวัว',
+                labelStyle: TextStyle(fontSize: 15),
+                prefixIcon: Icon(Icons.health_and_safety_outlined, size: 22),
+              ),
+              items: const [
+                DropdownMenuItem(
+                  value: CowStatus.normal,
+                  child: Text('ปกติ', style: TextStyle(fontSize: 15)),
+                ),
+                DropdownMenuItem(
+                  value: CowStatus.sick,
+                  child: Text('ป่วย', style: TextStyle(fontSize: 15)),
+                ),
+                DropdownMenuItem(
+                  value: CowStatus.injured,
+                  child: Text('บาดเจ็บ', style: TextStyle(fontSize: 15)),
+                ),
+              ],
+              onChanged: (val) {
+                if (val != null) {
+                  setState(() => selectedHealthStatus = val);
                 }
               },
             ),
@@ -1220,8 +1305,9 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
             ],
 
             if (showDisease && !widget.masterData.isLoading)
-              DropdownButtonFormField<String>(
-                initialValue: selectedDiseaseId,
+              DropdownButtonFormField<String?>(
+                isExpanded: true,
+                value: selectedDiseaseId,
                 style: const TextStyle(
                   fontSize: 15,
                   color: AppColors.textPrimary,
@@ -1232,14 +1318,22 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                   prefixIcon: Icon(Icons.coronavirus, size: 22),
                 ),
                 items: [
-                  const DropdownMenuItem(
+                  const DropdownMenuItem<String?>(
                     value: null,
-                    child: Text('เลือกโรค', style: TextStyle(fontSize: 15)),
+                    child: Text('เลือกโรค',
+                        style: TextStyle(fontSize: 15),
+                        overflow: TextOverflow.ellipsis),
                   ),
-                  ...widget.masterData.diseases.map((d) {
-                    return DropdownMenuItem(
+                  ...widget.masterData.diseases
+                      .where((d) => d.id.isNotEmpty)
+                      .map((d) {
+                    return DropdownMenuItem<String?>(
                       value: d.id,
-                      child: Text(d.name, style: const TextStyle(fontSize: 15)),
+                      child: Text(
+                        d.name,
+                        style: const TextStyle(fontSize: 15),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     );
                   }),
                 ],
@@ -1565,6 +1659,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                           cowId: widget.cow.id,
                           recordDate: selectedDate,
                           checkupTypeId: selectedType,
+                          status: selectedHealthStatus.name,
                           vacId: selectedVaccineIds.isNotEmpty ? selectedVaccineIds.first : null,
                           diseaseId: selectedDiseaseId,
                           medId: selectedMedicineIds.isNotEmpty ? selectedMedicineIds.first : null,
@@ -1580,6 +1675,9 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                               : noteController.text.trim(),
                         );
                         widget.onSave(record);
+                        ref
+                            .read(cowProvider.notifier)
+                            .updateCowStatus(widget.cow.id, selectedHealthStatus);
                         if (mounted) Navigator.pop(context);
                       },
                 style: ElevatedButton.styleFrom(

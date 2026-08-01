@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -34,14 +33,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final currentFarm = ref.read(farmProvider).currentFarm;
     if (currentFarm != null && !_hasFetchedData) {
       _hasFetchedData = true;
-
-      // Fetch zones
       ref.read(zoneProvider.notifier).fetchZones(currentFarm.id);
-
-      // Fetch finance data
       ref.read(financeProvider.notifier).fetchTransactions(currentFarm.id);
-
-      // Fetch notifications
       ref.read(notificationProvider.notifier).fetchNotifications();
     }
   }
@@ -69,61 +62,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ref.watch(marketPriceProvider).latest?.pricePerKg ?? 120.0;
 
     if (farmState.isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-
-    if (currentFarm == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('COWSMART ฟาร์ม')),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.agriculture,
-                  size: 80,
-                  color: AppColors.border,
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'ยังไม่มีข้อมูลฟาร์มของคุณ',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'เริ่มต้นด้วยการสร้างฟาร์มใหม่เพื่อจัดการข้อมูลวัวของคุณ',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 32),
-                ElevatedButton.icon(
-                  onPressed: () => context.push('/create_farm'),
-                  icon: const Icon(Icons.add),
-                  label: const Text(
-                    'สร้างฟาร์มแรกของคุณ',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 14,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
       );
     }
 
+    if (currentFarm == null) {
+      return _buildEmptyFarmScreen(context);
+    }
+
+    final totalCows = cowState.allCows.length;
+    final zoneCount = ref.watch(zoneProvider).zones.length;
     final totalValue = cowState.allCows.fold<double>(
       0,
       (sum, cow) => sum + (cow.latestWeight * marketPrice),
@@ -132,244 +82,104 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        top: false,
         child: RefreshIndicator(
           onRefresh: _refreshData,
           color: AppColors.primary,
-          child: CustomScrollView(
-            slivers: [
-              // ── Header Bar with Gradient ──
-              SliverToBoxAdapter(
-                child: Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [AppColors.primaryDark, AppColors.primary],
-                    ),
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(28),
-                      bottomRight: Radius.circular(28),
-                    ),
-                  ),
-                  child: SafeArea(
-                    bottom: false,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Top Action Bar
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              // Swap Farm Button
-                              Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: () => context.go('/select-farm'),
-                                  borderRadius: BorderRadius.circular(14),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.15,
-                                      ),
-                                      borderRadius: BorderRadius.circular(14),
-                                      border: Border.all(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.2,
-                                        ),
-                                      ),
-                                    ),
-                                    child: const Row(
-                                      children: [
-                                        Icon(
-                                          Icons.swap_horiz_rounded,
-                                          color: Colors.white,
-                                          size: 20,
-                                        ),
-                                        SizedBox(width: 6),
-                                        Text(
-                                          'สลับฟาร์ม',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(0, 0, 0, 80),
+            children: [
+              // ── 1. Top Bar (minimal) ──
+              _buildTopBar(context),
 
-                              // Right Actions (Calendar & Notifications)
-                              Row(
-                                children: [
-                                  // Calendar Button
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.15,
-                                      ),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: IconButton(
-                                      icon: const Icon(
-                                        Icons.calendar_month_rounded,
-                                        color: Colors.white,
-                                        size: 22,
-                                      ),
-                                      onPressed: () =>
-                                          context.push('/calendar'),
-                                      tooltip: 'ปฏิทินกิจกรรม',
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-
-                                  // Notification Badge
-                                  Consumer(
-                                    builder: (context, ref, _) {
-                                      final unread = ref
-                                          .watch(notificationProvider)
-                                          .unreadCount;
-                                      return Stack(
-                                        alignment: Alignment.center,
-                                        children: [
-                                          Container(
-                                            decoration: BoxDecoration(
-                                              color: Colors.white.withValues(
-                                                alpha: 0.15,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                            child: IconButton(
-                                              icon: const Icon(
-                                                Icons.notifications_outlined,
-                                                color: Colors.white,
-                                                size: 22,
-                                              ),
-                                              onPressed: () => context.push(
-                                                '/notifications',
-                                              ),
-                                              tooltip: 'การแจ้งเตือน',
-                                            ),
-                                          ),
-                                          if (unread > 0)
-                                            Positioned(
-                                              top: 6,
-                                              right: 6,
-                                              child: Container(
-                                                padding: const EdgeInsets.all(
-                                                  4,
-                                                ),
-                                                decoration: const BoxDecoration(
-                                                  color: AppColors.error,
-                                                  shape: BoxShape.circle,
-                                                ),
-                                                constraints:
-                                                    const BoxConstraints(
-                                                      minWidth: 18,
-                                                      minHeight: 18,
-                                                    ),
-                                                child: Text(
-                                                  unread > 99
-                                                      ? '99+'
-                                                      : '$unread',
-                                                  style: const TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 10,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ),
-                                            ),
-                                        ],
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-
-                          // Welcome Text
-                          Builder(
-                            builder: (context) {
-                              final user = ref.watch(authProvider).user;
-                              final userName = user != null
-                                  ? '${user['first_name'] ?? ''}'
-                                  : 'ผู้ใช้งาน';
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'สวัสดี, $userName',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.3,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'ภาพรวมฟาร์มของคุณในวันนี้',
-                                    style: TextStyle(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.75,
-                                      ),
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+              // ── 2. Farm Hero Banner Card ──
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+                child: _buildFarmHeroBanner(context, currentFarm),
               ),
 
-              // ── Main Content Body ──
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // 1. Farm Overview Header
-                      _buildFarmOverview(
-                        context,
-                        currentFarm,
-                        cowState.allCows.length,
-                        totalValue,
-                      ),
-                      const SizedBox(height: 20),
+              // ── 3. Stats Unified Card ──
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: _buildUnifiedStatsCard(totalCows, zoneCount, totalValue),
+              ),
 
-                      // 2. Financial Summary Card
-                      _buildFinancialSummary(context, ref),
-                      const SizedBox(height: 24),
+              // ── 4. Finance Dual Cards ──
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: _buildFinanceDualCards(context, ref),
+              ),
 
-                      // 3. Zone Overview List
-                      _buildZoneOverview(context, ref),
-                      const SizedBox(height: 24),
+              // ── 5. Zone List ──
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+                child: _buildZoneList(context, ref),
+              ),
 
-                      // 4. Quick Actions
-                      const _DashboardSectionTitle(title: 'เมนูหลัก'),
-                      const SizedBox(height: 12),
-                      _buildQuickActions(context),
-                      const SizedBox(height: 80), // Padding for bottom nav bar
-                    ],
+              // ── 6. Quick Actions ──
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+                child: _buildQuickActionsSection(context),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ────────────────────────────────────────────────────────
+  //  Empty Farm Screen
+  // ────────────────────────────────────────────────────────
+  Widget _buildEmptyFarmScreen(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.agriculture_rounded,
+                  size: 64,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'ยังไม่มีข้อมูลฟาร์มของคุณ',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'เริ่มต้นด้วยการสร้างฟาร์มใหม่เพื่อจัดการข้อมูลวัวของคุณ',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                height: 50,
+                child: ElevatedButton.icon(
+                  onPressed: () => context.push('/create_farm'),
+                  icon: const Icon(Icons.add_rounded),
+                  label: const Text('สร้างฟาร์มแรกของคุณ',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
                   ),
                 ),
               ),
@@ -380,68 +190,250 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildFarmOverview(
-    BuildContext context,
-    dynamic farm,
-    int totalCows,
-    double totalValue,
-  ) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.surface, Color(0xFFF0EDE4)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.border, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.secondaryDark.withValues(alpha: 0.10),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+  // ────────────────────────────────────────────────────────
+  //  1. TOP BAR — minimal, no gradient
+  // ────────────────────────────────────────────────────────
+  Widget _buildTopBar(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Greeting
+          Expanded(
+            child: Builder(
+              builder: (context) {
+                final user = ref.watch(authProvider).user;
+                final userName =
+                    user != null ? '${user['first_name'] ?? ''}' : 'ผู้ใช้งาน';
+                final hour = DateTime.now().hour;
+                final greeting = hour < 12
+                    ? 'สวัสดีตอนเช้า ☀️'
+                    : hour < 17
+                        ? 'สวัสดีตอนบ่าย 🌤️'
+                        : 'สวัสดีตอนเย็น 🌅';
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      greeting,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      userName,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+
+          // Action Buttons
+          Row(
+            children: [
+              _buildCircleAction(
+                icon: Icons.swap_horiz_rounded,
+                onTap: () => context.go('/select-farm'),
+                tooltip: 'สลับฟาร์ม',
+              ),
+              const SizedBox(width: 8),
+              _buildCircleAction(
+                icon: Icons.calendar_month_rounded,
+                onTap: () => context.push('/calendar'),
+                tooltip: 'ปฏิทิน',
+              ),
+              const SizedBox(width: 8),
+              _buildNotificationCircle(context),
+            ],
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(18.0),
-        child: Row(
+    );
+  }
+
+  Widget _buildCircleAction({
+    required IconData icon,
+    required VoidCallback onTap,
+    String? tooltip,
+  }) {
+    return Material(
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: AppColors.border.withValues(alpha: 0.6)),
+      ),
+      elevation: 0,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Icon(icon, color: AppColors.textPrimary, size: 22),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotificationCircle(BuildContext context) {
+    return Consumer(
+      builder: (context, ref, _) {
+        final unread = ref.watch(notificationProvider).unreadCount;
+        return Stack(
+          clipBehavior: Clip.none,
           children: [
-            Container(
-              width: 90,
-              height: 90,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.12),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
+            _buildCircleAction(
+              icon: Icons.notifications_outlined,
+              onTap: () => context.push('/notifications'),
+              tooltip: 'แจ้งเตือน',
+            ),
+            if (unread > 0)
+              Positioned(
+                top: -2,
+                right: -2,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: AppColors.error,
+                    shape: BoxShape.circle,
                   ),
-                ],
-                image: DecorationImage(
-                  image:
-                      farm.imageFullUrl != null && farm.imageFullUrl!.isNotEmpty
-                      ? NetworkImage(farm.imageFullUrl!)
-                      : const NetworkImage(
-                          'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1500&q=80',
-                        ),
-                  fit: BoxFit.cover,
+                  constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                  child: Text(
+                    unread > 99 ? '99+' : '$unread',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  // ────────────────────────────────────────────────────────
+  //  2. FARM HERO BANNER — image with overlay
+  // ────────────────────────────────────────────────────────
+  Widget _buildFarmHeroBanner(BuildContext context, dynamic farm) {
+    return InkWell(
+      onTap: () => context.push('/edit_farm', extra: farm),
+      borderRadius: BorderRadius.circular(22),
+      child: Container(
+        height: 160,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+          image: DecorationImage(
+            image: farm.imageFullUrl != null && farm.imageFullUrl!.isNotEmpty
+                ? NetworkImage(farm.imageFullUrl!)
+                : const NetworkImage(
+                    'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80',
+                  ),
+            fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(
+              Colors.black.withValues(alpha: 0.35),
+              BlendMode.darken,
+            ),
+          ),
+        ),
+        child: Stack(
+          children: [
+            // Gradient overlay at bottom
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(22),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.55),
+                    ],
+                    stops: const [0.3, 1.0],
+                  ),
                 ),
               ),
             ),
-            const SizedBox(width: 16),
-            Expanded(
+
+            // Farm info
+            Positioned(
+              left: 18,
+              right: 18,
+              bottom: 16,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    farm.name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 22,
-                      color: AppColors.textPrimary,
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          farm.name,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.3,
+                            shadows: [
+                              Shadow(
+                                blurRadius: 8,
+                                color: Colors.black38,
+                              ),
+                            ],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.edit_rounded,
+                                color: Colors.white, size: 14),
+                            SizedBox(width: 4),
+                            Text(
+                              'แก้ไข',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 4),
                   Builder(
@@ -451,44 +443,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           ? '${user['first_name'] ?? ''} ${user['last_name'] ?? ''}'
                                 .trim()
                           : farm.ownerEmail;
-                      return Text(
-                        'เจ้าของ: $ownerName',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textSecondary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      return Row(
+                        children: [
+                          Icon(Icons.person_outline_rounded,
+                              color: Colors.white.withValues(alpha: 0.8),
+                              size: 15),
+                          const SizedBox(width: 5),
+                          Expanded(
+                            child: Text(
+                              ownerName,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.85),
+                                fontSize: 13,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       );
                     },
                   ),
-                  const SizedBox(height: 12),
-
-                  // Stats Row
-                  Row(
-                    children: [
-                      _buildMiniStat(context, Icons.pets, '$totalCows ตัว'),
-                      const SizedBox(width: 16),
-                      _buildMiniStat(
-                        context,
-                        Icons.payments_outlined,
-                        '฿${NumberFormat('#,##0').format(totalValue)}',
-                      ),
-                    ],
-                  ),
                 ],
-              ),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: IconButton(
-                icon: const Icon(Icons.settings_outlined, size: 24),
-                onPressed: () => context.push('/edit_farm', extra: farm),
-                tooltip: 'แก้ไขข้อมูลฟาร์ม',
-                color: AppColors.primary,
               ),
             ),
           ],
@@ -497,181 +473,296 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildFinancialSummary(BuildContext context, WidgetRef ref) {
-    final financeState = ref.watch(financeProvider);
+  // ────────────────────────────────────────────────────────
+  //  3. UNIFIED STATS CARD — single card with 3 columns
+  // ────────────────────────────────────────────────────────
+  Widget _buildUnifiedStatsCard(
+      int totalCows, int zoneCount, double totalValue) {
+    final formatter = NumberFormat('#,##0');
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            Expanded(
+              child: _buildStatColumn(
+                Icons.pets_rounded,
+                AppColors.primary,
+                '$totalCows',
+                'วัวทั้งหมด',
+              ),
+            ),
+            Container(
+              width: 1,
+              color: AppColors.border.withValues(alpha: 0.5),
+            ),
+            Expanded(
+              child: _buildStatColumn(
+                Icons.grass_rounded,
+                AppColors.secondary,
+                '$zoneCount',
+                'โซน',
+              ),
+            ),
+            Container(
+              width: 1,
+              color: AppColors.border.withValues(alpha: 0.5),
+            ),
+            Expanded(
+              child: _buildStatColumn(
+                Icons.payments_rounded,
+                AppColors.accent,
+                '฿${formatter.format(totalValue)}',
+                'มูลค่ารวม',
+                isCompact: true,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
+  Widget _buildStatColumn(
+    IconData icon,
+    Color color,
+    String value,
+    String label, {
+    bool isCompact = false,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: color, size: 22),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: isCompact ? 16 : 24,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            color: AppColors.textSecondary,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ────────────────────────────────────────────────────────
+  //  4. FINANCE DUAL CARDS — income & expense side by side
+  // ────────────────────────────────────────────────────────
+  Widget _buildFinanceDualCards(BuildContext context, WidgetRef ref) {
+    final financeState = ref.watch(financeProvider);
     final income = financeState.totalIncomeThisMonth;
     final expense = financeState.totalExpenseThisMonth;
     final balance = income - expense;
-
     final formatter = NumberFormat('#,##0');
 
-    return InkWell(
-      onTap: () => context.push('/finance'),
-      borderRadius: BorderRadius.circular(22),
-      child: Container(
-        padding: const EdgeInsets.all(22),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF5D7552), Color(0xFF4A6040)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(22),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primaryDark.withValues(alpha: 0.35),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.account_balance_wallet_outlined,
-                        color: Colors.white,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    const Text(
-                      'สรุปธุรกรรมในฟาร์ม',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'ดูทั้งหมด',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(width: 4),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        color: Colors.white,
-                        size: 12,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '฿ ${formatter.format(balance)}',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 34,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.5,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'ยอดคงเหลือเดือนนี้',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.65),
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 18),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Balance header row
+        InkWell(
+          onTap: () => context.push('/finance'),
+          borderRadius: BorderRadius.circular(14),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
                 children: [
-                  Expanded(
-                    child: _buildFinanceMiniStat(
-                      'รายรับ',
-                      '฿${formatter.format(income)}',
-                      const Color(0xFF7BF562),
-                      Icons.trending_up,
+                  Container(
+                    width: 4,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                  Container(
-                    width: 1,
-                    height: 40,
-                    color: Colors.white.withValues(alpha: 0.2),
-                  ),
-                  Expanded(
-                    child: _buildFinanceMiniStat(
-                      'รายจ่าย',
-                      '฿${formatter.format(expense)}',
-                      const Color(0xFFFF6B6B),
-                      Icons.trending_down,
+                  const SizedBox(width: 8),
+                  const Text(
+                    'การเงินเดือนนี้',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ],
               ),
-            ),
-          ],
+              Row(
+                children: [
+                  Text(
+                    '฿${formatter.format(balance)}',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: balance >= 0 ? AppColors.success : AppColors.error,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: (balance >= 0 ? AppColors.success : AppColors.error)
+                          .withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      balance >= 0 ? 'กำไร' : 'ขาดทุน',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: balance >= 0
+                            ? AppColors.success
+                            : AppColors.error,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  const Icon(Icons.arrow_forward_ios_rounded,
+                      size: 14, color: AppColors.textSecondary),
+                ],
+              ),
+            ],
+          ),
         ),
-      ),
-    );
-  }
+        const SizedBox(height: 12),
 
-  Widget _buildFinanceMiniStat(
-    String label,
-    String amount,
-    Color color,
-    IconData icon,
-  ) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(icon, color: color, size: 20),
-        const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        // Dual cards
+        Row(
           children: [
-            Text(
-              label,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.7),
-                fontSize: 13,
+            // Income card
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: AppColors.success.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: AppColors.success.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.arrow_downward_rounded,
+                              color: AppColors.success, size: 16),
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'รายรับ',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      '฿${formatter.format(income)}',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.success,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
             ),
-            Text(
-              amount,
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.bold,
-                fontSize: 17,
+            const SizedBox(width: 12),
+
+            // Expense card
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: AppColors.error.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: AppColors.error.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.arrow_upward_rounded,
+                              color: AppColors.error, size: 16),
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'รายจ่าย',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      '฿${formatter.format(expense)}',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.error,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -680,7 +771,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildZoneOverview(BuildContext context, WidgetRef ref) {
+  // ────────────────────────────────────────────────────────
+  //  5. ZONE LIST — vertical card rows
+  // ────────────────────────────────────────────────────────
+  Widget _buildZoneList(BuildContext context, WidgetRef ref) {
     final zoneState = ref.watch(zoneProvider);
     final zones = zoneState.zones;
 
@@ -690,20 +784,35 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const _DashboardSectionTitle(title: 'โซนในฟาร์ม'),
+            Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 18,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'โซนในฟาร์ม',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
             TextButton.icon(
-              onPressed: () {
-                context.push('/create_zone');
-              },
-              icon: const Icon(
-                Icons.tune_rounded,
-                size: 16,
-                color: AppColors.primary,
-              ),
+              onPressed: () => context.push('/create_zone'),
+              icon: const Icon(Icons.add_rounded,
+                  size: 16, color: AppColors.primary),
               label: const Text(
-                'จัดการโซน',
+                'เพิ่มโซน',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 13,
                   color: AppColors.primary,
                   fontWeight: FontWeight.w600,
                 ),
@@ -712,296 +821,281 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ],
         ),
         const SizedBox(height: 10),
-        zoneState.isLoading
-            ? Container(
-                height: 120,
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: AppColors.border),
+        if (zoneState.isLoading)
+          Container(
+            height: 80,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+            ),
+            child:
+                const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+          )
+        else if (zones.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(24),
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.grass_rounded,
+                    size: 32,
+                    color: AppColors.primary.withValues(alpha: 0.4)),
+                const SizedBox(height: 8),
+                const Text(
+                  'ยังไม่มีข้อมูลโซน',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 14,
+                  ),
                 ),
-                child: const Center(child: CircularProgressIndicator()),
-              )
-            : zones.isEmpty
-            ? Container(
-                height: 120,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: const Center(
-                  child: Text(
-                    'ยังไม่มีข้อมูลโซน',
-                    style: TextStyle(
+              ],
+            ),
+          )
+        else
+          ...zones.map((zone) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: _buildZoneRow(context, zone),
+              )),
+      ],
+    );
+  }
+
+  Widget _buildZoneRow(BuildContext context, dynamic zone) {
+    return InkWell(
+      onTap: () => context.push('/zone_detail', extra: zone),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.grass_rounded,
+                  color: AppColors.primary, size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    zone.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: AppColors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'จำนวนวัว ${zone.cowCount} ตัว',
+                    style: const TextStyle(
+                      fontSize: 13,
                       color: AppColors.textSecondary,
-                      fontSize: 16,
                     ),
                   ),
-                ),
-              )
-            : SizedBox(
-                height: 130,
-                child: ScrollConfiguration(
-                  behavior: ScrollConfiguration.of(context).copyWith(
-                    dragDevices: {
-                      PointerDeviceKind.touch,
-                      PointerDeviceKind.mouse,
-                    },
-                  ),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: zones.map((zone) {
-                        return InkWell(
-                          onTap: () =>
-                              context.push('/zone_detail', extra: zone),
-                          borderRadius: BorderRadius.circular(20),
-                          child: Container(
-                            width: 140,
-                            margin: const EdgeInsets.only(right: 14),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 12,
-                            ),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  AppColors.surface,
-                                  const Color(0xFFF5F0E6),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: AppColors.primary.withValues(alpha: 0.2),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.secondaryDark.withValues(
-                                    alpha: 0.10,
-                                  ),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary.withValues(
-                                      alpha: 0.12,
-                                    ),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.grass,
-                                    color: AppColors.primary,
-                                    size: 24,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  zone.name,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.textPrimary,
-                                    fontSize: 15,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  '${zone.cowCount} ตัว',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.textSecondary,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '${zone.cowCount}',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
                 ),
               ),
-      ],
+            ),
+            const SizedBox(width: 6),
+            const Icon(Icons.chevron_right_rounded,
+                color: AppColors.textHint, size: 22),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildQuickActions(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: 3,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 14,
-      crossAxisSpacing: 14,
-      childAspectRatio: 0.9,
+  // ────────────────────────────────────────────────────────
+  //  6. QUICK ACTIONS — 2 columns with subtitles
+  // ────────────────────────────────────────────────────────
+  Widget _buildQuickActionsSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildActionCard(
-          context,
-          icon: Icons.chat_bubble_outline,
-          label: 'ผู้ช่วยหมอ',
-          color: AppColors.info,
-          onTap: () {},
+        Row(
+          children: [
+            Container(
+              width: 4,
+              height: 18,
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              'เมนูหลัก',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ],
         ),
-        _buildActionCard(
-          context,
-          icon: Icons.health_and_safety_outlined,
-          label: 'จัดการสุขภาพ',
-          color: AppColors.primary,
-          onTap: () {},
-        ),
-        _buildActionCard(
-          context,
-          icon: Icons.delete_sweep_outlined,
-          label: 'จำหน่าย/คัดออก',
-          color: AppColors.error,
-          onTap: () => context.push('/group_cull'),
-        ),
-        _buildActionCard(
-          context,
-          icon: Icons.calendar_month_outlined,
-          label: 'ปฏิทินกิจกรรม',
-          color: AppColors.secondary,
-          onTap: () => context.push('/calendar'),
-        ),
-        _buildActionCard(
-          context,
-          icon: Icons.show_chart,
-          label: 'ราคาตลาด',
-          color: AppColors.accent,
-          onTap: () => context.push('/market_price'),
-        ),
-        _buildActionCard(
-          context,
-          icon: Icons.add_business_outlined,
-          label: 'เพิ่มฟาร์ม',
-          color: AppColors.secondaryDark,
-          onTap: () => context.push('/create_farm'),
+        const SizedBox(height: 12),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 1.75,
+          children: [
+            _buildActionTile(
+              icon: Icons.chat_bubble_outline_rounded,
+              label: 'ผู้ช่วยหมอ',
+              subtitle: 'ปรึกษาอาการวัว',
+              color: AppColors.info,
+              onTap: () {},
+            ),
+            _buildActionTile(
+              icon: Icons.health_and_safety_rounded,
+              label: 'จัดการสุขภาพ',
+              subtitle: 'บันทึกการรักษา',
+              color: AppColors.primary,
+              onTap: () {},
+            ),
+            _buildActionTile(
+              icon: Icons.delete_sweep_outlined,
+              label: 'จำหน่าย/คัดออก',
+              subtitle: 'จัดการวัวออกฟาร์ม',
+              color: AppColors.error,
+              onTap: () => context.push('/group_cull'),
+            ),
+            _buildActionTile(
+              icon: Icons.calendar_month_rounded,
+              label: 'ปฏิทินกิจกรรม',
+              subtitle: 'ตารางนัดหมาย',
+              color: AppColors.secondary,
+              onTap: () => context.push('/calendar'),
+            ),
+            _buildActionTile(
+              icon: Icons.show_chart_rounded,
+              label: 'ราคาตลาด',
+              subtitle: 'ติดตามราคาวัว',
+              color: AppColors.accent,
+              onTap: () => context.push('/market_price'),
+            ),
+            _buildActionTile(
+              icon: Icons.add_business_rounded,
+              label: 'เพิ่มฟาร์ม',
+              subtitle: 'สร้างฟาร์มใหม่',
+              color: AppColors.secondaryDark,
+              onTap: () => context.push('/create_farm'),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildActionCard(
-    BuildContext context, {
+  Widget _buildActionTile({
     required IconData icon,
     required String label,
+    required String subtitle,
     required Color color,
     required VoidCallback onTap,
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withValues(alpha: 0.25), width: 1.5),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
           boxShadow: [
             BoxShadow(
-              color: color.withValues(alpha: 0.12),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: color, size: 30),
+              child: Icon(icon, color: color, size: 22),
             ),
-            const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: Text(
-                label,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: AppColors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildMiniStat(BuildContext context, IconData icon, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: AppColors.primary),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DashboardSectionTitle extends StatelessWidget {
-  final String title;
-
-  const _DashboardSectionTitle({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4),
-      child: Row(
-        children: [
-          Container(
-            width: 4,
-            height: 18,
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-          ),
-        ],
       ),
     );
   }

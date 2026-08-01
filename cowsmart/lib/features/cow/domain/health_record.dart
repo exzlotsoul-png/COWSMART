@@ -3,6 +3,7 @@ class HealthRecord {
   final String cowId;
   final DateTime recordDate;
   final String checkupTypeId;
+  final String? status; // 'normal', 'sick', 'injured'
   final String? diseaseId;
   final String? medId;
   final String? vacId;
@@ -22,6 +23,7 @@ class HealthRecord {
     required this.cowId,
     required this.recordDate,
     required this.checkupTypeId,
+    this.status,
     this.diseaseId,
     this.medId,
     this.vacId,
@@ -49,6 +51,7 @@ class HealthRecord {
       cowId: json['cow_id'].toString(),
       recordDate: DateTime.parse(json['record_date'] ?? json['recordDate']),
       checkupTypeId: json['checkup_type_id'].toString(),
+      status: json['status']?.toString(),
       diseaseId: json['disease_id']?.toString(),
       medId: json['med_id']?.toString(),
       vacId: json['vac_id']?.toString(),
@@ -70,6 +73,7 @@ class HealthRecord {
       'cow_id': cowId,
       'record_date': recordDate.toIso8601String(),
       'checkup_type_id': checkupTypeId,
+      'status': status,
       'disease_id': diseaseId,
       'med_id': medId ?? (medIds.isNotEmpty ? medIds.first : null),
       'vac_id': vacId ?? (vacIds.isNotEmpty ? vacIds.first : null),

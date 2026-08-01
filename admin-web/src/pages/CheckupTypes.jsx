@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, ArrowUpDown } from 'lucide-react';
 import api from '../lib/axios';
+import Pagination from '../components/layout/Pagination';
 
 const CheckupTypes = () => {
   const [checkupTypes, setCheckupTypes] = useState([]);
@@ -10,6 +11,8 @@ const CheckupTypes = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('newest');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchCheckupTypes();
@@ -19,6 +22,7 @@ const CheckupTypes = () => {
     try {
       const response = await api.get('/checkup_types');
       setCheckupTypes(response.data.data || response.data);
+      setCurrentPage(1);
     } catch (error) {
       console.error("Error fetching checkup types:", error);
     } finally {
@@ -76,6 +80,19 @@ const CheckupTypes = () => {
     }
   };
 
+  const filteredAndSorted = checkupTypes
+    .filter(t => 
+      (t.type_name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+      (t.checkup_types_id || '').toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      const compare = (b.checkup_types_id || '').localeCompare(a.checkup_types_id || '');
+      return sortOrder === 'newest' ? compare : -compare;
+    });
+
+  const totalPages = Math.ceil(filteredAndSorted.length / itemsPerPage) || 1;
+  const currentItems = filteredAndSorted.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
     <div>
       <div className="card">
@@ -95,7 +112,10 @@ const CheckupTypes = () => {
               placeholder="ค้นหา..." 
               style={{ border: 'none', backgroundColor: 'transparent', outline: 'none', width: '100%' }}
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
             />
           </div>
           <button 
@@ -109,57 +129,53 @@ const CheckupTypes = () => {
         </div>
 
         {loading ? (
-          <p>กำลังโหลดข้อมูล...</p>
+          <p style={{ padding: '24px' }}>กำลังโหลดข้อมูล...</p>
         ) : (
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>รหัสประเภทการตรวจ</th>
-                  <th>ชื่อประเภท</th>
-                  <th>จัดการ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(() => {
-                  const filteredAndSorted = checkupTypes
-                    .filter(t => 
-                      (t.type_name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-                      (t.checkup_types_id || '').toLowerCase().includes(searchTerm.toLowerCase())
-                    )
-                    .sort((a, b) => {
-                      const compare = (b.checkup_types_id || '').localeCompare(a.checkup_types_id || '');
-                      return sortOrder === 'newest' ? compare : -compare;
-                    });
-                  
-                  if (filteredAndSorted.length > 0) {
-                    return filteredAndSorted.map((type) => (
+          <>
+            <div className="table-container">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>รหัสประเภทการตรวจ</th>
+                    <th>ชื่อประเภท</th>
+                    <th>จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentItems.length > 0 ? (
+                    currentItems.map((type) => (
                       <tr key={type.checkup_types_id}>
                         <td>{type.checkup_types_id}</td>
-                      <td>{type.type_name}</td>
-                      <td>
-                        <div className="action-links">
-                          <button className="action-btn edit" onClick={() => handleOpenModal(type)}>
-                            <Edit size={16} />
-                          </button>
-                          <button className="action-btn delete" onClick={() => handleDelete(type.checkup_types_id)}>
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
+                        <td>{type.type_name}</td>
+                        <td>
+                          <div className="action-links">
+                            <button className="action-btn edit" onClick={() => handleOpenModal(type)}>
+                              <Edit size={16} />
+                            </button>
+                            <button className="action-btn delete" onClick={() => handleDelete(type.checkup_types_id)}>
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
                       </tr>
-                    ));
-                  } else {
-                    return (
-                      <tr>
-                        <td colSpan="3" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>
-                      </tr>
-                    );
-                  }
-                })()}
-              </tbody>
-            </table>
-          </div>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="3" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              totalItems={filteredAndSorted.length}
+              itemsPerPage={itemsPerPage}
+            />
+          </>
         )}
       </div>
 

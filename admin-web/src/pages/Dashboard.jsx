@@ -110,31 +110,26 @@ const Dashboard = () => {
   });
 
   // --- Process Health Data ---
-  let totalHealthCount = 0;
   let healthy = 0;
   let sick = 0;
   let pregnant = 0;
 
-  // Mapping different possible statuses to 3 categories (Healthy, Sick, Pregnant)
-  health_status.forEach(item => {
-    const s = (item.status || '').toLowerCase();
-    totalHealthCount += item.count;
-    if (s.includes('sick') || s.includes('ป่วย') || s.includes('บาดเจ็บ')) {
-      sick += item.count;
-    } else if (s.includes('pregnant') || s.includes('ท้อง')) {
-      pregnant += item.count;
-    } else {
-      healthy += item.count; // Default to healthy if not sick or pregnant
-    }
-  });
+  if (health_status && Array.isArray(health_status)) {
+    health_status.forEach(item => {
+      const s = (item.status || '').toLowerCase();
+      const count = parseInt(item.count, 10) || 0;
 
-  // If DB didn't return any status, use total_cows as mock data to show the chart
-  if (totalHealthCount === 0 && summary.total_cows > 0) {
-    totalHealthCount = summary.total_cows;
-    healthy = Math.floor(totalHealthCount * 0.5);
-    sick = Math.floor(totalHealthCount * 0.25);
-    pregnant = totalHealthCount - healthy - sick;
+      if (s === 'sick' || s === 'injured' || s.includes('ป่วย') || s.includes('บาดเจ็บ')) {
+        sick += count;
+      } else if (s === 'pregnant' || s.includes('ท้อง')) {
+        pregnant += count;
+      } else if (s !== 'sold' && s !== 'deceased' && s !== 'removed' && s !== 'ขายแล้ว' && s !== 'ตาย' && s !== 'คัดทิ้ง') {
+        healthy += count;
+      }
+    });
   }
+
+  const totalHealthCount = healthy + sick + pregnant;
 
   const healthData = [
     { name: 'สุขภาพดี', value: healthy, color: '#a3c9a8' }, // muted green
@@ -423,7 +418,7 @@ const Dashboard = () => {
                       const y = cy + radius * Math.sin(-midAngle * RADIAN);
                       const percent = totalHealthCount > 0 ? Math.round((value / totalHealthCount) * 100) : 0;
                       
-                      return percent > 5 ? (
+                      return percent > 0 ? (
                         <text x={x} y={y} fill="#1f2937" textAnchor="middle" dominantBaseline="central" style={{ fontSize: '12px', fontWeight: 'bold' }}>
                           <tspan x={x} dy="-0.5em">{percent}%</tspan>
                           <tspan x={x} dy="1.2em" fontSize="10px" fontWeight="normal">{name}</tspan>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Cow;
 use App\Models\Farm;
+use App\Models\Zone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -47,6 +48,21 @@ class CowController extends Controller
 
         $data = $request->all();
 
+        // Sanitize foreign keys
+        foreach (['zone_id', 'sire_id', 'dam_id', 'breed_id'] as $fk) {
+            if (array_key_exists($fk, $data)) {
+                if (empty($data[$fk]) || $data[$fk] === '' || $data[$fk] === 'null') {
+                    $data[$fk] = null;
+                }
+            }
+        }
+        if (!empty($data['zone_id'])) {
+            $exists = Zone::where('zone_id', $data['zone_id'])->exists();
+            if (!$exists) {
+                $data['zone_id'] = null;
+            }
+        }
+
         if (isset($data['cow_type_id']) && !empty($data['cow_type_id'])) {
             \App\Models\CowType::firstOrCreate(
                 ['cow_type_id' => $data['cow_type_id']],
@@ -82,7 +98,25 @@ class CowController extends Controller
                   ->whereIn('farm_id', $userFarmIds)
                   ->firstOrFail();
 
-        $cow->update($request->all());
+        $data = $request->all();
+
+        // Sanitize foreign keys: convert empty strings or non-existent FKs to null
+        foreach (['zone_id', 'sire_id', 'dam_id', 'breed_id'] as $fk) {
+            if (array_key_exists($fk, $data)) {
+                if (empty($data[$fk]) || $data[$fk] === '' || $data[$fk] === 'null') {
+                    $data[$fk] = null;
+                }
+            }
+        }
+
+        if (!empty($data['zone_id'])) {
+            $exists = Zone::where('zone_id', $data['zone_id'])->exists();
+            if (!$exists) {
+                $data['zone_id'] = null;
+            }
+        }
+
+        $cow->update($data);
         return response()->json($cow);
     }
 

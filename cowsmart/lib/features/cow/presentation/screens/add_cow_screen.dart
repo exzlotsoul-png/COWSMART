@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
-import 'package:cowsmart/core/constants/app_constants.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
@@ -148,8 +147,7 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                  ref.read(cowProvider.notifier).syncCow(updatedCow);
               }
             } catch (e) {
-              print('[ERROR] อัปโหลดรูปภาพไม่สำเร็จ: $e');
-              // We don't block the success flow if image fails, just log it or show a minor warning
+              debugPrint('[ERROR] อัปโหลดรูปภาพไม่สำเร็จ: $e');
             }
           }
 
@@ -165,7 +163,7 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
               final api = ref.read(apiClientProvider);
               await api.post('/growth_records', data: growthRecord.toJson());
             } catch (e) {
-              print('[ERROR] บันทึกน้ำหนักเริ่มต้นไม่สำเร็จ: $e');
+              debugPrint('[ERROR] บันทึกน้ำหนักเริ่มต้นไม่สำเร็จ: $e');
             }
           }
 
@@ -177,9 +175,9 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
               await api.put('/breeding_records/$breedingRecordId', data: {
                 'calf_id': createdCow.id,
               });
-              print('[SUCCESS] ผูกลูกวัว ID ${createdCow.id} กับประวัติผสมพันธุ์ $breedingRecordId สำเร็จ');
+              debugPrint('[SUCCESS] ผูกลูกวัว ID ${createdCow.id} กับประวัติผสมพันธุ์ $breedingRecordId สำเร็จ');
             } catch (e) {
-              print('[ERROR] อัปเดต calf_id ใน breeding_record ไม่สำเร็จ: $e');
+              debugPrint('[ERROR] อัปเดต calf_id ใน breeding_record ไม่สำเร็จ: $e');
             }
           }
         }
@@ -201,6 +199,76 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
     }
   }
 
+  InputDecoration _buildInputDecoration(String labelText, IconData icon, {String? hintText}) {
+    return InputDecoration(
+      labelText: labelText,
+      hintText: hintText,
+      prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
+      filled: true,
+      fillColor: AppColors.surfaceAlt,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.6)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.6)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 18,
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppColors.primaryDark,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCardContainer({required List<Widget> children}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cowState = ref.watch(cowProvider);
@@ -220,383 +288,470 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
     });
 
     return Scaffold(
-      appBar: AppBar(title: const Text('เพิ่มข้อมูลวัว'), actions: const []),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppConstants.defaultPadding),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Image Picker
-                Center(
-                  child: ImagePickerWidget(
-                    currentImageUrl: null,
-                    uploadType: 'cow',
-                    entityId: '', // Entity ID will be generated upon save
-                    size: 120,
-                    placeholderIcon: Icons.add_a_photo,
-                    showConfirmButtons: false,
-                    onImagePicked: (file) {
-                      _pendingImageFile = file;
-                    },
-                    onImageCancelled: () {
-                      _pendingImageFile = null;
-                    },
-                  ),
+      backgroundColor: AppColors.background,
+      body: CustomScrollView(
+        slivers: [
+          // ── Gradient Header ──
+          SliverToBoxAdapter(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [AppColors.primaryDark, AppColors.primary],
                 ),
-                const SizedBox(height: 24),
-
-                // Basic Info
-                Text(
-                  'ข้อมูลพื้นฐาน',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primaryDark,
-                  ),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
                 ),
-                const SizedBox(height: 16),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _tagController,
-                        decoration: const InputDecoration(
-                          labelText: 'หมายเลขประจำตัว (Tag/NFC)',
-                          prefixIcon: Icon(Icons.tag),
-                        ),
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'กรุณากรอกหมายเลข'
-                            : null,
+              ),
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: () => context.pop(),
+                        icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 24),
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _nameController,
-                        decoration: const InputDecoration(
-                          labelText: 'ชื่อ (ถ้ามี)',
-                          prefixIcon: Icon(Icons.pets),
-                        ),
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'กรุณากรอกชื่อ'
-                            : null,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Breed and Weight
-                Row(
-                  children: [
-                    Expanded(
-                      child: Consumer(
-                        builder: (context, ref, child) {
-                          final breeds = ref.watch(breedProvider);
-
-                          // Deduplicate breeds by ID to prevent crash if API returns duplicates
-                          final uniqueBreeds = {
-                            for (var b in breeds) b.id: b,
-                          }.values.toList();
-
-                          // Safety check: ensure _selectedBreedId exists in the items list to avoid crash
-                          final bool isValueInList = uniqueBreeds.any(
-                            (b) => b.id == _selectedBreedId,
-                          );
-                          final String? safeValue = isValueInList
-                              ? _selectedBreedId
-                              : null;
-
-                          return DropdownButtonFormField<String>(
-                            value: safeValue,
-                            decoration: const InputDecoration(
-                              labelText: 'สายพันธุ์',
-                              prefixIcon: Icon(Icons.category),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'เพิ่มข้อมูลวัว',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                            items: uniqueBreeds.map((breed) {
-                              return DropdownMenuItem(
-                                value: breed.id,
-                                child: Text(breed.name),
-                              );
-                            }).toList(),
-                            onChanged: (val) =>
-                                setState(() => _selectedBreedId = val),
-                            validator: (val) =>
-                                val == null ? 'กรุณาเลือกสายพันธุ์' : null,
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _weightController,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'น้ำหนัก (กก.)',
-                          prefixIcon: Icon(Icons.scale),
+                            const SizedBox(height: 2),
+                            Text(
+                              'ลงทะเบียนวัวตัวใหม่เข้าสู่ฟาร์มของคุณ',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.85),
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 16),
+              ),
+            ),
+          ),
 
-                Row(
+          // ── Form Body ──
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 100),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _purchasePriceController,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'ราคาที่ซื้อมา (บาท)',
-                          prefixIcon: Icon(Icons.payments),
-                          hintText: '0.00',
+                    // Card 1: Image Picker
+                    _buildCardContainer(
+                      children: [
+                        Center(
+                          child: ImagePickerWidget(
+                            currentImageUrl: null,
+                            uploadType: 'cow',
+                            entityId: '',
+                            size: 110,
+                            placeholderIcon: Icons.add_a_photo_rounded,
+                            showConfirmButtons: false,
+                            onImagePicked: (file) {
+                              _pendingImageFile = file;
+                            },
+                            onImageCancelled: () {
+                              _pendingImageFile = null;
+                            },
+                          ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    const Expanded(
-                      child: SizedBox(), // Placeholder spacer
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // Date of Birth
-                InkWell(
-                  onTap: () => _selectDate(context),
-                  child: InputDecorator(
-                    decoration: const InputDecoration(
-                      labelText: 'วันเกิด',
-                      prefixIcon: Icon(Icons.calendar_today),
-                    ),
-                    child: Text(DateFormat('dd/MM/yyyy').format(_selectedDate)),
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Gender & Type
-                Text(
-                  'ประเภทและเพศ',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primaryDark,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: SegmentedButton<String>(
-                        segments: const [
-                          ButtonSegment(value: 'M', label: Text('ตัวผู้')),
-                          ButtonSegment(value: 'F', label: Text('ตัวเมีย')),
-                        ],
-                        selected: <String>{_selectedGender},
-                        onSelectionChanged: (Set<String> newSelection) {
-                          setState(() {
-                            _selectedGender = newSelection.first;
-                            // Auto adjust type based on gender if needed, simplified here
-                            if (_selectedGender == 'M' &&
-                                _selectedType == CowType.breederFemale) {
-                              _selectedType = CowType.breederMale;
-                            } else if (_selectedGender == 'F' &&
-                                _selectedType == CowType.breederMale) {
-                              _selectedType = CowType.breederFemale;
-                            }
-                          });
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<CowType>(
-                  initialValue: _selectedType,
-                  decoration: const InputDecoration(
-                    labelText: 'ประเภทวัว',
-                    prefixIcon: Icon(Icons.merge_type),
-                  ),
-                  items: CowType.values.map((type) {
-                    return DropdownMenuItem(
-                      value: type,
-                      child: Text(type.label),
-                    );
-                  }).toList(),
-                  onChanged: (CowType? newValue) {
-                    setState(() {
-                      if (newValue != null) _selectedType = newValue;
-                    });
-                  },
-                ),
-                const SizedBox(height: 24),
-
-                // Zone Selection
-                Text(
-                  'ที่อยู่ (โซน)',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primaryDark,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Consumer(
-                  builder: (context, ref, child) {
-                    final zoneState = ref.watch(zoneProvider);
-                    final zones = zoneState.zones;
-
-                    return DropdownButtonFormField<String>(
-                      initialValue: _selectedZoneId,
-                      decoration: const InputDecoration(
-                        labelText: 'เลือกโซน',
-                        hintText: 'กรุณาเลือกโซน (ถ้ามี)',
-                        prefixIcon: Icon(Icons.fence_outlined),
-                      ),
-                      items: [
-                        const DropdownMenuItem(
-                          value: null,
-                          child: Text('ไม่ระบุโซน'),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'แตะเพื่อเพิ่มรูปถ่ายวัว',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                        ...zones.map((zone) {
-                          return DropdownMenuItem(
-                            value: zone.id,
-                            child: Text(zone.name),
-                          );
-                        }),
                       ],
-                      onChanged: (val) => setState(() => _selectedZoneId = val),
-                    );
-                  },
-                ),
-                const SizedBox(height: 24),
-
-                // Bloodline Info
-                Text(
-                  'สายเลือด (พ่อ/แม่)',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primaryDark,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Builder(
-                        builder: (context) {
-                          final bool isFatherInList = cowState.allCows
-                              .any((c) => c.gender == 'M' && c.id == _selectedFatherId);
-                          final String? safeFatherValue = isFatherInList ? _selectedFatherId : null;
-
-                          return DropdownButtonFormField<String>(
-                            value: safeFatherValue,
-                            decoration: const InputDecoration(
-                              labelText: 'เลือกพ่อพันธุ์ (Sire)',
-                              prefixIcon: Icon(Icons.male),
-                            ),
-                            items: [
-                              const DropdownMenuItem(
-                                value: null,
-                                child: Text('ไม่ระบุพ่อพันธุ์'),
-                              ),
-                              ...cowState.allCows
-                                  .where((c) => c.gender == 'M')
-                                  .map((cow) {
-                                return DropdownMenuItem(
-                                  value: cow.id,
-                                  child: Text(cow.name.isNotEmpty ? '${cow.name} (${cow.tagNumber})' : cow.tagNumber),
-                                );
-                              }),
-                            ],
-                            onChanged: (val) =>
-                                setState(() => _selectedFatherId = val),
-                          );
-                        }
-                      ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Builder(
-                        builder: (context) {
-                          final bool isMotherInList = cowState.allCows
-                              .any((c) => c.gender == 'F' && c.id == _selectedMotherId);
-                          final String? safeMotherValue = isMotherInList ? _selectedMotherId : null;
 
-                          return DropdownButtonFormField<String>(
-                            value: safeMotherValue,
-                            decoration: const InputDecoration(
-                              labelText: 'เลือกแม่พันธุ์ (Dam)',
-                              prefixIcon: Icon(Icons.female),
-                            ),
-                            items: [
-                              const DropdownMenuItem(
-                                value: null,
-                                child: Text('ไม่ระบุแม่พันธุ์'),
+                    // Card 2: Basic Info
+                    _buildCardContainer(
+                      children: [
+                        _buildSectionHeader('ข้อมูลพื้นฐาน'),
+                        const SizedBox(height: 16),
+
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _tagController,
+                                decoration: _buildInputDecoration('เบอร์วัว (Tag)', Icons.tag_rounded),
+                                validator: (value) => value == null || value.isEmpty
+                                    ? 'กรุณากรอกหมายเลข'
+                                    : null,
                               ),
-                              ...cowState.allCows
-                                  .where((c) => c.gender == 'F')
-                                  .map((cow) {
-                                return DropdownMenuItem(
-                                  value: cow.id,
-                                  child: Text(cow.name.isNotEmpty ? '${cow.name} (${cow.tagNumber})' : cow.tagNumber),
-                                );
-                              }),
-                            ],
-                            onChanged: (val) =>
-                                setState(() => _selectedMotherId = val),
-                          );
-                        }
-                      ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: TextFormField(
+                                controller: _nameController,
+                                decoration: _buildInputDecoration('ชื่อ (ถ้ามี)', Icons.pets_rounded),
+                                validator: (value) => value == null || value.isEmpty
+                                    ? 'กรุณากรอกชื่อ'
+                                    : null,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Consumer(
+                                builder: (context, ref, child) {
+                                  final breeds = ref.watch(breedProvider);
+                                  final uniqueBreeds = {
+                                    for (var b in breeds) b.id: b,
+                                  }.values.toList();
+
+                                  final bool isValueInList = uniqueBreeds.any(
+                                    (b) => b.id == _selectedBreedId,
+                                  );
+                                  final String? safeValue = isValueInList
+                                      ? _selectedBreedId
+                                      : null;
+
+                                  return DropdownButtonFormField<String>(
+                                    initialValue: safeValue,
+                                    isExpanded: true,
+                                    decoration: _buildInputDecoration('สายพันธุ์', Icons.category_rounded),
+                                    items: uniqueBreeds.map((breed) {
+                                      return DropdownMenuItem(
+                                        value: breed.id,
+                                        child: Text(
+                                          breed.name,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      );
+                                    }).toList(),
+                                    onChanged: (val) =>
+                                        setState(() => _selectedBreedId = val),
+                                    validator: (val) =>
+                                        val == null ? 'กรุณาเลือกสายพันธุ์' : null,
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: TextFormField(
+                                controller: _weightController,
+                                keyboardType: TextInputType.number,
+                                decoration: _buildInputDecoration('น้ำหนัก (กก.)', Icons.scale_rounded),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _purchasePriceController,
+                                keyboardType: TextInputType.number,
+                                decoration: _buildInputDecoration('ราคาซื้อมา (บาท)', Icons.payments_rounded, hintText: '0.00'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: InkWell(
+                                onTap: () => _selectDate(context),
+                                borderRadius: BorderRadius.circular(14),
+                                child: InputDecorator(
+                                  decoration: _buildInputDecoration('วันเกิด', Icons.calendar_today_rounded),
+                                  child: Text(
+                                    DateFormat('dd/MM/yyyy').format(_selectedDate),
+                                    style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+
+                    // Card 3: Type & Gender
+                    _buildCardContainer(
+                      children: [
+                        _buildSectionHeader('ประเภทและเพศ'),
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: SegmentedButton<String>(
+                                segments: const [
+                                  ButtonSegment(
+                                    value: 'M',
+                                    label: Text('ตัวผู้', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    icon: Icon(Icons.male_rounded, size: 18),
+                                  ),
+                                  ButtonSegment(
+                                    value: 'F',
+                                    label: Text('ตัวเมีย', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    icon: Icon(Icons.female_rounded, size: 18),
+                                  ),
+                                ],
+                                selected: <String>{_selectedGender},
+                                style: ButtonStyle(
+                                  visualDensity: VisualDensity.compact,
+                                  shape: WidgetStateProperty.all(
+                                    RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                ),
+                                onSelectionChanged: (Set<String> newSelection) {
+                                  setState(() {
+                                    _selectedGender = newSelection.first;
+                                    if (_selectedGender == 'M' &&
+                                        _selectedType == CowType.breederFemale) {
+                                      _selectedType = CowType.breederMale;
+                                    } else if (_selectedGender == 'F' &&
+                                        _selectedType == CowType.breederMale) {
+                                      _selectedType = CowType.breederFemale;
+                                    }
+                                  });
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        DropdownButtonFormField<CowType>(
+                          initialValue: _selectedType,
+                          isExpanded: true,
+                          decoration: _buildInputDecoration('ประเภทวัว', Icons.merge_type_rounded),
+                          items: CowType.values.map((type) {
+                            return DropdownMenuItem(
+                              value: type,
+                              child: Text(
+                                type.label,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (CowType? newValue) {
+                            setState(() {
+                              if (newValue != null) _selectedType = newValue;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+
+                    // Card 4: Zone
+                    _buildCardContainer(
+                      children: [
+                        _buildSectionHeader('ที่อยู่ (โซน)'),
+                        const SizedBox(height: 14),
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final zoneState = ref.watch(zoneProvider);
+                            final zones = zoneState.zones;
+
+                            return DropdownButtonFormField<String>(
+                              initialValue: _selectedZoneId,
+                              isExpanded: true,
+                              decoration: _buildInputDecoration('เลือกโซน', Icons.fence_rounded, hintText: 'กรุณาเลือกโซน (ถ้ามี)'),
+                              items: [
+                                const DropdownMenuItem(
+                                  value: null,
+                                  child: Text('ไม่ระบุโซน', overflow: TextOverflow.ellipsis),
+                                ),
+                                ...zones.map((zone) {
+                                  return DropdownMenuItem(
+                                    value: zone.id,
+                                    child: Text(zone.name, overflow: TextOverflow.ellipsis),
+                                  );
+                                }),
+                              ],
+                              onChanged: (val) => setState(() => _selectedZoneId = val),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+
+                    // Card 5: Bloodline (Sire/Dam)
+                    _buildCardContainer(
+                      children: [
+                        _buildSectionHeader('สายเลือด (พ่อ/แม่)'),
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Builder(
+                                builder: (context) {
+                                  final bool isFatherInList = cowState.allCows
+                                      .any((c) => c.gender == 'M' && c.id == _selectedFatherId);
+                                  final String? safeFatherValue = isFatherInList ? _selectedFatherId : null;
+
+                                  return DropdownButtonFormField<String>(
+                                    initialValue: safeFatherValue,
+                                    isExpanded: true,
+                                    decoration: _buildInputDecoration('พ่อพันธุ์ (Sire)', Icons.male_rounded),
+                                    items: [
+                                      const DropdownMenuItem(
+                                        value: null,
+                                        child: Text('ไม่ระบุพ่อพันธุ์', overflow: TextOverflow.ellipsis),
+                                      ),
+                                      ...cowState.allCows
+                                          .where((c) => c.gender == 'M')
+                                          .map((cow) {
+                                        return DropdownMenuItem(
+                                          value: cow.id,
+                                          child: Text(
+                                            cow.name.isNotEmpty ? '${cow.name} (${cow.tagNumber})' : cow.tagNumber,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        );
+                                      }),
+                                    ],
+                                    onChanged: (val) =>
+                                        setState(() => _selectedFatherId = val),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Builder(
+                                builder: (context) {
+                                  final bool isMotherInList = cowState.allCows
+                                      .any((c) => c.gender == 'F' && c.id == _selectedMotherId);
+                                  final String? safeMotherValue = isMotherInList ? _selectedMotherId : null;
+
+                                  return DropdownButtonFormField<String>(
+                                    initialValue: safeMotherValue,
+                                    isExpanded: true,
+                                    decoration: _buildInputDecoration('แม่พันธุ์ (Dam)', Icons.female_rounded),
+                                    items: [
+                                      const DropdownMenuItem(
+                                        value: null,
+                                        child: Text('ไม่ระบุแม่พันธุ์', overflow: TextOverflow.ellipsis),
+                                      ),
+                                      ...cowState.allCows
+                                          .where((c) => c.gender == 'F')
+                                          .map((cow) {
+                                        return DropdownMenuItem(
+                                          value: cow.id,
+                                          child: Text(
+                                            cow.name.isNotEmpty ? '${cow.name} (${cow.tagNumber})' : cow.tagNumber,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        );
+                                      }),
+                                    ],
+                                    onChanged: (val) =>
+                                        setState(() => _selectedMotherId = val),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+
+                    // Card 6: Current Status
+                    _buildCardContainer(
+                      children: [
+                        _buildSectionHeader('สถานะปัจจุบัน'),
+                        const SizedBox(height: 14),
+                        DropdownButtonFormField<CowStatus>(
+                          initialValue: _selectedStatus,
+                          isExpanded: true,
+                          decoration: _buildInputDecoration('สถานะสุขภาพ/การเลี้ยง', Icons.health_and_safety_rounded),
+                          items: CowStatus.values.map((status) {
+                            return DropdownMenuItem(
+                              value: status,
+                              child: Text(status.label, overflow: TextOverflow.ellipsis),
+                            );
+                          }).toList(),
+                          onChanged: (CowStatus? newValue) {
+                            setState(() {
+                              if (newValue != null) _selectedStatus = newValue;
+                            });
+                          },
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
+              ),
+            ),
+          ),
+        ],
+      ),
 
-                // Status
-                Text(
-                  'สถานะปัจจุบัน',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primaryDark,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<CowStatus>(
-                  initialValue: _selectedStatus,
-                  decoration: const InputDecoration(
-                    labelText: 'สถานะ',
-                    prefixIcon: Icon(Icons.health_and_safety),
-                  ),
-                  items: CowStatus.values.map((status) {
-                    return DropdownMenuItem(
-                      value: status,
-                      child: Text(status.label),
-                    );
-                  }).toList(),
-                  onChanged: (CowStatus? newValue) {
-                    setState(() {
-                      if (newValue != null) _selectedStatus = newValue;
-                    });
-                  },
-                ),
-                const SizedBox(height: 80),
-              ],
+      // ── Fixed Bottom Save Button ──
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: SizedBox(
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: (_isSaving || cowState.isLoading) ? null : _saveCow,
+              icon: _isSaving || cowState.isLoading
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                    )
+                  : const Icon(Icons.check_circle_rounded, size: 22),
+              label: Text(
+                _isSaving || cowState.isLoading ? 'กำลังบันทึก...' : 'บันทึกข้อมูลวัว',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 0.3),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                elevation: 3,
+                shadowColor: AppColors.primary.withValues(alpha: 0.4),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
             ),
           ),
         ),
       ),
-      floatingActionButton: _isSaving || cowState.isLoading
-          ? const SizedBox.shrink()
-          : FloatingActionButton.extended(
-              onPressed: _saveCow,
-              icon: const Icon(Icons.save),
-              label: const Text('บันทึก'),
-              backgroundColor: AppColors.primary,
-            ),
     );
   }
 }

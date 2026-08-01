@@ -2,9 +2,8 @@ import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage }) => {
-  if (totalPages <= 1) return null;
-
-  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const safeTotalPages = Math.max(1, totalPages || 1);
+  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   // Generate page numbers to show (e.g. 1, 2, 3...)
@@ -12,8 +11,8 @@ const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPe
     const pages = [];
     const maxVisiblePages = 5;
 
-    if (totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= totalPages; i++) {
+    if (safeTotalPages <= maxVisiblePages) {
+      for (let i = 1; i <= safeTotalPages; i++) {
         pages.push(i);
       }
     } else {
@@ -21,12 +20,12 @@ const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPe
       pages.push(1);
 
       let start = Math.max(2, currentPage - 1);
-      let end = Math.min(totalPages - 1, currentPage + 1);
+      let end = Math.min(safeTotalPages - 1, currentPage + 1);
 
       if (currentPage <= 2) {
         end = 4;
-      } else if (currentPage >= totalPages - 1) {
-        start = totalPages - 3;
+      } else if (currentPage >= safeTotalPages - 1) {
+        start = safeTotalPages - 3;
       }
 
       if (start > 2) {
@@ -37,12 +36,12 @@ const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPe
         pages.push(i);
       }
 
-      if (end < totalPages - 1) {
+      if (end < safeTotalPages - 1) {
         pages.push('...');
       }
 
       // Always show last page
-      pages.push(totalPages);
+      pages.push(safeTotalPages);
     }
     return pages;
   };
@@ -56,7 +55,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPe
         <button
           className="pagination-btn pagination-arrow"
           onClick={() => onPageChange(currentPage - 1)}
-          disabled={currentPage === 1}
+          disabled={currentPage <= 1}
         >
           <ChevronLeft size={16} style={{ marginRight: '4px' }} />
           ก่อนหน้า
@@ -76,7 +75,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPe
         <button
           className="pagination-btn pagination-arrow"
           onClick={() => onPageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
+          disabled={currentPage >= safeTotalPages}
         >
           ถัดไป
           <ChevronRight size={16} style={{ marginLeft: '4px' }} />

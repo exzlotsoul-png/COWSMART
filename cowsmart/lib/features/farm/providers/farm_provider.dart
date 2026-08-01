@@ -50,10 +50,23 @@ class FarmNotifier extends Notifier<FarmState> {
       final List<dynamic> data = response.data;
       final List<Farm> farms = data.map((json) => Farm.fromJson(json)).toList();
 
-      debugPrint('[SUCCESS] ดึงข้อมูลฟาร์มสำเร็จ: ${farms.length} รายการ');
+      final currentId = state.currentFarm?.id;
+      Farm? updatedCurrentFarm;
+      if (currentId != null) {
+        final matches = farms.where((f) => f.id == currentId).toList();
+        if (matches.isNotEmpty) {
+          updatedCurrentFarm = matches.first;
+        } else if (farms.isNotEmpty) {
+          updatedCurrentFarm = farms.first;
+        }
+      } else if (farms.isNotEmpty) {
+        updatedCurrentFarm = farms.first;
+      }
+
+      debugPrint('[SUCCESS] ดึงข้อมูลฟาร์มสำเร็จ: ${farms.length} รายการ (ฟาร์มปัจจุบัน: ${updatedCurrentFarm?.name})');
       state = state.copyWith(
         farms: farms,
-        currentFarm: farms.isNotEmpty ? farms.first : null,
+        currentFarm: updatedCurrentFarm,
         isLoading: false,
       );
     } catch (e) {

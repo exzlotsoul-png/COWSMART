@@ -45,19 +45,50 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
         .toList();
   }
 
+  Color _getStatusColor(Cow cow) {
+    switch (cow.status.colorType) {
+      case 'success':
+        return AppColors.success;
+      case 'error':
+        return AppColors.error;
+      case 'warning':
+        return AppColors.warning;
+      case 'info':
+        return AppColors.info;
+      default:
+        return AppColors.textHint;
+    }
+  }
+
   Future<void> _removeCowFromZone(Cow cow) async {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('ยืนยันการนำวัวออกจากโซน'),
-        content: Text('นำ ${cow.name} ออกจาก ${widget.zone.name}?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'ยืนยันการนำวัวออกจากโซน',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
+        content: Text(
+          'นำ ${cow.name} ออกจาก ${widget.zone.name}?',
+          style: const TextStyle(fontSize: 15),
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
         actions: [
           Row(
             children: [
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => Navigator.pop(context, false),
-                  child: const Text('ยกเลิก'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    side: const BorderSide(color: AppColors.border),
+                  ),
+                  child: const Text('ยกเลิก',
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 15)),
                 ),
               ),
               const SizedBox(width: 12),
@@ -67,8 +98,13 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.error,
                     foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  child: const Text('ยืนยัน'),
+                  child: const Text('ยืนยัน',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                 ),
               ),
             ],
@@ -84,17 +120,12 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
         if (currentFarm != null) {
           await ref
               .read(cowProvider.notifier)
-              .updateCowZone(
-                cow.id,
-                '', // Empty zoneId to remove from zone
-                currentFarm.id,
-              );
-          // Refresh zones to update cow count on dashboard
+              .updateCowZone(cow.id, '', currentFarm.id);
           await ref.read(zoneProvider.notifier).fetchZones(currentFarm.id);
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('นำ ${cow.name} ออกจากโซนแล้ว'),
+                content: Text('นำ ${cow.name} ออกจากโซนแล้ว', style: const TextStyle(fontSize: 15)),
                 backgroundColor: AppColors.success,
               ),
             );
@@ -104,7 +135,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('เกิดข้อผิดพลาด: $e'),
+              content: Text('เกิดข้อผิดพลาด: $e', style: const TextStyle(fontSize: 15)),
               backgroundColor: AppColors.error,
             ),
           );
@@ -134,13 +165,10 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
         successCount++;
       } catch (e) {
         failCount++;
-        print('[ERROR] ย้ายวัว ${cow.name} ไม่สำเร็จ: $e');
       }
     }
 
-    // Refresh zones to update cow count on dashboard
     await ref.read(zoneProvider.notifier).fetchZones(currentFarm.id);
-
     setState(() => _isLoading = false);
 
     if (mounted) {
@@ -148,185 +176,348 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
         SnackBar(
           content: Text(
             'เพิ่มวัวสำเร็จ $successCount ตัว${failCount > 0 ? ', ไม่สำเร็จ $failCount ตัว' : ''}',
+            style: const TextStyle(fontSize: 15),
           ),
-          backgroundColor: failCount > 0 ? Colors.orange : AppColors.success,
+          backgroundColor: failCount > 0 ? AppColors.warning : AppColors.success,
         ),
       );
     }
   }
 
-  void _showAddCowDialog() {
+  void _showAddCowBottomSheet() {
     final availableCows = _cowsNotInZone;
     if (availableCows.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ไม่มีวัวที่สามารถเพิ่มเข้าโซนได้')),
+        const SnackBar(content: Text('ไม่มีวัวที่สามารถเพิ่มเข้าโซนได้', style: TextStyle(fontSize: 15))),
       );
       return;
     }
 
     final selectedCows = <Cow>{};
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          return AlertDialog(
-            title: Text('เพิ่มวัวเข้า ${widget.zone.name}'),
-            content: SizedBox(
-              width: double.maxFinite,
-              height: 400,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (modalContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.78,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
               child: Column(
                 children: [
-                  // Select All / Clear All buttons
-                  Row(
-                    children: [
-                      TextButton.icon(
-                        onPressed: () {
-                          setDialogState(() {
-                            if (selectedCows.length == availableCows.length) {
-                              selectedCows.clear();
-                            } else {
-                              selectedCows.addAll(availableCows);
-                            }
-                          });
-                        },
-                        icon: Icon(
-                          selectedCows.length == availableCows.length
-                              ? Icons.check_box_outlined
-                              : Icons.check_box_outline_blank,
-                        ),
-                        label: Text(
-                          selectedCows.length == availableCows.length
-                              ? 'ยกเลิกเลือกทั้งหมด'
-                              : 'เลือกทั้งหมด',
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        '${selectedCows.length}/${availableCows.length} ตัว',
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                  // Handle bar
+                  Container(
+                    margin: const EdgeInsets.only(top: 12),
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                  const Divider(),
-                  // List with checkboxes
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: availableCows.length,
-                      itemBuilder: (context, index) {
-                        final cow = availableCows[index];
-                        final isSelected = selectedCows.contains(cow);
 
-                        Color statusColor;
-                        switch (cow.status.colorType) {
-                          case 'success':
-                            statusColor = Colors.green;
-                            break;
-                          case 'error':
-                            statusColor = Colors.red;
-                            break;
-                          case 'warning':
-                            statusColor = Colors.orange;
-                            break;
-                          case 'info':
-                            statusColor = Colors.blue;
-                            break;
-                          default:
-                            statusColor = Colors.grey;
-                        }
-
-                        return CheckboxListTile(
-                          value: isSelected,
-                          onChanged: (checked) {
-                            setDialogState(() {
-                              if (checked == true) {
-                                selectedCows.add(cow);
-                              } else {
-                                selectedCows.remove(cow);
-                              }
-                            });
-                          },
-                          title: Row(
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 12, 0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: Text(
-                                  cow.name,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                              Text(
+                                'เพิ่มวัวเข้า ${widget.zone.name}',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primaryDark,
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: statusColor.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  cow.status.label,
-                                  style: TextStyle(
-                                    color: statusColor,
-                                    fontSize: 10,
-                                  ),
+                              const SizedBox(height: 2),
+                              const Text(
+                                'เลือกวัวที่ต้องการย้ายเข้าโซนนี้',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: AppColors.textSecondary,
                                 ),
                               ),
                             ],
                           ),
-                          subtitle: Text(
-                            'แท็ก: ${cow.tagNumber} | ${cow.type.label}',
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(modalContext),
+                          icon: const Icon(Icons.close_rounded,
+                              color: AppColors.textSecondary, size: 24),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Select All + Counter
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 8, 16, 4),
+                    child: Row(
+                      children: [
+                        TextButton.icon(
+                          onPressed: () {
+                            setModalState(() {
+                              if (selectedCows.length == availableCows.length) {
+                                selectedCows.clear();
+                              } else {
+                                selectedCows.addAll(availableCows);
+                              }
+                            });
+                          },
+                          icon: Icon(
+                            selectedCows.length == availableCows.length
+                                ? Icons.check_box_rounded
+                                : Icons.check_box_outline_blank_rounded,
+                            color: AppColors.primary,
+                            size: 24,
                           ),
-                          secondary: CircleAvatar(
-                            backgroundColor: AppColors.primary.withOpacity(0.1),
-                            child: const Icon(
-                              Icons.pets,
+                          label: Text(
+                            selectedCows.length == availableCows.length
+                                ? 'ยกเลิกทั้งหมด'
+                                : 'เลือกทั้งหมด',
+                            style: const TextStyle(
                               color: AppColors.primary,
-                              size: 18,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            '${selectedCows.length}/${availableCows.length} ตัว',
+                            style: const TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const Divider(height: 1, color: AppColors.border),
+
+                  // Cow List
+                  Expanded(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      itemCount: availableCows.length,
+                      separatorBuilder: (_, __) => Divider(
+                        height: 1,
+                        indent: 76,
+                        color: AppColors.border.withValues(alpha: 0.5),
+                      ),
+                      itemBuilder: (context, index) {
+                        final cow = availableCows[index];
+                        final isSelected = selectedCows.contains(cow);
+                        final statusColor = _getStatusColor(cow);
+
+                        return InkWell(
+                          onTap: () {
+                            setModalState(() {
+                              if (isSelected) {
+                                selectedCows.remove(cow);
+                              } else {
+                                selectedCows.add(cow);
+                              }
+                            });
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            child: Row(
+                              children: [
+                                // Checkbox
+                                Container(
+                                  width: 26,
+                                  height: 26,
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? AppColors.primary
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? AppColors.primary
+                                          : AppColors.border,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: isSelected
+                                      ? const Icon(Icons.check_rounded,
+                                          color: Colors.white, size: 18)
+                                      : null,
+                                ),
+                                const SizedBox(width: 14),
+
+                                // Avatar
+                                Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary
+                                        .withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: cow.imageFullUrl != null &&
+                                          cow.imageFullUrl!.isNotEmpty
+                                      ? ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          child: Image.network(
+                                            cow.imageFullUrl!,
+                                            width: 48,
+                                            height: 48,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        )
+                                      : const Icon(Icons.pets_rounded,
+                                          color: AppColors.primary, size: 22),
+                                ),
+                                const SizedBox(width: 14),
+
+                                // Info
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Flexible(
+                                            child: Text(
+                                              cow.name,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 17,
+                                                color: AppColors.textPrimary,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 8, vertical: 3),
+                                            decoration: BoxDecoration(
+                                              color: statusColor.withValues(
+                                                  alpha: 0.12),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                            ),
+                                            child: Text(
+                                              cow.status.label,
+                                              style: TextStyle(
+                                                color: statusColor,
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'แท็ก: ${cow.tagNumber} · ${cow.type.label} · ${cow.breed}',
+                                        style: const TextStyle(
+                                          color: AppColors.textSecondary,
+                                          fontSize: 13,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         );
                       },
                     ),
                   ),
-                ],
-              ),
-            ),
-            actions: [
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('ยกเลิก'),
+
+                  // Bottom action bar
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.06),
+                          blurRadius: 10,
+                          offset: const Offset(0, -4),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: selectedCows.isEmpty
-                          ? null
-                          : () {
-                              Navigator.pop(context);
-                              _moveMultipleCowsToZone(selectedCows.toList());
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
+                    child: SafeArea(
+                      top: false,
+                      child: SizedBox(
+                        height: 52,
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: selectedCows.isEmpty
+                              ? null
+                              : () {
+                                  Navigator.pop(modalContext);
+                                  _moveMultipleCowsToZone(
+                                      selectedCows.toList());
+                                },
+                          icon: const Icon(Icons.check_circle_rounded,
+                              size: 22),
+                          label: Text(
+                            selectedCows.isEmpty
+                                ? 'เลือกวัวที่ต้องการเพิ่ม'
+                                : 'เพิ่ม ${selectedCows.length} ตัวเข้าโซน',
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            disabledBackgroundColor:
+                                AppColors.border.withValues(alpha: 0.5),
+                            disabledForegroundColor: AppColors.textHint,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                        ),
                       ),
-                      child: Text('เพิ่ม ${selectedCows.length} ตัว'),
                     ),
                   ),
                 ],
               ),
-            ],
-          );
-        },
-      ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -336,256 +527,417 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
     final cowState = ref.watch(cowProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.zone.name),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            onPressed: _isLoading ? null : _showAddCowDialog,
-            icon: const Icon(Icons.add),
-            tooltip: 'เพิ่มวัวเข้าโซน',
-          ),
-        ],
-      ),
-      body: cowState.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: () async {
-                final currentFarm = ref.read(farmProvider).currentFarm;
-                if (currentFarm != null) {
-                  await ref
-                      .read(cowProvider.notifier)
-                      .fetchCows(currentFarm.id);
-                  await ref
-                      .read(zoneProvider.notifier)
-                      .fetchZones(currentFarm.id);
-                }
-              },
-              child: Column(
-                children: [
-                  // Zone Info Card
-                  Container(
-                    margin: const EdgeInsets.all(16),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.primary.withOpacity(0.3),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.fence, color: AppColors.primary, size: 40),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                widget.zone.name,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                '${cowsInZone.length} ตัว ในฟาร์ม',
-                                style: const TextStyle(
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
+      backgroundColor: AppColors.background,
+      body: CustomScrollView(
+        slivers: [
+          // ── Gradient Header ──
+          SliverToBoxAdapter(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [AppColors.primaryDark, AppColors.primary],
+                ),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
+                ),
+              ),
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 20),
+                  child: Column(
+                    children: [
+                      // Top Row
+                      Row(
+                        children: [
+                          IconButton(
+                            onPressed: () => context.pop(),
+                            icon: const Icon(Icons.arrow_back_rounded,
+                                color: Colors.white, size: 26),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Cows List
-                  Expanded(
-                    child: cowsInZone.isEmpty
-                        ? Center(
+                          const SizedBox(width: 4),
+                          Expanded(
                             child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Icon(
-                                  Icons.pets_outlined,
-                                  size: 64,
-                                  color: AppColors.textSecondary,
-                                ),
-                                const SizedBox(height: 16),
-                                const Text(
-                                  'ยังไม่มีวัวในโซนนี้',
-                                  style: TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 16,
+                                Text(
+                                  widget.zone.name,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
                                   ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                const SizedBox(height: 16),
-                                ElevatedButton.icon(
-                                  onPressed: _showAddCowDialog,
-                                  icon: const Icon(Icons.add),
-                                  label: const Text('เพิ่มวัวเข้าโซน'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.primary,
-                                    foregroundColor: Colors.white,
+                                const SizedBox(height: 2),
+                                const Text(
+                                  'จัดการวัวในโซนนี้',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 14,
                                   ),
                                 ),
                               ],
                             ),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: cowsInZone.length,
-                            itemBuilder: (context, index) {
-                              final cow = cowsInZone[index];
-                              return _CowCard(
-                                cow: cow,
-                                onRemove: () => _removeCowFromZone(cow),
-                                onTap: () =>
-                                    context.push('/cow_detail', extra: cow),
-                              );
-                            },
                           ),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: IconButton(
+                              onPressed:
+                                  _isLoading ? null : _showAddCowBottomSheet,
+                              icon: const Icon(Icons.add_rounded,
+                                  color: Colors.white, size: 26),
+                              tooltip: 'เพิ่มวัวเข้าโซน',
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+
+                      // Zone Stats Bar
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: const Icon(Icons.grass_rounded,
+                                  color: Colors.white, size: 26),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    widget.zone.name,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '${cowsInZone.length} ตัว ในโซนนี้',
+                                    style: TextStyle(
+                                      color:
+                                          Colors.white.withValues(alpha: 0.85),
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Text(
+                                '${cowsInZone.length}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // ── Section Header ──
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'รายชื่อวัว (${cowsInZone.length})',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primaryDark,
+                    ),
                   ),
                 ],
               ),
             ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _isLoading ? null : _showAddCowDialog,
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text(
-          'เพิ่มวัว',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-      ),
-    );
-  }
-}
+          ),
 
-class _CowCard extends StatelessWidget {
-  final Cow cow;
-  final VoidCallback onRemove;
-  final VoidCallback onTap;
-
-  const _CowCard({
-    required this.cow,
-    required this.onRemove,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    Color statusColor;
-    switch (cow.status.colorType) {
-      case 'success':
-        statusColor = Colors.green;
-        break;
-      case 'error':
-        statusColor = Colors.red;
-        break;
-      case 'warning':
-        statusColor = Colors.orange;
-        break;
-      case 'info':
-        statusColor = Colors.blue;
-        break;
-      default:
-        statusColor = Colors.grey;
-    }
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: AppColors.primary.withOpacity(0.1),
-                child: cow.imageFullUrl != null && cow.imageFullUrl!.isNotEmpty
-                    ? ClipOval(
-                        child: Image.network(
-                          cow.imageFullUrl!,
-                          width: 56,
-                          height: 56,
-                          fit: BoxFit.cover,
-                        ),
-                      )
-                    : const Icon(Icons.pets, color: AppColors.primary),
+          // ── Loading / Empty / Cow List ──
+          if (cowState.isLoading)
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 60),
+                child: Center(
+                    child:
+                        CircularProgressIndicator(color: AppColors.primary)),
               ),
-              const SizedBox(width: 12),
-              Expanded(
+            )
+          else if (cowsInZone.isEmpty)
+            SliverToBoxAdapter(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.all(32),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                      color: AppColors.border.withValues(alpha: 0.5)),
+                ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      cow.name,
-                      style: const TextStyle(
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.pets_rounded,
+                          size: 44, color: AppColors.primary),
+                    ),
+                    const SizedBox(height: 14),
+                    const Text(
+                      'ยังไม่มีวัวในโซนนี้',
+                      style: TextStyle(
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        color: AppColors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Text(
-                          'แท็ก: ${cow.tagNumber}',
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 12,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: statusColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            cow.status.label,
-                            style: TextStyle(
-                              color: statusColor,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
+                    const SizedBox(height: 6),
+                    const Text(
+                      'แตะปุ่มด้านล่างเพื่อเพิ่มวัวเข้าโซนนี้',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          color: AppColors.textSecondary, fontSize: 14),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${cow.type.label} | ${cow.breed}',
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 12,
+                    const SizedBox(height: 18),
+                    SizedBox(
+                      height: 48,
+                      child: ElevatedButton.icon(
+                        onPressed: _showAddCowBottomSheet,
+                        icon: const Icon(Icons.add_rounded, size: 22),
+                        label: const Text('เพิ่มวัวเข้าโซน',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-              IconButton(
-                onPressed: onRemove,
-                icon: const Icon(
-                  Icons.remove_circle_outline,
-                  color: Colors.red,
-                ),
-                tooltip: 'นำออกจากโซน',
+            )
+          else
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final cow = cowsInZone[index];
+                  return Padding(
+                    padding:
+                        const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: _buildCowCard(context, cow),
+                  );
+                },
+                childCount: cowsInZone.length,
               ),
-            ],
-          ),
+            ),
+
+          // Bottom padding
+          const SliverToBoxAdapter(child: SizedBox(height: 80)),
+        ],
+      ),
+
+      // FAB
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _isLoading ? null : _showAddCowBottomSheet,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        elevation: 4,
+        icon: const Icon(Icons.add_rounded, size: 24),
+        label: const Text('เพิ่มวัว',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+      ),
+    );
+  }
+
+  Widget _buildCowCard(BuildContext context, Cow cow) {
+    final statusColor = _getStatusColor(cow);
+
+    return InkWell(
+      onTap: () => context.push('/cow_detail', extra: cow),
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border:
+              Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Avatar
+            Container(
+              width: 58,
+              height: 58,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: cow.imageFullUrl != null &&
+                      cow.imageFullUrl!.isNotEmpty
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.network(
+                        cow.imageFullUrl!,
+                        width: 58,
+                        height: 58,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  : const Icon(Icons.pets_rounded,
+                      color: AppColors.primary, size: 28),
+            ),
+            const SizedBox(width: 14),
+
+            // Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          cow.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            color: AppColors.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: statusColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          cow.status.label,
+                          style: TextStyle(
+                            color: statusColor,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: [
+                      _buildInfoChip('แท็ก: ${cow.tagNumber}'),
+                      _buildInfoChip(cow.type.label),
+                      _buildInfoChip(cow.breed),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 8),
+
+            // Remove button
+            InkWell(
+              onTap: () => _removeCowFromZone(cow),
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.remove_circle_outline_rounded,
+                    color: AppColors.error, size: 22),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoChip(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceAlt,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 13,
+          color: AppColors.textSecondary,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );

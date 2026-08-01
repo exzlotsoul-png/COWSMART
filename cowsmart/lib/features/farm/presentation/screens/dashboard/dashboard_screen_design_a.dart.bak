@@ -1,0 +1,1148 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import '../../../../../core/theme/app_colors.dart';
+import 'package:cowsmart/features/farm/providers/farm_provider.dart';
+import 'package:cowsmart/features/cow/providers/cow_provider.dart';
+import 'package:cowsmart/features/farm/providers/zone_provider.dart';
+import 'package:cowsmart/features/finance/providers/finance_provider.dart';
+import 'package:cowsmart/features/market/providers/market_price_provider.dart';
+import 'package:cowsmart/features/notifications/providers/notification_provider.dart';
+import 'package:cowsmart/features/auth/providers/auth_provider.dart';
+
+class DashboardScreen extends ConsumerStatefulWidget {
+  const DashboardScreen({super.key});
+
+  @override
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  bool _hasFetchedData = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchData();
+    });
+  }
+
+  void _fetchData() {
+    final currentFarm = ref.read(farmProvider).currentFarm;
+    if (currentFarm != null && !_hasFetchedData) {
+      _hasFetchedData = true;
+
+      // Fetch zones
+      ref.read(zoneProvider.notifier).fetchZones(currentFarm.id);
+
+      // Fetch finance data
+      ref.read(financeProvider.notifier).fetchTransactions(currentFarm.id);
+
+      // Fetch notifications
+      ref.read(notificationProvider.notifier).fetchNotifications();
+    }
+  }
+
+  Future<void> _refreshData() async {
+    _hasFetchedData = false;
+    final currentFarm = ref.read(farmProvider).currentFarm;
+    if (currentFarm != null) {
+      await ref.read(farmProvider.notifier).fetchFarms();
+      await Future.wait([
+        ref.read(cowProvider.notifier).fetchCows(currentFarm.id),
+        ref.read(zoneProvider.notifier).fetchZones(currentFarm.id),
+        ref.read(financeProvider.notifier).fetchTransactions(currentFarm.id),
+      ]);
+      _hasFetchedData = true;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final farmState = ref.watch(farmProvider);
+    final currentFarm = farmState.currentFarm;
+    final cowState = ref.watch(cowProvider);
+    final marketPrice =
+        ref.watch(marketPriceProvider).latest?.pricePerKg ?? 120.0;
+
+    if (farmState.isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (currentFarm == null) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.agriculture_rounded,
+                    size: 64,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'ยังไม่มีข้อมูลฟาร์มของคุณ',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'เริ่มต้นด้วยการสร้างฟาร์มใหม่เพื่อจัดการข้อมูลวัวของคุณ',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  height: 50,
+                  child: ElevatedButton.icon(
+                    onPressed: () => context.push('/create_farm'),
+                    icon: const Icon(Icons.add_rounded),
+                    label: const Text(
+                      'สร้างฟาร์มแรกของคุณ',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    final totalCows = cowState.allCows.length;
+    final zoneCount = ref.watch(zoneProvider).zones.length;
+    final totalValue = cowState.allCows.fold<double>(
+      0,
+      (sum, cow) => sum + (cow.latestWeight * marketPrice),
+    );
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        top: false,
+        child: RefreshIndicator(
+          onRefresh: _refreshData,
+          color: AppColors.primary,
+          child: CustomScrollView(
+            slivers: [
+              // ── 1. Gradient Header with Farm Info ──
+              SliverToBoxAdapter(
+                child: _buildHeader(context, currentFarm, totalCows, totalValue),
+              ),
+
+              // ── 2. Stat Cards Row ──
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
+                  child: _buildStatCardsRow(totalCows, zoneCount, totalValue),
+                ),
+              ),
+
+              // ── 3. Financial Summary ──
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
+                  child: _buildFinancialSummary(context, ref),
+                ),
+              ),
+
+              // ── 4. Zone Overview ──
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 22, 16, 0),
+                  child: _buildZoneOverview(context, ref),
+                ),
+              ),
+
+              // ── 5. Quick Actions ──
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 22, 16, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const _DashboardSectionTitle(title: 'เมนูหลัก'),
+                      const SizedBox(height: 12),
+                      _buildQuickActions(context),
+                      const SizedBox(height: 80),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ════════════════════════════════════════════════════════════
+  //  1. HEADER — gradient with farm info merged inside
+  // ════════════════════════════════════════════════════════════
+  Widget _buildHeader(
+    BuildContext context,
+    dynamic farm,
+    int totalCows,
+    double totalValue,
+  ) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [AppColors.primaryDark, AppColors.primary],
+        ),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(28),
+          bottomRight: Radius.circular(28),
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 10, 18, 22),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Top Action Bar ──
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Swap Farm Button
+                  _buildHeaderPill(
+                    icon: Icons.swap_horiz_rounded,
+                    label: 'สลับฟาร์ม',
+                    onTap: () => context.go('/select-farm'),
+                  ),
+
+                  // Right Actions
+                  Row(
+                    children: [
+                      _buildHeaderIconButton(
+                        icon: Icons.calendar_month_rounded,
+                        onTap: () => context.push('/calendar'),
+                        tooltip: 'ปฏิทินกิจกรรม',
+                      ),
+                      const SizedBox(width: 8),
+                      _buildNotificationBadge(context),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+
+              // ── Farm Info Row ──
+              Row(
+                children: [
+                  // Farm Avatar
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.4),
+                        width: 2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                      image: DecorationImage(
+                        image: farm.imageFullUrl != null &&
+                                farm.imageFullUrl!.isNotEmpty
+                            ? NetworkImage(farm.imageFullUrl!)
+                            : const NetworkImage(
+                                'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=400&q=80',
+                              ),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+
+                  // Farm Name + Owner
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          farm.name,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.3,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 3),
+                        Builder(
+                          builder: (context) {
+                            final user = ref.watch(authProvider).user;
+                            final ownerName = (user != null)
+                                ? '${user['first_name'] ?? ''} ${user['last_name'] ?? ''}'
+                                      .trim()
+                                : farm.ownerEmail;
+                            return Text(
+                              'เจ้าของ: $ownerName',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.75),
+                                fontSize: 13,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Settings Button
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.settings_outlined,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+                      onPressed: () => context.push('/edit_farm', extra: farm),
+                      tooltip: 'แก้ไขข้อมูลฟาร์ม',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              // ── Welcome Text ──
+              Builder(
+                builder: (context) {
+                  final user = ref.watch(authProvider).user;
+                  final userName = user != null
+                      ? '${user['first_name'] ?? ''}'
+                      : 'ผู้ใช้งาน';
+                  final hour = DateTime.now().hour;
+                  String greeting;
+                  if (hour < 12) {
+                    greeting = 'สวัสดีตอนเช้า';
+                  } else if (hour < 17) {
+                    greeting = 'สวัสดีตอนบ่าย';
+                  } else {
+                    greeting = 'สวัสดีตอนเย็น';
+                  }
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.wb_sunny_rounded, color: Colors.amber, size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            '$greeting, $userName — ภาพรวมฟาร์มของคุณในวันนี้',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.85),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeaderPill({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.2),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: Colors.white, size: 18),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeaderIconButton({
+    required IconData icon,
+    required VoidCallback onTap,
+    String? tooltip,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: Colors.white, size: 22),
+        onPressed: onTap,
+        tooltip: tooltip,
+      ),
+    );
+  }
+
+  Widget _buildNotificationBadge(BuildContext context) {
+    return Consumer(
+      builder: (context, ref, _) {
+        final unread = ref.watch(notificationProvider).unreadCount;
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: IconButton(
+                icon: const Icon(
+                  Icons.notifications_outlined,
+                  color: Colors.white,
+                  size: 22,
+                ),
+                onPressed: () => context.push('/notifications'),
+                tooltip: 'การแจ้งเตือน',
+              ),
+            ),
+            if (unread > 0)
+              Positioned(
+                top: 6,
+                right: 6,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: AppColors.error,
+                    shape: BoxShape.circle,
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 18,
+                    minHeight: 18,
+                  ),
+                  child: Text(
+                    unread > 99 ? '99+' : '$unread',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  // ════════════════════════════════════════════════════════════
+  //  2. STAT CARDS ROW — 3 columns
+  // ════════════════════════════════════════════════════════════
+  Widget _buildStatCardsRow(int totalCows, int zoneCount, double totalValue) {
+    final formatter = NumberFormat('#,##0');
+    return Row(
+      children: [
+        Expanded(
+          child: _buildStatCard(
+            icon: Icons.pets_rounded,
+            iconColor: AppColors.primary,
+            label: 'วัวทั้งหมด',
+            value: '$totalCows',
+            unit: 'ตัว',
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _buildStatCard(
+            icon: Icons.grass_rounded,
+            iconColor: AppColors.secondary,
+            label: 'โซน',
+            value: '$zoneCount',
+            unit: 'โซน',
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _buildStatCard(
+            icon: Icons.payments_rounded,
+            iconColor: AppColors.accent,
+            label: 'มูลค่ารวม',
+            value: '฿${formatter.format(totalValue)}',
+            unit: '',
+            isCompact: true,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatCard({
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    required String value,
+    required String unit,
+    bool isCompact = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: iconColor, size: 20),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Flexible(
+                child: Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: isCompact ? 15 : 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (unit.isNotEmpty) ...[
+                const SizedBox(width: 3),
+                Text(
+                  unit,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ════════════════════════════════════════════════════════════
+  //  3. FINANCIAL SUMMARY — dark green gradient card
+  // ════════════════════════════════════════════════════════════
+  Widget _buildFinancialSummary(BuildContext context, WidgetRef ref) {
+    final financeState = ref.watch(financeProvider);
+    final income = financeState.totalIncomeThisMonth;
+    final expense = financeState.totalExpenseThisMonth;
+    final balance = income - expense;
+    final formatter = NumberFormat('#,##0');
+
+    return InkWell(
+      onTap: () => context.push('/finance'),
+      borderRadius: BorderRadius.circular(22),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF5D7552), Color(0xFF4A6040)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primaryDark.withValues(alpha: 0.30),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.account_balance_wallet_outlined,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Text(
+                      'สรุปธุรกรรมในฟาร์ม',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'ดูทั้งหมด',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      SizedBox(width: 4),
+                      Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        color: Colors.white,
+                        size: 11,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '฿ ${formatter.format(balance)}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Row(
+              children: [
+                Text(
+                  'ยอดคงเหลือเดือนนี้',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.65),
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: (balance >= 0 ? const Color(0xFF7BF562) : const Color(0xFFFF6B6B))
+                        .withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    balance >= 0 ? 'กำไร' : 'ขาดทุน',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: balance >= 0
+                          ? const Color(0xFF7BF562)
+                          : const Color(0xFFFF6B6B),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _buildFinanceMiniStat(
+                      'รายรับ',
+                      '฿${formatter.format(income)}',
+                      const Color(0xFF7BF562),
+                      Icons.trending_up_rounded,
+                    ),
+                  ),
+                  Container(
+                    width: 1,
+                    height: 36,
+                    color: Colors.white.withValues(alpha: 0.2),
+                  ),
+                  Expanded(
+                    child: _buildFinanceMiniStat(
+                      'รายจ่าย',
+                      '฿${formatter.format(expense)}',
+                      const Color(0xFFFF6B6B),
+                      Icons.trending_down_rounded,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFinanceMiniStat(
+    String label,
+    String amount,
+    Color color,
+    IconData icon,
+  ) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(icon, color: color, size: 18),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  fontSize: 12,
+                ),
+              ),
+              Text(
+                amount,
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ════════════════════════════════════════════════════════════
+  //  4. ZONE OVERVIEW — horizontal scrollable cards
+  // ════════════════════════════════════════════════════════════
+  Widget _buildZoneOverview(BuildContext context, WidgetRef ref) {
+    final zoneState = ref.watch(zoneProvider);
+    final zones = zoneState.zones;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const _DashboardSectionTitle(title: 'โซนในฟาร์ม'),
+            TextButton.icon(
+              onPressed: () => context.push('/create_zone'),
+              icon: const Icon(
+                Icons.tune_rounded,
+                size: 16,
+                color: AppColors.primary,
+              ),
+              label: const Text(
+                'จัดการโซน',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        zoneState.isLoading
+            ? Container(
+                height: 130,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: const Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                ),
+              )
+            : zones.isEmpty
+                ? Container(
+                    height: 130,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.grass_rounded,
+                          size: 36,
+                          color: AppColors.primary.withValues(alpha: 0.4),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'ยังไม่มีข้อมูลโซน',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : SizedBox(
+                    height: 140,
+                    child: ScrollConfiguration(
+                      behavior: ScrollConfiguration.of(context).copyWith(
+                        dragDevices: {
+                          PointerDeviceKind.touch,
+                          PointerDeviceKind.mouse,
+                        },
+                      ),
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: zones.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 12),
+                        itemBuilder: (context, index) {
+                          final zone = zones[index];
+                          return _buildZoneCard(context, zone);
+                        },
+                      ),
+                    ),
+                  ),
+      ],
+    );
+  }
+
+  Widget _buildZoneCard(BuildContext context, dynamic zone) {
+    return InkWell(
+      onTap: () => context.push('/zone_detail', extra: zone),
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        width: 145,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: AppColors.primary.withValues(alpha: 0.2),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.grass_rounded,
+                color: AppColors.primary,
+                size: 24,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              zone.name,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+                fontSize: 14,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${zone.cowCount} ตัว',
+              style: const TextStyle(
+                fontSize: 16,
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ════════════════════════════════════════════════════════════
+  //  5. QUICK ACTIONS — 3×2 grid
+  // ════════════════════════════════════════════════════════════
+  Widget _buildQuickActions(BuildContext context) {
+    return GridView.count(
+      crossAxisCount: 3,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: 12,
+      crossAxisSpacing: 12,
+      childAspectRatio: 0.92,
+      children: [
+        _buildActionCard(
+          context,
+          icon: Icons.chat_bubble_outline_rounded,
+          label: 'ผู้ช่วยหมอ',
+          color: AppColors.info,
+          onTap: () {},
+        ),
+        _buildActionCard(
+          context,
+          icon: Icons.health_and_safety_rounded,
+          label: 'จัดการสุขภาพ',
+          color: AppColors.primary,
+          onTap: () {},
+        ),
+        _buildActionCard(
+          context,
+          icon: Icons.delete_sweep_outlined,
+          label: 'จำหน่าย/คัดออก',
+          color: AppColors.error,
+          onTap: () => context.push('/group_cull'),
+        ),
+        _buildActionCard(
+          context,
+          icon: Icons.calendar_month_rounded,
+          label: 'ปฏิทินกิจกรรม',
+          color: AppColors.secondary,
+          onTap: () => context.push('/calendar'),
+        ),
+        _buildActionCard(
+          context,
+          icon: Icons.show_chart_rounded,
+          label: 'ราคาตลาด',
+          color: AppColors.accent,
+          onTap: () => context.push('/market_price'),
+        ),
+        _buildActionCard(
+          context,
+          icon: Icons.add_business_rounded,
+          label: 'เพิ่มฟาร์ม',
+          color: AppColors.secondaryDark,
+          onTap: () => context.push('/create_farm'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionCard(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.08),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.10),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 28),
+            ),
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  Section Title Widget
+// ════════════════════════════════════════════════════════════
+class _DashboardSectionTitle extends StatelessWidget {
+  final String title;
+
+  const _DashboardSectionTitle({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 18,
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ],
+    );
+  }
+}

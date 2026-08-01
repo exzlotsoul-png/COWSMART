@@ -71,6 +71,21 @@ class _BreedTabState extends ConsumerState<BreedTab> {
       }
     }
 
+    final calvedRecords = records.where((r) => r.calvingDate != null).toList();
+    int daysPassed = 999;
+    if (calvedRecords.isNotEmpty) {
+      calvedRecords.sort((a, b) => b.calvingDate!.compareTo(a.calvingDate!));
+      daysPassed = DateTime.now().difference(calvedRecords.first.calvingDate!).inDays;
+    }
+
+    final isRecovering = (daysPassed < 45) || (widget.cow.status == CowStatus.recovering);
+    if (isRecovering) {
+      canRecordHeat = false;
+      canRecordMating = false;
+      canRecordPregnancyCheck = false;
+      canRecordCalving = false;
+    }
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -89,6 +104,34 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
+            if (isRecovering)
+              Container(
+                margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF9333EA).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                      color: const Color(0xFF9333EA).withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.hotel_rounded,
+                        color: Color(0xFF9333EA), size: 22),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'แม่วัวกำลังพักฟื้นหลังคลอด (เหลือพักอีก ${(45 - daysPassed).clamp(0, 45)} วัน) ไม่อนุญาตให้บันทึกการผสมพันธุ์',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF9333EA),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ListTile(
               leading: Container(
                 padding: const EdgeInsets.all(8),
@@ -251,6 +294,9 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                       ref
                           .read(cowDetailProvider.notifier)
                           .addBreedingRecord(record);
+                      ref
+                          .read(cowProvider.notifier)
+                          .updateCowStatus(widget.cow.id, CowStatus.estrous);
                       Navigator.pop(ctx);
                     },
                     child: const Text('บันทึก'),
@@ -683,6 +729,15 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                             ref
                                 .read(cowDetailProvider.notifier)
                                 .addBreedingRecord(record);
+                            if (result == 'ตั้งท้อง') {
+                              ref
+                                  .read(cowProvider.notifier)
+                                  .updateCowStatus(widget.cow.id, CowStatus.pregnant);
+                            } else if (result == 'ไม่ท้อง' || result == 'แท้ง' || result == 'แท้งลูก') {
+                              ref
+                                  .read(cowProvider.notifier)
+                                  .updateCowStatus(widget.cow.id, CowStatus.normal);
+                            }
                             Navigator.pop(ctx);
                           },
                     child: const Text('บันทึก', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
@@ -882,6 +937,9 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                             ref
                                 .read(cowDetailProvider.notifier)
                                 .addBreedingRecord(record);
+                            ref
+                                .read(cowProvider.notifier)
+                                .updateCowStatus(widget.cow.id, CowStatus.recovering);
                             
                             final result = calvingResult;
                             Navigator.pop(ctx);
@@ -997,12 +1055,31 @@ class _BreedTabState extends ConsumerState<BreedTab> {
 
     final isMale = widget.cow.gender == 'M';
 
+    final calvedRecords = records.where((r) => r.calvingDate != null).toList();
+    BreedingRecord? latestCalvingRecord;
+    int daysPassed = 999;
+    if (calvedRecords.isNotEmpty) {
+      calvedRecords.sort((a, b) => b.calvingDate!.compareTo(a.calvingDate!));
+      latestCalvingRecord = calvedRecords.first;
+      daysPassed = DateTime.now().difference(latestCalvingRecord.calvingDate!).inDays;
+    }
+
+    final isRecovering = (daysPassed < 45) || (widget.cow.status == CowStatus.recovering);
+
+    if (daysPassed >= 45 && widget.cow.status == CowStatus.recovering) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(cowProvider.notifier).updateCowStatus(widget.cow.id, CowStatus.normal);
+      });
+    }
+
     return Stack(
       children: [
         ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
           children: [
             if (!isMale) ...[
+              if (isRecovering && latestCalvingRecord != null && daysPassed < 45)
+                _buildRecoveryCard(daysPassed, 45, latestCalvingRecord.calvingDate!),
               _buildCurrentBreedingCards(context, records),
               const SizedBox(height: 20),
             ],
@@ -1119,6 +1196,115 @@ class _BreedTabState extends ConsumerState<BreedTab> {
     );
   }
 
+  Widget _buildRecoveryCard(int daysPassed, int totalDays, DateTime calvingDate) {
+    final remainingDays = (totalDays - daysPassed).clamp(0, totalDays);
+    final progress = (daysPassed / totalDays).clamp(0.0, 1.0);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF7C3AED).withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.hotel_rounded,
+                    color: Colors.white, size: 22),
+              ),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text(
+                  'อยู่ในช่วงพักฟื้นหลังคลอด',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'เหลือพักอีก $remainingDays วัน',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'แม่วัวคลอดเมื่อวันที่ ${DateFormat('dd/MM/yyyy').format(calvingDate)} (พักฟื้นมาแล้ว $daysPassed วัน จาก $totalDays วัน)',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.95),
+              fontSize: 14.5,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 8,
+              backgroundColor: Colors.white.withValues(alpha: 0.25),
+              color: const Color(0xFF34D399),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              const Icon(Icons.info_outline_rounded,
+                  color: Colors.white70, size: 17),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'งดบันทึกการผสมพันธุ์ชั่วคราวเพื่อรอให้มดลูกแม่วัวเข้าอู่สมบูรณ์',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   // Build Primary Card (Bred Partner Info) & Secondary Card (Current Stage Progress Tracker)
   Widget _buildCurrentBreedingCards(
     BuildContext context,
@@ -1163,12 +1349,18 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                 children: [
                   Text(
                     'พร้อมผสมพันธุ์',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.teal),
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.teal),
                   ),
-                  SizedBox(height: 2),
+                  SizedBox(height: 4),
                   Text(
                     'ไม่มีรายการเป็นสัดหรือผสมพันธุ์ค้างอยู่',
-                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500),
                   ),
                 ],
               ),

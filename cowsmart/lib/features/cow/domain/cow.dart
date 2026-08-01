@@ -1,8 +1,10 @@
 enum CowStatus {
   normal('ปกติ', 'success'),
   sick('ป่วย', 'error'),
+  injured('บาดเจ็บ', 'warning'),
+  estrous('เป็นสัด', 'warning'),
   pregnant('ตั้งท้อง', 'info'),
-  recovering('พักฟื้น', 'warning'),
+  recovering('กำลังพัก', 'warning'),
   sold('ขายแล้ว', 'secondary'),
   deceased('ตาย', 'error'),
   removed('คัดออก', 'warning');
@@ -89,25 +91,48 @@ class Cow {
     return {
       'cow_id': id,
       'farm_id': farmId,
-      'zone_id': zoneId,
+      'zone_id': zoneId.isEmpty ? null : zoneId,
       'name': name,
       'tag_number': tagNumber,
       'birth_date': birthDate.toIso8601String().split('T')[0],
       'gender': gender,
       'cow_type_id': type.id,
-      'breed_id': breed,
+      'breed_id': breed.isEmpty ? null : breed,
       'status': status.name,
       'latest_weight': latestWeight,
       'purchase_price': purchasePrice,
       'image_url': imageUrl,
-      'sire_id': fatherId,
-      'dam_id': motherId,
+      'sire_id': (fatherId == null || fatherId!.isEmpty) ? null : fatherId,
+      'dam_id': (motherId == null || motherId!.isEmpty) ? null : motherId,
     };
   }
 
   int get ageInMonths {
     final now = DateTime.now();
     return (now.year - birthDate.year) * 12 + now.month - birthDate.month;
+  }
+
+  String get ageYearsOnly {
+    final now = DateTime.now();
+    int years = now.year - birthDate.year;
+    int months = now.month - birthDate.month;
+    int days = now.day - birthDate.day;
+
+    if (days < 0) {
+      months -= 1;
+    }
+    if (months < 0) {
+      years -= 1;
+      months += 12;
+    }
+
+    if (years > 0) {
+      return '$years ปี';
+    } else if (months > 0) {
+      return '$months เดือน';
+    } else {
+      return '${days < 0 ? 0 : days} วัน';
+    }
   }
 
   String get ageDetailed {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, ArrowUpDown } from 'lucide-react';
 import api from '../lib/axios';
+import Pagination from '../components/layout/Pagination';
 
 const Medicines = () => {
   const [medicines, setMedicines] = useState([]);
@@ -14,6 +15,8 @@ const Medicines = () => {
     medicine_id: '', category: '', name: '', indications: '', dosage_usage: ''
   });
   const [isEditing, setIsEditing] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchMedicines();
@@ -23,6 +26,7 @@ const Medicines = () => {
     try {
       const response = await api.get('/medicines');
       setMedicines(response.data.data || response.data);
+      setCurrentPage(1);
     } catch (error) {
       console.error("Error fetching medicines:", error);
     } finally {
@@ -80,6 +84,25 @@ const Medicines = () => {
     }
   };
 
+  const filteredAndSorted = medicines
+    .filter(item => {
+      const matchSearch = 
+        (item.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+        String(item.medicine_id || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+        (item.indications || '').toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchCategory = categoryFilter === 'all' || item.category === categoryFilter;
+
+      return matchSearch && matchCategory;
+    })
+    .sort((a, b) => {
+      const compare = String(b.medicine_id || '').localeCompare(String(a.medicine_id || ''));
+      return sortOrder === 'newest' ? compare : -compare;
+    });
+
+  const totalPages = Math.ceil(filteredAndSorted.length / itemsPerPage) || 1;
+  const currentItems = filteredAndSorted.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
     <div>
       <div className="card">
@@ -99,13 +122,19 @@ const Medicines = () => {
                 placeholder="ค้นหา..." 
                 style={{ border: 'none', backgroundColor: 'transparent', outline: 'none', width: '100%' }}
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
               />
             </div>
             
             <select
               value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
+              onChange={(e) => {
+                setCategoryFilter(e.target.value);
+                setCurrentPage(1);
+              }}
               style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#fff', color: 'var(--text-main)', fontSize: '0.875rem' }}
             >
               <option value="all">ทุกหมวดหมู่</option>
@@ -124,71 +153,60 @@ const Medicines = () => {
           </button>
         </div>
 
-
         {loading ? (
-          <p>กำลังโหลดข้อมูล...</p>
+          <p style={{ padding: '24px' }}>กำลังโหลดข้อมูล...</p>
         ) : (
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>รหัสยา</th>
-                  <th>หมวดหมู่</th>
-                  <th>ชื่อยา</th>
-                  <th>ข้อบ่งใช้</th>
-                  <th>จัดการ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(() => {
-                  const filteredAndSorted = medicines
-                    .filter(item => {
-                      const matchSearch = 
-                        (item.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-                        String(item.medicine_id || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-                        (item.indications || '').toLowerCase().includes(searchTerm.toLowerCase());
-                      
-                      const matchCategory = categoryFilter === 'all' || item.category === categoryFilter;
-
-                      return matchSearch && matchCategory;
-                    })
-                    .sort((a, b) => {
-                      const compare = String(b.medicine_id || '').localeCompare(String(a.medicine_id || ''));
-                      return sortOrder === 'newest' ? compare : -compare;
-                    });
-                  
-                  if (filteredAndSorted.length > 0) {
-                    return filteredAndSorted.map((medicine) => (
+          <>
+            <div className="table-container">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>รหัสยา</th>
+                    <th>หมวดหมู่</th>
+                    <th>ชื่อยา</th>
+                    <th>ข้อบ่งใช้</th>
+                    <th>จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentItems.length > 0 ? (
+                    currentItems.map((medicine) => (
                       <tr key={medicine.medicine_id}>
-                      <td>{medicine.medicine_id}</td>
-                      <td>{medicine.category}</td>
-                      <td>{medicine.name}</td>
-                      <td style={{ maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {medicine.indications}
-                      </td>
-                      <td>
-                        <div className="action-links">
-                          <button className="action-btn edit" onClick={() => handleOpenModal(medicine)}>
-                            <Edit size={16} />
-                          </button>
-                          <button className="action-btn delete" onClick={() => handleDelete(medicine.medicine_id)}>
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                    ));
-                  } else {
-                    return (
-                      <tr>
-                        <td colSpan="5" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>
+                        <td>{medicine.medicine_id}</td>
+                        <td>{medicine.category}</td>
+                        <td>{medicine.name}</td>
+                        <td style={{ maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {medicine.indications}
+                        </td>
+                        <td>
+                          <div className="action-links">
+                            <button className="action-btn edit" onClick={() => handleOpenModal(medicine)}>
+                              <Edit size={16} />
+                            </button>
+                            <button className="action-btn delete" onClick={() => handleDelete(medicine.medicine_id)}>
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
                       </tr>
-                    );
-                  }
-                })()}
-              </tbody>
-            </table>
-          </div>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="5" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              totalItems={filteredAndSorted.length}
+              itemsPerPage={itemsPerPage}
+            />
+          </>
         )}
       </div>
 

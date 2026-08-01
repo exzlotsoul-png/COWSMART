@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, ArrowUpDown } from 'lucide-react';
 import api from '../lib/axios';
+import Pagination from '../components/layout/Pagination';
 
 const CowTypes = () => {
   const [cowTypes, setCowTypes] = useState([]);
@@ -10,6 +11,8 @@ const CowTypes = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentCowType, setCurrentCowType] = useState({ cow_type_id: '', cow_type_name: '' });
   const [isEditing, setIsEditing] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchCowTypes();
@@ -19,6 +22,7 @@ const CowTypes = () => {
     try {
       const response = await api.get('/cow_types');
       setCowTypes(response.data.data || response.data);
+      setCurrentPage(1);
     } catch (error) {
       console.error("Error fetching cow types:", error);
     } finally {
@@ -76,6 +80,19 @@ const CowTypes = () => {
     }
   };
 
+  const filteredAndSorted = cowTypes
+    .filter(item => 
+      (item.cow_type_name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+      String(item.cow_type_id || '').toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      const compare = String(b.cow_type_id || '').localeCompare(String(a.cow_type_id || ''));
+      return sortOrder === 'newest' ? compare : -compare;
+    });
+
+  const totalPages = Math.ceil(filteredAndSorted.length / itemsPerPage) || 1;
+  const currentItems = filteredAndSorted.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
     <div>
       <div className="card">
@@ -94,7 +111,10 @@ const CowTypes = () => {
               placeholder="ค้นหา..." 
               style={{ border: 'none', backgroundColor: 'transparent', outline: 'none', width: '100%' }}
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
             />
           </div>
           <button 
@@ -107,59 +127,54 @@ const CowTypes = () => {
           </button>
         </div>
 
-
         {loading ? (
-          <p>กำลังโหลดข้อมูล...</p>
+          <p style={{ padding: '24px' }}>กำลังโหลดข้อมูล...</p>
         ) : (
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>รหัสประเภทวัว</th>
-                  <th>ชื่อประเภท</th>
-                  <th>จัดการ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(() => {
-                  const filteredAndSorted = cowTypes
-                    .filter(item => 
-                      (item.cow_type_name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-                        String(item.cow_type_id || '').toLowerCase().includes(searchTerm.toLowerCase())
-                    )
-                    .sort((a, b) => {
-                      const compare = String(b.cow_type_id || '').localeCompare(String(a.cow_type_id || ''));
-                      return sortOrder === 'newest' ? compare : -compare;
-                    });
-                  
-                  if (filteredAndSorted.length > 0) {
-                    return filteredAndSorted.map((type) => (
-                    <tr key={type.cow_type_id}>
-                      <td>{type.cow_type_id}</td>
-                      <td>{type.cow_type_name}</td>
-                      <td>
-                        <div className="action-links">
-                          <button className="action-btn edit" onClick={() => handleOpenModal(type)}>
-                            <Edit size={16} />
-                          </button>
-                          <button className="action-btn delete" onClick={() => handleDelete(type.cow_type_id)}>
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ));
-                  } else {
-                    return (
-                      <tr>
-                        <td colSpan="3" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>
+          <>
+            <div className="table-container">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>รหัสประเภทวัว</th>
+                    <th>ชื่อประเภท</th>
+                    <th>จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentItems.length > 0 ? (
+                    currentItems.map((type) => (
+                      <tr key={type.cow_type_id}>
+                        <td>{type.cow_type_id}</td>
+                        <td>{type.cow_type_name}</td>
+                        <td>
+                          <div className="action-links">
+                            <button className="action-btn edit" onClick={() => handleOpenModal(type)}>
+                              <Edit size={16} />
+                            </button>
+                            <button className="action-btn delete" onClick={() => handleDelete(type.cow_type_id)}>
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
                       </tr>
-                    );
-                  }
-                })()}
-              </tbody>
-            </table>
-          </div>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="3" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              totalItems={filteredAndSorted.length}
+              itemsPerPage={itemsPerPage}
+            />
+          </>
         )}
       </div>
 
