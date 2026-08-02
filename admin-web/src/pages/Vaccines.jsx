@@ -11,7 +11,7 @@ const Vaccines = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentVaccine, setCurrentVaccine] = useState({
-    vaccine_id: '', category: '', name: '', indications: '', dosage_usage: ''
+    vaccine_id: '', category: '', name: ''
   });
   const [isEditing, setIsEditing] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -37,10 +37,14 @@ const Vaccines = () => {
 
   const handleOpenModal = (vaccine = null) => {
     if (vaccine) {
-      setCurrentVaccine(vaccine);
+      setCurrentVaccine({
+        vaccine_id: vaccine.vaccine_id || '',
+        category: vaccine.category || '',
+        name: vaccine.name || ''
+      });
       setIsEditing(true);
     } else {
-      setCurrentVaccine({ vaccine_id: '', category: '', name: '', indications: '', dosage_usage: '' });
+      setCurrentVaccine({ vaccine_id: '', category: '', name: '' });
       setIsEditing(false);
     }
     setIsModalOpen(true);
@@ -48,7 +52,7 @@ const Vaccines = () => {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setCurrentVaccine({ vaccine_id: '', category: '', name: '', indications: '', dosage_usage: '' });
+    setCurrentVaccine({ vaccine_id: '', category: '', name: '' });
     setIsEditing(false);
   };
 
@@ -89,7 +93,7 @@ const Vaccines = () => {
     const matchSearch = 
       (v.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
       (v.vaccine_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (v.indications || '').toLowerCase().includes(searchTerm.toLowerCase());
+      (v.category || '').toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchCategory = categoryFilter === 'all' || v.category === categoryFilter;
 
@@ -143,9 +147,8 @@ const Vaccines = () => {
           </button>
         </div>
 
-
         {loading ? (
-          <p>กำลังโหลดข้อมูล...</p>
+          <p style={{ padding: '24px' }}>กำลังโหลดข้อมูล...</p>
         ) : (
           <>
             <div className="table-container">
@@ -155,7 +158,6 @@ const Vaccines = () => {
                     <th>รหัสวัคซีน</th>
                     <th>หมวดหมู่</th>
                     <th>ชื่อวัคซีน</th>
-                    <th>ข้อบ่งใช้</th>
                     <th>จัดการ</th>
                   </tr>
                 </thead>
@@ -166,9 +168,6 @@ const Vaccines = () => {
                         <td>{vaccine.vaccine_id}</td>
                         <td>{vaccine.category}</td>
                         <td>{vaccine.name}</td>
-                        <td style={{ maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {vaccine.indications}
-                        </td>
                         <td>
                           <div className="action-links">
                             <button className="action-btn edit" onClick={() => handleOpenModal(vaccine)}>
@@ -183,7 +182,7 @@ const Vaccines = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="5" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>
+                      <td colSpan="4" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>
                     </tr>
                   )}
                 </tbody>
@@ -221,14 +220,6 @@ const Vaccines = () => {
                 <div className="form-group">
                   <label className="form-label" htmlFor="name">ชื่อวัคซีน</label>
                   <input id="name" name="name" type="text" className="form-control" value={currentVaccine.name} onChange={handleChange} required />
-                </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="indications">ข้อบ่งใช้</label>
-                  <textarea id="indications" name="indications" className="form-control" rows="3" value={currentVaccine.indications || ''} onChange={handleChange} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="dosage_usage">ขนาดและวิธีใช้</label>
-                  <textarea id="dosage_usage" name="dosage_usage" className="form-control" rows="3" value={currentVaccine.dosage_usage || ''} onChange={handleChange} />
                 </div>
               </div>
               <div className="modal-footer">

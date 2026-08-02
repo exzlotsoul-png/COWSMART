@@ -54,7 +54,11 @@ const Sidebar = () => {
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        CowSmart Admin
+        <img src="/favicon.svg" alt="CowSmart Logo" className="sidebar-logo" />
+        <div className="sidebar-title">
+          <span>CowSmart</span>
+          <span className="sub-title">Admin</span>
+        </div>
       </div>
       <nav className="sidebar-nav">
         {menuSections.map((section, idx) => (

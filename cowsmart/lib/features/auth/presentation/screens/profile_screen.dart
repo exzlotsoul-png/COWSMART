@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cowsmart/features/auth/providers/auth_provider.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
 import 'package:cowsmart/features/settings/presentation/screens/settings_screen.dart';
+import 'package:cowsmart/features/settings/presentation/screens/report_issue_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -177,6 +178,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         title: 'ช่วยเหลือและแนะนำ',
                         subtitle: 'คู่มือการใช้งาน, ติดต่อเรา',
                         onTap: () => _navigateToHelp(context),
+                      ),
+                      const _MenuDivider(),
+                      _MenuTile(
+                        icon: Icons.report_problem_outlined,
+                        iconBgColor: const Color(0xFFFFF3E0),
+                        iconColor: const Color(0xFFE65100),
+                        title: 'แจ้งรายงานการใช้งาน',
+                        subtitle: 'แจ้งปัญหาการใช้งาน, ข้อเสนอแนะ',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ReportIssueScreen(),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),

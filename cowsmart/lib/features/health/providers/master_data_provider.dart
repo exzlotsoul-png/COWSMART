@@ -52,11 +52,36 @@ class Vaccine {
   }
 }
 
+/// หน่วยวัด
+class UnitModel {
+  final String id;
+  final String name;
+  final String? abbreviation;
+  final String? type;
+
+  UnitModel({
+    required this.id,
+    required this.name,
+    this.abbreviation,
+    this.type,
+  });
+
+  factory UnitModel.fromJson(Map<String, dynamic> json) {
+    return UnitModel(
+      id: (json['unit_id'] ?? json['id'] ?? '').toString(),
+      name: json['name'] ?? '',
+      abbreviation: json['abbreviation'],
+      type: json['type'],
+    );
+  }
+}
+
 /// Master Data State
 class MasterDataState {
   final List<Disease> diseases;
   final List<Medicine> medicines;
   final List<Vaccine> vaccines;
+  final List<UnitModel> units;
   final bool isLoading;
   final String? error;
 
@@ -64,6 +89,7 @@ class MasterDataState {
     this.diseases = const [],
     this.medicines = const [],
     this.vaccines = const [],
+    this.units = const [],
     this.isLoading = false,
     this.error,
   });
@@ -72,6 +98,7 @@ class MasterDataState {
     List<Disease>? diseases,
     List<Medicine>? medicines,
     List<Vaccine>? vaccines,
+    List<UnitModel>? units,
     bool? isLoading,
     String? error,
   }) {
@@ -79,6 +106,7 @@ class MasterDataState {
       diseases: diseases ?? this.diseases,
       medicines: medicines ?? this.medicines,
       vaccines: vaccines ?? this.vaccines,
+      units: units ?? this.units,
       isLoading: isLoading ?? this.isLoading,
       error: error,
     );
@@ -100,6 +128,7 @@ class MasterDataNotifier extends Notifier<MasterDataState> {
         api.get('/diseases'),
         api.get('/medicines'),
         api.get('/vaccines'),
+        api.get('/units'),
       ]);
 
       final diseases = (responses[0].data as List)
@@ -111,11 +140,15 @@ class MasterDataNotifier extends Notifier<MasterDataState> {
       final vaccines = (responses[2].data as List)
           .map((j) => Vaccine.fromJson(j))
           .toList();
+      final units = (responses[3].data as List)
+          .map((j) => UnitModel.fromJson(j))
+          .toList();
 
       state = state.copyWith(
         diseases: diseases,
         medicines: medicines,
         vaccines: vaccines,
+        units: units,
         isLoading: false,
       );
       print('[SUCCESS] ดึงข้อมูล master data สำเร็จ');

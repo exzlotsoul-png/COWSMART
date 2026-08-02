@@ -10,6 +10,8 @@ class HealthRecord {
   final List<String> medIds;
   final List<String> vacIds;
   final double? cost;
+  final double? amount;
+  final int? unitId;
   final String? adminName;
   final String? note;
   final List<String> images;
@@ -17,6 +19,8 @@ class HealthRecord {
   final String? diseaseName;
   final String? medicineName;
   final String? vaccineName;
+  final String? unitName;
+  final String? unitAbbreviation;
 
   HealthRecord({
     required this.id,
@@ -31,11 +35,15 @@ class HealthRecord {
     this.vacIds = const [],
     this.images = const [],
     this.cost,
+    this.amount,
+    this.unitId,
     this.adminName,
     this.note,
     this.diseaseName,
     this.medicineName,
     this.vaccineName,
+    this.unitName,
+    this.unitAbbreviation,
   });
 
   factory HealthRecord.fromJson(Map<String, dynamic> json) {
@@ -58,12 +66,16 @@ class HealthRecord {
       medIds: parseStringList(json['med_ids']),
       vacIds: parseStringList(json['vac_ids']),
       images: parseStringList(json['images']),
-      cost: json['cost'] != null ? double.parse(json['cost'].toString()) : null,
+      cost: json['cost'] != null ? double.tryParse(json['cost'].toString()) : null,
+      amount: json['amount'] != null ? double.tryParse(json['amount'].toString()) : null,
+      unitId: json['unit_id'] != null ? int.tryParse(json['unit_id'].toString()) : null,
       adminName: json['admin_name'],
       note: json['note'],
       diseaseName: json['disease_name'],
       medicineName: json['medicine_name'],
       vaccineName: json['vaccine_name'],
+      unitName: json['unit_name'],
+      unitAbbreviation: json['unit_abbreviation'],
     );
   }
 
@@ -81,6 +93,8 @@ class HealthRecord {
       'vac_ids': vacIds,
       'images': images,
       'cost': cost,
+      'amount': amount,
+      'unit_id': unitId,
       'admin_name': adminName,
       'note': note,
     };

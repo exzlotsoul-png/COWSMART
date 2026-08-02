@@ -12,7 +12,7 @@ const Medicines = () => {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const uniqueCategories = Array.from(new Set(medicines.map(m => m.category).filter(Boolean)));
   const [currentMedicine, setCurrentMedicine] = useState({
-    medicine_id: '', category: '', name: '', indications: '', dosage_usage: ''
+    medicine_id: '', category: '', name: ''
   });
   const [isEditing, setIsEditing] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -36,10 +36,14 @@ const Medicines = () => {
 
   const handleOpenModal = (medicine = null) => {
     if (medicine) {
-      setCurrentMedicine(medicine);
+      setCurrentMedicine({
+        medicine_id: medicine.medicine_id || '',
+        category: medicine.category || '',
+        name: medicine.name || ''
+      });
       setIsEditing(true);
     } else {
-      setCurrentMedicine({ medicine_id: '', category: '', name: '', indications: '', dosage_usage: '' });
+      setCurrentMedicine({ medicine_id: '', category: '', name: '' });
       setIsEditing(false);
     }
     setIsModalOpen(true);
@@ -47,7 +51,7 @@ const Medicines = () => {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setCurrentMedicine({ medicine_id: '', category: '', name: '', indications: '', dosage_usage: '' });
+    setCurrentMedicine({ medicine_id: '', category: '', name: '' });
     setIsEditing(false);
   };
 
@@ -89,7 +93,7 @@ const Medicines = () => {
       const matchSearch = 
         (item.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
         String(item.medicine_id || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-        (item.indications || '').toLowerCase().includes(searchTerm.toLowerCase());
+        (item.category || '').toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchCategory = categoryFilter === 'all' || item.category === categoryFilter;
 
@@ -164,7 +168,6 @@ const Medicines = () => {
                     <th>รหัสยา</th>
                     <th>หมวดหมู่</th>
                     <th>ชื่อยา</th>
-                    <th>ข้อบ่งใช้</th>
                     <th>จัดการ</th>
                   </tr>
                 </thead>
@@ -175,9 +178,6 @@ const Medicines = () => {
                         <td>{medicine.medicine_id}</td>
                         <td>{medicine.category}</td>
                         <td>{medicine.name}</td>
-                        <td style={{ maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {medicine.indications}
-                        </td>
                         <td>
                           <div className="action-links">
                             <button className="action-btn edit" onClick={() => handleOpenModal(medicine)}>
@@ -192,7 +192,7 @@ const Medicines = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="5" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>
+                      <td colSpan="4" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>
                     </tr>
                   )}
                 </tbody>
@@ -230,14 +230,6 @@ const Medicines = () => {
                 <div className="form-group">
                   <label className="form-label" htmlFor="name">ชื่อยา</label>
                   <input id="name" name="name" type="text" className="form-control" value={currentMedicine.name} onChange={handleChange} required />
-                </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="indications">ข้อบ่งใช้</label>
-                  <textarea id="indications" name="indications" className="form-control" rows="3" value={currentMedicine.indications || ''} onChange={handleChange} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="dosage_usage">ขนาดและวิธีใช้</label>
-                  <textarea id="dosage_usage" name="dosage_usage" className="form-control" rows="3" value={currentMedicine.dosage_usage || ''} onChange={handleChange} />
                 </div>
               </div>
               <div className="modal-footer">

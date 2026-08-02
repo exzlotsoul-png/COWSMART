@@ -802,36 +802,48 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                   record.diseaseName != null ||
                   record.medicineName != null) ...[
                 const SizedBox(height: 12),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (record.vaccineName != null)
-                        _buildDetailRow(
-                          Icons.vaccines,
-                          'วัคซีน',
-                          record.vaccineName!,
-                        ),
-                      if (record.diseaseName != null)
-                        _buildDetailRow(
-                          Icons.coronavirus,
-                          'โรค',
-                          record.diseaseName!,
-                        ),
-                      if (record.medicineName != null)
-                        _buildDetailRow(
-                          Icons.medication,
-                          'ยา',
-                          record.medicineName!,
-                        ),
-                    ],
-                  ),
+                Builder(
+                  builder: (context) {
+                    String dosageStr = '';
+                    if (record.amount != null) {
+                      final amt = record.amount!;
+                      final amtStr = amt % 1 == 0 ? amt.toInt().toString() : amt.toString();
+                      final unit = record.unitAbbreviation ?? record.unitName ?? '';
+                      dosageStr = ' ($amtStr $unit)'.trimRight();
+                    }
+
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (record.vaccineName != null)
+                            _buildDetailRow(
+                              Icons.vaccines,
+                              'วัคซีน',
+                              '${record.vaccineName!}$dosageStr',
+                            ),
+                          if (record.diseaseName != null)
+                            _buildDetailRow(
+                              Icons.coronavirus,
+                              'โรค',
+                              record.diseaseName!,
+                            ),
+                          if (record.medicineName != null)
+                            _buildDetailRow(
+                              Icons.medication,
+                              'ยา',
+                              '${record.medicineName!}$dosageStr',
+                            ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
               ],
 
@@ -1040,6 +1052,8 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
   final costController = TextEditingController();
   final adminController = TextEditingController();
   final noteController = TextEditingController();
+  final amountController = TextEditingController();
+  int? selectedUnitId;
   DateTime selectedDate = DateTime.now();
   String selectedType = 'CT01';
   CowStatus selectedHealthStatus = CowStatus.normal;
@@ -1078,6 +1092,10 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
       noteController.text = r.note ?? '';
       costController.text = r.cost != null ? r.cost!.toStringAsFixed(0) : '';
       adminController.text = r.adminName ?? '';
+      if (r.amount != null) {
+        amountController.text = r.amount! % 1 == 0 ? r.amount!.toInt().toString() : r.amount!.toString();
+      }
+      selectedUnitId = r.unitId;
     }
   }
 
@@ -1086,6 +1104,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
     costController.dispose();
     adminController.dispose();
     noteController.dispose();
+    amountController.dispose();
     super.dispose();
   }
 
@@ -1177,39 +1196,41 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                 }
               },
             ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<CowStatus>(
-              value: selectedHealthStatus,
-              isExpanded: true,
-              style: const TextStyle(
-                fontSize: 15,
-                color: AppColors.textPrimary,
+            if (selectedType == 'CT01') ...[
+              const SizedBox(height: 12),
+              DropdownButtonFormField<CowStatus>(
+                value: selectedHealthStatus,
+                isExpanded: true,
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: AppColors.textPrimary,
+                ),
+                decoration: const InputDecoration(
+                  labelText: 'สถานะสุขภาพวัว',
+                  labelStyle: TextStyle(fontSize: 15),
+                  prefixIcon: Icon(Icons.health_and_safety_outlined, size: 22),
+                ),
+                items: const [
+                  DropdownMenuItem(
+                    value: CowStatus.normal,
+                    child: Text('ปกติ', style: TextStyle(fontSize: 15)),
+                  ),
+                  DropdownMenuItem(
+                    value: CowStatus.sick,
+                    child: Text('ป่วย', style: TextStyle(fontSize: 15)),
+                  ),
+                  DropdownMenuItem(
+                    value: CowStatus.injured,
+                    child: Text('บาดเจ็บ', style: TextStyle(fontSize: 15)),
+                  ),
+                ],
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() => selectedHealthStatus = val);
+                  }
+                },
               ),
-              decoration: const InputDecoration(
-                labelText: 'สถานะสุขภาพวัว',
-                labelStyle: TextStyle(fontSize: 15),
-                prefixIcon: Icon(Icons.health_and_safety_outlined, size: 22),
-              ),
-              items: const [
-                DropdownMenuItem(
-                  value: CowStatus.normal,
-                  child: Text('ปกติ', style: TextStyle(fontSize: 15)),
-                ),
-                DropdownMenuItem(
-                  value: CowStatus.sick,
-                  child: Text('ป่วย', style: TextStyle(fontSize: 15)),
-                ),
-                DropdownMenuItem(
-                  value: CowStatus.injured,
-                  child: Text('บาดเจ็บ', style: TextStyle(fontSize: 15)),
-                ),
-              ],
-              onChanged: (val) {
-                if (val != null) {
-                  setState(() => selectedHealthStatus = val);
-                }
-              },
-            ),
+            ],
             const SizedBox(height: 16),
             if (widget.masterData.isLoading)
               const Padding(
@@ -1418,6 +1439,68 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                           }).toList(),
                         ),
                 ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            if ((showVaccine || showMedicine) && !widget.masterData.isLoading) ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: TextField(
+                      controller: amountController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      style: const TextStyle(fontSize: 15),
+                      decoration: const InputDecoration(
+                        labelText: 'จำนวน',
+                        labelStyle: TextStyle(fontSize: 15),
+                        prefixIcon: Icon(Icons.scale_outlined, size: 22),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 1,
+                    child: DropdownButtonFormField<int?>(
+                      value: selectedUnitId,
+                      isExpanded: true,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: AppColors.textPrimary,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'หน่วยวัด',
+                        labelStyle: TextStyle(fontSize: 15),
+                        prefixIcon: Icon(Icons.square_foot, size: 22),
+                      ),
+                      items: [
+                        const DropdownMenuItem<int?>(
+                          value: null,
+                          child: Text('เลือกหน่วย', style: TextStyle(fontSize: 15)),
+                        ),
+                        ...widget.masterData.units.map((unit) {
+                          final idInt = int.tryParse(unit.id);
+                          final abbr = unit.abbreviation != null && unit.abbreviation!.isNotEmpty
+                              ? ' (${unit.abbreviation})'
+                              : '';
+                          return DropdownMenuItem<int?>(
+                            value: idInt,
+                            child: Text(
+                              '${unit.name}$abbr',
+                              style: const TextStyle(fontSize: 15),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          );
+                        }),
+                      ],
+                      onChanged: (val) {
+                        setState(() => selectedUnitId = val);
+                      },
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
             ],
@@ -1654,6 +1737,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                         }
 
                         final cost = double.tryParse(costController.text);
+                        final amount = double.tryParse(amountController.text);
                         final record = HealthRecord(
                           id: widget.initialRecord?.id ?? 'HR${DateTime.now().millisecondsSinceEpoch % 1000000}',
                           cowId: widget.cow.id,
@@ -1667,6 +1751,8 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                           medIds: selectedMedicineIds,
                           images: imageUrls,
                           cost: cost,
+                          amount: amount,
+                          unitId: selectedUnitId,
                           adminName: adminController.text.trim().isEmpty
                               ? null
                               : adminController.text.trim(),
