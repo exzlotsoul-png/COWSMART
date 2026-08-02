@@ -88,44 +88,56 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
     return Container(
       color: AppColors.surface,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: categories.map((cat) {
-            final isSelected = calState.selectedCategory == cat['key'];
-            final color = cat['color'] as Color?;
-            return Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: ChoiceChip(
-                showCheckmark: false,
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                avatar: Icon(
-                  cat['icon'] as IconData,
-                  size: 18,
-                  color: isSelected ? Colors.white : color,
-                ),
-                label: Text(
-                  cat['label'] as String,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                    color: isSelected ? Colors.white : AppColors.textPrimary,
-                  ),
-                ),
-                selected: isSelected,
-                selectedColor: color ?? AppColors.primary,
-                backgroundColor: (color ?? AppColors.primary).withValues(alpha: 0.1),
-                side: BorderSide(
-                  color: isSelected ? (color ?? AppColors.primary) : (color ?? AppColors.primary).withValues(alpha: 0.3),
-                ),
-                onSelected: (_) {
-                  ref.read(calendarProvider.notifier).setCategory(cat['key'] as String);
-                },
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: categories.map((cat) {
+                  final isSelected = calState.selectedCategory == cat['key'];
+                  final color = cat['color'] as Color?;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: ChoiceChip(
+                      showCheckmark: false,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      avatar: Icon(
+                        cat['icon'] as IconData,
+                        size: 16,
+                        color: isSelected ? Colors.white : color,
+                      ),
+                      label: Text(
+                        cat['label'] as String,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                          color: isSelected ? Colors.white : AppColors.textPrimary,
+                        ),
+                      ),
+                      selected: isSelected,
+                      selectedColor: color ?? AppColors.primary,
+                      backgroundColor: (color ?? AppColors.primary).withValues(alpha: 0.1),
+                      side: BorderSide(
+                        color: isSelected ? (color ?? AppColors.primary) : (color ?? AppColors.primary).withValues(alpha: 0.3),
+                      ),
+                      onSelected: (_) {
+                        ref.read(calendarProvider.notifier).setCategory(cat['key'] as String);
+                      },
+                    ),
+                  );
+                }).toList(),
               ),
-            );
-          }).toList(),
-        ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          const Icon(
+            Icons.arrow_forward_ios_rounded,
+            size: 14,
+            color: AppColors.textSecondary,
+          ),
+        ],
       ),
     );
   }

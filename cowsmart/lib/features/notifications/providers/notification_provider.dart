@@ -44,11 +44,11 @@ class NotificationNotifier extends Notifier<NotificationState> {
       final list = (response.data as List<dynamic>)
           .map((j) => AppNotification.fromJson(j))
           .toList();
-      list.sort(
-        (a, b) => (b.notifyDatetime ?? DateTime(0)).compareTo(
-          a.notifyDatetime ?? DateTime(0),
-        ),
-      );
+      list.sort((a, b) {
+        final tA = a.createdAt ?? a.notifyDatetime ?? DateTime(0);
+        final tB = b.createdAt ?? b.notifyDatetime ?? DateTime(0);
+        return tB.compareTo(tA);
+      });
       state = state.copyWith(notifications: list, isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());

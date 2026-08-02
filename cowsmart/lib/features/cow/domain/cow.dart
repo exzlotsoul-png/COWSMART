@@ -36,6 +36,7 @@ class Cow {
   final String name;
   final String tagNumber;
   final DateTime birthDate;
+  final DateTime? entryDate;
   final String gender; // 'M' or 'F'
   final CowType type;
   final String breed;
@@ -54,6 +55,7 @@ class Cow {
     required this.name,
     required this.tagNumber,
     required this.birthDate,
+    this.entryDate,
     required this.gender,
     required this.type,
     required this.breed,
@@ -67,6 +69,7 @@ class Cow {
   });
 
   factory Cow.fromJson(Map<String, dynamic> json) {
+    final entryDateStr = json['entry_date'] ?? json['entryDate'];
     return Cow(
       id: (json['cow_id'] ?? json['id']).toString(),
       farmId: (json['farm_id'] ?? json['farmId']).toString(),
@@ -74,6 +77,7 @@ class Cow {
       name: json['name'].toString(),
       tagNumber: json['tag_number'] ?? json['tagNumber'] ?? '',
       birthDate: DateTime.parse(json['birth_date'] ?? json['birthDate']),
+      entryDate: entryDateStr != null ? DateTime.tryParse(entryDateStr.toString()) : null,
       gender: json['gender'].toString(),
       type: CowType.fromId(json['cow_type_id'] ?? ''),
       breed: (json['breed_id'] ?? json['breed'] ?? 'Unknown').toString(),
@@ -95,6 +99,7 @@ class Cow {
       'name': name,
       'tag_number': tagNumber,
       'birth_date': birthDate.toIso8601String().split('T')[0],
+      'entry_date': entryDate?.toIso8601String().split('T')[0],
       'gender': gender,
       'cow_type_id': type.id,
       'breed_id': breed.isEmpty ? null : breed,

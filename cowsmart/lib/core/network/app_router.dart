@@ -18,6 +18,7 @@ import '../../features/cow/presentation/screens/cow_detail_screen.dart';
 import '../../features/cow/presentation/screens/edit_cow_screen.dart';
 import '../../features/cow/presentation/screens/cull_cow_screen.dart';
 import '../../features/cow/presentation/screens/culling_history_screen.dart';
+import '../../features/cow/presentation/screens/cow_history_list_screen.dart';
 import '../../features/cow/presentation/screens/group_cull_screen.dart';
 import '../../features/feed/presentation/screens/feed_history_screen.dart';
 import '../../features/finance/presentation/screens/finance_overview_screen.dart';
@@ -162,6 +163,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/culling_history',
         builder: (context, state) => const CullingHistoryScreen(),
+      ),
+      GoRoute(
+        path: '/cow_history_list',
+        builder: (context, state) {
+          final args = state.extra as Map<String, dynamic>;
+          final cow = args['cow'] as Cow;
+          final initialTab = args['initialTab'] as String? ?? 'health';
+          return CowHistoryListScreen(cow: cow, initialTab: initialTab);
+        },
       ),
       GoRoute(
         path: '/group_cull',

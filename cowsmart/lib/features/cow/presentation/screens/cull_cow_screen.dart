@@ -9,6 +9,7 @@ import 'package:cowsmart/features/cow/domain/culling_record.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
+import 'package:cowsmart/features/market/providers/market_price_provider.dart';
 
 enum CullType {
   sold('ขาย', Icons.monetization_on_outlined, Colors.green),
@@ -73,7 +74,7 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
       }
 
       final record = CullingRecord(
-        id: 'CUL${DateTime.now().millisecondsSinceEpoch % 1000000}',
+        id: '',
         cowId: widget.cow.id,
         cullDate: _selectedDate,
         status: statusValue,
@@ -234,20 +235,87 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
 
               // Conditional Price Field for "Sold"
               if (_selectedType == CullType.sold) ...[
-                TextFormField(
-                  controller: _priceController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'ราคาที่ขายได้ (บาท)',
-                    prefixIcon: Icon(Icons.payments_outlined),
-                    hintText: '0.00',
-                  ),
-                  validator: (value) {
-                    if (_selectedType == CullType.sold &&
-                        (value == null || value.isEmpty)) {
-                      return 'กรุณากรอกราคาขาย';
-                    }
-                    return null;
+                Builder(
+                  builder: (context) {
+                    final marketPrice = ref.watch(marketPriceProvider).latest?.pricePerKg ?? 120.0;
+                    final weight = widget.cow.latestWeight;
+                    final estimatedVal = weight * marketPrice;
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (weight > 0) ...[
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.success.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: AppColors.success.withOpacity(0.3)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.calculate_outlined, color: AppColors.success, size: 20),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'ราคาประเมินเบื้องต้น: ฿${NumberFormat('#,##0').format(estimatedVal)}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                          color: AppColors.success,
+                                        ),
+                                      ),
+                                      Text(
+                                        'คำนวณจากน้ำหนัก ${weight.toStringAsFixed(0)} กก. × ${marketPrice.toStringAsFixed(0)} ฿/กก.',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[700],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _priceController.text = estimatedVal.toStringAsFixed(0);
+                                    });
+                                  },
+                                  style: TextButton.styleFrom(
+                                    backgroundColor: AppColors.success,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  child: const Text('ใช้ราคานี้', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        TextFormField(
+                          controller: _priceController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'ราคาที่ขายได้ (บาท)',
+                            prefixIcon: Icon(Icons.payments_outlined),
+                            hintText: '0.00',
+                          ),
+                          validator: (value) {
+                            if (_selectedType == CullType.sold &&
+                                (value == null || value.isEmpty)) {
+                              return 'กรุณากรอกราคาขาย';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
+                    );
                   },
                 ),
                 const SizedBox(height: 16),

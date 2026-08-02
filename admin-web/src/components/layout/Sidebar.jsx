@@ -12,7 +12,8 @@ import {
   Users,
   MessageSquareWarning,
   Scale,
-  CalendarDays
+  CalendarDays,
+  CalendarCheck
 } from 'lucide-react';
 import './layout.css';
 
@@ -45,6 +46,7 @@ const Sidebar = () => {
       label: 'ตั้งค่าระบบ',
       items: [
         { path: '/checkup-types', icon: <ActivitySquare className="nav-icon" />, label: 'ประเภทกิจกรรม' },
+        { path: '/appointment-types', icon: <CalendarCheck className="nav-icon" />, label: 'ประเภทนัดหมาย' },
         { path: '/units', icon: <Scale className="nav-icon" />, label: 'หน่วยวัด' },
         { path: '/settings', icon: <CalendarDays className="nav-icon" />, label: 'คำนวณวันคลอด' },
       ]

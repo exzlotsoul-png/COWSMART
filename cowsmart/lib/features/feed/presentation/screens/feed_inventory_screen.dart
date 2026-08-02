@@ -113,7 +113,8 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
       );
     }
 
-    final allItems = state.inventory;
+    final allItems = List.of(state.inventory)
+      ..sort((a, b) => b.recordedAt.compareTo(a.recordedAt));
 
     // Calculate totals for all items
     final totalQuantity = allItems.fold<double>(
@@ -299,8 +300,18 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
     );
   }
 
+  Color _getCategoryColorByName(String name) {
+    if (name.contains('หญ้า') || name.contains('หยาบ')) {
+      return Colors.green[700]!;
+    } else if (name.contains('ข้น') || name.contains('เม็ด')) {
+      return Colors.orange[800]!;
+    } else if (name.contains('เสริม') || name.contains('แร่ธาตุ')) {
+      return Colors.blue[700]!;
+    }
+    return Colors.grey[700]!;
+  }
+
   Widget _buildCategoryBreakdown(Map<String, double> categoryMap, Map<String, double> categoryCostMap, double total) {
-    final colors = [Colors.green, Colors.orange, Colors.blue, Colors.purple];
     final entries = categoryMap.entries.toList();
 
     return Container(
@@ -327,11 +338,12 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                 child: SizedBox(
                   height: 18,
                   child: Row(
-                    children: entries.asMap().entries.map((e) {
-                      final ratio = e.value.value / total;
+                    children: entries.map((e) {
+                      final ratio = e.value / total;
+                      final catColor = _getCategoryColorByName(e.key);
                       return Expanded(
                         flex: (ratio * 100).round().clamp(1, 100),
-                        child: Container(color: colors[e.key % colors.length]),
+                        child: Container(color: catColor),
                       );
                     }).toList(),
                   ),
@@ -339,11 +351,12 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
               ),
             const SizedBox(height: 14),
             // Legend
-            ...entries.asMap().entries.map((e) {
-              final catName = e.value.key;
-              final qty = e.value.value;
+            ...entries.map((e) {
+              final catName = e.key;
+              final qty = e.value;
               final cost = categoryCostMap[catName] ?? 0;
               final pct = total > 0 ? (qty / total * 100).toStringAsFixed(0) : '0';
+              final catColor = _getCategoryColorByName(catName);
 
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 5),
@@ -353,7 +366,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                       width: 14,
                       height: 14,
                       decoration: BoxDecoration(
-                        color: colors[e.key % colors.length],
+                        color: catColor,
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),

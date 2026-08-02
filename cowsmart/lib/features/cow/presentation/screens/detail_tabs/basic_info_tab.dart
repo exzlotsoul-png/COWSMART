@@ -19,23 +19,36 @@ class BasicInfoTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final allCows = ref.watch(cowProvider).allCows;
+    final breeds = ref.watch(breedProvider);
 
-    String formatCowName(String? id) {
+    String formatCowNameWithBreed(String? id) {
       if (id == null || id.isEmpty) return 'ไม่ทราบข้อมูล';
       final matches = allCows.where((c) => c.id == id || c.tagNumber == id || c.name == id).toList();
       if (matches.isNotEmpty) {
         final c = matches.first;
+        final cBreedName = breeds.firstWhere(
+          (b) => b.id == c.breed,
+          orElse: () => Breed(id: c.breed, name: c.breed.isNotEmpty ? c.breed : '-'),
+        ).name;
+        
+        final String displayName;
         if (c.name.isNotEmpty && c.tagNumber.isNotEmpty && c.name != c.tagNumber) {
-          return '${c.name} (${c.tagNumber})';
+          displayName = '${c.name} (${c.tagNumber})';
         } else if (c.name.isNotEmpty) {
-          return c.name;
+          displayName = c.name;
         } else if (c.tagNumber.isNotEmpty) {
-          return c.tagNumber;
+          displayName = c.tagNumber;
+        } else {
+          displayName = id;
         }
+
+        return cBreedName.isNotEmpty && cBreedName != '-'
+            ? '$displayName • พันธุ์: $cBreedName'
+            : displayName;
       }
       return id;
     }
-    final breeds = ref.watch(breedProvider);
+
     final breedName = breeds
         .firstWhere(
           (b) => b.id == cow.breed,
@@ -82,9 +95,16 @@ class BasicInfoTab extends ConsumerWidget {
               _buildInfoRow(cow.gender == 'M' ? Icons.male : Icons.female, 'เพศ', cow.gender == 'M' ? 'ผู้' : 'เมีย'),
               _buildInfoRow(Icons.cake_outlined, 'อายุ', cow.ageDetailed),
               _buildInfoRow(
-                Icons.calendar_today,
-                'วันเกิด/เข้าฟาร์ม',
+                Icons.cake_outlined,
+                'วันเกิด',
                 DateFormat('dd MMM yyyy', 'th_TH').format(cow.birthDate),
+              ),
+              _buildInfoRow(
+                Icons.login_rounded,
+                'วันที่เข้าฟาร์ม',
+                cow.entryDate != null
+                    ? DateFormat('dd MMM yyyy', 'th_TH').format(cow.entryDate!)
+                    : 'ไม่ได้ระบุ',
               ),
             ],
           ),
@@ -123,8 +143,8 @@ class BasicInfoTab extends ConsumerWidget {
             iconColor: AppColors.secondary,
             title: 'สายเลือด/พ่อแม่',
             children: [
-              _buildInfoRow(Icons.male, 'พ่อกำเนิด', formatCowName(cow.fatherId)),
-              _buildInfoRow(Icons.female, 'แม่กำเนิด', formatCowName(cow.motherId)),
+              _buildInfoRow(Icons.male, 'พ่อกำเนิด', formatCowNameWithBreed(cow.fatherId)),
+              _buildInfoRow(Icons.female, 'แม่กำเนิด', formatCowNameWithBreed(cow.motherId)),
             ],
           ),
           const SizedBox(height: 24),

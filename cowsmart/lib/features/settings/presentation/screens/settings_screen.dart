@@ -1482,28 +1482,6 @@ class HelpScreen extends StatelessWidget {
                           trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.textHint),
                           onTap: () {},
                         ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 60),
-                          child: Divider(height: 1, color: AppColors.divider.withValues(alpha: 0.5)),
-                        ),
-                        ListTile(
-                          leading: Container(
-                            width: 42,
-                            height: 42,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFE3F2FD),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(Icons.phone_in_talk_rounded, color: AppColors.info, size: 22),
-                          ),
-                          title: const Text(
-                            'ศูนย์บริการลูกค้า',
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
-                          ),
-                          subtitle: const Text('02-123-4567 (จันทร์-ศุกร์ 8:30 - 17:30)', style: TextStyle(fontSize: 12, color: AppColors.textHint)),
-                          trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.textHint),
-                          onTap: () {},
-                        ),
                       ],
                     ),
                   ),

@@ -1142,18 +1142,32 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                       children: [
                         const Icon(Icons.history, color: AppColors.textSecondary, size: 20),
                         const SizedBox(width: 8),
-                        Text(
-                          isMale ? 'ประวัติการทำหน้าที่พ่อพันธุ์ที่เสร็จสิ้น' : 'ประวัติการผสมพันธุ์ที่เสร็จสิ้นแล้ว',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
+                        Expanded(
+                          child: Text(
+                            isMale ? 'ประวัติการทำหน้าที่พ่อพันธุ์ที่เสร็จสิ้น' : 'ประวัติการผสมพันธุ์ที่เสร็จสิ้นแล้ว',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const Spacer(),
-                        Text(
-                          '${completedRecords.length} รายการ',
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 14,
+                        const SizedBox(width: 4),
+                        TextButton.icon(
+                          onPressed: () {
+                            context.push(
+                              '/cow_history_list',
+                              extra: {'cow': widget.cow, 'initialTab': 'breeding'},
+                            );
+                          },
+                          icon: const Icon(Icons.arrow_forward, size: 16, color: AppColors.primary),
+                          label: Text(
+                            'ดูทั้งหมด (${completedRecords.length})',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],
@@ -1175,7 +1189,27 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                         ),
                       )
                     else
-                      ...completedRecords.map((r) => _buildBreedingCard(r)),
+                      ...completedRecords.take(5).map((r) => _buildBreedingCard(r)),
+                    if (completedRecords.length > 5)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8, bottom: 12),
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            context.push(
+                              '/cow_history_list',
+                              extra: {'cow': widget.cow, 'initialTab': 'breeding'},
+                            );
+                          },
+                          icon: const Icon(Icons.history, size: 18),
+                          label: Text('ดูประวัติการผสมพันธุ์ทั้งหมด (${completedRecords.length} รายการ)'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.primary,
+                            side: const BorderSide(color: AppColors.primary),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
+                      ),
                   ],
                 );
               },
@@ -1204,17 +1238,14 @@ class _BreedTabState extends ConsumerState<BreedTab> {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: const Color(0xFFF3E8FF),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFD8B4FE), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF7C3AED).withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 5),
+            color: const Color(0xFF9333EA).withValues(alpha: 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -1226,18 +1257,18 @@ class _BreedTabState extends ConsumerState<BreedTab> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: const Color(0xFF9333EA).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.hotel_rounded,
-                    color: Colors.white, size: 22),
+                    color: Color(0xFF7E22CE), size: 22),
               ),
               const SizedBox(width: 10),
               const Expanded(
                 child: Text(
                   'อยู่ในช่วงพักฟื้นหลังคลอด',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Color(0xFF581C87),
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
                   ),
@@ -1250,13 +1281,13 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.25),
+                  color: const Color(0xFF9333EA).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   'เหลือพักอีก $remainingDays วัน',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Color(0xFF6B21A8),
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                   ),
@@ -1267,8 +1298,8 @@ class _BreedTabState extends ConsumerState<BreedTab> {
           const SizedBox(height: 14),
           Text(
             'แม่วัวคลอดเมื่อวันที่ ${DateFormat('dd/MM/yyyy').format(calvingDate)} (พักฟื้นมาแล้ว $daysPassed วัน จาก $totalDays วัน)',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.95),
+            style: const TextStyle(
+              color: Color(0xFF6B21A8),
               fontSize: 14.5,
               fontWeight: FontWeight.w500,
             ),
@@ -1279,21 +1310,21 @@ class _BreedTabState extends ConsumerState<BreedTab> {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 8,
-              backgroundColor: Colors.white.withValues(alpha: 0.25),
-              color: const Color(0xFF34D399),
+              backgroundColor: const Color(0xFFE9D5FF),
+              color: const Color(0xFF9333EA),
             ),
           ),
           const SizedBox(height: 10),
           Row(
             children: [
               const Icon(Icons.info_outline_rounded,
-                  color: Colors.white70, size: 17),
+                  color: Color(0xFF7E22CE), size: 17),
               const SizedBox(width: 6),
-              Expanded(
+              const Expanded(
                 child: Text(
                   'งดบันทึกการผสมพันธุ์ชั่วคราวเพื่อรอให้มดลูกแม่วัวเข้าอู่สมบูรณ์',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: Color(0xFF6B21A8),
                     fontSize: 13,
                   ),
                 ),
@@ -1825,12 +1856,15 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                     children: [
                       const Icon(Icons.check_circle_outline, size: 15, color: Colors.teal),
                       const SizedBox(width: 6),
-                      Text(
-                        'ลงทะเบียนลูกวัวแล้ว (${_formatCowDisplayById(record.calfId, allCows)})',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.teal,
+                      Flexible(
+                        child: Text(
+                          'ลงทะเบียนลูกวัวแล้ว (${_formatCowDisplayById(record.calfId, allCows)})',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.teal,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],

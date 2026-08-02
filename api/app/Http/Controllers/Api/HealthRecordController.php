@@ -16,11 +16,14 @@ class HealthRecordController extends Controller
             ->leftJoin('diseases', 'health_records.disease_id', '=', 'diseases.disease_id')
             ->leftJoin('medicines', 'health_records.med_id', '=', 'medicines.medicine_id')
             ->leftJoin('vaccines', 'health_records.vac_id', '=', 'vaccines.vaccine_id')
+            ->leftJoin('units', 'health_records.unit_id', '=', 'units.unit_id')
             ->select(
                 'health_records.*',
                 'diseases.name as disease_name',
                 'medicines.name as medicine_name',
-                'vaccines.name as vaccine_name'
+                'vaccines.name as vaccine_name',
+                'units.name as unit_name',
+                'units.abbreviation as unit_abbreviation'
             );
     }
 
@@ -28,38 +31,9 @@ class HealthRecordController extends Controller
     {
         if (!$recordData) return null;
 
-        $recordId = is_object($recordData) ? $recordData->health_record_id : $recordData['health_record_id'];
-
-        // Get medicines from junction table
-        $meds = DB::table('health_record_medicines')
-            ->join('medicines', 'health_record_medicines.medicine_id', '=', 'medicines.medicine_id')
-            ->where('health_record_medicines.health_record_id', $recordId)
-            ->select('medicines.medicine_id', 'medicines.name')
-            ->get();
-
-        // Get vaccines from junction table
-        $vacs = DB::table('health_record_vaccines')
-            ->join('vaccines', 'health_record_vaccines.vaccine_id', '=', 'vaccines.vaccine_id')
-            ->where('health_record_vaccines.health_record_id', $recordId)
-            ->select('vaccines.vaccine_id', 'vaccines.name')
-            ->get();
-
-        $medIds = $meds->pluck('medicine_id')->toArray();
-        $medNames = $meds->pluck('name')->toArray();
-        $vacIds = $vacs->pluck('vaccine_id')->toArray();
-        $vacNames = $vacs->pluck('name')->toArray();
-
-        // If junction table has data, override/supplement med_id / vac_id and names
         if (is_object($recordData)) {
-            $recordData->med_ids = !empty($medIds) ? $medIds : ($recordData->med_id ? [$recordData->med_id] : []);
-            $recordData->vac_ids = !empty($vacIds) ? $vacIds : ($recordData->vac_id ? [$recordData->vac_id] : []);
-            
-            if (!empty($medNames)) {
-                $recordData->medicine_name = implode(', ', $medNames);
-            }
-            if (!empty($vacNames)) {
-                $recordData->vaccine_name = implode(', ', $vacNames);
-            }
+            $recordData->med_ids = $recordData->med_id ? [$recordData->med_id] : [];
+            $recordData->vac_ids = $recordData->vac_id ? [$recordData->vac_id] : [];
             if (isset($recordData->images)) {
                 $imgs = is_string($recordData->images) ? (json_decode($recordData->images, true) ?? []) : (is_array($recordData->images) ? $recordData->images : []);
                 $recordData->images = array_map(function($img) {
@@ -70,14 +44,8 @@ class HealthRecordController extends Controller
                 }, $imgs);
             }
         } else {
-            $recordData['med_ids'] = !empty($medIds) ? $medIds : ($recordData['med_id'] ? [$recordData['med_id']] : []);
-            $recordData['vac_ids'] = !empty($vacIds) ? $vacIds : ($recordData['vac_id'] ? [$recordData['vac_id']] : []);
-            if (!empty($medNames)) {
-                $recordData['medicine_name'] = implode(', ', $medNames);
-            }
-            if (!empty($vacNames)) {
-                $recordData['vaccine_name'] = implode(', ', $vacNames);
-            }
+            $recordData['med_ids'] = !empty($recordData['med_id']) ? [$recordData['med_id']] : [];
+            $recordData['vac_ids'] = !empty($recordData['vac_id']) ? [$recordData['vac_id']] : [];
             if (isset($recordData['images'])) {
                 $imgs = is_string($recordData['images']) ? (json_decode($recordData['images'], true) ?? []) : (is_array($recordData['images']) ? $recordData['images'] : []);
                 $recordData['images'] = array_map(function($img) {
@@ -113,12 +81,17 @@ class HealthRecordController extends Controller
     {
         $payload = $request->except(['med_ids', 'vac_ids']);
         
-        // Handle backward compatibility for med_id and vac_id from arrays
+        // Handle med_id and vac_id from arrays if passed
         if ($request->has('med_ids') && is_array($request->med_ids) && count($request->med_ids) > 0) {
             $payload['med_id'] = $request->med_ids[0];
         }
         if ($request->has('vac_ids') && is_array($request->vac_ids) && count($request->vac_ids) > 0) {
             $payload['vac_id'] = $request->vac_ids[0];
+        }
+
+        // Handle items_json array
+        if ($request->has('items_json') && is_array($request->items_json)) {
+            $payload['items_json'] = json_encode($request->items_json);
         }
 
         // Handle images array to json string, converting full URLs to relative path
@@ -133,34 +106,6 @@ class HealthRecordController extends Controller
         }
 
         $record = HealthRecord::create($payload);
-
-        // Sync medicines in junction table
-        if ($request->has('med_ids') && is_array($request->med_ids)) {
-            foreach ($request->med_ids as $medId) {
-                if ($medId) {
-                    DB::table('health_record_medicines')->insert([
-                        'health_record_id' => $record->health_record_id,
-                        'medicine_id' => $medId,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
-            }
-        }
-
-        // Sync vaccines in junction table
-        if ($request->has('vac_ids') && is_array($request->vac_ids)) {
-            foreach ($request->vac_ids as $vacId) {
-                if ($vacId) {
-                    DB::table('health_record_vaccines')->insert([
-                        'health_record_id' => $record->health_record_id,
-                        'vaccine_id' => $vacId,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
-            }
-        }
 
         $data = $this->getJoinedQuery()
             ->where('health_records.health_record_id', $record->health_record_id)
@@ -217,34 +162,6 @@ class HealthRecordController extends Controller
 
         $record->update($payload);
 
-        if ($request->has('med_ids') && is_array($request->med_ids)) {
-            DB::table('health_record_medicines')->where('health_record_id', $id)->delete();
-            foreach ($request->med_ids as $medId) {
-                if ($medId) {
-                    DB::table('health_record_medicines')->insert([
-                        'health_record_id' => $id,
-                        'medicine_id' => $medId,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
-            }
-        }
-
-        if ($request->has('vac_ids') && is_array($request->vac_ids)) {
-            DB::table('health_record_vaccines')->where('health_record_id', $id)->delete();
-            foreach ($request->vac_ids as $vacId) {
-                if ($vacId) {
-                    DB::table('health_record_vaccines')->insert([
-                        'health_record_id' => $id,
-                        'vaccine_id' => $vacId,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
-            }
-        }
-
         $data = $this->getJoinedQuery()
             ->where('health_records.health_record_id', $id)
             ->first();
@@ -271,8 +188,6 @@ class HealthRecordController extends Controller
             }
         }
 
-        DB::table('health_record_medicines')->where('health_record_id', $id)->delete();
-        DB::table('health_record_vaccines')->where('health_record_id', $id)->delete();
         HealthRecord::destroy($id);
         return response()->json(null, 204);
     }

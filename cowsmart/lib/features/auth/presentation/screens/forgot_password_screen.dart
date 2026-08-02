@@ -50,9 +50,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           builder: (context) => AlertDialog(
             title: const Row(
               children: [
-                Icon(Icons.mark_email_read_outlined, color: AppColors.primary),
-                SizedBox(width: 8),
-                Text('ส่งรหัส OTP แล้ว', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Icon(Icons.mark_email_read_outlined, color: AppColors.primary, size: 28),
+                SizedBox(width: 10),
+                Text('ส่งรหัส OTP แล้ว', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
               ],
             ),
             content: Column(
@@ -61,17 +61,17 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               children: [
                 Text(
                   'ระบบได้ส่งรหัส OTP สำหรับตั้งรหัสผ่านใหม่ไปยังอีเมล:\n$email เรียบร้อยแล้ว',
-                  style: const TextStyle(fontSize: 15, height: 1.4),
+                  style: const TextStyle(fontSize: 17, height: 1.4, fontWeight: FontWeight.w500),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 const Text(
                   'โปรดเช็คกล่องข้อความ (Inbox) หรืออีเมลขยะ (Spam)',
-                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                  style: TextStyle(fontSize: 15, color: AppColors.textSecondary),
                 ),
                 if (otp.isNotEmpty) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: Colors.amber.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
@@ -79,7 +79,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     ),
                     child: Text(
                       'โหมดทดสอบ/สำรอง OTP: $otp',
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.brown),
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.brown),
                     ),
                   ),
                 ],
@@ -90,6 +90,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                 ),
                 onPressed: () {
                   Navigator.pop(context); // Close dialog
@@ -98,7 +99,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     'isForgotPassword': true,
                   });
                 },
-                child: const Text('กรอกรหัส OTP', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                child: const Text('กรอกรหัส OTP', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -177,7 +178,22 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                           color: Colors.white,
                         ),
                       )
-                    : const Text('ส่งรหัส OTP'),
+                    : const Text('รับรหัส OTP'),
+              ),
+              const SizedBox(height: 16),
+              Center(
+                child: TextButton.icon(
+                  onPressed: () => context.go('/login'),
+                  icon: const Icon(Icons.arrow_back_rounded, size: 18, color: AppColors.textSecondary),
+                  label: const Text(
+                    'กลับไปหน้าเข้าสู่ระบบ',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),

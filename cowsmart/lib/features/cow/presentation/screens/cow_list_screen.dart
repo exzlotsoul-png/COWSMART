@@ -187,7 +187,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                           ref.read(cowProvider.notifier).setSearchQuery(value),
                       decoration: InputDecoration(
                         hintText:
-                            'ค้นหาด้วยชื่อ หมายเลขประจำตัว หรือสายพันธุ์...',
+                            'ค้นหาด้วยชื่อหรือหมายเลขประจำตัว...',
                         hintStyle: const TextStyle(
                           fontSize: 15,
                           color: AppColors.textHint,

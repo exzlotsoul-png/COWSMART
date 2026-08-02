@@ -6,6 +6,7 @@ import 'package:cowsmart/core/theme/app_colors.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
+import 'package:cowsmart/features/cow/domain/breed.dart';
 import 'package:cowsmart/features/cow/providers/breed_provider.dart';
 import 'package:cowsmart/features/cow/domain/growth_record.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
@@ -37,6 +38,7 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
   bool _isSaving = false;
 
   DateTime _selectedDate = DateTime.now();
+  DateTime _selectedEntryDate = DateTime.now();
   String _selectedGender = 'F';
   CowType _selectedType = CowType.breederFemale;
   CowStatus _selectedStatus = CowStatus.normal;
@@ -58,8 +60,35 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
       if (data['birth_date'] != null) {
         _selectedDate = data['birth_date'] as DateTime;
       }
+      if (data['entry_date'] != null) {
+        _selectedEntryDate = data['entry_date'] as DateTime;
+      }
       if (data['type'] != null) {
         _selectedType = data['type'] as CowType;
+      }
+    }
+    Future.microtask(() {
+      final allCows = ref.read(cowProvider).allCows;
+      _checkAndAutoSetBreed(allCows);
+    });
+  }
+
+  void _checkAndAutoSetBreed(List<Cow> allCows) {
+    if (_selectedFatherId != null && _selectedMotherId != null) {
+      final fatherMatches = allCows.where((c) => c.id == _selectedFatherId).toList();
+      final motherMatches = allCows.where((c) => c.id == _selectedMotherId).toList();
+      if (fatherMatches.isNotEmpty && motherMatches.isNotEmpty) {
+        final fatherBreed = fatherMatches.first.breed;
+        final motherBreed = motherMatches.first.breed;
+        // If father breed and mother breed are different, auto-select B013 (Crossbred)
+        if (fatherBreed.isNotEmpty && motherBreed.isNotEmpty && fatherBreed != motherBreed) {
+          final breeds = ref.read(breedProvider);
+          final crossbred = breeds.firstWhere(
+            (b) => b.id == 'B013' || b.name.contains('ลูกผสม'),
+            orElse: () => breeds.isNotEmpty ? breeds.first : Breed(id: 'B013', name: 'ลูกผสม (Crossbred)'),
+          );
+          _selectedBreedId = crossbred.id;
+        }
       }
     }
   }
@@ -87,6 +116,20 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
     }
   }
 
+  Future<void> _selectEntryDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedEntryDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && picked != _selectedEntryDate) {
+      setState(() {
+        _selectedEntryDate = picked;
+      });
+    }
+  }
+
   Future<void> _saveCow() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -103,15 +146,15 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
     try {
       final initialWeight = double.tryParse(_weightController.text) ?? 0.0;
       final purchasePrice = double.tryParse(_purchasePriceController.text) ?? 0.0;
-      final cowId = 'C${DateTime.now().millisecondsSinceEpoch % 1000000}';
 
       final newCow = Cow(
-        id: cowId,
+        id: '',
         farmId: currentFarm.id,
         zoneId: _selectedZoneId ?? '',
         name: _nameController.text,
         tagNumber: _tagController.text,
         birthDate: _selectedDate,
+        entryDate: _selectedEntryDate,
         gender: _selectedGender,
         type: _selectedType,
         breed: _selectedBreedId ?? '',
@@ -471,19 +514,11 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                         Row(
                           children: [
                             Expanded(
-                              child: TextFormField(
-                                controller: _purchasePriceController,
-                                keyboardType: TextInputType.number,
-                                decoration: _buildInputDecoration('ราคาซื้อมา (บาท)', Icons.payments_rounded, hintText: '0.00'),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
                               child: InkWell(
                                 onTap: () => _selectDate(context),
                                 borderRadius: BorderRadius.circular(14),
                                 child: InputDecorator(
-                                  decoration: _buildInputDecoration('วันเกิด', Icons.calendar_today_rounded),
+                                  decoration: _buildInputDecoration('วันเกิด', Icons.cake_rounded),
                                   child: Text(
                                     DateFormat('dd/MM/yyyy').format(_selectedDate),
                                     style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
@@ -491,7 +526,27 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                                 ),
                               ),
                             ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: InkWell(
+                                onTap: () => _selectEntryDate(context),
+                                borderRadius: BorderRadius.circular(14),
+                                child: InputDecorator(
+                                  decoration: _buildInputDecoration('วันเข้าฟาร์ม', Icons.login_rounded),
+                                  child: Text(
+                                    DateFormat('dd/MM/yyyy').format(_selectedEntryDate),
+                                    style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+                                  ),
+                                ),
+                              ),
+                            ),
                           ],
+                        ),
+                        const SizedBox(height: 14),
+                        TextFormField(
+                          controller: _purchasePriceController,
+                          keyboardType: TextInputType.number,
+                          decoration: _buildInputDecoration('ราคาซื้อมา (บาท)', Icons.payments_rounded, hintText: '0.00'),
                         ),
                       ],
                     ),
@@ -631,8 +686,12 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                                         );
                                       }),
                                     ],
-                                    onChanged: (val) =>
-                                        setState(() => _selectedFatherId = val),
+                                    onChanged: (val) {
+                                      setState(() {
+                                        _selectedFatherId = val;
+                                        _checkAndAutoSetBreed(cowState.allCows);
+                                      });
+                                    },
                                   );
                                 },
                               ),
@@ -666,8 +725,12 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                                         );
                                       }),
                                     ],
-                                    onChanged: (val) =>
-                                        setState(() => _selectedMotherId = val),
+                                    onChanged: (val) {
+                                      setState(() {
+                                        _selectedMotherId = val;
+                                        _checkAndAutoSetBreed(cowState.allCows);
+                                      });
+                                    },
                                   );
                                 },
                               ),
@@ -686,7 +749,11 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                           initialValue: _selectedStatus,
                           isExpanded: true,
                           decoration: _buildInputDecoration('สถานะสุขภาพ/การเลี้ยง', Icons.health_and_safety_rounded),
-                          items: CowStatus.values.map((status) {
+                          items: [
+                            CowStatus.normal,
+                            CowStatus.sick,
+                            CowStatus.injured,
+                          ].map((status) {
                             return DropdownMenuItem(
                               value: status,
                               child: Text(status.label, overflow: TextOverflow.ellipsis),

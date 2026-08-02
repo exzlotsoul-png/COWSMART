@@ -186,6 +186,21 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                       )
                     : const Text('ตั้งรหัสผ่านใหม่'),
               ),
+              const SizedBox(height: 16),
+              Center(
+                child: TextButton.icon(
+                  onPressed: () => context.go('/login'),
+                  icon: const Icon(Icons.arrow_back_rounded, size: 18, color: AppColors.textSecondary),
+                  label: const Text(
+                    'กลับไปหน้าเข้าสู่ระบบ',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),

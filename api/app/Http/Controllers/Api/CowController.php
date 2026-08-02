@@ -70,8 +70,20 @@ class CowController extends Controller
             );
         }
 
-        // Generate unique cow_id (max 10 chars)
-        $data['cow_id'] = 'C-' . substr(md5(uniqid(mt_rand(), true)), 0, 8);
+        // Generate sequential cow_id (e.g. C001, C002, ...)
+        if (empty($data['cow_id']) || str_contains($data['cow_id'], 'C-')) {
+            $lastCow = Cow::where('cow_id', 'LIKE', 'C%')
+                ->whereRaw('cow_id REGEXP "^C[0-9]+$"')
+                ->orderByRaw('CAST(SUBSTRING(cow_id, 2) AS UNSIGNED) DESC')
+                ->first();
+
+            $nextNum = 1;
+            if ($lastCow) {
+                $numPart = (int) substr($lastCow->cow_id, 1);
+                $nextNum = $numPart + 1;
+            }
+            $data['cow_id'] = 'C' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
+        }
 
         $cow = Cow::create($data);
         return response()->json($cow, 201);

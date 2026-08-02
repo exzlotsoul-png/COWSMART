@@ -33,6 +33,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
   String? _selectedMotherId;
 
   late DateTime _selectedDate;
+  late DateTime _selectedEntryDate;
   late String _selectedGender;
   late CowType _selectedType;
   late CowStatus _selectedStatus;
@@ -50,6 +51,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
     );
     _selectedBreedId = widget.cow.breed;
     _selectedDate = widget.cow.birthDate;
+    _selectedEntryDate = widget.cow.entryDate ?? DateTime.now();
     _selectedGender = widget.cow.gender;
     _selectedType = widget.cow.type;
     _selectedStatus = widget.cow.status;
@@ -87,6 +89,20 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
     }
   }
 
+  Future<void> _selectEntryDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedEntryDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && picked != _selectedEntryDate) {
+      setState(() {
+        _selectedEntryDate = picked;
+      });
+    }
+  }
+
   Future<void> _saveCow() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -101,6 +117,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
         name: _nameController.text,
         tagNumber: _tagController.text,
         birthDate: _selectedDate,
+        entryDate: _selectedEntryDate,
         gender: _selectedGender,
         type: _selectedType,
         breed: _selectedBreedId ?? widget.cow.breed,
@@ -309,32 +326,40 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: TextFormField(
-                        controller: _purchasePriceController,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'ราคาที่ซื้อมา (บาท)',
-                          prefixIcon: Icon(Icons.payments),
-                          hintText: '0.00',
+                      child: InkWell(
+                        onTap: () => _selectDate(context),
+                        child: InputDecorator(
+                          decoration: const InputDecoration(
+                            labelText: 'วันเกิด',
+                            prefixIcon: Icon(Icons.cake),
+                          ),
+                          child: Text(DateFormat('dd/MM/yyyy').format(_selectedDate)),
                         ),
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const Expanded(
-                      child: SizedBox(), // Spacer placeholder
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => _selectEntryDate(context),
+                        child: InputDecorator(
+                          decoration: const InputDecoration(
+                            labelText: 'วันที่เข้าฟาร์ม',
+                            prefixIcon: Icon(Icons.login),
+                          ),
+                          child: Text(DateFormat('dd/MM/yyyy').format(_selectedEntryDate)),
+                        ),
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
-
-                InkWell(
-                  onTap: () => _selectDate(context),
-                  child: InputDecorator(
-                    decoration: const InputDecoration(
-                      labelText: 'วันเกิด / วันที่เข้าฟาร์ม',
-                      prefixIcon: Icon(Icons.calendar_today),
-                    ),
-                    child: Text(DateFormat('dd/MM/yyyy').format(_selectedDate)),
+                TextFormField(
+                  controller: _purchasePriceController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'ราคาที่ซื้อมา (บาท)',
+                    prefixIcon: Icon(Icons.payments),
+                    hintText: '0.00',
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -516,7 +541,12 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                     labelText: 'สถานะ',
                     prefixIcon: Icon(Icons.health_and_safety),
                   ),
-                  items: CowStatus.values.map((status) {
+                  items: {
+                    CowStatus.normal,
+                    CowStatus.sick,
+                    CowStatus.injured,
+                    _selectedStatus,
+                  }.map((status) {
                     return DropdownMenuItem(
                       value: status,
                       child: Text(status.label),

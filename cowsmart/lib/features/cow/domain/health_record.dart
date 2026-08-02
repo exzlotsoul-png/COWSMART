@@ -1,3 +1,53 @@
+import 'dart:convert';
+
+class HealthRecordItem {
+  final String itemId;
+  final String itemName;
+  final String itemType; // 'vaccine' or 'medicine'
+  final double? amount;
+  final int? unitId;
+  final String? unitName;
+  final String? unitAbbreviation;
+  final double? cost;
+
+  HealthRecordItem({
+    required this.itemId,
+    required this.itemName,
+    required this.itemType,
+    this.amount,
+    this.unitId,
+    this.unitName,
+    this.unitAbbreviation,
+    this.cost,
+  });
+
+  factory HealthRecordItem.fromJson(Map<String, dynamic> json) {
+    return HealthRecordItem(
+      itemId: (json['item_id'] ?? json['itemId'] ?? '').toString(),
+      itemName: (json['item_name'] ?? json['itemName'] ?? '').toString(),
+      itemType: (json['item_type'] ?? json['itemType'] ?? '').toString(),
+      amount: json['amount'] != null ? double.tryParse(json['amount'].toString()) : null,
+      unitId: json['unit_id'] != null ? int.tryParse(json['unit_id'].toString()) : null,
+      unitName: json['unit_name'],
+      unitAbbreviation: json['unit_abbreviation'],
+      cost: json['cost'] != null ? double.tryParse(json['cost'].toString()) : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'item_id': itemId,
+      'item_name': itemName,
+      'item_type': itemType,
+      'amount': amount,
+      'unit_id': unitId,
+      'unit_name': unitName,
+      'unit_abbreviation': unitAbbreviation,
+      'cost': cost,
+    };
+  }
+}
+
 class HealthRecord {
   final String id;
   final String cowId;
@@ -15,6 +65,8 @@ class HealthRecord {
   final String? adminName;
   final String? note;
   final List<String> images;
+  final List<HealthRecordItem> items;
+
   // Display names from joined tables
   final String? diseaseName;
   final String? medicineName;
@@ -34,6 +86,7 @@ class HealthRecord {
     this.medIds = const [],
     this.vacIds = const [],
     this.images = const [],
+    this.items = const [],
     this.cost,
     this.amount,
     this.unitId,
@@ -54,6 +107,21 @@ class HealthRecord {
       return [];
     }
 
+    List<HealthRecordItem> parseItems(dynamic val) {
+      if (val is List) {
+        return val.map((e) => HealthRecordItem.fromJson(e as Map<String, dynamic>)).toList();
+      }
+      if (val is String && val.isNotEmpty) {
+        try {
+          final decoded = jsonDecode(val);
+          if (decoded is List) {
+            return decoded.map((e) => HealthRecordItem.fromJson(e as Map<String, dynamic>)).toList();
+          }
+        } catch (_) {}
+      }
+      return [];
+    }
+
     return HealthRecord(
       id: (json['health_record_id'] ?? json['id']).toString(),
       cowId: json['cow_id'].toString(),
@@ -66,6 +134,7 @@ class HealthRecord {
       medIds: parseStringList(json['med_ids']),
       vacIds: parseStringList(json['vac_ids']),
       images: parseStringList(json['images']),
+      items: parseItems(json['items_json'] ?? json['items']),
       cost: json['cost'] != null ? double.tryParse(json['cost'].toString()) : null,
       amount: json['amount'] != null ? double.tryParse(json['amount'].toString()) : null,
       unitId: json['unit_id'] != null ? int.tryParse(json['unit_id'].toString()) : null,
@@ -92,6 +161,7 @@ class HealthRecord {
       'med_ids': medIds,
       'vac_ids': vacIds,
       'images': images,
+      'items_json': items.map((i) => i.toJson()).toList(),
       'cost': cost,
       'amount': amount,
       'unit_id': unitId,

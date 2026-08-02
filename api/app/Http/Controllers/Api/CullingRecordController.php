@@ -41,8 +41,13 @@ class CullingRecordController extends Controller
                         continue;
                     }
                     
-                    if (empty($rData['culling_record_id'])) {
-                        $rData['culling_record_id'] = 'CL-' . substr(md5(uniqid(mt_rand(), true)), 0, 7);
+                    if (empty($rData['culling_record_id']) || str_contains($rData['culling_record_id'], 'CL-')) {
+                        $lastRecord = CullingRecord::where('culling_record_id', 'LIKE', 'CUL%')
+                            ->whereRaw('culling_record_id REGEXP "^CUL[0-9]+$"')
+                            ->orderByRaw('CAST(SUBSTRING(culling_record_id, 4) AS UNSIGNED) DESC')
+                            ->first();
+                        $nextNum = $lastRecord ? ((int)substr($lastRecord->culling_record_id, 3)) + 1 : 1;
+                        $rData['culling_record_id'] = 'CUL' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
                     }
 
                     // Create culling record
@@ -69,8 +74,16 @@ class CullingRecordController extends Controller
                     $price = (double)($rData['price'] ?? 0);
                     if ((int)$rData['status'] === 0 && $price > 0) {
                         $cullDate = Carbon::parse($rData['cull_date'])->format('Y-m-d');
+                        
+                        $lastFR = FinancialRecord::where('financial_record_id', 'LIKE', 'FR%')
+                            ->whereRaw('financial_record_id REGEXP "^FR[0-9]+$"')
+                            ->orderByRaw('CAST(SUBSTRING(financial_record_id, 3) AS UNSIGNED) DESC')
+                            ->first();
+                        $nextFRNum = $lastFR ? ((int)substr($lastFR->financial_record_id, 2)) + 1 : 1;
+                        $frId = 'FR' . str_pad($nextFRNum, 3, '0', STR_PAD_LEFT);
+
                         FinancialRecord::create([
-                            'financial_record_id' => 'FR-' . substr(md5(uniqid(mt_rand(), true)), 0, 7),
+                            'financial_record_id' => $frId,
                             'farm_id' => $cow->farm_id,
                             'title' => "ขายวัว หมายเลข " . ($cow->tag_number ?? $cow->cow_id),
                             'trans_type' => 'income',
@@ -95,8 +108,13 @@ class CullingRecordController extends Controller
 
         return DB::transaction(function () use ($request) {
             $data = $request->all();
-            if (empty($data['culling_record_id'])) {
-                $data['culling_record_id'] = 'CL-' . substr(md5(uniqid(mt_rand(), true)), 0, 7);
+            if (empty($data['culling_record_id']) || str_contains($data['culling_record_id'], 'CL-')) {
+                $lastRecord = CullingRecord::where('culling_record_id', 'LIKE', 'CUL%')
+                    ->whereRaw('culling_record_id REGEXP "^CUL[0-9]+$"')
+                    ->orderByRaw('CAST(SUBSTRING(culling_record_id, 4) AS UNSIGNED) DESC')
+                    ->first();
+                $nextNum = $lastRecord ? ((int)substr($lastRecord->culling_record_id, 3)) + 1 : 1;
+                $data['culling_record_id'] = 'CUL' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
             }
 
             // Create culling record
@@ -122,8 +140,15 @@ class CullingRecordController extends Controller
             $price = (double)($request->price ?? 0);
             if ((int)$request->status === 0 && $price > 0) {
                 $cullDate = Carbon::parse($request->cull_date)->format('Y-m-d');
+                $lastFR = FinancialRecord::where('financial_record_id', 'LIKE', 'FR%')
+                    ->whereRaw('financial_record_id REGEXP "^FR[0-9]+$"')
+                    ->orderByRaw('CAST(SUBSTRING(financial_record_id, 3) AS UNSIGNED) DESC')
+                    ->first();
+                $nextFRNum = $lastFR ? ((int)substr($lastFR->financial_record_id, 2)) + 1 : 1;
+                $frId = 'FR' . str_pad($nextFRNum, 3, '0', STR_PAD_LEFT);
+
                 FinancialRecord::create([
-                    'financial_record_id' => 'FR-' . substr(md5(uniqid(mt_rand(), true)), 0, 7),
+                    'financial_record_id' => $frId,
                     'farm_id' => $cow->farm_id,
                     'title' => "ขายวัว หมายเลข " . ($cow->tag_number ?? $cow->cow_id),
                     'trans_type' => 'income',

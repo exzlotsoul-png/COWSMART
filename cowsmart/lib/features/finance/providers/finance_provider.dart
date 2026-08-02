@@ -35,6 +35,30 @@ class FinanceState {
       .where((t) => t.type == TransactionType.expense)
       .fold(0.0, (sum, t) => sum + t.amount);
 
+  double get totalIncomeCurrentActualMonth {
+    final now = DateTime.now();
+    return transactions
+        .where(
+          (t) =>
+              t.date.year == now.year &&
+              t.date.month == now.month &&
+              t.type == TransactionType.income,
+        )
+        .fold(0.0, (sum, t) => sum + t.amount);
+  }
+
+  double get totalExpenseCurrentActualMonth {
+    final now = DateTime.now();
+    return transactions
+        .where(
+          (t) =>
+              t.date.year == now.year &&
+              t.date.month == now.month &&
+              t.type == TransactionType.expense,
+        )
+        .fold(0.0, (sum, t) => sum + t.amount);
+  }
+
   FinanceState copyWith({
     bool? isLoading,
     String? errorMessage,

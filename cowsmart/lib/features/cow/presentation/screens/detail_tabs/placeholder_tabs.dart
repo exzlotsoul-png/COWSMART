@@ -16,6 +16,7 @@ import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import '../../../providers/cow_detail_provider.dart';
 import '../../../../health/providers/master_data_provider.dart';
 import 'package:cowsmart/core/network/api_client.dart';
+import 'package:go_router/go_router.dart';
 
 class HealthTab extends ConsumerStatefulWidget {
   final Cow cow;
@@ -57,7 +58,7 @@ class _HealthTabState extends ConsumerState<HealthTab> {
     );
   }
 
-  void _showAddHealthAppointmentDialog() {
+  Future<void> _showAddHealthAppointmentDialog() async {
     final titleCtrl = TextEditingController(text: 'นัดหมายฉีดวัคซีน/ตรวจสุขภาพ');
     final descCtrl = TextEditingController();
     DateTime selectedDate = DateTime.now().add(const Duration(days: 7));
@@ -65,13 +66,28 @@ class _HealthTabState extends ConsumerState<HealthTab> {
     String selectedReminder = 'ก่อน 1 วัน';
     String selectedType = 'ฉีดวัคซีน/ถ่ายพยาธิ';
 
-    final types = [
+    List<String> types = [
       'ฉีดวัคซีน/ถ่ายพยาธิ',
       'ตรวจสุขภาพประจำปี/ประจำเดือน',
       'ตรวจระบบสืบพันธุ์',
       'ติดตามผลการรักษา',
       'อื่นๆ',
     ];
+
+    // Fetch appointment types from API
+    try {
+      final api = ref.read(apiClientProvider);
+      final res = await api.get('/appointment_types');
+      final apiTypes = (res.data as List<dynamic>)
+          .map((e) => e['name']?.toString() ?? '')
+          .where((name) => name.isNotEmpty)
+          .toList();
+      if (apiTypes.isNotEmpty) {
+        types = apiTypes;
+        selectedType = types.first;
+        titleCtrl.text = 'นัดหมาย${types.first}';
+      }
+    } catch (_) {}
 
     final reminderOptions = [
       'ตรงเวลาที่บันทึก',
@@ -83,6 +99,7 @@ class _HealthTabState extends ConsumerState<HealthTab> {
       'ไม่แจ้งเตือน'
     ];
 
+    if (!mounted) return;
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
@@ -311,19 +328,34 @@ class _HealthTabState extends ConsumerState<HealthTab> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'ประวัติการรักษาและตรวจสุขภาพ',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                Expanded(
+                  child: const Text(
+                    'ประวัติการรักษาและตรวจสุขภาพ',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Text(
-                  '${records.length} รายการ',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
+                const SizedBox(width: 4),
+                TextButton.icon(
+                  onPressed: () {
+                    context.push(
+                      '/cow_history_list',
+                      extra: {'cow': widget.cow, 'initialTab': 'health'},
+                    );
+                  },
+                  icon: const Icon(Icons.arrow_forward, size: 16, color: AppColors.primary),
+                  label: Text(
+                    'ดูทั้งหมด (${records.length})',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -367,8 +399,29 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                   ),
                 ),
               )
-            else
-              ...records.map((r) => _buildHealthCard(context, r)),
+            else ...[
+              ...records.take(5).map((r) => _buildHealthCard(context, r)),
+              if (records.length > 5)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8, bottom: 12),
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      context.push(
+                        '/cow_history_list',
+                        extra: {'cow': widget.cow, 'initialTab': 'health'},
+                      );
+                    },
+                    icon: const Icon(Icons.history, size: 18),
+                    label: Text('ดูประวัติการรักษาทั้งหมด (${records.length} รายการ)'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: const BorderSide(color: AppColors.primary),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+            ],
           ],
         ),
         Positioned(
@@ -408,7 +461,7 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                       )
                     : const Icon(Icons.add, color: Colors.white, size: 24),
                 label: const Text(
-                  'บันทึกการรักษา',
+                  'บันทึกสุขภาพและการรักษา',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 15,
@@ -610,15 +663,18 @@ class _HealthTabState extends ConsumerState<HealthTab> {
 
     String? statusText;
     Color statusBgColor = AppColors.success;
-    if (record.status == 'normal') {
-      statusText = 'ปกติ';
-      statusBgColor = AppColors.success;
-    } else if (record.status == 'sick') {
-      statusText = 'ป่วย';
-      statusBgColor = AppColors.error;
-    } else if (record.status == 'injured') {
-      statusText = 'บาดเจ็บ';
-      statusBgColor = const Color(0xFFD97706);
+    // Only display status tag for General Checkup (CT01)
+    if (record.checkupTypeId == 'CT01') {
+      if (record.status == 'normal') {
+        statusText = 'ปกติ';
+        statusBgColor = AppColors.success;
+      } else if (record.status == 'sick') {
+        statusText = 'ป่วย';
+        statusBgColor = AppColors.error;
+      } else if (record.status == 'injured') {
+        statusText = 'บาดเจ็บ';
+        statusBgColor = const Color(0xFFD97706);
+      }
     }
 
     return Card(
@@ -797,53 +853,62 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                 ],
               ),
 
-              // Detail rows
-              if (record.vaccineName != null ||
+              // Detail rows & items
+              if (record.items.isNotEmpty ||
+                  record.vaccineName != null ||
                   record.diseaseName != null ||
                   record.medicineName != null) ...[
                 const SizedBox(height: 12),
-                Builder(
-                  builder: (context) {
-                    String dosageStr = '';
-                    if (record.amount != null) {
-                      final amt = record.amount!;
-                      final amtStr = amt % 1 == 0 ? amt.toInt().toString() : amt.toString();
-                      final unit = record.unitAbbreviation ?? record.unitName ?? '';
-                      dosageStr = ' ($amtStr $unit)'.trimRight();
-                    }
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (record.items.isNotEmpty) ...[
+                        ...record.items.map((item) {
+                          String amtStr = '';
+                          if (item.amount != null && item.amount! > 0) {
+                            final a = item.amount!;
+                            amtStr = ' (${a % 1 == 0 ? a.toInt() : a} ${item.unitAbbreviation ?? item.unitName ?? ''})'.trimRight();
+                          }
+                          String costStr = '';
+                          if (item.cost != null && item.cost! > 0) {
+                            costStr = ' - ${NumberFormat('#,##0').format(item.cost)} ฿';
+                          }
 
-                    return Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[50],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (record.vaccineName != null)
-                            _buildDetailRow(
-                              Icons.vaccines,
-                              'วัคซีน',
-                              '${record.vaccineName!}$dosageStr',
-                            ),
-                          if (record.diseaseName != null)
-                            _buildDetailRow(
-                              Icons.coronavirus,
-                              'โรค',
-                              record.diseaseName!,
-                            ),
-                          if (record.medicineName != null)
-                            _buildDetailRow(
-                              Icons.medication,
-                              'ยา',
-                              '${record.medicineName!}$dosageStr',
-                            ),
-                        ],
-                      ),
-                    );
-                  },
+                          return _buildDetailRow(
+                            item.itemType == 'vaccine' ? Icons.vaccines : Icons.medication,
+                            item.itemType == 'vaccine' ? 'วัคซีน' : 'ยา',
+                            '${item.itemName}$amtStr$costStr',
+                          );
+                        }),
+                      ] else ...[
+                        if (record.vaccineName != null)
+                          _buildDetailRow(
+                            Icons.vaccines,
+                            'วัคซีน',
+                            record.vaccineName!,
+                          ),
+                        if (record.diseaseName != null)
+                          _buildDetailRow(
+                            Icons.coronavirus,
+                            'โรค',
+                            record.diseaseName!,
+                          ),
+                        if (record.medicineName != null)
+                          _buildDetailRow(
+                            Icons.medication,
+                            'ยา',
+                            record.medicineName!,
+                          ),
+                      ],
+                    ],
+                  ),
                 ),
               ],
 
@@ -1063,6 +1128,19 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
   List<XFile> selectedImageFiles = [];
   List<String> existingImageUrls = [];
   bool isUploading = false;
+  int currentStep = 1;
+
+  final Map<String, TextEditingController> _itemAmountControllers = {};
+  final Map<String, int?> _itemUnitIds = {};
+  final Map<String, TextEditingController> _itemCostControllers = {};
+
+  TextEditingController _getItemAmountController(String id) {
+    return _itemAmountControllers.putIfAbsent(id, () => TextEditingController());
+  }
+
+  TextEditingController _getItemCostController(String id) {
+    return _itemCostControllers.putIfAbsent(id, () => TextEditingController());
+  }
 
   final checkupTypes = [
     {'id': 'CT01', 'name': 'ตรวจสุขภาพทั่วไป'},
@@ -1105,6 +1183,12 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
     adminController.dispose();
     noteController.dispose();
     amountController.dispose();
+    for (var c in _itemAmountControllers.values) {
+      c.dispose();
+    }
+    for (var c in _itemCostControllers.values) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -1115,24 +1199,62 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
     final showMedicine = selectedType == 'CT03';
 
     return AlertDialog(
-      title: Row(
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.medical_services,
-              color: AppColors.primary,
-              size: 22,
-            ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.medical_services,
+                  color: AppColors.primary,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'บันทึกสุขภาพและการรักษา',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 10),
-          const Text(
-            'บันทึกการรักษา',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: currentStep >= 1 ? AppColors.primary : AppColors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Container(
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: currentStep >= 2 ? AppColors.primary : AppColors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            currentStep == 1 ? 'ขั้นตอนที่ 1/2: ข้อมูลพื้นฐานและการรักษา' : 'ขั้นตอนที่ 2/2: จำนวน หน่วยวัด และค่าใช้จ่าย',
+            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -1141,557 +1263,660 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-              leading: const Icon(Icons.calendar_today, size: 22),
-              title: const Text('วันที่', style: TextStyle(fontSize: 16)),
-              subtitle: Text(
-                DateFormat('dd/MM/yyyy').format(selectedDate),
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              onTap: () async {
-                final picked = await showDatePicker(
-                  context: context,
-                  initialDate: selectedDate,
-                  firstDate: DateTime(2020),
-                  lastDate: DateTime.now(),
-                );
-                if (picked != null) setState(() => selectedDate = picked);
-              },
-            ),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              value: selectedType,
-              isExpanded: true,
-              style: const TextStyle(
-                fontSize: 15,
-                color: AppColors.textPrimary,
-              ),
-              decoration: const InputDecoration(
-                labelText: 'ประเภทการตรวจ',
-                labelStyle: TextStyle(fontSize: 15),
-                prefixIcon: Icon(Icons.category, size: 22),
-              ),
-              items: checkupTypes.map((type) {
-                return DropdownMenuItem(
-                  value: type['id'],
-                  child: Text(
-                    type['name']!,
-                    style: const TextStyle(fontSize: 15),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                );
-              }).toList(),
-              onChanged: (val) {
-                if (val != null) {
-                  setState(() {
-                    selectedType = val;
-                    selectedVaccineIds = [];
-                    selectedDiseaseId = null;
-                    selectedMedicineIds = [];
-                  });
-                }
-              },
-            ),
-            if (selectedType == 'CT01') ...[
-              const SizedBox(height: 12),
-              DropdownButtonFormField<CowStatus>(
-                value: selectedHealthStatus,
-                isExpanded: true,
-                style: const TextStyle(
-                  fontSize: 15,
-                  color: AppColors.textPrimary,
-                ),
-                decoration: const InputDecoration(
-                  labelText: 'สถานะสุขภาพวัว',
-                  labelStyle: TextStyle(fontSize: 15),
-                  prefixIcon: Icon(Icons.health_and_safety_outlined, size: 22),
-                ),
-                items: const [
-                  DropdownMenuItem(
-                    value: CowStatus.normal,
-                    child: Text('ปกติ', style: TextStyle(fontSize: 15)),
-                  ),
-                  DropdownMenuItem(
-                    value: CowStatus.sick,
-                    child: Text('ป่วย', style: TextStyle(fontSize: 15)),
-                  ),
-                  DropdownMenuItem(
-                    value: CowStatus.injured,
-                    child: Text('บาดเจ็บ', style: TextStyle(fontSize: 15)),
-                  ),
-                ],
-                onChanged: (val) {
-                  if (val != null) {
-                    setState(() => selectedHealthStatus = val);
-                  }
-                },
-              ),
-            ],
-            const SizedBox(height: 16),
-            if (widget.masterData.isLoading)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                child: Center(
-                  child: SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+            if (currentStep == 1) ...[
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                leading: const Icon(Icons.calendar_today, size: 22),
+                title: const Text('วันที่', style: TextStyle(fontSize: 16)),
+                subtitle: Text(
+                  DateFormat('dd/MM/yyyy').format(selectedDate),
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-              ),
-            
-            // Multiple Vaccines Selection (Select Box)
-            if (showVaccine && !widget.masterData.isLoading) ...[
-              InkWell(
                 onTap: () async {
-                  final result = await showDialog<List<String>>(
+                  final picked = await showDatePicker(
                     context: context,
-                    builder: (ctx) {
-                      final tempSelected = List<String>.from(selectedVaccineIds);
-                      return StatefulBuilder(
-                        builder: (ctx, setDialogState) {
-                          return AlertDialog(
-                            title: const Text('เลือกวัคซีน (เลือกได้หลายรายการ)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                            content: SizedBox(
-                              width: double.maxFinite,
-                              child: ListView(
-                                shrinkWrap: true,
-                                children: widget.masterData.vaccines.map((v) {
-                                  final checked = tempSelected.contains(v.id);
-                                  return CheckboxListTile(
-                                    title: Text(v.name, style: const TextStyle(fontSize: 15)),
-                                    value: checked,
-                                    activeColor: AppColors.primary,
-                                    onChanged: (val) {
-                                      setDialogState(() {
-                                        if (val == true) {
-                                          tempSelected.add(v.id);
-                                        } else {
-                                          tempSelected.remove(v.id);
-                                        }
-                                      });
-                                    },
-                                  );
-                                }).toList(),
-                              ),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(ctx, selectedVaccineIds),
-                                child: const Text('ยกเลิก'),
-                              ),
-                              ElevatedButton(
-                                onPressed: () => Navigator.pop(ctx, tempSelected),
-                                child: const Text('ตกลง'),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
+                    initialDate: selectedDate,
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime.now(),
                   );
-                  if (result != null) {
-                    setState(() => selectedVaccineIds = result);
-                  }
+                  if (picked != null) setState(() => selectedDate = picked);
                 },
-                child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'วัคซีน (เลือกได้หลายรายการ)',
-                    labelStyle: TextStyle(fontSize: 15),
-                    prefixIcon: Icon(Icons.vaccines, size: 22),
-                    suffixIcon: Icon(Icons.arrow_drop_down),
-                  ),
-                  child: selectedVaccineIds.isEmpty
-                      ? const Text('แตะเพื่อเลือกวัคซีน...', style: TextStyle(fontSize: 15, color: AppColors.textHint))
-                      : Wrap(
-                          spacing: 4,
-                          runSpacing: 4,
-                          children: selectedVaccineIds.map((id) {
-                            final name = widget.masterData.vaccines.firstWhere((v) => v.id == id, orElse: () => widget.masterData.vaccines.first).name;
-                            return Chip(
-                              label: Text(name, style: const TextStyle(fontSize: 13, color: Colors.white)),
-                              backgroundColor: AppColors.primary,
-                              visualDensity: VisualDensity.compact,
-                              padding: EdgeInsets.zero,
-                            );
-                          }).toList(),
-                        ),
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-
-            if (showDisease && !widget.masterData.isLoading)
-              DropdownButtonFormField<String?>(
-                isExpanded: true,
-                value: selectedDiseaseId,
-                style: const TextStyle(
-                  fontSize: 15,
-                  color: AppColors.textPrimary,
-                ),
-                decoration: const InputDecoration(
-                  labelText: 'โรค',
-                  labelStyle: TextStyle(fontSize: 15),
-                  prefixIcon: Icon(Icons.coronavirus, size: 22),
-                ),
-                items: [
-                  const DropdownMenuItem<String?>(
-                    value: null,
-                    child: Text('เลือกโรค',
-                        style: TextStyle(fontSize: 15),
-                        overflow: TextOverflow.ellipsis),
-                  ),
-                  ...widget.masterData.diseases
-                      .where((d) => d.id.isNotEmpty)
-                      .map((d) {
-                    return DropdownMenuItem<String?>(
-                      value: d.id,
-                      child: Text(
-                        d.name,
-                        style: const TextStyle(fontSize: 15),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    );
-                  }),
-                ],
-                onChanged: (val) => setState(() => selectedDiseaseId = val),
-              ),
-
-            // Multiple Medicines Selection (Select Box)
-            if (showMedicine && !widget.masterData.isLoading) ...[
-              const SizedBox(height: 16),
-              InkWell(
-                onTap: () async {
-                  final result = await showDialog<List<String>>(
-                    context: context,
-                    builder: (ctx) {
-                      final tempSelected = List<String>.from(selectedMedicineIds);
-                      return StatefulBuilder(
-                        builder: (ctx, setDialogState) {
-                          return AlertDialog(
-                            title: const Text('เลือกยา (เลือกได้หลายรายการ)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                            content: SizedBox(
-                              width: double.maxFinite,
-                              child: ListView(
-                                shrinkWrap: true,
-                                children: widget.masterData.medicines.map((m) {
-                                  final checked = tempSelected.contains(m.id);
-                                  return CheckboxListTile(
-                                    title: Text(m.name, style: const TextStyle(fontSize: 15)),
-                                    value: checked,
-                                    activeColor: AppColors.primary,
-                                    onChanged: (val) {
-                                      setDialogState(() {
-                                        if (val == true) {
-                                          tempSelected.add(m.id);
-                                        } else {
-                                          tempSelected.remove(m.id);
-                                        }
-                                      });
-                                    },
-                                  );
-                                }).toList(),
-                              ),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(ctx, selectedMedicineIds),
-                                child: const Text('ยกเลิก'),
-                              ),
-                              ElevatedButton(
-                                onPressed: () => Navigator.pop(ctx, tempSelected),
-                                child: const Text('ตกลง'),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                  );
-                  if (result != null) {
-                    setState(() => selectedMedicineIds = result);
-                  }
-                },
-                child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'ยาที่ใช้ (เลือกได้หลายรายการ)',
-                    labelStyle: TextStyle(fontSize: 15),
-                    prefixIcon: Icon(Icons.medication, size: 22),
-                    suffixIcon: Icon(Icons.arrow_drop_down),
-                  ),
-                  child: selectedMedicineIds.isEmpty
-                      ? const Text('แตะเพื่อเลือกยา...', style: TextStyle(fontSize: 15, color: AppColors.textHint))
-                      : Wrap(
-                          spacing: 4,
-                          runSpacing: 4,
-                          children: selectedMedicineIds.map((id) {
-                            final name = widget.masterData.medicines.firstWhere((m) => m.id == id, orElse: () => widget.masterData.medicines.first).name;
-                            return Chip(
-                              label: Text(name, style: const TextStyle(fontSize: 13, color: Colors.white)),
-                              backgroundColor: AppColors.primary,
-                              visualDensity: VisualDensity.compact,
-                              padding: EdgeInsets.zero,
-                            );
-                          }).toList(),
-                        ),
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-
-            if ((showVaccine || showMedicine) && !widget.masterData.isLoading) ...[
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 1,
-                    child: TextField(
-                      controller: amountController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      style: const TextStyle(fontSize: 15),
-                      decoration: const InputDecoration(
-                        labelText: 'จำนวน',
-                        labelStyle: TextStyle(fontSize: 15),
-                        prefixIcon: Icon(Icons.scale_outlined, size: 22),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 1,
-                    child: DropdownButtonFormField<int?>(
-                      value: selectedUnitId,
-                      isExpanded: true,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        color: AppColors.textPrimary,
-                      ),
-                      decoration: const InputDecoration(
-                        labelText: 'หน่วยวัด',
-                        labelStyle: TextStyle(fontSize: 15),
-                        prefixIcon: Icon(Icons.square_foot, size: 22),
-                      ),
-                      items: [
-                        const DropdownMenuItem<int?>(
-                          value: null,
-                          child: Text('เลือกหน่วย', style: TextStyle(fontSize: 15)),
-                        ),
-                        ...widget.masterData.units.map((unit) {
-                          final idInt = int.tryParse(unit.id);
-                          final abbr = unit.abbreviation != null && unit.abbreviation!.isNotEmpty
-                              ? ' (${unit.abbreviation})'
-                              : '';
-                          return DropdownMenuItem<int?>(
-                            value: idInt,
-                            child: Text(
-                              '${unit.name}$abbr',
-                              style: const TextStyle(fontSize: 15),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          );
-                        }),
-                      ],
-                      onChanged: (val) {
-                        setState(() => selectedUnitId = val);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-            ],
-
-            if (selectedType == 'CT01') ...[
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'รูปภาพแผล/อาการป่วย (สูงสุด 3 รูป):',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                  ),
-                  Text(
-                    '${existingImageUrls.length + selectedImageFiles.length}/3',
-                    style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                  ),
-                ],
               ),
               const SizedBox(height: 8),
-              Row(
-                children: [
-                  ...existingImageUrls.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    String url = entry.value;
-                    if (!url.startsWith('blob:')) {
-                      if (url.contains('/storage/http')) {
-                        url = url.substring(url.indexOf('/storage/http') + 9);
-                      }
-                      if (url.startsWith('http://') || url.startsWith('https://')) {
-                        url = url.replaceAll('http://127.0.0.1:8000/storage/', 'http://127.0.0.1:8000/api/storage/');
-                      } else {
-                        url = 'http://127.0.0.1:8000/api/storage/' + url.replaceAll(RegExp(r'^/?storage/'), '');
-                      }
+              DropdownButtonFormField<String>(
+                value: selectedType,
+                isExpanded: true,
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: AppColors.textPrimary,
+                ),
+                decoration: const InputDecoration(
+                  labelText: 'ประเภทการตรวจ',
+                  labelStyle: TextStyle(fontSize: 15),
+                  prefixIcon: Icon(Icons.category, size: 22),
+                ),
+                items: checkupTypes.map((type) {
+                  return DropdownMenuItem(
+                    value: type['id'],
+                    child: Text(
+                      type['name']!,
+                      style: const TextStyle(fontSize: 15),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() {
+                      selectedType = val;
+                      selectedVaccineIds = [];
+                      selectedDiseaseId = null;
+                      selectedMedicineIds = [];
+                    });
+                  }
+                },
+              ),
+              if (selectedType == 'CT01') ...[
+                const SizedBox(height: 12),
+                DropdownButtonFormField<CowStatus>(
+                  value: selectedHealthStatus,
+                  isExpanded: true,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    color: AppColors.textPrimary,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'สถานะสุขภาพวัว',
+                    labelStyle: TextStyle(fontSize: 15),
+                    prefixIcon: Icon(Icons.health_and_safety_outlined, size: 22),
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: CowStatus.normal,
+                      child: Text('ปกติ', style: TextStyle(fontSize: 15)),
+                    ),
+                    DropdownMenuItem(
+                      value: CowStatus.sick,
+                      child: Text('ป่วย', style: TextStyle(fontSize: 15)),
+                    ),
+                    DropdownMenuItem(
+                      value: CowStatus.injured,
+                      child: Text('บาดเจ็บ', style: TextStyle(fontSize: 15)),
+                    ),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) {
+                      setState(() => selectedHealthStatus = val);
                     }
-                    return Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Container(
-                          margin: const EdgeInsets.only(right: 10),
-                          width: 70,
-                          height: 70,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: Image.network(
-                              url,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, color: Colors.grey),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          top: -6,
-                          right: 4,
-                          child: GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                existingImageUrls.removeAt(index);
-                              });
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(2),
-                              decoration: const BoxDecoration(
-                                color: Colors.red,
-                                shape: BoxShape.circle,
+                  },
+                ),
+              ],
+              const SizedBox(height: 16),
+              if (widget.masterData.isLoading)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Center(
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                ),
+              
+              // Multiple Vaccines Selection (Select Box)
+              if (showVaccine && !widget.masterData.isLoading) ...[
+                InkWell(
+                  onTap: () async {
+                    final result = await showDialog<List<String>>(
+                      context: context,
+                      builder: (ctx) {
+                        final tempSelected = List<String>.from(selectedVaccineIds);
+                        return StatefulBuilder(
+                          builder: (ctx, setDialogState) {
+                            return AlertDialog(
+                              title: const Text('เลือกวัคซีน (เลือกได้หลายรายการ)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                              content: SizedBox(
+                                width: double.maxFinite,
+                                child: ListView(
+                                  shrinkWrap: true,
+                                  children: widget.masterData.vaccines.map((v) {
+                                    final checked = tempSelected.contains(v.id);
+                                    return CheckboxListTile(
+                                      title: Text(v.name, style: const TextStyle(fontSize: 15)),
+                                      value: checked,
+                                      activeColor: AppColors.primary,
+                                      onChanged: (val) {
+                                        setDialogState(() {
+                                          if (val == true) {
+                                            tempSelected.add(v.id);
+                                          } else {
+                                            tempSelected.remove(v.id);
+                                          }
+                                        });
+                                      },
+                                    );
+                                  }).toList(),
+                                ),
                               ),
-                              child: const Icon(Icons.close, size: 14, color: Colors.white),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  }),
-                  ...selectedImageFiles.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final xfile = entry.value;
-                    return Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Container(
-                          margin: const EdgeInsets.only(right: 10),
-                          width: 70,
-                          height: 70,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: FutureBuilder<Uint8List>(
-                              future: xfile.readAsBytes(),
-                              builder: (context, snapshot) {
-                                if (snapshot.hasData) {
-                                  return Image.memory(snapshot.data!, fit: BoxFit.cover);
-                                }
-                                return const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)));
-                              },
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          top: -6,
-                          right: 4,
-                          child: GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                selectedImageFiles.removeAt(index);
-                              });
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(2),
-                              decoration: const BoxDecoration(
-                                color: Colors.red,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.close, size: 14, color: Colors.white),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  }),
-                  if (existingImageUrls.length + selectedImageFiles.length < 3)
-                    InkWell(
-                      onTap: () async {
-                        final picker = ImagePicker();
-                        final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
-                        if (picked != null) {
-                          setState(() {
-                            selectedImageFiles.add(picked);
-                          });
-                        }
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx, selectedVaccineIds),
+                                  child: const Text('ยกเลิก'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () => Navigator.pop(ctx, tempSelected),
+                                  child: const Text('ตกลง'),
+                                ),
+                              ],
+                            );
+                          },
+                        );
                       },
-                      child: Container(
-                        width: 70,
-                        height: 70,
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppColors.border, style: BorderStyle.solid),
+                    );
+                    if (result != null) {
+                      setState(() => selectedVaccineIds = result);
+                    }
+                  },
+                  child: InputDecorator(
+                    decoration: const InputDecoration(
+                      labelText: 'วัคซีน (เลือกได้หลายรายการ)',
+                      labelStyle: TextStyle(fontSize: 15),
+                      prefixIcon: Icon(Icons.vaccines, size: 22),
+                      suffixIcon: Icon(Icons.arrow_drop_down),
+                    ),
+                    child: selectedVaccineIds.isEmpty
+                        ? const Text('แตะเพื่อเลือกวัคซีน...', style: TextStyle(fontSize: 15, color: AppColors.textHint))
+                        : Wrap(
+                            spacing: 4,
+                            runSpacing: 4,
+                            children: selectedVaccineIds.map((id) {
+                              final name = widget.masterData.vaccines.firstWhere((v) => v.id == id, orElse: () => widget.masterData.vaccines.first).name;
+                              return Chip(
+                                label: Text(name, style: const TextStyle(fontSize: 13, color: Colors.white)),
+                                backgroundColor: AppColors.primary,
+                                visualDensity: VisualDensity.compact,
+                                padding: EdgeInsets.zero,
+                              );
+                            }).toList(),
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              if (showDisease && !widget.masterData.isLoading)
+                DropdownButtonFormField<String?>(
+                  isExpanded: true,
+                  value: selectedDiseaseId,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    color: AppColors.textPrimary,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'โรค',
+                    labelStyle: TextStyle(fontSize: 15),
+                    prefixIcon: Icon(Icons.coronavirus, size: 22),
+                  ),
+                  items: [
+                    const DropdownMenuItem<String?>(
+                      value: null,
+                      child: Text('เลือกโรค',
+                          style: TextStyle(fontSize: 15),
+                          overflow: TextOverflow.ellipsis),
+                    ),
+                    ...widget.masterData.diseases
+                        .where((d) => d.id.isNotEmpty)
+                        .map((d) {
+                      return DropdownMenuItem<String?>(
+                        value: d.id,
+                        child: Text(
+                          d.name,
+                          style: const TextStyle(fontSize: 15),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        child: const Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                      );
+                    }),
+                  ],
+                  onChanged: (val) => setState(() => selectedDiseaseId = val),
+                ),
+
+              // Multiple Medicines Selection (Select Box)
+              if (showMedicine && !widget.masterData.isLoading) ...[
+                const SizedBox(height: 16),
+                InkWell(
+                  onTap: () async {
+                    final result = await showDialog<List<String>>(
+                      context: context,
+                      builder: (ctx) {
+                        final tempSelected = List<String>.from(selectedMedicineIds);
+                        return StatefulBuilder(
+                          builder: (ctx, setDialogState) {
+                            return AlertDialog(
+                              title: const Text('เลือกยา (เลือกได้หลายรายการ)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                              content: SizedBox(
+                                width: double.maxFinite,
+                                child: ListView(
+                                  shrinkWrap: true,
+                                  children: widget.masterData.medicines.map((m) {
+                                    final checked = tempSelected.contains(m.id);
+                                    return CheckboxListTile(
+                                      title: Text(m.name, style: const TextStyle(fontSize: 15)),
+                                      value: checked,
+                                      activeColor: AppColors.primary,
+                                      onChanged: (val) {
+                                        setDialogState(() {
+                                          if (val == true) {
+                                            tempSelected.add(m.id);
+                                          } else {
+                                            tempSelected.remove(m.id);
+                                          }
+                                        });
+                                      },
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx, selectedMedicineIds),
+                                  child: const Text('ยกเลิก'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () => Navigator.pop(ctx, tempSelected),
+                                  child: const Text('ตกลง'),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                    );
+                    if (result != null) {
+                      setState(() => selectedMedicineIds = result);
+                    }
+                  },
+                  child: InputDecorator(
+                    decoration: const InputDecoration(
+                      labelText: 'ยา (เลือกได้หลายรายการ)',
+                      labelStyle: TextStyle(fontSize: 15),
+                      prefixIcon: Icon(Icons.medication, size: 22),
+                      suffixIcon: Icon(Icons.arrow_drop_down),
+                    ),
+                    child: selectedMedicineIds.isEmpty
+                        ? const Text('แตะเพื่อเลือกยา...', style: TextStyle(fontSize: 15, color: AppColors.textHint))
+                        : Wrap(
+                            spacing: 4,
+                            runSpacing: 4,
+                            children: selectedMedicineIds.map((id) {
+                              final name = widget.masterData.medicines.firstWhere((m) => m.id == id, orElse: () => widget.masterData.medicines.first).name;
+                              return Chip(
+                                label: Text(name, style: const TextStyle(fontSize: 13, color: Colors.white)),
+                                backgroundColor: AppColors.primary,
+                                visualDensity: VisualDensity.compact,
+                                padding: EdgeInsets.zero,
+                              );
+                            }).toList(),
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              TextField(
+                controller: adminController,
+                style: const TextStyle(fontSize: 15),
+                decoration: const InputDecoration(
+                  labelText: 'ผู้ดำเนินการ (ชื่อ)',
+                  labelStyle: TextStyle(fontSize: 15),
+                  prefixIcon: Icon(Icons.person, size: 22),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: noteController,
+                maxLines: 2,
+                style: const TextStyle(fontSize: 15),
+                decoration: const InputDecoration(
+                  labelText: 'รายละเอียดเพิ่มเติม / หมายเหตุ',
+                  labelStyle: TextStyle(fontSize: 15),
+                  hintText: 'กรอกรายละเอียดหรือข้อมูลเพิ่มเติม (ถ้ามี)',
+                  hintStyle: TextStyle(fontSize: 14),
+                  prefixIcon: Icon(Icons.description, size: 22),
+                ),
+              ),
+            ] else ...[
+              // Step 2: Per-item details (Amount, Unit, Cost)
+              if (selectedType == 'CT02' && selectedVaccineIds.isNotEmpty) ...[
+                const Text(
+                  'กรอกรายละเอียดปริมาณและราคาของแต่ละวัคซีน:',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+                ),
+                const SizedBox(height: 10),
+                ...selectedVaccineIds.map((vId) {
+                  final vName = widget.masterData.vaccines.firstWhere((v) => v.id == vId, orElse: () => widget.masterData.vaccines.first).name;
+                  final amtCtrl = _getItemAmountController(vId);
+                  final costCtrl = _getItemCostController(vId);
+                  final unitVal = _itemUnitIds[vId];
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
                           children: [
-                            Icon(Icons.add_a_photo, color: AppColors.primary, size: 22),
-                            SizedBox(height: 2),
-                            Text('เพิ่มรูป', style: TextStyle(fontSize: 11, color: AppColors.primary)),
+                            const Icon(Icons.vaccines, size: 18, color: AppColors.primary),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                vName,
+                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                              ),
+                            ),
                           ],
                         ),
-                      ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Expanded(
+                              flex: 1,
+                              child: TextField(
+                                controller: amtCtrl,
+                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                style: const TextStyle(fontSize: 14),
+                                decoration: const InputDecoration(
+                                  labelText: 'จำนวนที่ใช้',
+                                  labelStyle: TextStyle(fontSize: 13),
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              flex: 1,
+                              child: DropdownButtonFormField<int?>(
+                                value: unitVal,
+                                isExpanded: true,
+                                style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+                                decoration: const InputDecoration(
+                                  labelText: 'หน่วยวัด',
+                                  labelStyle: TextStyle(fontSize: 13),
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                ),
+                                items: [
+                                  const DropdownMenuItem<int?>(
+                                    value: null,
+                                    child: Text('เลือกหน่วย', style: TextStyle(fontSize: 13)),
+                                  ),
+                                  ...widget.masterData.units.map((unit) {
+                                    final idInt = int.tryParse(unit.id);
+                                    final abbr = unit.abbreviation != null && unit.abbreviation!.isNotEmpty
+                                        ? ' (${unit.abbreviation})'
+                                        : '';
+                                    return DropdownMenuItem<int?>(
+                                      value: idInt,
+                                      child: Text(
+                                        '${unit.name}$abbr',
+                                        style: const TextStyle(fontSize: 13),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    );
+                                  }),
+                                ],
+                                onChanged: (val) => setState(() => _itemUnitIds[vId] = val),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: costCtrl,
+                          keyboardType: TextInputType.number,
+                          style: const TextStyle(fontSize: 14),
+                          decoration: const InputDecoration(
+                            labelText: 'ราคา/ค่าใช้จ่าย (บาท)',
+                            labelStyle: TextStyle(fontSize: 13),
+                            prefixIcon: Icon(Icons.payments, size: 18),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          ),
+                        ),
+                      ],
                     ),
-                ],
-              ),
-            ],
+                  );
+                }),
+              ] else if (selectedType == 'CT03' && selectedMedicineIds.isNotEmpty) ...[
+                const Text(
+                  'กรอกรายละเอียดปริมาณและราคาของแต่ละยาที่ใช้:',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+                ),
+                const SizedBox(height: 10),
+                ...selectedMedicineIds.map((mId) {
+                  final mName = widget.masterData.medicines.firstWhere((m) => m.id == mId, orElse: () => widget.masterData.medicines.first).name;
+                  final amtCtrl = _getItemAmountController(mId);
+                  final costCtrl = _getItemCostController(mId);
+                  final unitVal = _itemUnitIds[mId];
 
-            const SizedBox(height: 16),
-            TextField(
-              controller: noteController,
-              maxLines: 3,
-              style: const TextStyle(fontSize: 15),
-              decoration: const InputDecoration(
-                labelText: 'รายละเอียดเพิ่มเติม / หมายเหตุ',
-                labelStyle: TextStyle(fontSize: 15),
-                hintText: 'กรอกรายละเอียดหรือข้อมูลเพิ่มเติม (ถ้ามี)',
-                hintStyle: TextStyle(fontSize: 14),
-                prefixIcon: Icon(Icons.description, size: 22),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: costController,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(fontSize: 15),
-              decoration: const InputDecoration(
-                labelText: 'ค่าใช้จ่าย (บาท)',
-                labelStyle: TextStyle(fontSize: 15),
-                prefixIcon: Icon(Icons.payments, size: 22),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: adminController,
-              style: const TextStyle(fontSize: 15),
-              decoration: const InputDecoration(
-                labelText: 'ผู้ดำเนินการ (ชื่อ)',
-                labelStyle: TextStyle(fontSize: 15),
-                prefixIcon: Icon(Icons.person, size: 22),
-              ),
-            ),
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.medication, size: 18, color: AppColors.primary),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                mName,
+                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Expanded(
+                              flex: 1,
+                              child: TextField(
+                                controller: amtCtrl,
+                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                style: const TextStyle(fontSize: 14),
+                                decoration: const InputDecoration(
+                                  labelText: 'จำนวนที่ใช้',
+                                  labelStyle: TextStyle(fontSize: 13),
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              flex: 1,
+                              child: DropdownButtonFormField<int?>(
+                                value: unitVal,
+                                isExpanded: true,
+                                style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+                                decoration: const InputDecoration(
+                                  labelText: 'หน่วยวัด',
+                                  labelStyle: TextStyle(fontSize: 13),
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                ),
+                                items: [
+                                  const DropdownMenuItem<int?>(
+                                    value: null,
+                                    child: Text('เลือกหน่วย', style: TextStyle(fontSize: 13)),
+                                  ),
+                                  ...widget.masterData.units.map((unit) {
+                                    final idInt = int.tryParse(unit.id);
+                                    final abbr = unit.abbreviation != null && unit.abbreviation!.isNotEmpty
+                                        ? ' (${unit.abbreviation})'
+                                        : '';
+                                    return DropdownMenuItem<int?>(
+                                      value: idInt,
+                                      child: Text(
+                                        '${unit.name}$abbr',
+                                        style: const TextStyle(fontSize: 13),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    );
+                                  }),
+                                ],
+                                onChanged: (val) => setState(() => _itemUnitIds[mId] = val),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: costCtrl,
+                          keyboardType: TextInputType.number,
+                          style: const TextStyle(fontSize: 14),
+                          decoration: const InputDecoration(
+                            labelText: 'ราคา/ค่าใช้จ่าย (บาท)',
+                            labelStyle: TextStyle(fontSize: 13),
+                            prefixIcon: Icon(Icons.payments, size: 18),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ] else ...[
+                // For CT01 (General Checkup) without multi items
+                TextField(
+                  controller: costController,
+                  keyboardType: TextInputType.number,
+                  style: const TextStyle(fontSize: 15),
+                  decoration: const InputDecoration(
+                    labelText: 'ค่าใช้จ่ายรวม (บาท)',
+                    labelStyle: TextStyle(fontSize: 15),
+                    prefixIcon: Icon(Icons.payments, size: 22),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              if (selectedType == 'CT01') ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'รูปภาพแผล/อาการป่วย (สูงสุด 3 รูป):',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                    ),
+                    Text(
+                      '${existingImageUrls.length + selectedImageFiles.length}/3',
+                      style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    ...existingImageUrls.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      String url = entry.value;
+                      if (!url.startsWith('blob:')) {
+                        if (url.contains('/storage/http')) {
+                          url = url.substring(url.indexOf('/storage/http') + 9);
+                        }
+                        if (url.startsWith('http://') || url.startsWith('https://')) {
+                          url = url.replaceAll('http://127.0.0.1:8000/storage/', 'http://127.0.0.1:8000/api/storage/');
+                        } else {
+                          url = 'http://127.0.0.1:8000/api/storage/' + url.replaceAll(RegExp(r'^/?storage/'), '');
+                        }
+                      }
+                      return Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.only(right: 10),
+                            width: 70,
+                            height: 70,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image.network(
+                                url,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, color: Colors.grey),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            top: -6,
+                            right: 4,
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  existingImageUrls.removeAt(index);
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.close, size: 14, color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }),
+                    if (existingImageUrls.length + selectedImageFiles.length < 3)
+                      InkWell(
+                        onTap: () async {
+                          final picker = ImagePicker();
+                          final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+                          if (picked != null) {
+                            setState(() {
+                              selectedImageFiles.add(picked);
+                            });
+                          }
+                        },
+                        child: Container(
+                          width: 70,
+                          height: 70,
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: AppColors.border, style: BorderStyle.solid),
+                          ),
+                          child: const Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.add_a_photo, color: AppColors.primary, size: 22),
+                              SizedBox(height: 2),
+                              Text('เพิ่มรูป', style: TextStyle(fontSize: 11, color: AppColors.primary)),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ],
           ],
         ),
       ),
@@ -1700,12 +1925,18 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
           children: [
             Expanded(
               child: OutlinedButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  if (currentStep == 2) {
+                    setState(() => currentStep = 1);
+                  } else {
+                    Navigator.pop(context);
+                  }
+                },
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   textStyle: const TextStyle(fontSize: 16),
                 ),
-                child: const Text('ยกเลิก'),
+                child: Text(currentStep == 2 ? 'ย้อนกลับ' : 'ยกเลิก'),
               ),
             ),
             const SizedBox(width: 12),
@@ -1714,6 +1945,11 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                 onPressed: (widget.masterData.isLoading || isUploading)
                     ? null
                     : () async {
+                        if (currentStep == 1) {
+                          setState(() => currentStep = 2);
+                          return;
+                        }
+
                         setState(() => isUploading = true);
                         List<String> imageUrls = List<String>.from(existingImageUrls);
                         if (selectedImageFiles.isNotEmpty) {
@@ -1736,31 +1972,74 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                           }
                         }
 
-                        final cost = double.tryParse(costController.text);
-                        final amount = double.tryParse(amountController.text);
+                        final adminName = adminController.text.trim().isEmpty ? null : adminController.text.trim();
+                        final note = noteController.text.trim().isEmpty ? null : noteController.text.trim();
+
+                        List<HealthRecordItem> itemsList = [];
+                        double totalCost = 0.0;
+
+                        if (selectedType == 'CT02' && selectedVaccineIds.isNotEmpty) {
+                          for (var vId in selectedVaccineIds) {
+                            final v = widget.masterData.vaccines.firstWhere((item) => item.id == vId, orElse: () => widget.masterData.vaccines.first);
+                            final c = double.tryParse(_itemCostControllers[vId]?.text ?? '');
+                            final a = double.tryParse(_itemAmountControllers[vId]?.text ?? '');
+                            final uId = _itemUnitIds[vId];
+
+                            if (c != null && c > 0) totalCost += c;
+
+                            itemsList.add(HealthRecordItem(
+                              itemId: vId,
+                              itemName: v.name,
+                              itemType: 'vaccine',
+                              amount: a,
+                              unitId: uId,
+                              cost: c,
+                            ));
+                          }
+                        } else if (selectedType == 'CT03' && selectedMedicineIds.isNotEmpty) {
+                          for (var mId in selectedMedicineIds) {
+                            final m = widget.masterData.medicines.firstWhere((item) => item.id == mId, orElse: () => widget.masterData.medicines.first);
+                            final c = double.tryParse(_itemCostControllers[mId]?.text ?? '');
+                            final a = double.tryParse(_itemAmountControllers[mId]?.text ?? '');
+                            final uId = _itemUnitIds[mId];
+
+                            if (c != null && c > 0) totalCost += c;
+
+                            itemsList.add(HealthRecordItem(
+                              itemId: mId,
+                              itemName: m.name,
+                              itemType: 'medicine',
+                              amount: a,
+                              unitId: uId,
+                              cost: c,
+                            ));
+                          }
+                        } else {
+                          totalCost = double.tryParse(costController.text) ?? 0.0;
+                        }
+
                         final record = HealthRecord(
                           id: widget.initialRecord?.id ?? 'HR${DateTime.now().millisecondsSinceEpoch % 1000000}',
                           cowId: widget.cow.id,
                           recordDate: selectedDate,
                           checkupTypeId: selectedType,
                           status: selectedHealthStatus.name,
-                          vacId: selectedVaccineIds.isNotEmpty ? selectedVaccineIds.first : null,
                           diseaseId: selectedDiseaseId,
+                          vacId: selectedVaccineIds.isNotEmpty ? selectedVaccineIds.first : null,
                           medId: selectedMedicineIds.isNotEmpty ? selectedMedicineIds.first : null,
                           vacIds: selectedVaccineIds,
                           medIds: selectedMedicineIds,
+                          items: itemsList,
                           images: imageUrls,
-                          cost: cost,
-                          amount: amount,
-                          unitId: selectedUnitId,
-                          adminName: adminController.text.trim().isEmpty
-                              ? null
-                              : adminController.text.trim(),
-                          note: noteController.text.trim().isEmpty
-                              ? null
-                              : noteController.text.trim(),
+                          cost: totalCost > 0 ? totalCost : null,
+                          amount: itemsList.isNotEmpty ? itemsList.first.amount : double.tryParse(amountController.text),
+                          unitId: itemsList.isNotEmpty ? itemsList.first.unitId : selectedUnitId,
+                          adminName: adminName,
+                          note: note,
                         );
-                        widget.onSave(record);
+
+                        await widget.onSave(record);
+
                         ref
                             .read(cowProvider.notifier)
                             .updateCowStatus(widget.cow.id, selectedHealthStatus);
@@ -2016,6 +2295,7 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                   ),
                   const SizedBox(height: 20),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: TextField(
@@ -2046,10 +2326,72 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                             prefixIcon: Icon(Icons.straighten, size: 22),
                             border: OutlineInputBorder(),
                           ),
+                          onChanged: (val) {
+                            final girthVal = double.tryParse(val);
+                            if (girthVal != null && girthVal > 50) {
+                              // Standard chest girth estimation formula: Weight (kg) = (Girth cm ^ 2.8) / 10000 approx or standard equation:
+                              // Formula: W = (Girth * Girth * 1.5) / 100 or standard cattle estimation: (girth / 100)^3 * 80
+                              final estWeight = (girthVal * girthVal * girthVal) / 28000;
+                              setSheetState(() {});
+                            }
+                          },
                         ),
                       ),
                     ],
                   ),
+                  if (girthCtrl.text.isNotEmpty && double.tryParse(girthCtrl.text) != null && (double.tryParse(girthCtrl.text)! > 50)) ...[
+                    const SizedBox(height: 10),
+                    InkWell(
+                      onTap: () {
+                        final g = double.parse(girthCtrl.text);
+                        final estWeight = (g * g * g) / 27000;
+                        setSheetState(() {
+                          weightCtrl.text = estWeight.toStringAsFixed(1);
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.amber[700]!, width: 1.2),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.auto_awesome, size: 22, color: Colors.amber[900]),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'ประมาณการน้ำหนัก: ${((double.parse(girthCtrl.text) * double.parse(girthCtrl.text) * double.parse(girthCtrl.text)) / 27000).toStringAsFixed(1)} กก.',
+                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.amber[900]),
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber[800],
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Text(
+                                    'กดเพื่อใช้',
+                                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              '*คำนวณตามสูตรมาตรฐานปศุสัตว์: (รอบอก ซม.)³ ÷ 27,000',
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.amber[900]),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 14),
                   InkWell(
                     onTap: () async {
@@ -2584,6 +2926,7 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
     final latestWeight = records.isNotEmpty
         ? records.first.weight
         : widget.cow.latestWeight;
+    final double? latestGirth = records.isNotEmpty ? records.first.girth : null;
     final prevWeight = records.length > 1 ? records[1].weight : null;
     final weightDiff = prevWeight != null ? latestWeight - prevWeight : null;
 
@@ -2716,11 +3059,37 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                         ? '${latestWeight.toStringAsFixed(1)} กก.'
                         : '- กก.',
                     style: const TextStyle(
-                      fontSize: 42,
+                      fontSize: 38,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
+                  if (latestGirth != null && latestGirth > 0) ...[
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white30),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.straighten, color: Colors.white, size: 16),
+                          const SizedBox(width: 6),
+                          Text(
+                            'รอบอก: ${latestGirth.toStringAsFixed(1)} ซม.',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
@@ -2852,6 +3221,7 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
             ),
             const SizedBox(height: 16),
 
+            /*
             // 2. Growth Evaluation Performance Status Card
             Container(
               width: double.infinity,
@@ -2898,6 +3268,7 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                 ],
               ),
             ),
+            */
 
             // 3. Visual Growth Line Chart Widget (if >= 2 records)
             if (chronologicalRecords.length >= 2) ...[
@@ -2972,31 +3343,32 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                   color: AppColors.primaryDark,
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  'ประวัติการชั่งน้ำหนัก',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: AppColors.textPrimary,
+                Expanded(
+                  child: const Text(
+                    'ประวัติการชั่งน้ำหนัก',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: AppColors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    hasFallback
-                        ? '1 ครั้ง (เริ่มต้น)'
-                        : '${records.length} ครั้ง',
+                const SizedBox(width: 4),
+                TextButton.icon(
+                  onPressed: () {
+                    context.push(
+                      '/cow_history_list',
+                      extra: {'cow': widget.cow, 'initialTab': 'growth'},
+                    );
+                  },
+                  icon: const Icon(Icons.arrow_forward, size: 16, color: AppColors.primary),
+                  label: Text(
+                    'ดูทั้งหมด (${records.length})',
                     style: const TextStyle(
-                      color: AppColors.primary,
                       fontSize: 14,
+                      color: AppColors.primary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -3263,7 +3635,12 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                 Padding(
                   padding: const EdgeInsets.only(top: 4, bottom: 8),
                   child: OutlinedButton.icon(
-                    onPressed: () => _showAllGrowthHistorySheet(context, records),
+                    onPressed: () {
+                      context.push(
+                        '/cow_history_list',
+                        extra: {'cow': widget.cow, 'initialTab': 'growth'},
+                      );
+                    },
                     icon: const Icon(Icons.history, size: 20),
                     label: Text(
                       'ดูประวัติทั้งหมด (${records.length} รายการ)',
@@ -3651,11 +4028,11 @@ class _CostTabState extends ConsumerState<CostTab> {
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
         child: Column(
           children: [
             Container(
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(5),
               decoration: BoxDecoration(
                 color: (isBornInFarm ? Colors.teal : color).withValues(
                   alpha: 0.1,
@@ -3673,24 +4050,26 @@ class _CostTabState extends ConsumerState<CostTab> {
                     ? Icons.payments_outlined
                     : Icons.receipt_long_outlined,
                 color: isBornInFarm ? Colors.teal : color,
-                size: 20,
+                size: 18,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               label,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 12,
                 color: Colors.grey[750],
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 4),
             isBornInFarm
                 ? Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
+                      horizontal: 4,
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
@@ -3701,19 +4080,25 @@ class _CostTabState extends ConsumerState<CostTab> {
                       'เกิดในฟาร์ม',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 12,
+                        fontSize: 11,
                         color: Colors.teal,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   )
-                : Text(
-                    '${NumberFormat('#,##0').format(amount)} ฿',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: amount > 0
-                          ? AppColors.textPrimary
-                          : Colors.grey[400],
+                : FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      '${NumberFormat('#,##0').format(amount)} ฿',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: amount > 0
+                            ? AppColors.textPrimary
+                            : Colors.grey[400],
+                      ),
+                      maxLines: 1,
                     ),
                   ),
           ],

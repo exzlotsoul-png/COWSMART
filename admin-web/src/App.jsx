@@ -16,6 +16,7 @@ import IssueReports from './pages/IssueReports';
 import Units from './pages/Units';
 import Settings from './pages/Settings';
 import Dashboard from './pages/Dashboard';
+import AppointmentTypes from './pages/AppointmentTypes';
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
             <Route path="issue-reports" element={<IssueReports />} />
             <Route path="units" element={<Units />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="appointment-types" element={<AppointmentTypes />} />
           </Route>
         </Routes>
       </Router>

@@ -10,6 +10,8 @@ import 'package:cowsmart/features/finance/providers/finance_provider.dart';
 import 'package:cowsmart/features/market/providers/market_price_provider.dart';
 import 'package:cowsmart/features/notifications/providers/notification_provider.dart';
 import 'package:cowsmart/features/auth/providers/auth_provider.dart';
+import 'package:cowsmart/features/calendar/providers/calendar_provider.dart';
+import 'package:cowsmart/core/network/api_client.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -582,8 +584,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   // ────────────────────────────────────────────────────────
   Widget _buildFinanceDualCards(BuildContext context, WidgetRef ref) {
     final financeState = ref.watch(financeProvider);
-    final income = financeState.totalIncomeThisMonth;
-    final expense = financeState.totalExpenseThisMonth;
+    final income = financeState.totalIncomeCurrentActualMonth;
+    final expense = financeState.totalExpenseCurrentActualMonth;
     final balance = income - expense;
     final formatter = NumberFormat('#,##0');
 
@@ -981,7 +983,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: 12,
           crossAxisSpacing: 12,
-          childAspectRatio: 1.75,
+          childAspectRatio: 1.65,
           children: [
             _buildActionTile(
               icon: Icons.chat_bubble_outline_rounded,
@@ -1003,6 +1005,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               subtitle: 'จัดการวัวออกฟาร์ม',
               color: AppColors.error,
               onTap: () => context.push('/group_cull'),
+            ),
+            _buildActionTile(
+              icon: Icons.event_available_rounded,
+              label: 'สร้างนัดหมาย',
+              subtitle: 'นัดตรวจ/วัคซีน',
+              color: Colors.orange[800]!,
+              onTap: () => _showAddGlobalAppointmentDialog(context),
             ),
             _buildActionTile(
               icon: Icons.calendar_month_rounded,
@@ -1042,7 +1051,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -1058,12 +1067,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(9),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: color, size: 22),
+              child: Icon(icon, color: color, size: 24),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -1075,7 +1084,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     label,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 13,
+                      fontSize: 15,
                       color: AppColors.textPrimary,
                     ),
                     maxLines: 1,
@@ -1085,7 +1094,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   Text(
                     subtitle,
                     style: const TextStyle(
-                      fontSize: 11,
+                      fontSize: 13,
                       color: AppColors.textSecondary,
                     ),
                     maxLines: 1,
@@ -1097,6 +1106,356 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Future<void> _showAddGlobalAppointmentDialog(BuildContext context) async {
+    final titleCtrl = TextEditingController(text: 'นัดหมายฉีดวัคซีน/ตรวจสุขภาพ');
+    final descCtrl = TextEditingController();
+    DateTime selectedDate = DateTime.now().add(const Duration(days: 7));
+    TimeOfDay selectedTime = const TimeOfDay(hour: 9, minute: 0);
+    String selectedReminder = 'ก่อน 1 วัน';
+    String selectedType = 'ฉีดวัคซีน/ถ่ายพยาธิ';
+    final selectedCowIds = <String>{};
+
+    List<String> types = [
+      'ฉีดวัคซีน/ถ่ายพยาธิ',
+      'ตรวจสุขภาพประจำปี/ประจำเดือน',
+      'ตรวจระบบสืบพันธุ์',
+      'ติดตามผลการรักษา',
+      'อื่นๆ',
+    ];
+
+    // Fetch appointment types from API
+    try {
+      final api = ref.read(apiClientProvider);
+      final res = await api.get('/appointment_types');
+      final apiTypes = (res.data as List<dynamic>)
+          .map((e) => e['name']?.toString() ?? '')
+          .where((name) => name.isNotEmpty)
+          .toList();
+      if (apiTypes.isNotEmpty) {
+        types = apiTypes;
+        selectedType = types.first;
+        titleCtrl.text = 'นัดหมาย${types.first}';
+      }
+    } catch (_) {}
+
+    final reminderOptions = [
+      'ตรงเวลาที่บันทึก',
+      'ก่อน 15 นาที',
+      'ก่อน 1 ชั่วโมง',
+      'ก่อน 1 วัน',
+      'ก่อน 3 วัน',
+      'ก่อน 7 วัน',
+      'ไม่แจ้งเตือน'
+    ];
+
+    final allCows = ref.read(cowProvider).allCows;
+
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          final selectedCowNames = allCows
+              .where((c) => selectedCowIds.contains(c.id))
+              .map((c) => c.name.isNotEmpty ? '${c.name} (${c.tagNumber})' : c.tagNumber)
+              .join(', ');
+
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Row(
+              children: [
+                Icon(Icons.medical_services_outlined, color: Colors.orange[800], size: 24),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'นัดหมายตรวจสุขภาพ / ฉีดวัคซีน / ถ่ายพยาธิ',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  InkWell(
+                    onTap: () async {
+                      final tempSelected = Set<String>.from(selectedCowIds);
+                      final result = await showDialog<Set<String>>(
+                        context: ctx,
+                        builder: (selectCtx) => StatefulBuilder(
+                          builder: (selectCtx, setSelectState) => AlertDialog(
+                            title: Row(
+                              children: [
+                                const Text('เลือกวัวที่ต้องการนัดหมาย', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                                const Spacer(),
+                                TextButton(
+                                  onPressed: () {
+                                    setSelectState(() {
+                                      if (tempSelected.length == allCows.length) {
+                                        tempSelected.clear();
+                                      } else {
+                                        tempSelected.addAll(allCows.map((c) => c.id));
+                                      }
+                                    });
+                                  },
+                                  child: Text(
+                                    tempSelected.length == allCows.length ? 'ยกเลิกทั้งหมด' : 'เลือกทั้งหมด',
+                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            content: SizedBox(
+                              width: double.maxFinite,
+                              height: 320,
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                itemCount: allCows.length,
+                                itemBuilder: (cCtx, i) {
+                                  final cow = allCows[i];
+                                  final isChecked = tempSelected.contains(cow.id);
+                                  return CheckboxListTile(
+                                    value: isChecked,
+                                    activeColor: Colors.orange[800],
+                                    title: Text(cow.name.isNotEmpty ? '${cow.name} (${cow.tagNumber})' : cow.tagNumber, style: const TextStyle(fontSize: 15)),
+                                    subtitle: Text('แท็ก: ${cow.tagNumber} · ${cow.type.label}', style: const TextStyle(fontSize: 12)),
+                                    onChanged: (val) {
+                                      setSelectState(() {
+                                        if (val == true) {
+                                          tempSelected.add(cow.id);
+                                        } else {
+                                          tempSelected.remove(cow.id);
+                                        }
+                                      });
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(selectCtx, null),
+                                child: const Text('ยกเลิก'),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange[800]),
+                                onPressed: () => Navigator.pop(selectCtx, tempSelected),
+                                child: const Text('ตกลง', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+
+                      if (result != null) {
+                        setDialogState(() {
+                          selectedCowIds.clear();
+                          selectedCowIds.addAll(result);
+                        });
+                      }
+                    },
+                    child: InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'ระบุกระบือ/วัว (เลือกได้หลายตัว)',
+                        labelStyle: TextStyle(fontSize: 15),
+                        prefixIcon: Icon(Icons.pets),
+                        suffixIcon: Icon(Icons.arrow_drop_down),
+                      ),
+                      child: Text(
+                        selectedCowIds.isEmpty
+                            ? 'ทั้งฟาร์ม / ไม่เจาะจงวัว'
+                            : 'เลือกแล้ว ${selectedCowIds.length} ตัว: $selectedCowNames',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: selectedCowIds.isEmpty ? AppColors.textHint : AppColors.textPrimary,
+                          fontWeight: selectedCowIds.isEmpty ? FontWeight.normal : FontWeight.w600,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    initialValue: selectedType,
+                    style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
+                    decoration: const InputDecoration(
+                      labelText: 'ประเภทนัดหมาย *',
+                      labelStyle: TextStyle(fontSize: 15),
+                      prefixIcon: Icon(Icons.category),
+                    ),
+                    items: types.map((t) => DropdownMenuItem(value: t, child: Text(t, style: const TextStyle(fontSize: 15)))).toList(),
+                    onChanged: (v) {
+                      if (v != null) {
+                        setDialogState(() {
+                          selectedType = v;
+                          titleCtrl.text = 'นัดหมาย: $v';
+                        });
+                      }
+                    },
+                  ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: titleCtrl,
+                  style: const TextStyle(fontSize: 15),
+                  decoration: const InputDecoration(
+                    labelText: 'หัวข้อการนัดหมาย *',
+                    labelStyle: TextStyle(fontSize: 15),
+                    prefixIcon: Icon(Icons.title),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.calendar_today, color: AppColors.primary),
+                  title: const Text('วันนัดหมาย', style: TextStyle(fontSize: 15)),
+                  subtitle: Text(DateFormat('dd MMM yyyy').format(selectedDate), style: const TextStyle(fontSize: 14)),
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: ctx,
+                      initialDate: selectedDate,
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime(2030),
+                      helpText: 'เลือกวันที่',
+                      cancelText: 'ยกเลิก',
+                      confirmText: 'ตกลง',
+                    );
+                    if (picked != null) setDialogState(() => selectedDate = picked);
+                  },
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.access_time, color: AppColors.primary),
+                  title: const Text('เวลานัดหมาย', style: TextStyle(fontSize: 15)),
+                  subtitle: Text(selectedTime.format(ctx), style: const TextStyle(fontSize: 14)),
+                  onTap: () async {
+                    final picked = await showTimePicker(
+                      context: ctx,
+                      initialTime: selectedTime,
+                      helpText: 'ระบุเวลา',
+                      cancelText: 'ยกเลิก',
+                      confirmText: 'ตกลง',
+                      hourLabelText: 'ชั่วโมง',
+                      minuteLabelText: 'นาที',
+                    );
+                    if (picked != null) setDialogState(() => selectedTime = picked);
+                  },
+                ),
+                const SizedBox(height: 4),
+                TextField(
+                  controller: descCtrl,
+                  maxLines: 2,
+                  style: const TextStyle(fontSize: 15),
+                  decoration: const InputDecoration(
+                    labelText: 'รายละเอียด/หมายเหตุ (ไม่บังคับ)',
+                    labelStyle: TextStyle(fontSize: 15),
+                    prefixIcon: Icon(Icons.notes),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: selectedReminder,
+                  style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
+                  decoration: const InputDecoration(
+                    labelText: 'แจ้งเตือนล่วงหน้า',
+                    labelStyle: TextStyle(fontSize: 15),
+                    prefixIcon: Icon(Icons.notifications_active_outlined),
+                  ),
+                  items: reminderOptions.map((r) => DropdownMenuItem(value: r, child: Text(r, style: const TextStyle(fontSize: 15)))).toList(),
+                  onChanged: (v) {
+                    if (v != null) {
+                      setDialogState(() => selectedReminder = v);
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            Row(children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
+                  child: const Text('ยกเลิก', style: TextStyle(fontSize: 15)),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange[800],
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  onPressed: () async {
+                    final title = titleCtrl.text.trim();
+                    if (title.isEmpty) return;
+
+                    final dt = DateTime(
+                      selectedDate.year,
+                      selectedDate.month,
+                      selectedDate.day,
+                      selectedTime.hour,
+                      selectedTime.minute,
+                    );
+
+                    Navigator.pop(ctx);
+
+                    final messenger = ScaffoldMessenger.of(context);
+
+                    try {
+                      final api = ref.read(apiClientProvider);
+                      final farmId = ref.read(farmProvider).currentFarm?.id ?? '';
+
+                      if (selectedCowIds.isEmpty) {
+                        await api.post('/health_appointments', data: {
+                          'cow_id': null,
+                          'appoint_datetime': dt.toIso8601String(),
+                          'description': '$title ${descCtrl.text.trim()}'.trim(),
+                          'reminder_setting': selectedReminder,
+                          'status': 0,
+                        });
+                      } else {
+                        for (final cowId in selectedCowIds) {
+                          await api.post('/health_appointments', data: {
+                            'cow_id': cowId,
+                            'appoint_datetime': dt.toIso8601String(),
+                            'description': '$title ${descCtrl.text.trim()}'.trim(),
+                            'reminder_setting': selectedReminder,
+                            'status': 0,
+                          });
+                        }
+                      }
+
+                      if (farmId.isNotEmpty) {
+                        ref.read(calendarProvider.notifier).fetchEvents(farmId);
+                      }
+
+                      messenger.showSnackBar(SnackBar(
+                        content: Text(selectedCowIds.isEmpty
+                            ? 'บันทึกวันนัดหมายสุขภาพทั้งฟาร์มแล้ว'
+                            : 'บันทึกวันนัดหมายสุขภาพสำหรับวัว ${selectedCowIds.length} ตัวแล้ว', style: const TextStyle(fontSize: 15)),
+                        backgroundColor: AppColors.success,
+                      ));
+                    } catch (e) {
+                      messenger.showSnackBar(SnackBar(
+                        content: Text('เกิดข้อผิดพลาดในการบันทึก: $e', style: const TextStyle(fontSize: 15)),
+                        backgroundColor: AppColors.error,
+                      ));
+                    }
+                  },
+                  child: const Text('บันทึกนัดหมาย', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+                ),
+              ),
+            ]),
+          ],
+        );
+      },
+    ),
     );
   }
 }

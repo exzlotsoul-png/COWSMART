@@ -14,6 +14,7 @@ class NotificationController extends Controller
         $user = Auth::user();
         return response()->json(
             Notification::where('email', $user->email)
+                ->orderByDesc('created_at')
                 ->orderByDesc('notify_datetime')
                 ->get()
         );

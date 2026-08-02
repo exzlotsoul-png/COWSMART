@@ -8,6 +8,7 @@ import 'package:cowsmart/features/cow/domain/culling_record.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
+import 'package:cowsmart/features/market/providers/market_price_provider.dart';
 
 enum CullType {
   sold('ขาย', Icons.monetization_on_rounded, AppColors.success),
@@ -90,7 +91,7 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
       final records = _selectedCowIds.map((cowId) {
         final priceText = _priceControllers[cowId]?.text ?? '0.0';
         return CullingRecord(
-          id: 'CUL${DateTime.now().millisecondsSinceEpoch % 1000000 + cowId.hashCode % 10000}',
+          id: '',
           cowId: cowId,
           cullDate: _selectedDate,
           status: statusValue,
@@ -682,23 +683,70 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                                     Padding(
                                       padding: const EdgeInsets.fromLTRB(
                                           14, 0, 14, 14),
-                                      child: TextFormField(
-                                        controller: _priceControllers[cow.id],
-                                        keyboardType: TextInputType.number,
-                                        decoration: _buildInputDecoration(
-                                          'ราคาขายของวัวตัวนี้ (บาท)',
-                                          Icons.payments_rounded,
-                                          hintText: '0.00',
-                                        ),
-                                        style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold),
-                                        validator: (value) {
-                                          if (_selectedType == CullType.sold &&
-                                              (value == null || value.isEmpty)) {
-                                            return 'กรุณากรอกราคาขายสำหรับวัวตัวนี้';
-                                          }
-                                          return null;
+                                      child: Builder(
+                                        builder: (context) {
+                                          final marketPrice = ref.watch(marketPriceProvider).latest?.pricePerKg ?? 120.0;
+                                          final weight = cow.latestWeight;
+                                          final estVal = weight * marketPrice;
+
+                                          return Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              if (weight > 0) ...[
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                  children: [
+                                                    Text(
+                                                      'ราคาประเมิน: ฿${NumberFormat('#,##0').format(estVal)} (${weight.toStringAsFixed(0)}กก. × ${marketPrice.toStringAsFixed(0)}฿)',
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: AppColors.success,
+                                                      ),
+                                                    ),
+                                                    InkWell(
+                                                      onTap: () {
+                                                        setState(() {
+                                                          _priceControllers[cow.id]?.text = estVal.toStringAsFixed(0);
+                                                        });
+                                                      },
+                                                      child: Container(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                                        decoration: BoxDecoration(
+                                                          color: AppColors.success,
+                                                          borderRadius: BorderRadius.circular(6),
+                                                        ),
+                                                        child: const Text(
+                                                          'ใช้ราคานี้',
+                                                          style: TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 6),
+                                              ],
+                                              TextFormField(
+                                                controller: _priceControllers[cow.id],
+                                                keyboardType: TextInputType.number,
+                                                decoration: _buildInputDecoration(
+                                                  'ราคาขายของวัวตัวนี้ (บาท)',
+                                                  Icons.payments_rounded,
+                                                  hintText: '0.00',
+                                                ),
+                                                style: const TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.bold),
+                                                validator: (value) {
+                                                  if (_selectedType == CullType.sold &&
+                                                      (value == null || value.isEmpty)) {
+                                                    return 'กรุณากรอกราคาขายสำหรับวัวตัวนี้';
+                                                  }
+                                                  return null;
+                                                },
+                                              ),
+                                            ],
+                                          );
                                         },
                                       ),
                                     ),

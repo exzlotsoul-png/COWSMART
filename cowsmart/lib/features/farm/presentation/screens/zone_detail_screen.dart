@@ -185,15 +185,17 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
   }
 
   void _showAddCowBottomSheet() {
-    final availableCows = _cowsNotInZone;
-    if (availableCows.isEmpty) {
+    final allCowsInFarm = _cowsNotInZone; // All cows not in this specific current zone
+    if (allCowsInFarm.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ไม่มีวัวที่สามารถเพิ่มเข้าโซนได้', style: TextStyle(fontSize: 15))),
+        const SnackBar(content: Text('ไม่มีวัวที่สามารถเพิ่มเข้าโซนนี้ได้', style: TextStyle(fontSize: 15))),
       );
       return;
     }
 
+    final allZonesMap = {for (final z in ref.read(zoneProvider).zones) z.id: z.name};
     final selectedCows = <Cow>{};
+    bool showOnlyUnassigned = false;
 
     showModalBottomSheet(
       context: context,
@@ -202,8 +204,15 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
       builder: (modalContext) {
         return StatefulBuilder(
           builder: (context, setModalState) {
+            final isCowUnassigned = (Cow c) => c.zoneId.isEmpty || c.zoneId == 'null' || c.zoneId == '0';
+            final filteredCows = showOnlyUnassigned
+                ? allCowsInFarm.where((c) => isCowUnassigned(c)).toList()
+                : allCowsInFarm;
+
+            final unassignedCount = allCowsInFarm.where((c) => isCowUnassigned(c)).length;
+
             return Container(
-              height: MediaQuery.of(context).size.height * 0.78,
+              height: MediaQuery.of(context).size.height * 0.82,
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.only(
@@ -264,30 +273,74 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                     ),
                   ),
 
+                  // Filter Chips (ทั้งหมด / ยังไม่มีโซน)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Row(
+                      children: [
+                        FilterChip(
+                          selected: !showOnlyUnassigned,
+                          label: Text('ทั้งหมด (${allCowsInFarm.length})'),
+                          selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                          labelStyle: TextStyle(
+                            color: !showOnlyUnassigned ? AppColors.primary : AppColors.textSecondary,
+                            fontWeight: !showOnlyUnassigned ? FontWeight.bold : FontWeight.normal,
+                          ),
+                          onSelected: (selected) {
+                            if (selected) {
+                              setModalState(() {
+                                showOnlyUnassigned = false;
+                              });
+                            }
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        FilterChip(
+                          selected: showOnlyUnassigned,
+                          label: Text('ยังไม่มีโซน ($unassignedCount)'),
+                          selectedColor: Colors.orange.withValues(alpha: 0.2),
+                          labelStyle: TextStyle(
+                            color: showOnlyUnassigned ? Colors.orange[800] : AppColors.textSecondary,
+                            fontWeight: showOnlyUnassigned ? FontWeight.bold : FontWeight.normal,
+                          ),
+                          avatar: showOnlyUnassigned
+                              ? Icon(Icons.warning_amber_rounded, size: 16, color: Colors.orange[800])
+                              : null,
+                          onSelected: (selected) {
+                            setModalState(() {
+                              showOnlyUnassigned = selected;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
                   // Select All + Counter
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(10, 8, 16, 4),
+                    padding: const EdgeInsets.fromLTRB(10, 0, 16, 4),
                     child: Row(
                       children: [
                         TextButton.icon(
                           onPressed: () {
                             setModalState(() {
-                              if (selectedCows.length == availableCows.length) {
-                                selectedCows.clear();
+                              final isAllSelectedInFilter = filteredCows.every((c) => selectedCows.contains(c));
+                              if (isAllSelectedInFilter) {
+                                selectedCows.removeAll(filteredCows);
                               } else {
-                                selectedCows.addAll(availableCows);
+                                selectedCows.addAll(filteredCows);
                               }
                             });
                           },
                           icon: Icon(
-                            selectedCows.length == availableCows.length
+                            filteredCows.isNotEmpty && filteredCows.every((c) => selectedCows.contains(c))
                                 ? Icons.check_box_rounded
                                 : Icons.check_box_outline_blank_rounded,
                             color: AppColors.primary,
                             size: 24,
                           ),
                           label: Text(
-                            selectedCows.length == availableCows.length
+                            filteredCows.isNotEmpty && filteredCows.every((c) => selectedCows.contains(c))
                                 ? 'ยกเลิกทั้งหมด'
                                 : 'เลือกทั้งหมด',
                             style: const TextStyle(
@@ -306,7 +359,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            '${selectedCows.length}/${availableCows.length} ตัว',
+                            '${selectedCows.length}/${filteredCows.length} ตัว',
                             style: const TextStyle(
                               color: AppColors.primary,
                               fontWeight: FontWeight.bold,
@@ -322,143 +375,194 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
 
                   // Cow List
                   Expanded(
-                    child: ListView.separated(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      itemCount: availableCows.length,
-                      separatorBuilder: (_, __) => Divider(
-                        height: 1,
-                        indent: 76,
-                        color: AppColors.border.withValues(alpha: 0.5),
-                      ),
-                      itemBuilder: (context, index) {
-                        final cow = availableCows[index];
-                        final isSelected = selectedCows.contains(cow);
-                        final statusColor = _getStatusColor(cow);
-
-                        return InkWell(
-                          onTap: () {
-                            setModalState(() {
-                              if (isSelected) {
-                                selectedCows.remove(cow);
-                              } else {
-                                selectedCows.add(cow);
-                              }
-                            });
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
-                            child: Row(
+                    child: filteredCows.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                // Checkbox
-                                Container(
-                                  width: 26,
-                                  height: 26,
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? AppColors.primary
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: isSelected
-                                          ? AppColors.primary
-                                          : AppColors.border,
-                                      width: 2,
-                                    ),
-                                  ),
-                                  child: isSelected
-                                      ? const Icon(Icons.check_rounded,
-                                          color: Colors.white, size: 18)
-                                      : null,
+                                Icon(Icons.pets_rounded, size: 48, color: Colors.grey[400]),
+                                const SizedBox(height: 8),
+                                Text(
+                                  showOnlyUnassigned ? 'ไม่มีวัวที่ยังไม่มีโซน' : 'ไม่มีวัวในระบบ',
+                                  style: TextStyle(color: Colors.grey[600], fontSize: 15),
                                 ),
-                                const SizedBox(width: 14),
+                              ],
+                            ),
+                          )
+                        : ListView.separated(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            itemCount: filteredCows.length,
+                            separatorBuilder: (_, __) => Divider(
+                              height: 1,
+                              indent: 76,
+                              color: AppColors.border.withValues(alpha: 0.5),
+                            ),
+                            itemBuilder: (context, index) {
+                              final cow = filteredCows[index];
+                              final isSelected = selectedCows.contains(cow);
+                              final statusColor = _getStatusColor(cow);
+                              final isUnassigned = cow.zoneId.isEmpty || cow.zoneId == 'null' || cow.zoneId == '0';
+                              final currentZoneName = isUnassigned
+                                  ? 'ยังไม่มีโซน'
+                                  : (allZonesMap[cow.zoneId] ?? 'โซนอื่น (${cow.zoneId})');
 
-                                // Avatar
-                                Container(
-                                  width: 48,
-                                  height: 48,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary
-                                        .withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: cow.imageFullUrl != null &&
-                                          cow.imageFullUrl!.isNotEmpty
-                                      ? ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                          child: Image.network(
-                                            cow.imageFullUrl!,
-                                            width: 48,
-                                            height: 48,
-                                            fit: BoxFit.cover,
-                                          ),
-                                        )
-                                      : const Icon(Icons.pets_rounded,
-                                          color: AppColors.primary, size: 22),
-                                ),
-                                const SizedBox(width: 14),
-
-                                // Info
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                              return InkWell(
+                                onTap: () {
+                                  setModalState(() {
+                                    if (isSelected) {
+                                      selectedCows.remove(cow);
+                                    } else {
+                                      selectedCows.add(cow);
+                                    }
+                                  });
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 12),
+                                  child: Row(
                                     children: [
-                                      Row(
-                                        children: [
-                                          Flexible(
-                                            child: Text(
-                                              cow.name,
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 17,
-                                                color: AppColors.textPrimary,
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
+                                      // Checkbox
+                                      Container(
+                                        width: 26,
+                                        height: 26,
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? AppColors.primary
+                                              : Colors.transparent,
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(
+                                            color: isSelected
+                                                ? AppColors.primary
+                                                : AppColors.border,
+                                            width: 2,
                                           ),
-                                          const SizedBox(width: 8),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 8, vertical: 3),
-                                            decoration: BoxDecoration(
-                                              color: statusColor.withValues(
-                                                  alpha: 0.12),
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                            ),
-                                            child: Text(
-                                              cow.status.label,
-                                              style: TextStyle(
-                                                color: statusColor,
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'แท็ก: ${cow.tagNumber} · ${cow.type.label} · ${cow.breed}',
-                                        style: const TextStyle(
-                                          color: AppColors.textSecondary,
-                                          fontSize: 13,
                                         ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
+                                        child: isSelected
+                                            ? const Icon(Icons.check_rounded,
+                                                color: Colors.white, size: 18)
+                                            : null,
+                                      ),
+                                      const SizedBox(width: 14),
+
+                                      // Avatar
+                                      Container(
+                                        width: 48,
+                                        height: 48,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary
+                                              .withValues(alpha: 0.1),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: cow.imageFullUrl != null &&
+                                                cow.imageFullUrl!.isNotEmpty
+                                            ? ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                child: Image.network(
+                                                  cow.imageFullUrl!,
+                                                  width: 48,
+                                                  height: 48,
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              )
+                                            : const Icon(Icons.pets_rounded,
+                                                color: AppColors.primary, size: 22),
+                                      ),
+                                      const SizedBox(width: 14),
+
+                                      // Info
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Flexible(
+                                                  child: Text(
+                                                    cow.name,
+                                                    style: const TextStyle(
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 17,
+                                                      color: AppColors.textPrimary,
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(
+                                                      horizontal: 8, vertical: 3),
+                                                  decoration: BoxDecoration(
+                                                    color: statusColor.withValues(
+                                                        alpha: 0.12),
+                                                    borderRadius:
+                                                        BorderRadius.circular(6),
+                                                  ),
+                                                  child: Text(
+                                                    cow.status.label,
+                                                    style: TextStyle(
+                                                      color: statusColor,
+                                                      fontSize: 11,
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Row(
+                                              children: [
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(
+                                                      horizontal: 6, vertical: 2),
+                                                  decoration: BoxDecoration(
+                                                    color: isUnassigned
+                                                        ? Colors.amber[100]
+                                                        : Colors.blue[50],
+                                                    borderRadius: BorderRadius.circular(4),
+                                                    border: Border.all(
+                                                      color: isUnassigned
+                                                          ? Colors.orange[300]!
+                                                          : Colors.blue[200]!,
+                                                      width: 0.8,
+                                                    ),
+                                                  ),
+                                                  child: Text(
+                                                    isUnassigned ? 'ยังไม่มีโซน' : 'ย้ายจาก: $currentZoneName',
+                                                    style: TextStyle(
+                                                      fontSize: 11,
+                                                      fontWeight: FontWeight.w600,
+                                                      color: isUnassigned
+                                                          ? Colors.orange[900]
+                                                          : Colors.blue[900],
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Expanded(
+                                                  child: Text(
+                                                    'แท็ก: ${cow.tagNumber} · ${cow.type.label}',
+                                                    style: const TextStyle(
+                                                      color: AppColors.textSecondary,
+                                                      fontSize: 13,
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ),
-                              ],
-                            ),
+                              );
+                            },
                           ),
-                        );
-                      },
-                    ),
                   ),
 
                   // Bottom action bar

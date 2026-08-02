@@ -32,6 +32,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UnitController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\AppointmentTypeController;
 use App\Http\Controllers\Api\CowCostController;
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -93,4 +94,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('users', UserController::class);
     Route::apiResource('units', UnitController::class);
     Route::apiResource('settings', SettingController::class);
+    Route::apiResource('appointment_types', AppointmentTypeController::class);
 });
