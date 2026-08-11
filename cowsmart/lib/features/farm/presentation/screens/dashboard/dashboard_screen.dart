@@ -209,21 +209,47 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 final userName =
                     user != null ? '${user['first_name'] ?? ''}' : 'ผู้ใช้งาน';
                 final hour = DateTime.now().hour;
-                final greeting = hour < 12
-                    ? 'สวัสดีตอนเช้า ☀️'
-                    : hour < 17
-                        ? 'สวัสดีตอนบ่าย 🌤️'
-                        : 'สวัสดีตอนเย็น 🌅';
+                final String greetingText;
+                final IconData greetingIcon;
+                final Color iconColor;
+
+                if (hour >= 5 && hour < 12) {
+                  greetingText = 'สวัสดีตอนเช้า';
+                  greetingIcon = Icons.wb_sunny_rounded;
+                  iconColor = const Color(0xFFF59E0B);
+                } else if (hour >= 12 && hour < 17) {
+                  greetingText = 'สวัสดีตอนบ่าย';
+                  greetingIcon = Icons.wb_twilight_rounded;
+                  iconColor = const Color(0xFFF97316);
+                } else if (hour >= 17 && hour < 20) {
+                  greetingText = 'สวัสดีตอนเย็น';
+                  greetingIcon = Icons.nights_stay_rounded;
+                  iconColor = const Color(0xFF6366F1);
+                } else {
+                  greetingText = 'สวัสดีตอนดึก';
+                  greetingIcon = Icons.dark_mode_rounded;
+                  iconColor = const Color(0xFF8B5CF6);
+                }
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      greeting,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          greetingText,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          greetingIcon,
+                          size: 16,
+                          color: iconColor,
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 2),
                     Text(

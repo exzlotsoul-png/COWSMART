@@ -1022,14 +1022,15 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.notes, size: 16, color: AppColors.textSecondary),
+                    const Icon(Icons.notes, size: 16, color: AppColors.textPrimary),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         record.note!,
                         style: const TextStyle(
                           fontSize: 14,
-                          color: AppColors.textSecondary,
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
@@ -1044,14 +1045,15 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                     const Icon(
                       Icons.person_outline,
                       size: 16,
-                      color: AppColors.textHint,
+                      color: AppColors.textPrimary,
                     ),
                     const SizedBox(width: 6),
                     Text(
                       'ผู้ดำเนินการ: ${record.adminName}',
                       style: const TextStyle(
                         fontSize: 14,
-                        color: AppColors.textHint,
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
@@ -1133,6 +1135,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
   final Map<String, TextEditingController> _itemAmountControllers = {};
   final Map<String, int?> _itemUnitIds = {};
   final Map<String, TextEditingController> _itemCostControllers = {};
+  final Map<String, TextEditingController> _customItemNameControllers = {};
 
   TextEditingController _getItemAmountController(String id) {
     return _itemAmountControllers.putIfAbsent(id, () => TextEditingController());
@@ -1140,6 +1143,10 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
 
   TextEditingController _getItemCostController(String id) {
     return _itemCostControllers.putIfAbsent(id, () => TextEditingController());
+  }
+
+  TextEditingController _getCustomItemNameController(String id) {
+    return _customItemNameControllers.putIfAbsent(id, () => TextEditingController());
   }
 
   final checkupTypes = [
@@ -1161,11 +1168,36 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
       final r = widget.initialRecord!;
       selectedDate = r.recordDate;
       selectedType = r.checkupTypeId;
+      
       selectedVaccineIds = List<String>.from(r.vacIds);
       if (selectedVaccineIds.isEmpty && r.vacId != null) selectedVaccineIds.add(r.vacId!);
+      
       selectedDiseaseId = r.diseaseId;
+      
       selectedMedicineIds = List<String>.from(r.medIds);
       if (selectedMedicineIds.isEmpty && r.medId != null) selectedMedicineIds.add(r.medId!);
+
+      // Populate item details from r.items if available
+      if (r.items.isNotEmpty) {
+        for (var item in r.items) {
+          if (item.itemType == 'vaccine' && !selectedVaccineIds.contains(item.itemId)) {
+            selectedVaccineIds.add(item.itemId);
+          } else if (item.itemType == 'medicine' && !selectedMedicineIds.contains(item.itemId)) {
+            selectedMedicineIds.add(item.itemId);
+          }
+
+          if (item.amount != null) {
+            _getItemAmountController(item.itemId).text = item.amount! % 1 == 0 ? item.amount!.toInt().toString() : item.amount!.toString();
+          }
+          if (item.cost != null) {
+            _getItemCostController(item.itemId).text = item.cost! % 1 == 0 ? item.cost!.toInt().toString() : item.cost!.toString();
+          }
+          if (item.unitId != null) {
+            _itemUnitIds[item.itemId] = item.unitId;
+          }
+        }
+      }
+
       existingImageUrls = List<String>.from(r.images);
       noteController.text = r.note ?? '';
       costController.text = r.cost != null ? r.cost!.toStringAsFixed(0) : '';
@@ -1366,8 +1398,6 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                     ),
                   ),
                 ),
-              
-              // Multiple Vaccines Selection (Select Box)
               if (showVaccine && !widget.masterData.isLoading) ...[
                 InkWell(
                   onTap: () async {
@@ -1377,24 +1407,31 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                         final tempSelected = List<String>.from(selectedVaccineIds);
                         return StatefulBuilder(
                           builder: (ctx, setDialogState) {
+                            final listOptions = [
+                              ...widget.masterData.vaccines.map((v) => {'id': v.id, 'name': v.name}),
+                              {'id': 'other', 'name': 'อื่นๆ (ระบุเอง)'},
+                            ];
+
                             return AlertDialog(
                               title: const Text('เลือกวัคซีน (เลือกได้หลายรายการ)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                               content: SizedBox(
                                 width: double.maxFinite,
                                 child: ListView(
                                   shrinkWrap: true,
-                                  children: widget.masterData.vaccines.map((v) {
-                                    final checked = tempSelected.contains(v.id);
+                                  children: listOptions.map((v) {
+                                    final vId = v['id']!;
+                                    final vName = v['name']!;
+                                    final checked = tempSelected.contains(vId);
                                     return CheckboxListTile(
-                                      title: Text(v.name, style: const TextStyle(fontSize: 15)),
+                                      title: Text(vName, style: TextStyle(fontSize: 15, fontWeight: vId == 'other' ? FontWeight.bold : FontWeight.normal, color: vId == 'other' ? AppColors.primary : null)),
                                       value: checked,
                                       activeColor: AppColors.primary,
                                       onChanged: (val) {
                                         setDialogState(() {
                                           if (val == true) {
-                                            tempSelected.add(v.id);
+                                            tempSelected.add(vId);
                                           } else {
-                                            tempSelected.remove(v.id);
+                                            tempSelected.remove(vId);
                                           }
                                         });
                                       },
@@ -1434,10 +1471,15 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                             spacing: 4,
                             runSpacing: 4,
                             children: selectedVaccineIds.map((id) {
-                              final name = widget.masterData.vaccines.firstWhere((v) => v.id == id, orElse: () => widget.masterData.vaccines.first).name;
+                              String name;
+                              if (id == 'other') {
+                                name = 'อื่นๆ (ระบุเอง)';
+                              } else {
+                                name = widget.masterData.vaccines.firstWhere((v) => v.id == id, orElse: () => widget.masterData.vaccines.first).name;
+                              }
                               return Chip(
                                 label: Text(name, style: const TextStyle(fontSize: 13, color: Colors.white)),
-                                backgroundColor: AppColors.primary,
+                                backgroundColor: id == 'other' ? Colors.orange[800] : AppColors.primary,
                                 visualDensity: VisualDensity.compact,
                                 padding: EdgeInsets.zero,
                               );
@@ -1495,24 +1537,31 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                         final tempSelected = List<String>.from(selectedMedicineIds);
                         return StatefulBuilder(
                           builder: (ctx, setDialogState) {
+                            final listOptions = [
+                              ...widget.masterData.medicines.map((m) => {'id': m.id, 'name': m.name}),
+                              {'id': 'other', 'name': 'อื่นๆ (ระบุเอง)'},
+                            ];
+
                             return AlertDialog(
                               title: const Text('เลือกยา (เลือกได้หลายรายการ)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                               content: SizedBox(
                                 width: double.maxFinite,
                                 child: ListView(
                                   shrinkWrap: true,
-                                  children: widget.masterData.medicines.map((m) {
-                                    final checked = tempSelected.contains(m.id);
+                                  children: listOptions.map((m) {
+                                    final mId = m['id']!;
+                                    final mName = m['name']!;
+                                    final checked = tempSelected.contains(mId);
                                     return CheckboxListTile(
-                                      title: Text(m.name, style: const TextStyle(fontSize: 15)),
+                                      title: Text(mName, style: TextStyle(fontSize: 15, fontWeight: mId == 'other' ? FontWeight.bold : FontWeight.normal, color: mId == 'other' ? AppColors.primary : null)),
                                       value: checked,
                                       activeColor: AppColors.primary,
                                       onChanged: (val) {
                                         setDialogState(() {
                                           if (val == true) {
-                                            tempSelected.add(m.id);
+                                            tempSelected.add(mId);
                                           } else {
-                                            tempSelected.remove(m.id);
+                                            tempSelected.remove(mId);
                                           }
                                         });
                                       },
@@ -1552,10 +1601,15 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                             spacing: 4,
                             runSpacing: 4,
                             children: selectedMedicineIds.map((id) {
-                              final name = widget.masterData.medicines.firstWhere((m) => m.id == id, orElse: () => widget.masterData.medicines.first).name;
+                              String name;
+                              if (id == 'other') {
+                                name = 'อื่นๆ (ระบุเอง)';
+                              } else {
+                                name = widget.masterData.medicines.firstWhere((m) => m.id == id, orElse: () => widget.masterData.medicines.first).name;
+                              }
                               return Chip(
                                 label: Text(name, style: const TextStyle(fontSize: 13, color: Colors.white)),
-                                backgroundColor: AppColors.primary,
+                                backgroundColor: id == 'other' ? Colors.orange[800] : AppColors.primary,
                                 visualDensity: VisualDensity.compact,
                                 padding: EdgeInsets.zero,
                               );
@@ -1597,7 +1651,9 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                 ),
                 const SizedBox(height: 10),
                 ...selectedVaccineIds.map((vId) {
-                  final vName = widget.masterData.vaccines.firstWhere((v) => v.id == vId, orElse: () => widget.masterData.vaccines.first).name;
+                  final isOther = vId == 'other';
+                  final vName = isOther ? 'วัคซีนอื่นๆ' : widget.masterData.vaccines.firstWhere((v) => v.id == vId, orElse: () => widget.masterData.vaccines.first).name;
+                  final customNameCtrl = _getCustomItemNameController(vId);
                   final amtCtrl = _getItemAmountController(vId);
                   final costCtrl = _getItemCostController(vId);
                   final unitVal = _itemUnitIds[vId];
@@ -1608,23 +1664,36 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                     decoration: BoxDecoration(
                       color: AppColors.surface,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(color: isOther ? Colors.orange[800]! : AppColors.border),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.vaccines, size: 18, color: AppColors.primary),
+                            Icon(Icons.vaccines, size: 18, color: isOther ? Colors.orange[800] : AppColors.primary),
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text(
                                 vName,
-                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: isOther ? Colors.orange[800] : AppColors.textPrimary),
                               ),
                             ),
                           ],
                         ),
+                        if (isOther) ...[
+                          const SizedBox(height: 10),
+                          TextField(
+                            controller: customNameCtrl,
+                            style: const TextStyle(fontSize: 14),
+                            decoration: const InputDecoration(
+                              labelText: 'ระบุชื่อวัคซีน',
+                              labelStyle: TextStyle(fontSize: 13),
+                              hintText: 'พิมพ์ชื่อวัคซีน...',
+                              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 10),
                         Row(
                           children: [
@@ -1701,7 +1770,9 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                 ),
                 const SizedBox(height: 10),
                 ...selectedMedicineIds.map((mId) {
-                  final mName = widget.masterData.medicines.firstWhere((m) => m.id == mId, orElse: () => widget.masterData.medicines.first).name;
+                  final isOther = mId == 'other';
+                  final mName = isOther ? 'ยาอื่นๆ' : widget.masterData.medicines.firstWhere((m) => m.id == mId, orElse: () => widget.masterData.medicines.first).name;
+                  final customNameCtrl = _getCustomItemNameController(mId);
                   final amtCtrl = _getItemAmountController(mId);
                   final costCtrl = _getItemCostController(mId);
                   final unitVal = _itemUnitIds[mId];
@@ -1712,23 +1783,36 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                     decoration: BoxDecoration(
                       color: AppColors.surface,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(color: isOther ? Colors.orange[800]! : AppColors.border),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.medication, size: 18, color: AppColors.primary),
+                            Icon(Icons.medication, size: 18, color: isOther ? Colors.orange[800] : AppColors.primary),
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text(
                                 mName,
-                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: isOther ? Colors.orange[800] : AppColors.textPrimary),
                               ),
                             ),
                           ],
                         ),
+                        if (isOther) ...[
+                          const SizedBox(height: 10),
+                          TextField(
+                            controller: customNameCtrl,
+                            style: const TextStyle(fontSize: 14),
+                            decoration: const InputDecoration(
+                              labelText: 'ระบุชื่อยา',
+                              labelStyle: TextStyle(fontSize: 13),
+                              hintText: 'พิมพ์ชื่อยา...',
+                              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 10),
                         Row(
                           children: [
@@ -1980,7 +2064,14 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
 
                         if (selectedType == 'CT02' && selectedVaccineIds.isNotEmpty) {
                           for (var vId in selectedVaccineIds) {
-                            final v = widget.masterData.vaccines.firstWhere((item) => item.id == vId, orElse: () => widget.masterData.vaccines.first);
+                            String vName;
+                            if (vId == 'other') {
+                              final customName = _getCustomItemNameController(vId).text.trim();
+                              vName = customName.isNotEmpty ? customName : 'วัคซีนอื่นๆ';
+                            } else {
+                              vName = widget.masterData.vaccines.firstWhere((item) => item.id == vId, orElse: () => widget.masterData.vaccines.first).name;
+                            }
+
                             final c = double.tryParse(_itemCostControllers[vId]?.text ?? '');
                             final a = double.tryParse(_itemAmountControllers[vId]?.text ?? '');
                             final uId = _itemUnitIds[vId];
@@ -1989,7 +2080,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
 
                             itemsList.add(HealthRecordItem(
                               itemId: vId,
-                              itemName: v.name,
+                              itemName: vName,
                               itemType: 'vaccine',
                               amount: a,
                               unitId: uId,
@@ -1998,7 +2089,14 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                           }
                         } else if (selectedType == 'CT03' && selectedMedicineIds.isNotEmpty) {
                           for (var mId in selectedMedicineIds) {
-                            final m = widget.masterData.medicines.firstWhere((item) => item.id == mId, orElse: () => widget.masterData.medicines.first);
+                            String mName;
+                            if (mId == 'other') {
+                              final customName = _getCustomItemNameController(mId).text.trim();
+                              mName = customName.isNotEmpty ? customName : 'ยาอื่นๆ';
+                            } else {
+                              mName = widget.masterData.medicines.firstWhere((item) => item.id == mId, orElse: () => widget.masterData.medicines.first).name;
+                            }
+
                             final c = double.tryParse(_itemCostControllers[mId]?.text ?? '');
                             final a = double.tryParse(_itemAmountControllers[mId]?.text ?? '');
                             final uId = _itemUnitIds[mId];
@@ -2007,7 +2105,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
 
                             itemsList.add(HealthRecordItem(
                               itemId: mId,
-                              itemName: m.name,
+                              itemName: mName,
                               itemType: 'medicine',
                               amount: a,
                               unitId: uId,

@@ -80,13 +80,21 @@ class FinancialTransaction {
   });
 
   factory FinancialTransaction.fromJson(Map<String, dynamic> json) {
+    final cat = TransactionCategory.fromString(json['category'] ?? 'other');
+    String parsedTitle = '';
+    if (json['title'] != null && json['title'].toString().trim().isNotEmpty) {
+      parsedTitle = json['title'].toString().trim();
+    } else {
+      parsedTitle = cat.label;
+    }
+
     return FinancialTransaction(
       id: json['financial_record_id'] ?? json['id'] ?? '',
       farmId: json['farm_id'] ?? json['farmId'] ?? '',
-      title: json['title'] ?? json['category'] ?? 'ไม่ระบุ',
+      title: parsedTitle,
       amount: double.tryParse(json['amount']?.toString() ?? '0') ?? 0.0,
       type: TransactionType.fromString(json['trans_type'] ?? 'expense'),
-      category: TransactionCategory.fromString(json['category'] ?? 'other'),
+      category: cat,
       date: DateTime.parse(
         json['transaction_date'] ??
             json['date'] ??
@@ -101,6 +109,7 @@ class FinancialTransaction {
     return {
       'financial_record_id': id.isEmpty ? null : id,
       'farm_id': farmId,
+      'title': title,
       'trans_type': type.apiValue,
       'category': category.apiValue,
       'amount': amount,

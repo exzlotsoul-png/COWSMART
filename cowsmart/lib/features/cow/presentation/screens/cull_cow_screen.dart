@@ -114,256 +114,349 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
     }
   }
 
+  InputDecoration _buildInputDecoration(String label, IconData icon, {String? hintText}) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(fontSize: 15, color: AppColors.textSecondary),
+      hintText: hintText,
+      hintStyle: const TextStyle(fontSize: 14, color: AppColors.textHint),
+      prefixIcon: Icon(icon, color: AppColors.primary, size: 22),
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: AppColors.border),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: AppColors.border),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: AppColors.primary, width: 2),
+      ),
+    );
+  }
+
+  Widget _buildCardContainer({required List<Widget> children}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+        color: AppColors.primaryDark,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('บันทึกการจำหน่ายและคัดออก')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Cow Info Header
-              Card(
-                color: AppColors.primary.withOpacity(0.05),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.pets, color: AppColors.primary),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'วัวหมายเลข: ${widget.cow.tagNumber}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          Text(
-                            'ชื่อ: ${widget.cow.name.isNotEmpty ? widget.cow.name : "-"}',
-                            style: const TextStyle(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
+    final cowState = ref.watch(cowProvider);
+    final isLoading = cowState.isLoading;
 
-              // Cull Type Selection
-              Text(
-                'รูปแบบการจำหน่าย/คัดออก',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: CullType.values.map((type) {
-                  final isSelected = _selectedType == type;
-                  return Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                      child: InkWell(
-                        onTap: () => setState(() => _selectedType = type),
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('บันทึกการจำหน่ายและคัดออก', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        backgroundColor: AppColors.primaryDark,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Card 1: Cow Info Header
+                _buildCardContainer(
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: isSelected
-                                ? type.color.withOpacity(0.1)
-                                : Colors.transparent,
-                            border: Border.all(
-                              color: isSelected ? type.color : AppColors.border,
-                              width: isSelected ? 2 : 1,
-                            ),
+                            color: AppColors.primary.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(12),
                           ),
+                          child: const Icon(Icons.pets_rounded, color: AppColors.primary, size: 24),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
                           child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(
-                                type.icon,
-                                color: isSelected
-                                    ? type.color
-                                    : AppColors.textHint,
-                              ),
-                              const SizedBox(height: 8),
                               Text(
-                                type.label,
-                                style: TextStyle(
-                                  color: isSelected
-                                      ? type.color
-                                      : AppColors.textHint,
-                                  fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
+                                'วัวหมายเลข: ${widget.cow.tagNumber}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 17,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'ชื่อ: ${widget.cow.name.isNotEmpty ? widget.cow.name : "-"}',
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 14,
                                 ),
                               ),
                             ],
                           ),
                         ),
+                      ],
+                    ),
+                  ],
+                ),
+
+                // Card 2: Cull Type Selection
+                _buildCardContainer(
+                  children: [
+                    _buildSectionHeader('รูปแบบการจำหน่าย/คัดออก'),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: CullType.values.map((type) {
+                        final isSelected = _selectedType == type;
+                        return Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                            child: InkWell(
+                              onTap: () => setState(() => _selectedType = type),
+                              borderRadius: BorderRadius.circular(14),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? type.color.withValues(alpha: 0.12)
+                                      : Colors.white,
+                                  border: Border.all(
+                                    color: isSelected ? type.color : AppColors.border,
+                                    width: isSelected ? 2 : 1,
+                                  ),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Icon(
+                                      type.icon,
+                                      size: 26,
+                                      color: isSelected
+                                          ? type.color
+                                          : AppColors.textHint,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      type.label,
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        color: isSelected
+                                            ? type.color
+                                            : AppColors.textSecondary,
+                                        fontWeight: isSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+
+                // Card 3: Date & Details
+                _buildCardContainer(
+                  children: [
+                    _buildSectionHeader('ข้อมูลการดำเนินการ'),
+                    const SizedBox(height: 14),
+                    InkWell(
+                      onTap: () => _selectDate(context),
+                      borderRadius: BorderRadius.circular(14),
+                      child: InputDecorator(
+                        decoration: _buildInputDecoration('วันที่ดำเนินการ', Icons.calendar_today_rounded),
+                        child: Text(
+                          DateFormat('dd/MM/yyyy').format(_selectedDate),
+                          style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
+                        ),
                       ),
                     ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 24),
+                    const SizedBox(height: 14),
 
-              // Date Selection
-              InkWell(
-                onTap: () => _selectDate(context),
-                child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'วันที่ดำเนินการ',
-                    prefixIcon: Icon(Icons.calendar_today),
-                  ),
-                  child: Text(DateFormat('dd/MM/yyyy').format(_selectedDate)),
-                ),
-              ),
-              const SizedBox(height: 16),
+                    // Conditional Price Field for "Sold"
+                    if (_selectedType == CullType.sold) ...[
+                      Builder(
+                        builder: (context) {
+                          final marketPrice = ref.watch(marketPriceProvider).latest?.pricePerKg ?? 120.0;
+                          final weight = widget.cow.latestWeight;
+                          final estimatedVal = weight * marketPrice;
 
-              // Conditional Price Field for "Sold"
-              if (_selectedType == CullType.sold) ...[
-                Builder(
-                  builder: (context) {
-                    final marketPrice = ref.watch(marketPriceProvider).latest?.pricePerKg ?? 120.0;
-                    final weight = widget.cow.latestWeight;
-                    final estimatedVal = weight * marketPrice;
-
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (weight > 0) ...[
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppColors.success.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: AppColors.success.withOpacity(0.3)),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.calculate_outlined, color: AppColors.success, size: 20),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (weight > 0) ...[
+                                Container(
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.success.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+                                  ),
+                                  child: Row(
                                     children: [
-                                      Text(
-                                        'ราคาประเมินเบื้องต้น: ฿${NumberFormat('#,##0').format(estimatedVal)}',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                          color: AppColors.success,
+                                      const Icon(Icons.calculate_outlined, color: AppColors.success, size: 24),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'ราคาประเมินเบื้องต้น: ฿${NumberFormat('#,##0').format(estimatedVal)}',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 15,
+                                                color: AppColors.success,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              'คำนวณจากน้ำหนัก ${weight.toStringAsFixed(0)} กก. × ${marketPrice.toStringAsFixed(0)} ฿/กก.',
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                color: Colors.grey[800],
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                      Text(
-                                        'คำนวณจากน้ำหนัก ${weight.toStringAsFixed(0)} กก. × ${marketPrice.toStringAsFixed(0)} ฿/กก.',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey[700],
+                                      const SizedBox(width: 8),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          setState(() {
+                                            _priceController.text = estimatedVal.toStringAsFixed(0);
+                                          });
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppColors.success,
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                          minimumSize: Size.zero,
+                                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                         ),
+                                        child: const Text('ใช้ราคานี้', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                                       ),
                                     ],
                                   ),
                                 ),
-                                TextButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      _priceController.text = estimatedVal.toStringAsFixed(0);
-                                    });
-                                  },
-                                  style: TextButton.styleFrom(
-                                    backgroundColor: AppColors.success,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                    minimumSize: Size.zero,
-                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                  ),
-                                  child: const Text('ใช้ราคานี้', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                                ),
+                                const SizedBox(height: 14),
                               ],
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                        ],
-                        TextFormField(
-                          controller: _priceController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'ราคาที่ขายได้ (บาท)',
-                            prefixIcon: Icon(Icons.payments_outlined),
-                            hintText: '0.00',
-                          ),
-                          validator: (value) {
-                            if (_selectedType == CullType.sold &&
-                                (value == null || value.isEmpty)) {
-                              return 'กรุณากรอกราคาขาย';
-                            }
-                            return null;
-                          },
-                        ),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              // Note Field
-              TextFormField(
-                controller: _noteController,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'สาเหตุหรือหมายเหตุ',
-                  prefixIcon: Padding(
-                    padding: EdgeInsets.only(bottom: 40),
-                    child: Icon(Icons.note_alt_outlined),
-                  ),
-                  hintText: 'เช่น สุขภาพไม่ดี, อายุมากแล้ว, ฯลฯ',
-                  alignLabelWithHint: true,
-                ),
-              ),
-              const SizedBox(height: 40),
-
-              // Submit Button
-              Consumer(
-                builder: (context, ref, child) {
-                  final isLoading = ref.watch(cowProvider).isLoading;
-                  return ElevatedButton(
-                    onPressed: isLoading ? null : _submitCull,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _selectedType.color,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                              TextFormField(
+                                controller: _priceController,
+                                keyboardType: TextInputType.number,
+                                style: const TextStyle(fontSize: 15),
+                                decoration: _buildInputDecoration('ราคาที่ขายได้ (บาท)', Icons.payments_rounded, hintText: '0.00'),
+                                validator: (value) {
+                                  if (_selectedType == CullType.sold &&
+                                      (value == null || value.isEmpty)) {
+                                    return 'กรุณากรอกราคาขาย';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 14),
+                            ],
+                          );
+                        },
                       ),
+                    ],
+
+                    // Note Field
+                    TextFormField(
+                      controller: _noteController,
+                      maxLines: 3,
+                      style: const TextStyle(fontSize: 15),
+                      decoration: _buildInputDecoration('สาเหตุหรือหมายเหตุ', Icons.note_alt_rounded, hintText: 'เช่น สุขภาพไม่ดี, อายุมากแล้ว, ฯลฯ'),
                     ),
-                    child: isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : Text(
-                            'ยืนยันการ${_selectedType.label}',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                  );
-                },
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+
+      // ── Fixed Bottom Button ──
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: SizedBox(
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: isLoading ? null : _submitCull,
+              icon: isLoading
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                    )
+                  : Icon(_selectedType.icon, size: 22),
+              label: Text(
+                isLoading ? 'กำลังบันทึก...' : 'ยืนยันการ${_selectedType.label}',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 0.3),
               ),
-            ],
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _selectedType.color,
+                foregroundColor: Colors.white,
+                elevation: 3,
+                shadowColor: _selectedType.color.withValues(alpha: 0.4),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+            ),
           ),
         ),
       ),

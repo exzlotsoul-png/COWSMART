@@ -89,6 +89,13 @@ class HealthRecordController extends Controller
             $payload['vac_id'] = $request->vac_ids[0];
         }
 
+        if (isset($payload['vac_id']) && ($payload['vac_id'] === 'other' || empty($payload['vac_id']))) {
+            $payload['vac_id'] = null;
+        }
+        if (isset($payload['med_id']) && ($payload['med_id'] === 'other' || empty($payload['med_id']))) {
+            $payload['med_id'] = null;
+        }
+
         // Handle items_json array
         if ($request->has('items_json') && is_array($request->items_json)) {
             $payload['items_json'] = json_encode($request->items_json);
@@ -137,6 +144,13 @@ class HealthRecordController extends Controller
         }
         if ($request->has('vac_ids') && is_array($request->vac_ids) && count($request->vac_ids) > 0) {
             $payload['vac_id'] = $request->vac_ids[0];
+        }
+
+        if (isset($payload['vac_id']) && ($payload['vac_id'] === 'other' || empty($payload['vac_id']))) {
+            $payload['vac_id'] = null;
+        }
+        if (isset($payload['med_id']) && ($payload['med_id'] === 'other' || empty($payload['med_id']))) {
+            $payload['med_id'] = null;
         }
 
         if ($request->has('images') && is_array($request->images)) {
