@@ -1,10 +1,11 @@
 import 'dart:io';
-import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:cowsmart/core/utils/date_formatter.dart';
 import 'package:cowsmart/core/services/image_upload_service.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
 import 'package:cowsmart/features/cow/domain/health_record.dart';
@@ -122,6 +123,7 @@ class _HealthTabState extends ConsumerState<HealthTab> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 DropdownButtonFormField<String>(
+                  isExpanded: true,
                   initialValue: selectedType,
                   style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
                   decoration: const InputDecoration(
@@ -154,7 +156,10 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.calendar_today, color: AppColors.primary),
                   title: const Text('วันนัดหมาย', style: TextStyle(fontSize: 15)),
-                  subtitle: Text(DateFormat('dd MMM yyyy').format(selectedDate), style: const TextStyle(fontSize: 14)),
+                  subtitle: Text(
+                    AppDateUtils.formatThaiDate(selectedDate, useFullMonth: true),
+                    style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                  ),
                   onTap: () async {
                     final picked = await showDatePicker(
                       context: ctx,
@@ -172,7 +177,10 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.access_time, color: AppColors.primary),
                   title: const Text('เวลานัดหมาย', style: TextStyle(fontSize: 15)),
-                  subtitle: Text(selectedTime.format(ctx), style: const TextStyle(fontSize: 14)),
+                  subtitle: Text(
+                    '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')} น.',
+                    style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                  ),
                   onTap: () async {
                     final picked = await showTimePicker(
                       context: ctx,
@@ -199,6 +207,7 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
+                  isExpanded: true,
                   initialValue: selectedReminder,
                   style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
                   decoration: const InputDecoration(
@@ -750,17 +759,15 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                             Icon(
                               Icons.calendar_today,
                               size: 14,
-                              color: AppColors.textSecondary,
+                              color: AppColors.primary,
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              DateFormat(
-                                'dd/MM/yyyy',
-                              ).format(record.recordDate),
+                              AppDateUtils.formatThaiDate(record.recordDate),
                               style: const TextStyle(
                                 fontSize: 14,
-                                color: AppColors.textSecondary,
-                                fontWeight: FontWeight.w500,
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
@@ -1407,36 +1414,72 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                         final tempSelected = List<String>.from(selectedVaccineIds);
                         return StatefulBuilder(
                           builder: (ctx, setDialogState) {
+                            String searchQuery = '';
                             final listOptions = [
                               ...widget.masterData.vaccines.map((v) => {'id': v.id, 'name': v.name}),
                               {'id': 'other', 'name': 'อื่นๆ (ระบุเอง)'},
                             ];
 
+                            final filteredOptions = listOptions.where((v) {
+                              if (searchQuery.isEmpty) return true;
+                              return v['name']!.toLowerCase().contains(searchQuery.toLowerCase());
+                            }).toList();
+
                             return AlertDialog(
-                              title: const Text('เลือกวัคซีน (เลือกได้หลายรายการ)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                              title: const Text('เลือกวัคซีน (เลือกได้หลายรายการ)', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
                               content: SizedBox(
                                 width: double.maxFinite,
-                                child: ListView(
-                                  shrinkWrap: true,
-                                  children: listOptions.map((v) {
-                                    final vId = v['id']!;
-                                    final vName = v['name']!;
-                                    final checked = tempSelected.contains(vId);
-                                    return CheckboxListTile(
-                                      title: Text(vName, style: TextStyle(fontSize: 15, fontWeight: vId == 'other' ? FontWeight.bold : FontWeight.normal, color: vId == 'other' ? AppColors.primary : null)),
-                                      value: checked,
-                                      activeColor: AppColors.primary,
+                                height: 360,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    TextField(
                                       onChanged: (val) {
                                         setDialogState(() {
-                                          if (val == true) {
-                                            tempSelected.add(vId);
-                                          } else {
-                                            tempSelected.remove(vId);
-                                          }
+                                          searchQuery = val.trim();
                                         });
                                       },
-                                    );
-                                  }).toList(),
+                                      decoration: InputDecoration(
+                                        hintText: 'ค้นหาวัคซีน...',
+                                        hintStyle: const TextStyle(fontSize: 13, color: AppColors.textHint),
+                                        prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.primary),
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                        filled: true,
+                                        fillColor: AppColors.surfaceAlt,
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                          borderSide: BorderSide.none,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Expanded(
+                                      child: filteredOptions.isEmpty
+                                          ? const Center(child: Text('ไม่พบข้อมูล', style: TextStyle(color: AppColors.textHint, fontSize: 13)))
+                                          : ListView(
+                                              shrinkWrap: true,
+                                              children: filteredOptions.map((v) {
+                                                final vId = v['id']!;
+                                                final vName = v['name']!;
+                                                final checked = tempSelected.contains(vId);
+                                                return CheckboxListTile(
+                                                  title: Text(vName, style: TextStyle(fontSize: 14, fontWeight: vId == 'other' ? FontWeight.bold : FontWeight.normal, color: vId == 'other' ? AppColors.primary : null)),
+                                                  value: checked,
+                                                  activeColor: AppColors.primary,
+                                                  onChanged: (val) {
+                                                    setDialogState(() {
+                                                      if (val == true) {
+                                                        tempSelected.add(vId);
+                                                      } else {
+                                                        tempSelected.remove(vId);
+                                                      }
+                                                    });
+                                                  },
+                                                );
+                                              }).toList(),
+                                            ),
+                                    ),
+                                  ],
                                 ),
                               ),
                               actions: [
@@ -1477,7 +1520,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                               } else {
                                 name = widget.masterData.vaccines.firstWhere((v) => v.id == id, orElse: () => widget.masterData.vaccines.first).name;
                               }
-                              return Chip(
+                                                            return Chip(
                                 label: Text(name, style: const TextStyle(fontSize: 13, color: Colors.white)),
                                 backgroundColor: id == 'other' ? Colors.orange[800] : AppColors.primary,
                                 visualDensity: VisualDensity.compact,
@@ -1537,36 +1580,72 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                         final tempSelected = List<String>.from(selectedMedicineIds);
                         return StatefulBuilder(
                           builder: (ctx, setDialogState) {
+                            String searchQuery = '';
                             final listOptions = [
                               ...widget.masterData.medicines.map((m) => {'id': m.id, 'name': m.name}),
                               {'id': 'other', 'name': 'อื่นๆ (ระบุเอง)'},
                             ];
 
+                            final filteredOptions = listOptions.where((m) {
+                              if (searchQuery.isEmpty) return true;
+                              return m['name']!.toLowerCase().contains(searchQuery.toLowerCase());
+                            }).toList();
+
                             return AlertDialog(
-                              title: const Text('เลือกยา (เลือกได้หลายรายการ)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                              title: const Text('เลือกยา (เลือกได้หลายรายการ)', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
                               content: SizedBox(
                                 width: double.maxFinite,
-                                child: ListView(
-                                  shrinkWrap: true,
-                                  children: listOptions.map((m) {
-                                    final mId = m['id']!;
-                                    final mName = m['name']!;
-                                    final checked = tempSelected.contains(mId);
-                                    return CheckboxListTile(
-                                      title: Text(mName, style: TextStyle(fontSize: 15, fontWeight: mId == 'other' ? FontWeight.bold : FontWeight.normal, color: mId == 'other' ? AppColors.primary : null)),
-                                      value: checked,
-                                      activeColor: AppColors.primary,
+                                height: 360,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    TextField(
                                       onChanged: (val) {
                                         setDialogState(() {
-                                          if (val == true) {
-                                            tempSelected.add(mId);
-                                          } else {
-                                            tempSelected.remove(mId);
-                                          }
+                                          searchQuery = val.trim();
                                         });
                                       },
-                                    );
-                                  }).toList(),
+                                      decoration: InputDecoration(
+                                        hintText: 'ค้นหายา...',
+                                        hintStyle: const TextStyle(fontSize: 13, color: AppColors.textHint),
+                                        prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.primary),
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                        filled: true,
+                                        fillColor: AppColors.surfaceAlt,
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                          borderSide: BorderSide.none,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Expanded(
+                                      child: filteredOptions.isEmpty
+                                          ? const Center(child: Text('ไม่พบข้อมูล', style: TextStyle(color: AppColors.textHint, fontSize: 13)))
+                                          : ListView(
+                                              shrinkWrap: true,
+                                              children: filteredOptions.map((m) {
+                                                final mId = m['id']!;
+                                                final mName = m['name']!;
+                                                final checked = tempSelected.contains(mId);
+                                                return CheckboxListTile(
+                                                  title: Text(mName, style: TextStyle(fontSize: 14, fontWeight: mId == 'other' ? FontWeight.bold : FontWeight.normal, color: mId == 'other' ? AppColors.primary : null)),
+                                                  value: checked,
+                                                  activeColor: AppColors.primary,
+                                                  onChanged: (val) {
+                                                    setDialogState(() {
+                                                      if (val == true) {
+                                                        tempSelected.add(mId);
+                                                      } else {
+                                                        tempSelected.remove(mId);
+                                                      }
+                                                    });
+                                                  },
+                                                );
+                                              }).toList(),
+                                            ),
+                                    ),
+                                  ],
                                 ),
                               ),
                               actions: [
@@ -1953,6 +2032,57 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                               onTap: () {
                                 setState(() {
                                   existingImageUrls.removeAt(index);
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.close, size: 14, color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }),
+                    ...selectedImageFiles.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final xfile = entry.value;
+                      return Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.only(right: 10),
+                            width: 70,
+                            height: 70,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: AppColors.primary, width: 1.5),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(9),
+                              child: kIsWeb
+                                  ? Image.network(
+                                      xfile.path,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, color: Colors.grey),
+                                    )
+                                  : Image.file(
+                                      File(xfile.path),
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, color: Colors.grey),
+                                    ),
+                            ),
+                          ),
+                          Positioned(
+                            top: -6,
+                            right: 4,
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  selectedImageFiles.removeAt(index);
                                 });
                               },
                               child: Container(
@@ -2787,7 +2917,7 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                                 Icon(
                                   Icons.search_off,
                                   size: 48,
-                                  color: Colors.grey[350],
+                                  color: AppColors.textSecondary,
                                 ),
                                 const SizedBox(height: 8),
                                 const Text(
@@ -3298,10 +3428,11 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                   if (records.isNotEmpty) ...[
                     const SizedBox(height: 10),
                     Text(
-                      'ชั่งล่าสุดเมื่อ: ${DateFormat('dd MMM yyyy', 'th_TH').format(records.first.recordDate)}',
+                      'ชั่งล่าสุดเมื่อ: ${AppDateUtils.formatThaiDate(records.first.recordDate)}',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.6),
+                        color: Colors.white.withValues(alpha: 0.9),
                         fontSize: 13,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ] else if (hasFallback) ...[
@@ -3608,7 +3739,7 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                DateFormat('dd MMM yyyy', 'th_TH').format(r.recordDate),
+                                AppDateUtils.formatThaiDate(r.recordDate),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
@@ -4282,11 +4413,7 @@ class _CostTabState extends ConsumerState<CostTab> {
   }
 
   Widget _buildHealthDetailCard(Map<String, dynamic> h) {
-    final date = h['record_date'] != null
-        ? DateFormat(
-            'dd/MM/yyyy',
-          ).format(DateTime.parse(h['record_date'].toString()))
-        : '-';
+    final date = AppDateUtils.formatDynamicDate(h['record_date']);
     final cost = _parseDouble(h['cost']);
     final disease = h['disease_name'];
     final medicine = h['medicine_name'];
@@ -4330,13 +4457,13 @@ class _CostTabState extends ConsumerState<CostTab> {
         ),
         subtitle: Row(
           children: [
-            Icon(Icons.calendar_today, size: 14, color: Colors.grey[500]),
+            const Icon(Icons.calendar_today, size: 14, color: AppColors.primary),
             const SizedBox(width: 4),
             Text(
               date,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 13,
-                color: Colors.grey[600],
+                color: AppColors.textPrimary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -4360,15 +4487,7 @@ class _CostTabState extends ConsumerState<CostTab> {
     final costPerCow = _parseDouble(f['cost_per_cow']);
     final totalCost = _parseDouble(f['cost']);
 
-    String displayDate = rawDate.toString();
-    if (rawDate != '-') {
-      try {
-        final parsedDate = DateTime.parse(rawDate.toString());
-        displayDate = DateFormat('dd/MM/yyyy').format(parsedDate);
-      } catch (e) {
-        // Fallback to raw string if parsing fails
-      }
-    }
+    String displayDate = AppDateUtils.formatDynamicDate(rawDate);
 
     return Card(
       elevation: 1,
@@ -4398,20 +4517,20 @@ class _CostTabState extends ConsumerState<CostTab> {
         ),
         subtitle: Row(
           children: [
-            Icon(Icons.calendar_today, size: 14, color: Colors.grey[500]),
+            const Icon(Icons.calendar_today, size: 14, color: AppColors.primary),
             const SizedBox(width: 4),
             Text(
               displayDate,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 13,
-                color: Colors.grey[600],
+                color: AppColors.textPrimary,
                 fontWeight: FontWeight.w500,
               ),
             ),
             const SizedBox(width: 8),
             Text(
               '(ทั้งโซน ${NumberFormat('#,##0').format(totalCost)} ฿)',
-              style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+              style: const TextStyle(fontSize: 11, color: AppColors.textPrimary),
             ),
           ],
         ),
@@ -4428,11 +4547,7 @@ class _CostTabState extends ConsumerState<CostTab> {
   }
 
   Widget _buildDirectCostCard(Map<String, dynamic> d) {
-    final date = d['transaction_date'] != null
-        ? DateFormat(
-            'dd/MM/yyyy',
-          ).format(DateTime.parse(d['transaction_date'].toString()))
-        : '-';
+    final date = AppDateUtils.formatDynamicDate(d['transaction_date']);
     final amount = _parseDouble(d['amount']);
     final title = d['title'] ?? d['category'] ?? 'ค่าใช้จ่าย';
     final notes = d['notes'];

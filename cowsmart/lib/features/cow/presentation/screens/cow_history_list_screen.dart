@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:cowsmart/core/utils/date_formatter.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
 import 'package:cowsmart/features/cow/domain/health_record.dart';
 import 'package:cowsmart/features/cow/domain/growth_record.dart';
@@ -318,8 +319,8 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                         ],
                       ),
                       Text(
-                        DateFormat('dd/MM/yyyy').format(record.recordDate),
-                        style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                        AppDateUtils.formatThaiDate(record.recordDate),
+                        style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
@@ -420,8 +421,8 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                         ),
                         subtitle: Text(
-                          'วันที่ชั่ง: ${DateFormat('dd/MM/yyyy').format(r.recordDate)}${r.girth != null ? " • รอบอก: ${r.girth!.toStringAsFixed(1)} ซม." : ""}',
-                          style: const TextStyle(fontSize: 13),
+                          'วันที่ชั่ง: ${AppDateUtils.formatThaiDate(r.recordDate)}${r.girth != null ? " • รอบอก: ${r.girth!.toStringAsFixed(1)} ซม." : ""}',
+                          style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
                         ),
                         trailing: diff != null
                             ? Container(
@@ -521,7 +522,7 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                               children: [
                                 Text(
                                   r.heatDate != null
-                                      ? 'เป็นสัด: ${DateFormat('dd/MM/yyyy').format(r.heatDate!)}'
+                                      ? 'เป็นสัด: ${AppDateUtils.formatThaiDate(r.heatDate!)}'
                                       : 'ผสมพันธุ์',
                                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                                 ),
@@ -540,15 +541,15 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                             ),
                             const SizedBox(height: 8),
                             if (r.matingDate != null)
-                              Text('• วันที่ผสม: ${DateFormat('dd/MM/yyyy HH:mm น.').format(r.matingDate!)}', style: const TextStyle(fontSize: 14)),
+                              Text('• วันที่ผสม: ${AppDateUtils.formatThaiDate(r.matingDate!, includeTime: true)}', style: const TextStyle(fontSize: 14, color: AppColors.textPrimary)),
                             if (r.sireId != null)
-                              Text('• พ่อพันธุ์: ${_formatCowDisplayById(r.sireId, allCows)}', style: const TextStyle(fontSize: 14)),
+                              Text('• พ่อพันธุ์: ${_formatCowDisplayById(r.sireId, allCows)}', style: const TextStyle(fontSize: 14, color: AppColors.textPrimary)),
                             if (r.expectedCalving != null)
-                              Text('• คาดว่าจะคลอด: ${DateFormat('dd/MM/yyyy').format(r.expectedCalving!)}', style: const TextStyle(fontSize: 14)),
+                              Text('• คาดว่าจะคลอด: ${AppDateUtils.formatThaiDate(r.expectedCalving!)}', style: const TextStyle(fontSize: 14, color: AppColors.textPrimary)),
                             if (r.calvingDate != null) ...[
                               const SizedBox(height: 4),
                               Text(
-                                '• คลอดจริง: ${DateFormat('dd/MM/yyyy').format(r.calvingDate!)} (${r.calvingResult ?? "-"})',
+                                '• คลอดจริง: ${AppDateUtils.formatThaiDate(r.calvingDate!)} (${r.calvingResult ?? "-"})',
                                 style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.teal, fontSize: 14),
                               ),
                             ],

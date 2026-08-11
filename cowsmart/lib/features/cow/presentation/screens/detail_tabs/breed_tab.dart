@@ -6,6 +6,8 @@ import '../../../domain/breeding_record.dart';
 import '../../../providers/cow_detail_provider.dart';
 import '../../../providers/cow_provider.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
+import 'package:cowsmart/core/utils/date_formatter.dart';
 import 'package:go_router/go_router.dart';
 
 // Provider to get male cows (bulls) for breeding
@@ -231,7 +233,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                 leading: const Icon(Icons.calendar_today, color: Colors.pink),
                 title: const Text('วันที่และเวลาที่เป็นสัด', style: TextStyle(fontSize: 14)),
                 subtitle: Text(
-                  DateFormat('dd/MM/yyyy HH:mm น.').format(heatDate),
+                  AppDateUtils.formatThaiDate(heatDate, includeTime: true),
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 onTap: () async {
@@ -298,6 +300,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                           .read(cowProvider.notifier)
                           .updateCowStatus(widget.cow.id, CowStatus.estrous);
                       Navigator.pop(ctx);
+                      AppFeedback.showSuccess(context, 'บันทึกประวัติการเป็นสัดเรียบร้อยแล้ว');
                     },
                     child: const Text('บันทึก'),
                   ),
@@ -439,7 +442,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                   leading: const Icon(Icons.calendar_today, color: AppColors.primary),
                   title: const Text('วันที่และเวลาที่ผสม', style: TextStyle(fontSize: 14)),
                   subtitle: Text(
-                    DateFormat('dd/MM/yyyy HH:mm น.').format(matingDate),
+                    AppDateUtils.formatThaiDate(matingDate, includeTime: true),
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   onTap: () async {
@@ -508,6 +511,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                                 .read(cowDetailProvider.notifier)
                                 .addBreedingRecord(record);
                             Navigator.pop(ctx);
+                            AppFeedback.showSuccess(context, 'บันทึกรายการผสมพันธุ์เรียบร้อยแล้ว');
                           },
                     child: const Text('บันทึก', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                   ),
@@ -612,8 +616,8 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'วันที่ผสม: ${DateFormat('dd/MM/yyyy').format(activeMating.matingDate!)} (${DateTime.now().difference(activeMating.matingDate!).inDays} วันที่แล้ว)',
-                        style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                        'วันที่ผสม: ${AppDateUtils.formatThaiDate(activeMating.matingDate!)} (${DateTime.now().difference(activeMating.matingDate!).inDays} วันที่แล้ว)',
+                        style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
                       ),
                     ],
                   ),
@@ -652,7 +656,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                     title: const Text('กำหนดคลอดโดยประมาณ', style: TextStyle(fontSize: 14)),
                     subtitle: Text(
                       expectedCalving != null
-                          ? DateFormat('dd/MM/yyyy').format(expectedCalving!)
+                          ? AppDateUtils.formatThaiDate(expectedCalving!)
                           : 'เลือกวันที่',
                       style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.purple, fontSize: 16),
                     ),
@@ -739,6 +743,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                                   .updateCowStatus(widget.cow.id, CowStatus.normal);
                             }
                             Navigator.pop(ctx);
+                            AppFeedback.showSuccess(context, 'บันทึกผลการตรวจท้องเรียบร้อยแล้ว');
                           },
                     child: const Text('บันทึก', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                   ),
@@ -832,9 +837,9 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                             const SizedBox(height: 2),
                             Text(
                               activePregnancy.expectedCalving != null
-                                  ? 'กำหนดคลอด: ${DateFormat('dd/MM/yyyy').format(activePregnancy.expectedCalving!)}'
-                                  : 'ผสมวันที่: ${DateFormat('dd/MM/yyyy').format(activePregnancy.matingDate!)}',
-                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                                  ? 'กำหนดคลอด: ${AppDateUtils.formatThaiDate(activePregnancy.expectedCalving!)}'
+                                  : 'ผสมวันที่: ${AppDateUtils.formatThaiDate(activePregnancy.matingDate!)}',
+                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                             ),
                           ],
                         ),
@@ -851,7 +856,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                   leading: const Icon(Icons.calendar_today, color: Colors.teal),
                   title: const Text('วันที่และเวลาที่คลอด', style: TextStyle(fontSize: 14)),
                   subtitle: Text(
-                    DateFormat('dd/MM/yyyy HH:mm น.').format(calvingDate),
+                    AppDateUtils.formatThaiDate(calvingDate, includeTime: true),
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   onTap: () async {
@@ -941,8 +946,9 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                                 .read(cowProvider.notifier)
                                 .updateCowStatus(widget.cow.id, CowStatus.recovering);
                             
-                            final result = calvingResult;
-                            Navigator.pop(ctx);
+                             final result = calvingResult;
+                             Navigator.pop(ctx);
+                             AppFeedback.showSuccess(context, 'บันทึกข้อมูลการคลอดลูกวัวเรียบร้อยแล้ว');
 
                             if (result != null && (result.contains('ปกติ') || result.contains('แฝด') || result.contains('ช่วยคลอด'))) {
                               Future.delayed(const Duration(milliseconds: 300), () {
@@ -1297,7 +1303,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
           ),
           const SizedBox(height: 14),
           Text(
-            'แม่วัวคลอดเมื่อวันที่ ${DateFormat('dd/MM/yyyy').format(calvingDate)} (พักฟื้นมาแล้ว $daysPassed วัน จาก $totalDays วัน)',
+            'แม่วัวคลอดเมื่อวันที่ ${AppDateUtils.formatThaiDate(calvingDate)} (พักฟื้นมาแล้ว $daysPassed วัน จาก $totalDays วัน)',
             style: const TextStyle(
               color: Color(0xFF6B21A8),
               fontSize: 14.5,
@@ -1579,10 +1585,10 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                           children: [
                             const Text(
                               'วันที่ผสม',
-                              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                              style: TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
                             ),
                             Text(
-                              DateFormat('dd/MM/yyyy').format(current.matingDate!),
+                              AppDateUtils.formatThaiDate(current.matingDate!),
                               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.indigo),
                             ),
                           ],
@@ -1591,8 +1597,8 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                   ),
                 ] else ...[
                   Text(
-                    'ยังไม่ได้บันทึกพ่อพันธุ์ (เป็นสัดเมื่อ: ${DateFormat('dd/MM/yyyy').format(current.heatDate!)})',
-                    style: const TextStyle(fontSize: 15, color: AppColors.textSecondary),
+                    'ยังไม่ได้บันทึกพ่อพันธุ์ (เป็นสัดเมื่อ: ${AppDateUtils.formatThaiDate(current.heatDate!)})',
+                    style: const TextStyle(fontSize: 15, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
                   ),
                 ],
               ],
@@ -1662,8 +1668,8 @@ class _BreedTabState extends ConsumerState<BreedTab> {
             children: [
               if (record.matingDate != null)
                 Text(
-                  'วันที่ผสม: ${DateFormat('dd/MM/yyyy HH:mm น.').format(record.matingDate!)}',
-                  style: const TextStyle(fontSize: 14),
+                  'วันที่ผสม: ${AppDateUtils.formatThaiDate(record.matingDate!, includeTime: true)}',
+                  style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
                 ),
               Text(
                 'ผลตรวจท้อง: ${record.pregnancyResult ?? "รอตรวจ"}',
@@ -1672,7 +1678,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
               if (record.calvingDate != null) ...[
                 const SizedBox(height: 4),
                 Text(
-                  'คลอดจริง: ${DateFormat('dd/MM/yyyy HH:mm น.').format(record.calvingDate!)}',
+                  'คลอดจริง: ${AppDateUtils.formatThaiDate(record.calvingDate!, includeTime: true)}',
                   style: TextStyle(
                     color: !['แท้ง', 'ลูกตาย'].contains(record.calvingResult)
                         ? Colors.teal
@@ -1779,23 +1785,23 @@ class _BreedTabState extends ConsumerState<BreedTab> {
           children: [
             if (record.heatDate != null)
               Text(
-                'เป็นสัด: ${DateFormat('dd/MM/yyyy HH:mm น.').format(record.heatDate!)}',
-                style: const TextStyle(fontSize: 14),
+                'เป็นสัด: ${AppDateUtils.formatThaiDate(record.heatDate!, includeTime: true)}',
+                style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
               ),
             if (record.matingDate != null)
               Text(
-                'ผสม: ${DateFormat('dd/MM/yyyy HH:mm น.').format(record.matingDate!)} (พ่อพันธุ์: ${_formatCowDisplayById(record.sireId, allCows)})',
-                style: const TextStyle(fontSize: 14),
+                'ผสม: ${AppDateUtils.formatThaiDate(record.matingDate!, includeTime: true)} (พ่อพันธุ์: ${_formatCowDisplayById(record.sireId, allCows)})',
+                style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
               ),
             if (record.expectedCalving != null)
               Text(
-                'คลอดประมาณ: ${DateFormat('dd/MM/yyyy').format(record.expectedCalving!)}',
-                style: const TextStyle(fontSize: 14),
+                'คลอดประมาณ: ${AppDateUtils.formatThaiDate(record.expectedCalving!)}',
+                style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
               ),
             if (record.calvingDate != null) ...[
               const SizedBox(height: 4),
               Text(
-                'คลอดจริง: ${DateFormat('dd/MM/yyyy HH:mm น.').format(record.calvingDate!)}',
+                'คลอดจริง: ${AppDateUtils.formatThaiDate(record.calvingDate!, includeTime: true)}',
                 style: TextStyle(
                   color: !['แท้ง', 'ลูกตาย'].contains(record.calvingResult)
                       ? Colors.teal

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
+import 'package:cowsmart/core/utils/date_formatter.dart';
 import 'package:cowsmart/core/constants/app_constants.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
@@ -104,7 +106,10 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
   }
 
   Future<void> _saveCow() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      AppFeedback.showError(context, 'กรุณาตรวจสอบข้อมูลและกรอกข้อมูลในช่องที่จำเป็นให้ถูกต้อง');
+      return;
+    }
 
     setState(() => _isSaving = true);
 
@@ -154,12 +159,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
         }
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('บันทึกการแก้ไขเรียบร้อยแล้ว!'),
-              backgroundColor: AppColors.success,
-            ),
-          );
+          AppFeedback.showSuccess(context, 'อัปเดตและบันทึกข้อมูลการแก้ไขเรียบร้อยแล้ว');
           ref.read(cowProvider.notifier).clearFlags();
           context.pop();
         }
@@ -176,12 +176,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
     ref.listen<CowState>(cowProvider, (previous, next) {
       if (next.errorMessage != null &&
           previous?.errorMessage != next.errorMessage) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.errorMessage!),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppFeedback.showError(context, next.errorMessage!);
         ref.read(cowProvider.notifier).clearFlags();
       }
     });
@@ -333,7 +328,10 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                             labelText: 'วันเกิด',
                             prefixIcon: Icon(Icons.cake),
                           ),
-                          child: Text(DateFormat('dd/MM/yyyy').format(_selectedDate)),
+                          child: Text(
+                            AppDateUtils.formatThaiDate(_selectedDate),
+                            style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+                          ),
                         ),
                       ),
                     ),
@@ -346,7 +344,10 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                             labelText: 'วันที่เข้าฟาร์ม',
                             prefixIcon: Icon(Icons.login),
                           ),
-                          child: Text(DateFormat('dd/MM/yyyy').format(_selectedEntryDate)),
+                          child: Text(
+                            AppDateUtils.formatThaiDate(_selectedEntryDate),
+                            style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+                          ),
                         ),
                       ),
                     ),

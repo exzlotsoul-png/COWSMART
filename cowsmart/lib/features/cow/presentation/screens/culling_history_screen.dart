@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:cowsmart/core/network/api_client.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:cowsmart/core/utils/date_formatter.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
@@ -391,12 +392,12 @@ class _CullingCard extends ConsumerWidget {
                       Row(
                         children: [
                           const Icon(Icons.calendar_today,
-                              size: 13, color: AppColors.textHint),
+                              size: 13, color: AppColors.primary),
                           const SizedBox(width: 4),
                           Text(
-                            DateFormat('dd MMMM yyyy').format(record.cullDate),
+                            AppDateUtils.formatThaiDate(record.cullDate, useFullMonth: true),
                             style: const TextStyle(
-                                fontSize: 12, color: AppColors.textSecondary),
+                                fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),

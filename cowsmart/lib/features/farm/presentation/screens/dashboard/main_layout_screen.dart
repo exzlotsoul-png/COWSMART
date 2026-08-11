@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'dashboard_screen.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../cow/presentation/screens/cow_list_screen.dart';
@@ -28,19 +29,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
       body: _screens[_currentIndex],
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: ไปยังหน้าสแกน QR Code
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('สแกน QR Code'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('ตกลง'),
-                ),
-              ],
-            ),
-          );
+          context.push('/qr_scanner');
         },
         backgroundColor: AppColors.primary,
         shape: const CircleBorder(),

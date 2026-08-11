@@ -61,6 +61,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/change-password', [AuthController::class, 'changePassword']);
     Route::post('/images/upload', [ImageController::class, 'upload']);
+    Route::post('/images/delete', [ImageController::class, 'deleteImage']);
 
     Route::apiResource('breeds', BreedController::class);
     Route::apiResource('diseases', DiseaseController::class);

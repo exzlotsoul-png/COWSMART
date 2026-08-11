@@ -52,7 +52,15 @@ class FarmController extends Controller
                     ->where('email', $user->email)
                     ->firstOrFail();
                     
-        $farm->update($request->all());
+        $data = $request->all();
+        if (array_key_exists('image_url', $data) && $farm->image_url !== $data['image_url'] && $farm->image_url) {
+            $oldPath = preg_match('/storage\/(.+)$/', $farm->image_url, $m) ? $m[1] : ltrim($farm->image_url, '/');
+            if ($oldPath && !\Illuminate\Support\Str::startsWith($oldPath, 'http') && \Illuminate\Support\Facades\Storage::disk('public')->exists($oldPath)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPath);
+            }
+        }
+
+        $farm->update($data);
         return response()->json($farm);
     }
 
@@ -68,6 +76,12 @@ class FarmController extends Controller
             $cows = \App\Models\Cow::where('farm_id', $id)->get();
             $cowIds = [];
             foreach ($cows as $c) {
+                if ($c->image_url) {
+                    $cPath = preg_match('/storage\/(.+)$/', $c->image_url, $m) ? $m[1] : ltrim($c->image_url, '/');
+                    if ($cPath && !\Illuminate\Support\Str::startsWith($cPath, 'http') && \Illuminate\Support\Facades\Storage::disk('public')->exists($cPath)) {
+                        \Illuminate\Support\Facades\Storage::disk('public')->delete($cPath);
+                    }
+                }
                 if ($c->id) $cowIds[] = (string)$c->id;
                 if ($c->cow_id) $cowIds[] = (string)$c->cow_id;
                 if ($c->tag_number) $cowIds[] = (string)$c->tag_number;
@@ -92,8 +106,11 @@ class FarmController extends Controller
             \App\Models\FinancialRecord::where('farm_id', $id)->delete();
 
             // Delete farm image file if exists locally
-            if ($farm->image_url && !\Illuminate\Support\Str::startsWith($farm->image_url, 'http')) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($farm->image_url);
+            if ($farm->image_url) {
+                $fPath = preg_match('/storage\/(.+)$/', $farm->image_url, $m) ? $m[1] : ltrim($farm->image_url, '/');
+                if ($fPath && !\Illuminate\Support\Str::startsWith($fPath, 'http') && \Illuminate\Support\Facades\Storage::disk('public')->exists($fPath)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($fPath);
+                }
             }
 
             // Delete farm

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart' hide TextDirection;
 import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:cowsmart/core/utils/date_formatter.dart';
 import '../../providers/notification_provider.dart';
 import '../../domain/app_notification.dart';
 
@@ -215,14 +215,14 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.access_time_rounded, size: 18, color: AppColors.textSecondary),
+                    const Icon(Icons.access_time_rounded, size: 18, color: AppColors.primary),
                     const SizedBox(width: 6),
                     Text(
-                      DateFormat('dd MMM yyyy HH:mm').format(notif.notifyDatetime!),
+                      AppDateUtils.formatThaiDate(notif.notifyDatetime!, includeTime: true),
                       style: const TextStyle(
                         fontSize: 15,
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
@@ -570,6 +570,6 @@ class _NotificationCard extends StatelessWidget {
     if (diff.inMinutes < 60) return '${diff.inMinutes} นาทีที่แล้ว';
     if (diff.inHours < 24) return '${diff.inHours} ชั่วโมงที่แล้ว';
     if (diff.inDays < 7) return '${diff.inDays} วันที่แล้ว';
-    return DateFormat('dd MMM yyyy').format(localDt);
+    return AppDateUtils.formatThaiDate(localDt);
   }
 }

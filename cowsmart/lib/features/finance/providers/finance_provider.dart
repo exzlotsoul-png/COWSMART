@@ -1,23 +1,54 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cowsmart/core/network/api_client.dart';
 import '../domain/finance.dart';
 import '../../feed/domain/feed.dart';
+import '../../cow/domain/culling_record.dart';
+
+enum FinanceFilterMode { month, range }
 
 class FinanceState {
   final bool isLoading;
   final String? errorMessage;
   final List<FinancialTransaction> transactions;
   final DateTime selectedMonth;
+  final FinanceFilterMode filterMode;
+  final DateTimeRange? customDateRange;
 
   FinanceState({
     this.isLoading = false,
     this.errorMessage,
     this.transactions = const [],
     DateTime? selectedMonth,
+    this.filterMode = FinanceFilterMode.month,
+    this.customDateRange,
   }) : selectedMonth =
-           selectedMonth ?? DateTime(DateTime.now().year, DateTime.now().month);
+            selectedMonth ?? DateTime(DateTime.now().year, DateTime.now().month);
 
   List<FinancialTransaction> get currentMonthTransactions {
+    if (filterMode == FinanceFilterMode.range && customDateRange != null) {
+      final start = DateTime(
+        customDateRange!.start.year,
+        customDateRange!.start.month,
+        customDateRange!.start.day,
+        0,
+        0,
+        0,
+      );
+      final end = DateTime(
+        customDateRange!.end.year,
+        customDateRange!.end.month,
+        customDateRange!.end.day,
+        23,
+        59,
+        59,
+      );
+      return transactions.where((t) {
+        return (t.date.isAfter(start) || t.date.isAtSameMomentAs(start)) &&
+            (t.date.isBefore(end) || t.date.isAtSameMomentAs(end));
+      }).toList();
+    }
+
     return transactions
         .where(
           (t) =>
@@ -64,12 +95,19 @@ class FinanceState {
     String? errorMessage,
     List<FinancialTransaction>? transactions,
     DateTime? selectedMonth,
+    FinanceFilterMode? filterMode,
+    DateTimeRange? customDateRange,
+    bool clearCustomRange = false,
   }) {
     return FinanceState(
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage,
       transactions: transactions ?? this.transactions,
       selectedMonth: selectedMonth ?? this.selectedMonth,
+      filterMode: filterMode ?? this.filterMode,
+      customDateRange: clearCustomRange
+          ? null
+          : (customDateRange ?? this.customDateRange),
     );
   }
 }
@@ -81,6 +119,25 @@ class FinanceNotifier extends Notifier<FinanceState> {
   FinanceState build() {
     _api = ref.watch(apiClientProvider);
     return FinanceState();
+  }
+
+  void changeMonth(DateTime newMonth) {
+    state = state.copyWith(
+      selectedMonth: newMonth,
+      filterMode: FinanceFilterMode.month,
+      clearCustomRange: true,
+    );
+  }
+
+  void setCustomDateRange(DateTimeRange range) {
+    state = state.copyWith(
+      customDateRange: range,
+      filterMode: FinanceFilterMode.range,
+    );
+  }
+
+  void setFilterMode(FinanceFilterMode mode) {
+    state = state.copyWith(filterMode: mode);
   }
 
   Future<void> fetchTransactions(String farmId) async {
@@ -98,84 +155,155 @@ class FinanceNotifier extends Notifier<FinanceState> {
           .map((json) => FinancialTransaction.fromJson(json))
           .toList();
 
-      // Fetch feed inventory expenses
-      final feedResponse = await _api.get(
-        '/feed_inventories',
-        query: {'farm_id': farmId},
-      );
-      final List<dynamic> feedData = feedResponse.data;
-      final List<FeedItem> feedItems = feedData
-          .map((json) => FeedItem.fromJson(json))
-          .toList();
+      // Also fetch feed items / purchases and convert to financial transactions
+      final List<FinancialTransaction> feedTransactions = [];
+      try {
+        final feedRes = await _api.get(
+          '/feed_inventories',
+          query: {'farm_id': farmId},
+        );
+        final List<dynamic> feedData = feedRes.data;
+        for (var fJson in feedData) {
+          final feedItem = FeedItem.fromJson(fJson);
+          if (feedItem.cost > 0) {
+            feedTransactions.add(
+              FinancialTransaction(
+                id: 'feed_inv_${feedItem.id}',
+                farmId: farmId,
+                title: 'ค่าอาหาร: ${feedItem.name}',
+                type: TransactionType.expense,
+                category: TransactionCategory.feed,
+                amount: feedItem.cost,
+                date: feedItem.recordedAt,
+                notes: feedItem.notes ?? 'บันทึกรายจ่ายจากการซื้ออาหารเข้าคลัง',
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        print('⚠️ ไม่สามารถดึงข้อมูลคลังอาหารมารวมในบัญชีได้: $e');
+      }
 
-      // Convert feed items to expense transactions
-      final List<FinancialTransaction> feedExpenses = feedItems
-          .where((item) => item.cost > 0)
-          .map(
-            (item) => FinancialTransaction(
-              id: 'FEED_${item.id}',
-              farmId: farmId,
-              title: 'ค่าอาหาร: ${item.name}',
-              amount: item.cost,
-              type: TransactionType.expense,
-              category: TransactionCategory.feed,
-              date: item.recordedAt,
-              notes: item.notes,
-            ),
-          )
-          .toList();
+      // Also fetch culling records (sold cows) and merge with financial transactions
+      try {
+        final cullRes = await _api.get(
+          '/culling_records',
+          query: {'farm_id': farmId},
+        );
+        final List<dynamic> cullData = cullRes.data;
+        for (var cJson in cullData) {
+          final record = CullingRecord.fromJson(cJson);
+          if (record.status == 0 && record.price > 0) {
+            final cowName = record.cow != null && record.cow!.name.isNotEmpty
+                ? record.cow!.name
+                : (record.cow != null ? 'หมายเลข ${record.cow!.tagNumber}' : 'หมายเลข ${record.cowId}');
 
-      // Combine all transactions
-      final allTransactions = [...manualTransactions, ...feedExpenses];
+            final formattedTitle = 'ขายวัว $cowName';
 
-      print(
-        '[SUCCESS] ดึงข้อมูลสำเร็จ: ${manualTransactions.length} ธุรกรรม + ${feedExpenses.length} ค่าอาหาร',
-      );
-      state = state.copyWith(transactions: allTransactions, isLoading: false);
-    } catch (e) {
-      print('[ERROR] ดึงข้อมูลธุรกรรมไม่สำเร็จ: $e');
-      state = state.copyWith(isLoading: false, errorMessage: e.toString());
-    }
-  }
+            // Check if manualTransactions already has a transaction for this sale (by ID or same date/amount)
+            final existingIndex = manualTransactions.indexWhere((t) {
+              if (t.id == record.id || t.id == 'cull_${record.id}') return true;
+              final isSameDate = t.date.year == record.cullDate.year &&
+                  t.date.month == record.cullDate.month &&
+                  t.date.day == record.cullDate.day;
+              final isSameAmount = (t.amount - record.price).abs() < 0.01;
+              final isIncome = t.type == TransactionType.income;
+              return isSameDate && isSameAmount && isIncome;
+            });
 
-  void changeMonth(DateTime newMonth) {
-    state = state.copyWith(
-      selectedMonth: DateTime(newMonth.year, newMonth.month),
-    );
-  }
+            if (existingIndex != -1) {
+              // Update title to prefer cow's name (e.g. "ขายวัว นำโชค")
+              manualTransactions[existingIndex] = FinancialTransaction(
+                id: manualTransactions[existingIndex].id,
+                farmId: manualTransactions[existingIndex].farmId,
+                title: formattedTitle,
+                type: manualTransactions[existingIndex].type,
+                category: manualTransactions[existingIndex].category,
+                amount: manualTransactions[existingIndex].amount,
+                date: manualTransactions[existingIndex].date,
+                relatedCowId: record.cowId,
+                notes: manualTransactions[existingIndex].notes ?? (record.note.isNotEmpty ? record.note : null),
+              );
+            } else {
+              manualTransactions.add(
+                FinancialTransaction(
+                  id: 'cull_${record.id}',
+                  farmId: farmId,
+                  title: formattedTitle,
+                  type: TransactionType.income,
+                  category: TransactionCategory.cowSale,
+                  amount: record.price,
+                  date: record.cullDate,
+                  relatedCowId: record.cowId,
+                  notes: record.note.isNotEmpty ? record.note : 'ระบบบันทึกรายรับอัตโนมัติจากการขายวัว',
+                ),
+              );
+            }
+          }
+        }
+      } catch (e) {
+        print('⚠️ ไม่สามารถดึงข้อมูลการขายวัวมารวมในบัญชีได้: $e');
+      }
 
-  Future<void> addTransaction(FinancialTransaction transaction) async {
-    state = state.copyWith(isLoading: true, errorMessage: null);
-    try {
-      print('[CREATE] กำลังเพิ่มธุรกรรมใหม่: ${transaction.title}...');
-      final response = await _api.post(
-        '/financial_records',
-        data: transaction.toJson(),
-      );
-      final newTransaction = FinancialTransaction.fromJson(response.data);
+      final allTx = [...manualTransactions, ...feedTransactions];
+      allTx.sort((a, b) => b.date.compareTo(a.date));
 
-      print('[SUCCESS] เพิ่มธุรกรรมสำเร็จ: ${newTransaction.title}');
       state = state.copyWith(
         isLoading: false,
-        transactions: [newTransaction, ...state.transactions],
+        transactions: allTx,
       );
     } catch (e) {
-      print('[ERROR] เพิ่มธุรกรรมไม่สำเร็จ: $e');
+      print('[ERROR] ไม่สามารถดึงข้อมูลธุรกรรมได้: $e');
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
 
-  Future<void> updateTransaction(FinancialTransaction transaction) async {
+  Future<void> addTransaction(FinancialTransaction tx) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
-      print('[UPDATE] กำลังแก้ไขธุรกรรม: ${transaction.id}...');
-      final response = await _api.put(
-        '/financial_records/${transaction.id}',
-        data: transaction.toJson(),
+      final body = {
+        'farm_id': tx.farmId,
+        'title': tx.title,
+        'type': tx.type.name,
+        'category': tx.category.label,
+        'amount': tx.amount,
+        'date': tx.date.toIso8601String().split('T')[0],
+        if (tx.notes != null) 'notes': tx.notes,
+      };
+
+      print('[POST] กำลังบันทึกธุรกรรมใหม่: $body');
+      final response = await _api.post('/financial_records', data: body);
+      final newTx = FinancialTransaction.fromJson(response.data);
+
+      final updatedList = [newTx, ...state.transactions];
+      updatedList.sort((a, b) => b.date.compareTo(a.date));
+
+      state = state.copyWith(
+        isLoading: false,
+        transactions: updatedList,
       );
+    } catch (e) {
+      print('[ERROR] บันทึกธุรกรรมไม่สำเร็จ: $e');
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+    }
+  }
+
+  Future<void> updateTransaction(FinancialTransaction tx) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      final body = {
+        'title': tx.title,
+        'type': tx.type.name,
+        'category': tx.category.label,
+        'amount': tx.amount,
+        'date': tx.date.toIso8601String().split('T')[0],
+        if (tx.notes != null) 'notes': tx.notes,
+      };
+
+      print('[PUT] กำลังแก้ไขธุรกรรม ${tx.id}: $body');
+      final response = await _api.put('/financial_records/${tx.id}', data: body);
       final updated = FinancialTransaction.fromJson(response.data);
 
-      print('[SUCCESS] แก้ไขธุรกรรมสำเร็จ: ${updated.title}');
       state = state.copyWith(
         isLoading: false,
         transactions: state.transactions

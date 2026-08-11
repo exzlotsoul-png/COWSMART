@@ -100,4 +100,25 @@ class ImageController extends Controller
 
         return response()->json($response);
     }
+
+    public function deleteImage(Request $request)
+    {
+        $request->validate([
+            'path' => 'required|string',
+        ]);
+
+        $rawPath = $request->input('path');
+        if (preg_match('/storage\/(.+)$/', $rawPath, $matches)) {
+            $path = $matches[1];
+        } else {
+            $path = ltrim($rawPath, '/');
+            $path = preg_replace('/^storage\//', '', $path);
+        }
+
+        if ($path && !str_starts_with($path, 'http') && Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
+        }
+
+        return response()->json(['message' => 'ลบรูปภาพจากระบบเรียบร้อยแล้ว']);
+    }
 }

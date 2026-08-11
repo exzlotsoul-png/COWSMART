@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:cowsmart/core/utils/date_formatter.dart';
 import '../../providers/market_price_provider.dart';
 import '../../domain/market_price.dart';
 
@@ -93,8 +94,8 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          DateFormat('dd MMM yyyy').format(selectedDate),
-                          style: const TextStyle(fontSize: 14),
+                          AppDateUtils.formatThaiDate(selectedDate, useFullMonth: true),
+                          style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
@@ -288,8 +289,8 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    DateFormat('dd MMM yyyy').format(latest.effectiveDate),
-                    style: const TextStyle(color: Colors.white70, fontSize: 11),
+                    AppDateUtils.formatThaiDate(latest.effectiveDate),
+                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
                   ),
                 ),
             ],
@@ -389,10 +390,11 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
                 ),
               ),
               Text(
-                DateFormat('dd MMM yyyy').format(price.effectiveDate),
+                AppDateUtils.formatThaiDate(price.effectiveDate),
                 style: const TextStyle(
                   fontSize: 11,
-                  color: AppColors.textSecondary,
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],

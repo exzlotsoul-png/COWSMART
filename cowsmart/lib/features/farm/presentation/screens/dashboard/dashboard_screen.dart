@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/theme/app_colors.dart';
+import 'package:cowsmart/core/utils/date_formatter.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
@@ -885,11 +886,36 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ],
             ),
           )
-        else
-          ...zones.map((zone) => Padding(
+        else ...[
+          ...zones.take(5).map((zone) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: _buildZoneRow(context, zone),
               )),
+          if (zones.length > 5)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: OutlinedButton.icon(
+                onPressed: () => context.push('/all_zones'),
+                icon: const Icon(Icons.grid_view_rounded, size: 18),
+                label: Text(
+                  'ดูโซนทั้งหมด (${zones.length} โซน)',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  side: BorderSide(color: AppColors.primary.withValues(alpha: 0.5)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  minimumSize: const Size(double.infinity, 44),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ],
     );
   }
@@ -1210,70 +1236,126 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   InkWell(
                     onTap: () async {
                       final tempSelected = Set<String>.from(selectedCowIds);
+                      String dialogSearchQuery = '';
                       final result = await showDialog<Set<String>>(
                         context: ctx,
                         builder: (selectCtx) => StatefulBuilder(
-                          builder: (selectCtx, setSelectState) => AlertDialog(
-                            title: Row(
-                              children: [
-                                const Text('เลือกวัวที่ต้องการนัดหมาย', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
-                                const Spacer(),
-                                TextButton(
-                                  onPressed: () {
-                                    setSelectState(() {
-                                      if (tempSelected.length == allCows.length) {
-                                        tempSelected.clear();
-                                      } else {
-                                        tempSelected.addAll(allCows.map((c) => c.id));
-                                      }
-                                    });
-                                  },
-                                  child: Text(
-                                    tempSelected.length == allCows.length ? 'ยกเลิกทั้งหมด' : 'เลือกทั้งหมด',
-                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                          builder: (selectCtx, setSelectState) {
+                            final filteredCows = allCows.where((cow) {
+                              if (dialogSearchQuery.isEmpty) return true;
+                              final q = dialogSearchQuery.toLowerCase();
+                              return cow.name.toLowerCase().contains(q) ||
+                                  cow.tagNumber.toLowerCase().contains(q);
+                            }).toList();
+
+                            return AlertDialog(
+                              title: Row(
+                                children: [
+                                  const Expanded(
+                                    child: Text(
+                                      'เลือกวัวที่ต้องการนัดหมาย',
+                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            content: SizedBox(
-                              width: double.maxFinite,
-                              height: 320,
-                              child: ListView.builder(
-                                shrinkWrap: true,
-                                itemCount: allCows.length,
-                                itemBuilder: (cCtx, i) {
-                                  final cow = allCows[i];
-                                  final isChecked = tempSelected.contains(cow.id);
-                                  return CheckboxListTile(
-                                    value: isChecked,
-                                    activeColor: Colors.orange[800],
-                                    title: Text(cow.name.isNotEmpty ? '${cow.name} (${cow.tagNumber})' : cow.tagNumber, style: const TextStyle(fontSize: 15)),
-                                    subtitle: Text('แท็ก: ${cow.tagNumber} · ${cow.type.label}', style: const TextStyle(fontSize: 12)),
-                                    onChanged: (val) {
+                                  TextButton(
+                                    onPressed: () {
                                       setSelectState(() {
-                                        if (val == true) {
-                                          tempSelected.add(cow.id);
+                                        if (tempSelected.length == allCows.length) {
+                                          tempSelected.clear();
                                         } else {
-                                          tempSelected.remove(cow.id);
+                                          tempSelected.addAll(allCows.map((c) => c.id));
                                         }
                                       });
                                     },
-                                  );
-                                },
+                                    child: Text(
+                                      tempSelected.length == allCows.length ? 'ยกเลิกทั้งหมด' : 'เลือกทั้งหมด',
+                                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(selectCtx, null),
-                                child: const Text('ยกเลิก'),
+                              content: SizedBox(
+                                width: double.maxFinite,
+                                height: 380,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    TextField(
+                                      onChanged: (val) {
+                                        setSelectState(() {
+                                          dialogSearchQuery = val.trim();
+                                        });
+                                      },
+                                      decoration: InputDecoration(
+                                        hintText: 'ค้นหาชื่อ หรือ เบอร์หู...',
+                                        hintStyle: const TextStyle(fontSize: 13, color: AppColors.textHint),
+                                        prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.primary),
+                                        suffixIcon: dialogSearchQuery.isNotEmpty
+                                            ? IconButton(
+                                                icon: const Icon(Icons.clear, size: 18),
+                                                onPressed: () {
+                                                  setSelectState(() {
+                                                    dialogSearchQuery = '';
+                                                  });
+                                                },
+                                              )
+                                            : null,
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                        filled: true,
+                                        fillColor: AppColors.surfaceAlt,
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                          borderSide: BorderSide.none,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Expanded(
+                                      child: filteredCows.isEmpty
+                                          ? const Center(
+                                              child: Text('ไม่พบข้อมูลวัวที่ค้นหา', style: TextStyle(color: AppColors.textHint, fontSize: 13)),
+                                            )
+                                          : ListView.builder(
+                                              shrinkWrap: true,
+                                              itemCount: filteredCows.length,
+                                              itemBuilder: (cCtx, i) {
+                                                final cow = filteredCows[i];
+                                                final isChecked = tempSelected.contains(cow.id);
+                                                return CheckboxListTile(
+                                                  value: isChecked,
+                                                  activeColor: Colors.orange[800],
+                                                  title: Text(cow.name.isNotEmpty ? '${cow.name} (${cow.tagNumber})' : cow.tagNumber, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                                                  subtitle: Text('แท็ก: ${cow.tagNumber} · ${cow.type.label}', style: const TextStyle(fontSize: 12)),
+                                                  onChanged: (val) {
+                                                    setSelectState(() {
+                                                      if (val == true) {
+                                                        tempSelected.add(cow.id);
+                                                      } else {
+                                                        tempSelected.remove(cow.id);
+                                                      }
+                                                    });
+                                                  },
+                                                );
+                                              },
+                                            ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange[800]),
-                                onPressed: () => Navigator.pop(selectCtx, tempSelected),
-                                child: const Text('ตกลง', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                              ),
-                            ],
-                          ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(selectCtx, null),
+                                  child: const Text('ยกเลิก'),
+                                ),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.orange[800]),
+                                  onPressed: () => Navigator.pop(selectCtx, tempSelected),
+                                  child: const Text('ตกลง', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       );
 
@@ -1307,6 +1389,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
+                    isExpanded: true,
                     initialValue: selectedType,
                     style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
                     decoration: const InputDecoration(
@@ -1339,7 +1422,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.calendar_today, color: AppColors.primary),
                   title: const Text('วันนัดหมาย', style: TextStyle(fontSize: 15)),
-                  subtitle: Text(DateFormat('dd MMM yyyy').format(selectedDate), style: const TextStyle(fontSize: 14)),
+                  subtitle: Text(AppDateUtils.formatThaiDate(selectedDate, useFullMonth: true), style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
                   onTap: () async {
                     final picked = await showDatePicker(
                       context: ctx,
@@ -1357,7 +1440,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.access_time, color: AppColors.primary),
                   title: const Text('เวลานัดหมาย', style: TextStyle(fontSize: 15)),
-                  subtitle: Text(selectedTime.format(ctx), style: const TextStyle(fontSize: 14)),
+                  subtitle: Text(
+                    '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')} น.',
+                    style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                  ),
                   onTap: () async {
                     final picked = await showTimePicker(
                       context: ctx,
@@ -1384,6 +1470,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
+                  isExpanded: true,
                   initialValue: selectedReminder,
                   style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
                   decoration: const InputDecoration(

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/constants/app_constants.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
 import 'package:cowsmart/features/farm/domain/zone.dart';
@@ -263,204 +262,260 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('จัดการโซนในฟาร์ม')),
-      body: Stack(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.primaryDark,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+          onPressed: () => context.pop(),
+        ),
+        title: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'จัดการโซนในฟาร์ม',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 2),
+            Text(
+              'เพิ่ม แก้ไข หรือลบโซนพื้นที่เลี้ยงวัว',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+      body: Column(
         children: [
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(AppConstants.defaultPadding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 16),
-                  Text(
-                    'แบ่งพื้นที่ฟาร์มของคุณ',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
+          // ── Header Input Card ──
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+            decoration: const BoxDecoration(
+              color: AppColors.primaryDark,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(20),
+                bottomRight: Radius.circular(20),
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _zoneNameController,
+                    style: const TextStyle(fontSize: 14),
+                    decoration: InputDecoration(
+                      hintText: 'พิมพ์ชื่อโซนใหม่ เช่น โซน ก., คอกอนุบาล...',
+                      hintStyle: const TextStyle(color: AppColors.textHint, fontSize: 13),
+                      prefixIcon: const Icon(Icons.add_location_alt_rounded, color: AppColors.primary, size: 22),
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'คุณสามารถเพิ่มและลบโซนได้จากหน้านี้ ข้อมูลจะถูกบันทึกเมื่อกดปุ่ม "บันทึก" เท่านั้น',
-                    style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(width: 8),
+                Material(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(14),
+                  child: InkWell(
+                    onTap: _addLocalZone,
+                    borderRadius: BorderRadius.circular(14),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.add_rounded, size: 18, color: Colors.white),
+                          SizedBox(width: 4),
+                          Text('เพิ่ม', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 24),
+                ),
+              ],
+            ),
+          ),
 
-                  // Add Zone Input
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _zoneNameController,
-                          decoration: const InputDecoration(
-                            labelText: 'ชื่อโซนใหม่',
-                            hintText: 'เช่น โซน ก., คอกอนุบาล...',
-                            prefixIcon: Icon(Icons.fence_outlined),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: _addLocalZone,
-                        style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 20,
-                            horizontal: 16,
-                          ),
-                          minimumSize: Size.zero,
-                        ),
-                        child: const Icon(Icons.add),
-                      ),
-                    ],
+          // ── Status Bar ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'รายการโซนในระบบ (${_zones.length} โซน)',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
                   ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      const Text(
-                        'รายการโซนที่คุณเลือก',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                if (_zonesToDelete.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'เตรียมลบ ${_zonesToDelete.length} รายการ',
+                      style: const TextStyle(
+                        color: AppColors.error,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
                       ),
-                      const Spacer(),
-                      if (_zonesToDelete.isNotEmpty)
-                        Text(
-                          'ลบออก ${_zonesToDelete.length} รายการ',
-                          style: const TextStyle(
-                            color: AppColors.error,
-                            fontSize: 12,
-                          ),
-                        ),
-                    ],
+                    ),
                   ),
-                  const SizedBox(height: 8),
-                  const Divider(),
-                  const SizedBox(height: 8),
+              ],
+            ),
+          ),
 
-                  // Zones List
-                  Expanded(
-                    child: _zones.isEmpty && !_isLoading
-                        ? Center(
-                            child: Text(
+          // ── Zones List ──
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                : _zones.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.grass_rounded, size: 48, color: AppColors.primary.withValues(alpha: 0.4)),
+                            const SizedBox(height: 12),
+                            const Text(
                               'ยังไม่มีโซน',
-                              style: Theme.of(context).textTheme.bodyMedium,
+                              style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
                             ),
-                          )
-                        : ListView.builder(
-                            itemCount: _zones.length,
-                            itemBuilder: (context, index) {
-                              final zone = _zones[index];
-                              final isNew = zone.id == 'NEW';
-                              return Card(
-                                margin: const EdgeInsets.symmetric(vertical: 6),
-                                color: isNew
-                                    ? AppColors.primaryLight.withValues(alpha: 0.05)
-                                    : AppColors.surface,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  side: BorderSide(
-                                    color: isNew
-                                        ? AppColors.primary
-                                        : AppColors.border,
-                                  ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        itemCount: _zones.length,
+                        itemBuilder: (context, index) {
+                          final zone = _zones[index];
+                          final isNew = zone.id == 'NEW';
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: isNew ? AppColors.primary.withValues(alpha: 0.05) : Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: isNew
+                                      ? AppColors.primary.withValues(alpha: 0.8)
+                                      : AppColors.border.withValues(alpha: 0.6),
+                                  width: isNew ? 1.5 : 1.0,
                                 ),
-                                child: ListTile(
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                                  leading: CircleAvatar(
-                                    radius: 20,
-                                    backgroundColor: isNew
-                                        ? AppColors.primary
-                                        : AppColors.primaryLight.withValues(alpha: 0.2),
-                                    child: Text(
-                                      '${index + 1}',
-                                      style: TextStyle(
-                                        color: isNew
-                                            ? Colors.white
-                                            : AppColors.primaryDark,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.03),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: isNew
+                                          ? AppColors.primary
+                                          : AppColors.primary.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Icon(
+                                      Icons.grass_rounded,
+                                      color: isNew ? Colors.white : AppColors.primary,
+                                      size: 22,
                                     ),
                                   ),
-                                  title: Text(
-                                    zone.name,
-                                    style: const TextStyle(
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.textPrimary,
-                                    ),
-                                  ),
-                                  subtitle: Padding(
-                                    padding: const EdgeInsets.only(top: 4),
-                                    child: Text(
-                                      isNew
-                                          ? 'โซนใหม่ (ยังไม่บันทึก)'
-                                          : 'วัวในโซน: ${zone.cowCount} ตัว',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                        color: isNew ? AppColors.primary : AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.edit_outlined,
-                                          color: AppColors.primary,
-                                          size: 22,
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          zone.name,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.textPrimary,
+                                          ),
                                         ),
-                                        onPressed: () =>
-                                            _showEditZoneDialog(index),
-                                        tooltip: 'แก้ไขชื่อ',
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.close,
-                                          color: AppColors.textSecondary,
-                                          size: 22,
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          isNew ? '✨ โซนใหม่ (ยังไม่บันทึก)' : 'วัวในโซน: ${zone.cowCount} ตัว',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: isNew ? FontWeight.bold : FontWeight.normal,
+                                            color: isNew ? AppColors.primary : AppColors.textSecondary,
+                                          ),
                                         ),
-                                        onPressed: () =>
-                                            _removeLocalZone(index),
-                                        tooltip: 'ลบโซน',
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              );
-                            },
-                          ),
-                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.edit_note_rounded, color: AppColors.primary, size: 24),
+                                    onPressed: () => _showEditZoneDialog(index),
+                                    tooltip: 'แก้ไขชื่อโซน',
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error, size: 22),
+                                    onPressed: () => _removeLocalZone(index),
+                                    tooltip: 'ลบโซน',
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+          ),
 
-                  // Save Button
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : _saveAllChanges,
-                    child: _isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : const Text('บันทึกการเปลี่ยนแปลงทั้งหมด'),
+          // ── Save Changes Bar ──
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _saveAllChanges,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  const SizedBox(height: 8),
-                ],
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check_circle_rounded, size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      'บันทึกการเปลี่ยนแปลงทั้งหมด',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-          if (_isLoading)
-            Container(
-              color: Colors.black12,
-              child: const Center(child: CircularProgressIndicator()),
-            ),
         ],
       ),
     );

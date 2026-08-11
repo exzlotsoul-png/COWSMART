@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
+import 'package:cowsmart/core/utils/date_formatter.dart';
 import '../../providers/finance_provider.dart';
 import '../../domain/finance.dart';
 import '../../../farm/providers/farm_provider.dart';
@@ -190,7 +192,10 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                         height: 50,
                         child: ElevatedButton.icon(
                           onPressed: () async {
-                            if (!formKey.currentState!.validate()) return;
+                            if (!formKey.currentState!.validate()) {
+                              AppFeedback.showError(context, 'กรุณากรอกหัวข้อรายการและจำนวนเงินให้ถูกต้อง');
+                              return;
+                            }
                             final currentFarm = ref.read(farmProvider).currentFarm;
                             if (currentFarm == null) return;
 
@@ -208,12 +213,7 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                             Navigator.pop(modalContext);
                             await ref.read(financeProvider.notifier).addTransaction(tx);
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('บันทึกรายการสำเร็จ!'),
-                                  backgroundColor: AppColors.success,
-                                ),
-                              );
+                              AppFeedback.showSuccess(context, 'บันทึกรายการรายรับ/รายจ่ายเรียบร้อยแล้ว');
                             }
                           },
                           icon: const Icon(Icons.check_circle_rounded, size: 20),
@@ -233,6 +233,316 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
           },
         );
       },
+    );
+  }
+
+  void _showCustomDateRangePicker(BuildContext context) {
+    final financeState = ref.read(financeProvider);
+    final now = DateTime.now();
+
+    DateTime tempStart = financeState.customDateRange?.start ??
+        DateTime(now.year, now.month, 1);
+    DateTime tempEnd = financeState.customDateRange?.end ?? now;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (modalContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final daysCount = tempEnd.difference(tempStart).inDays + 1;
+
+            void applyPreset(DateTime start, DateTime end) {
+              setModalState(() {
+                tempStart = start;
+                tempEnd = end;
+              });
+            }
+
+            return Container(
+              padding: const EdgeInsets.all(20),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Header
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.date_range_rounded, color: AppColors.primary, size: 22),
+                            SizedBox(width: 8),
+                            Text(
+                              'เลือกช่วงเวลาดูบัญชี',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primaryDark,
+                              ),
+                            ),
+                          ],
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(modalContext),
+                          icon: const Icon(Icons.close_rounded, color: AppColors.textSecondary),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Quick Presets Label
+                    const Text(
+                      'ตัวเลือกด่วน',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Preset Chips
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _buildPresetChip(
+                          label: '7 วันล่าสุด',
+                          onTap: () {
+                            final today = DateTime.now();
+                            applyPreset(today.subtract(const Duration(days: 6)), today);
+                          },
+                        ),
+                        _buildPresetChip(
+                          label: '30 วันล่าสุด',
+                          onTap: () {
+                            final today = DateTime.now();
+                            applyPreset(today.subtract(const Duration(days: 29)), today);
+                          },
+                        ),
+                        _buildPresetChip(
+                          label: 'เดือนนี้',
+                          onTap: () {
+                            final today = DateTime.now();
+                            applyPreset(DateTime(today.year, today.month, 1), today);
+                          },
+                        ),
+                        _buildPresetChip(
+                          label: 'เดือนที่แล้ว',
+                          onTap: () {
+                            final today = DateTime.now();
+                            final firstOfLastMonth = DateTime(today.year, today.month - 1, 1);
+                            final lastOfLastMonth = DateTime(today.year, today.month, 0);
+                            applyPreset(firstOfLastMonth, lastOfLastMonth);
+                          },
+                        ),
+                        _buildPresetChip(
+                          label: 'ปีนี้ (พ.ศ. ${now.year + 543})',
+                          onTap: () {
+                            final today = DateTime.now();
+                            applyPreset(DateTime(today.year, 1, 1), today);
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Custom Date Pickers Label
+                    const Text(
+                      'ระบุช่วงวันที่เอง',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    Row(
+                      children: [
+                        // Start Date
+                        Expanded(
+                          child: InkWell(
+                            onTap: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: tempStart,
+                                firstDate: DateTime(2020),
+                                lastDate: DateTime(2100),
+                                helpText: 'เลือกวันที่เริ่มต้น',
+                              );
+                              if (picked != null) {
+                                setModalState(() {
+                                  tempStart = picked;
+                                  if (tempEnd.isBefore(tempStart)) {
+                                    tempEnd = tempStart;
+                                  }
+                                });
+                              }
+                            },
+                            borderRadius: BorderRadius.circular(14),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceAlt,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'ตั้งแต่วันที่',
+                                    style: TextStyle(fontSize: 11, color: AppColors.textHint, fontWeight: FontWeight.w500),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.calendar_today_rounded, size: 16, color: AppColors.primary),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          AppDateUtils.formatThaiDate(tempStart),
+                                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          child: Icon(Icons.arrow_forward_rounded, color: AppColors.textHint, size: 18),
+                        ),
+                        // End Date
+                        Expanded(
+                          child: InkWell(
+                            onTap: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: tempEnd,
+                                firstDate: tempStart,
+                                lastDate: DateTime(2100),
+                                helpText: 'เลือกวันที่สิ้นสุด',
+                              );
+                              if (picked != null) {
+                                setModalState(() {
+                                  tempEnd = picked;
+                                });
+                              }
+                            },
+                            borderRadius: BorderRadius.circular(14),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceAlt,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'ถึงวันที่',
+                                    style: TextStyle(fontSize: 11, color: AppColors.textHint, fontWeight: FontWeight.w500),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.event_rounded, size: 16, color: AppColors.primary),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          AppDateUtils.formatThaiDate(tempEnd),
+                                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Days Count Badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.info_outline_rounded, size: 16, color: AppColors.primaryDark),
+                          const SizedBox(width: 6),
+                          Text(
+                            'รวมระยะเวลาเลือกทั้งหมด $daysCount วัน',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primaryDark,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Apply Button
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        ref.read(financeProvider.notifier).setCustomDateRange(
+                              DateTimeRange(start: tempStart, end: tempEnd),
+                            );
+                        Navigator.pop(modalContext);
+                      },
+                      icon: const Icon(Icons.check_circle_rounded, size: 20),
+                      label: const Text('ตกลง / ดูรายงานช่วงเวลานี้', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildPresetChip({required String label, required VoidCallback onTap}) {
+    return ActionChip(
+      label: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.primaryDark)),
+      backgroundColor: AppColors.surfaceAlt,
+      side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      onPressed: onTap,
     );
   }
 
@@ -496,66 +806,175 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                       ),
                       const SizedBox(height: 12),
 
-                      // Month Navigator Bar inside Header
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.chevron_left_rounded, color: Colors.white, size: 28),
-                              onPressed: () {
-                                final newDate = DateTime(
-                                  financeState.selectedMonth.year,
-                                  financeState.selectedMonth.month - 1,
-                                );
-                                ref.read(financeProvider.notifier).changeMonth(newDate);
-                              },
-                            ),
-                            InkWell(
-                              onTap: () => _showMonthYearPicker(context),
-                              borderRadius: BorderRadius.circular(10),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.calendar_month_rounded, color: Colors.white, size: 18),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      DateFormat('MMMM yyyy').format(financeState.selectedMonth),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    const Icon(Icons.arrow_drop_down_rounded, color: Colors.white, size: 22),
-                                  ],
+                      // Filter Mode Switcher (Month vs Custom Range)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          InkWell(
+                            onTap: () {
+                              ref.read(financeProvider.notifier).setFilterMode(FinanceFilterMode.month);
+                            },
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: financeState.filterMode == FinanceFilterMode.month
+                                    ? Colors.white
+                                    : Colors.white.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                'รายเดือน',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: financeState.filterMode == FinanceFilterMode.month
+                                      ? AppColors.primaryDark
+                                      : Colors.white,
                                 ),
                               ),
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.chevron_right_rounded, color: Colors.white, size: 28),
-                              onPressed: () {
-                                final newDate = DateTime(
-                                  financeState.selectedMonth.year,
-                                  financeState.selectedMonth.month + 1,
-                                );
-                                if (newDate.isBefore(DateTime.now()) ||
-                                    DateFormat('MM yyyy').format(newDate) ==
-                                        DateFormat('MM yyyy').format(DateTime.now())) {
-                                  ref.read(financeProvider.notifier).changeMonth(newDate);
-                                }
-                              },
+                          ),
+                          const SizedBox(width: 8),
+                          InkWell(
+                            onTap: () {
+                              if (financeState.filterMode != FinanceFilterMode.range) {
+                                ref.read(financeProvider.notifier).setFilterMode(FinanceFilterMode.range);
+                              }
+                              if (financeState.customDateRange == null) {
+                                _showCustomDateRangePicker(context);
+                              }
+                            },
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: financeState.filterMode == FinanceFilterMode.range
+                                    ? Colors.white
+                                    : Colors.white.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    'กำหนดช่วงวัน',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                      color: financeState.filterMode == FinanceFilterMode.range
+                                          ? AppColors.primaryDark
+                                          : Colors.white,
+                                    ),
+                                  ),
+                                  if (financeState.filterMode == FinanceFilterMode.range) ...[
+                                    const SizedBox(width: 4),
+                                    const Icon(Icons.edit_calendar_rounded, size: 14, color: AppColors.primaryDark),
+                                  ],
+                                ],
+                              ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
+                      const SizedBox(height: 10),
+
+                      // Month Navigator Bar OR Custom Range Bar
+                      if (financeState.filterMode == FinanceFilterMode.month) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.chevron_left_rounded, color: Colors.white, size: 28),
+                                onPressed: () {
+                                  final newDate = DateTime(
+                                    financeState.selectedMonth.year,
+                                    financeState.selectedMonth.month - 1,
+                                  );
+                                  ref.read(financeProvider.notifier).changeMonth(newDate);
+                                },
+                              ),
+                              InkWell(
+                                onTap: () => _showMonthYearPicker(context),
+                                borderRadius: BorderRadius.circular(10),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.calendar_month_rounded, color: Colors.white, size: 18),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        AppDateUtils.formatThaiMonthYear(financeState.selectedMonth),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      const Icon(Icons.arrow_drop_down_rounded, color: Colors.white, size: 22),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.chevron_right_rounded, color: Colors.white, size: 28),
+                                onPressed: () {
+                                  final newDate = DateTime(
+                                    financeState.selectedMonth.year,
+                                    financeState.selectedMonth.month + 1,
+                                  );
+                                  if (newDate.isBefore(DateTime.now()) ||
+                                      DateFormat('MM yyyy').format(newDate) ==
+                                          DateFormat('MM yyyy').format(DateTime.now())) {
+                                    ref.read(financeProvider.notifier).changeMonth(newDate);
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ] else ...[
+                        InkWell(
+                          onTap: () => _showCustomDateRangePicker(context),
+                          borderRadius: BorderRadius.circular(14),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.date_range_rounded, color: Colors.white, size: 20),
+                                const SizedBox(width: 8),
+                                Text(
+                                  financeState.customDateRange != null
+                                      ? AppDateUtils.formatThaiDateRange(
+                                          financeState.customDateRange!.start,
+                                          financeState.customDateRange!.end,
+                                        )
+                                      : 'กดที่นี่เพื่อเลือกช่วงวันที่ (จากวันที่ - ถึงวันที่)',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                const Icon(Icons.edit_calendar_rounded, color: Colors.white, size: 18),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -585,9 +1004,9 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Net Balance Title
-                    const Text(
-                      'คงเหลือสุทธิเดือนนี้',
-                      style: TextStyle(
+                    Text(
+                      financeState.filterMode == FinanceFilterMode.range ? 'คงเหลือสุทธิช่วงเวลานี้' : 'คงเหลือสุทธิเดือนนี้',
+                      style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textSecondary,

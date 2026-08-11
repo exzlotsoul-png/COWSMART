@@ -11,6 +11,7 @@ import '../../features/farm/presentation/screens/edit_farm_screen.dart';
 import '../../features/farm/domain/farm.dart';
 import '../../features/farm/presentation/screens/create_zone_screen.dart';
 import '../../features/farm/presentation/screens/zone_detail_screen.dart';
+import '../../features/farm/presentation/screens/all_zones_screen.dart';
 import '../../features/farm/presentation/screens/select_farm_screen.dart';
 import '../../features/farm/presentation/screens/dashboard/main_layout_screen.dart';
 import '../../features/cow/presentation/screens/add_cow_screen.dart';
@@ -20,6 +21,7 @@ import '../../features/cow/presentation/screens/cull_cow_screen.dart';
 import '../../features/cow/presentation/screens/culling_history_screen.dart';
 import '../../features/cow/presentation/screens/cow_history_list_screen.dart';
 import '../../features/cow/presentation/screens/group_cull_screen.dart';
+import '../../features/cow/presentation/screens/qr_scanner_screen.dart';
 import '../../features/feed/presentation/screens/feed_history_screen.dart';
 import '../../features/finance/presentation/screens/finance_overview_screen.dart';
 import '../../features/market/presentation/screens/market_price_screen.dart';
@@ -27,6 +29,7 @@ import '../../features/notifications/presentation/screens/notification_screen.da
 import '../../features/calendar/presentation/screens/calendar_screen.dart';
 import '../../features/cow/domain/cow.dart';
 import '../../features/farm/domain/zone.dart';
+import '../../features/cow/providers/cow_provider.dart';
 import '../../features/auth/providers/auth_provider.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -87,6 +90,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const CreateFarmScreen(),
       ),
       GoRoute(
+        path: '/all_zones',
+        builder: (context, state) => const AllZonesScreen(),
+      ),
+      GoRoute(
         path: '/create_zone',
         builder: (context, state) => const CreateZoneScreen(),
       ),
@@ -118,6 +125,31 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final initData = state.extra as Map<String, dynamic>?;
           return AddCowScreen(initialData: initData);
+        },
+      ),
+      GoRoute(
+        path: '/qr_scanner',
+        builder: (context, state) => const QrScannerScreen(),
+      ),
+      GoRoute(
+        path: '/cow_detail/:id',
+        builder: (context, state) {
+          if (state.extra is Cow) {
+            return CowDetailScreen(cow: state.extra as Cow);
+          }
+          final cowId = state.pathParameters['id'];
+          final cows = ref.read(cowProvider).allCows;
+          final matchedCow = cows.cast<Cow?>().firstWhere(
+                (c) => c?.id == cowId || c?.tagNumber == cowId,
+                orElse: () => cows.isNotEmpty ? cows.first : null,
+              );
+          if (matchedCow != null) {
+            return CowDetailScreen(cow: matchedCow);
+          }
+          return Scaffold(
+            appBar: AppBar(title: const Text('ไม่พบข้อมูลวัว')),
+            body: const Center(child: Text('ไม่พบข้อมูลวัวที่ระบุ')),
+          );
         },
       ),
       GoRoute(

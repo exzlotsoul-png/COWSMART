@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
+import 'package:cowsmart/core/utils/date_formatter.dart';
 import 'package:cowsmart/core/constants/app_constants.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
 import 'package:cowsmart/features/cow/domain/culling_record.dart';
@@ -59,57 +61,51 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
   }
 
   void _submitCull() async {
-    if (_formKey.currentState!.validate()) {
-      int statusValue;
-      switch (_selectedType) {
-        case CullType.sold:
-          statusValue = 0;
-          break;
-        case CullType.deceased:
-          statusValue = 1;
-          break;
-        case CullType.removed:
-          statusValue = 2;
-          break;
-      }
+    if (!_formKey.currentState!.validate()) {
+      AppFeedback.showError(context, 'กรุณาตรวจสอบและระบุสาเหตุการคัดออกให้ครบถ้วน');
+      return;
+    }
 
-      final record = CullingRecord(
-        id: '',
-        cowId: widget.cow.id,
-        cullDate: _selectedDate,
-        status: statusValue,
-        price: double.tryParse(_priceController.text) ?? 0.0,
-        note: _noteController.text,
-      );
+    int statusValue;
+    switch (_selectedType) {
+      case CullType.sold:
+        statusValue = 0;
+        break;
+      case CullType.deceased:
+        statusValue = 1;
+        break;
+      case CullType.removed:
+        statusValue = 2;
+        break;
+    }
 
-      await ref.read(cowProvider.notifier).cullCow(record);
+    final record = CullingRecord(
+      id: '',
+      cowId: widget.cow.id,
+      cullDate: _selectedDate,
+      status: statusValue,
+      price: double.tryParse(_priceController.text) ?? 0.0,
+      note: _noteController.text,
+    );
 
-      if (mounted) {
-        final state = ref.read(cowProvider);
-        if (state.errorMessage == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'บันทึกการ${_selectedType.label}วัวหมายเลข ${widget.cow.tagNumber} เรียบร้อยแล้ว',
-              ),
-              backgroundColor: AppColors.success,
-            ),
-          );
-          // Refresh zone counts for the dashboard
-          final currentFarm = ref.read(farmProvider).currentFarm;
-          if (currentFarm != null) {
-            ref.read(zoneProvider.notifier).fetchZones(currentFarm.id);
-          }
+    await ref.read(cowProvider.notifier).cullCow(record);
 
-          context.go('/dashboard');
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.errorMessage!),
-              backgroundColor: AppColors.error,
-            ),
-          );
+    if (mounted) {
+      final state = ref.read(cowProvider);
+      if (state.errorMessage == null) {
+        AppFeedback.showSuccess(
+          context,
+          'บันทึกการ${_selectedType.label}วัวหมายเลข ${widget.cow.tagNumber} เรียบร้อยแล้ว',
+        );
+        // Refresh zone counts for the dashboard
+        final currentFarm = ref.read(farmProvider).currentFarm;
+        if (currentFarm != null) {
+          ref.read(zoneProvider.notifier).fetchZones(currentFarm.id);
         }
+
+        context.go('/dashboard');
+      } else {
+        AppFeedback.showError(context, state.errorMessage!);
       }
     }
   }
@@ -306,8 +302,8 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
                       child: InputDecorator(
                         decoration: _buildInputDecoration('วันที่ดำเนินการ', Icons.calendar_today_rounded),
                         child: Text(
-                          DateFormat('dd/MM/yyyy').format(_selectedDate),
-                          style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
+                          AppDateUtils.formatThaiDate(_selectedDate),
+                          style: const TextStyle(fontSize: 15, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),

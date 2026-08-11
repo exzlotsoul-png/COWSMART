@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:cowsmart/core/utils/date_formatter.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import '../../domain/calendar_event.dart';
@@ -198,6 +199,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           formatButtonTextStyle: TextStyle(color: AppColors.primary, fontSize: 13, fontWeight: FontWeight.bold),
         ),
         calendarBuilders: CalendarBuilders(
+          headerTitleBuilder: (context, day) {
+            return Center(
+              child: Text(
+                AppDateUtils.formatThaiMonthYear(day),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            );
+          },
           markerBuilder: (context, date, events) {
             if (events.isEmpty) return const SizedBox();
             return Positioned(
@@ -240,7 +253,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              DateFormat('dd MMMM yyyy').format(_selectedDay),
+              AppDateUtils.formatThaiDate(_selectedDay, useFullMonth: true),
               style: const TextStyle(color: AppColors.textHint, fontSize: 14),
             ),
           ],
@@ -338,7 +351,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.calendar_today, color: AppColors.primary),
                   title: const Text('วันที่', style: TextStyle(fontSize: 16)),
-                  subtitle: Text(DateFormat('dd MMM yyyy').format(selectedDate), style: const TextStyle(fontSize: 14)),
+                  subtitle: Text(
+                    AppDateUtils.formatThaiDate(selectedDate, useFullMonth: true),
+                    style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                  ),
                   onTap: () async {
                     final picked = await showDatePicker(
                       context: ctx,
@@ -356,7 +372,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.access_time, color: AppColors.primary),
                   title: const Text('เวลา', style: TextStyle(fontSize: 16)),
-                  subtitle: Text(selectedTime.format(ctx), style: const TextStyle(fontSize: 14)),
+                  subtitle: Text(
+                    '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')} น.',
+                    style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                  ),
                   onTap: () async {
                     final picked = await showTimePicker(
                       context: ctx,

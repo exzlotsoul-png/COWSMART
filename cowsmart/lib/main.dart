@@ -6,6 +6,8 @@ import 'core/theme/app_theme.dart';
 import 'core/constants/app_constants.dart';
 import 'core/network/app_router.dart';
 
+import 'core/utils/thai_date_localization.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('th_TH', null);
@@ -29,6 +31,7 @@ class MyApp extends ConsumerWidget {
         Locale('en', 'US'),
       ],
       localizationsDelegates: const [
+        ThaiMaterialLocalizationsDelegate(),
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

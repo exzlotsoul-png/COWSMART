@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/utils/date_formatter.dart';
 import '../../../domain/cow.dart';
 import '../../../domain/breed.dart';
 import '../../../providers/breed_provider.dart';
@@ -97,13 +98,13 @@ class BasicInfoTab extends ConsumerWidget {
               _buildInfoRow(
                 Icons.cake_outlined,
                 'วันเกิด',
-                DateFormat('dd MMM yyyy', 'th_TH').format(cow.birthDate),
+                AppDateUtils.formatThaiDate(cow.birthDate, useFullMonth: true),
               ),
               _buildInfoRow(
                 Icons.login_rounded,
                 'วันที่เข้าฟาร์ม',
                 cow.entryDate != null
-                    ? DateFormat('dd MMM yyyy', 'th_TH').format(cow.entryDate!)
+                    ? AppDateUtils.formatThaiDate(cow.entryDate!, useFullMonth: true)
                     : 'ไม่ได้ระบุ',
               ),
             ],
@@ -306,15 +307,16 @@ class BasicInfoTab extends ConsumerWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(icon, size: 20, color: AppColors.textSecondary),
+          Icon(icon, size: 20, color: AppColors.primary),
           const SizedBox(width: 10),
           Expanded(
             flex: 2,
             child: Text(
               label,
               style: const TextStyle(
-                color: AppColors.textSecondary,
+                color: AppColors.textPrimary,
                 fontSize: 15,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -340,15 +342,16 @@ class BasicInfoTab extends ConsumerWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(Icons.favorite, size: 20, color: AppColors.textSecondary),
+          Icon(Icons.favorite, size: 20, color: AppColors.primary),
           const SizedBox(width: 10),
           Expanded(
             flex: 2,
             child: Text(
               label,
               style: const TextStyle(
-                color: AppColors.textSecondary,
+                color: AppColors.textPrimary,
                 fontSize: 15,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),

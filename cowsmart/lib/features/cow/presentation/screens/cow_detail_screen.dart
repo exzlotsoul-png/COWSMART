@@ -8,6 +8,7 @@ import '../../providers/cow_provider.dart';
 import 'detail_tabs/basic_info_tab.dart';
 import 'detail_tabs/breed_tab.dart';
 import 'detail_tabs/placeholder_tabs.dart';
+import '../widgets/cow_qr_dialog.dart';
 
 class CowDetailScreen extends ConsumerStatefulWidget {
   final Cow cow;
@@ -52,13 +53,46 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen> {
                 ),
                 actions: [
                   Container(
-                    margin: const EdgeInsets.only(right: 8),
+                    margin: const EdgeInsets.only(right: 6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.black.withValues(alpha: 0.65),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1.2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.25),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.edit, size: 22),
+                      icon: const Icon(Icons.qr_code_2_rounded, size: 22, color: Colors.white),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (_) => CowQrDialog(cow: currentCow),
+                        );
+                      },
+                      tooltip: 'QR Code วัว',
+                    ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.only(right: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.65),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1.2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.25),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.edit, size: 22, color: Colors.white),
                       onPressed: () {
                         context.push('/edit_cow', extra: currentCow);
                       },
@@ -160,14 +194,15 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen> {
                         ],
                       ),
                       labelColor: Colors.white,
-                      unselectedLabelColor: AppColors.textSecondary,
+                      unselectedLabelColor: AppColors.textPrimary,
                       labelStyle: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14.5,
                       ),
                       unselectedLabelStyle: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
                       ),
                       tabs: const [
                         Tab(

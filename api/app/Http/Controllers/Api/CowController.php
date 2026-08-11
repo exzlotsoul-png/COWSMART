@@ -8,9 +8,26 @@ use App\Models\Farm;
 use App\Models\Zone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class CowController extends Controller
 {
+    protected function deleteStorageFile($imageUrl)
+    {
+        if (empty($imageUrl)) return;
+        $path = $imageUrl;
+        if (preg_match('/storage\/(.+)$/', $path, $matches)) {
+            $path = $matches[1];
+        } else {
+            $path = ltrim($path, '/');
+            $path = preg_replace('/^storage\//', '', $path);
+        }
+
+        if ($path && !str_starts_with($path, 'http') && Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
+        }
+    }
+
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -112,6 +129,11 @@ class CowController extends Controller
 
         $data = $request->all();
 
+        // Check if image_url is changing or deleted
+        if (array_key_exists('image_url', $data) && $cow->image_url !== $data['image_url']) {
+            $this->deleteStorageFile($cow->image_url);
+        }
+
         // Sanitize foreign keys: convert empty strings or non-existent FKs to null
         foreach (['zone_id', 'sire_id', 'dam_id', 'breed_id'] as $fk) {
             if (array_key_exists($fk, $data)) {
@@ -141,6 +163,10 @@ class CowController extends Controller
                   ->whereIn('farm_id', $userFarmIds)
                   ->firstOrFail();
                   
+        if ($cow->image_url) {
+            $this->deleteStorageFile($cow->image_url);
+        }
+
         $cow->delete();
         return response()->json(null, 204);
     }

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
+import 'package:cowsmart/core/utils/date_formatter.dart';
 import 'package:cowsmart/features/feed/providers/feed_provider.dart';
 import 'package:cowsmart/features/feed/domain/feed.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
@@ -616,11 +618,11 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
             const SizedBox(height: 10),
             Row(
               children: [
-                Icon(Icons.access_time_rounded, size: 14, color: AppColors.textHint),
+                Icon(Icons.access_time_rounded, size: 14, color: AppColors.primary),
                 const SizedBox(width: 4),
                 Text(
-                  DateFormat('dd/MM/yyyy HH:mm').format(item.recordedAt),
-                  style: TextStyle(fontSize: 13, color: AppColors.textHint, fontWeight: FontWeight.w500),
+                  AppDateUtils.formatThaiDate(item.recordedAt, includeTime: true),
+                  style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
                 ),
                 const Spacer(),
                 IconButton(
@@ -662,9 +664,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
               if (currentFarm != null) {
                 await ref.read(feedProvider.notifier).deleteFeed(item.id);
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('ลบรายการเรียบร้อยแล้ว')),
-                  );
+                  AppFeedback.showWarning(context, 'ลบรายการอาหารเรียบร้อยแล้ว');
                 }
               }
             },
@@ -847,8 +847,8 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                         const Icon(Icons.calendar_today_outlined, size: 20, color: AppColors.primary),
                         const SizedBox(width: 10),
                         Text(
-                          'วันที่บันทึก: ${DateFormat('dd/MM/yyyy').format(selectedDate)}',
-                          style: const TextStyle(fontSize: 15, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
+                          'วันที่บันทึก: ${AppDateUtils.formatThaiDate(selectedDate)}',
+                          style: const TextStyle(fontSize: 15, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
@@ -879,9 +879,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                       final cost = double.tryParse(costController.text) ?? 0;
 
                       if (name.isEmpty || qty <= 0) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('กรุณากรอกชื่อและปริมาณอาหารให้ถูกต้อง')),
-                        );
+                        AppFeedback.showError(context, 'กรุณากรอกชื่อและปริมาณอาหารให้ถูกต้องและมากกว่า 0');
                         return;
                       }
 
@@ -905,12 +903,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                       Navigator.pop(ctx);
                       await ref.read(feedProvider.notifier).addFeed(item);
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('บันทึกการให้อาหารเรียบร้อยแล้ว'),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
+                        AppFeedback.showSuccess(context, 'บันทึกรายการอาหารเรียบร้อยแล้ว');
                       }
                     },
                     style: ElevatedButton.styleFrom(

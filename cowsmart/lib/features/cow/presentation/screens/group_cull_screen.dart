@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:cowsmart/core/utils/date_formatter.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
 import 'package:cowsmart/features/cow/domain/culling_record.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
@@ -373,10 +374,10 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                           Icons.calendar_today_rounded,
                         ),
                         child: Text(
-                          DateFormat('dd/MM/yyyy').format(_selectedDate),
+                          AppDateUtils.formatThaiDate(_selectedDate),
                           style: const TextStyle(
                               fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.bold,
                               color: AppColors.textPrimary),
                         ),
                       ),

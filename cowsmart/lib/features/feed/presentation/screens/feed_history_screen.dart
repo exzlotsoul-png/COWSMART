@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:cowsmart/core/utils/date_formatter.dart';
 import 'package:cowsmart/features/feed/providers/feed_provider.dart';
 import 'package:cowsmart/features/feed/domain/feed.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
@@ -177,7 +178,7 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                               decoration: BoxDecoration(
                                 border: Border.all(color: _dateRange != null ? AppColors.primary : AppColors.border),
                                 borderRadius: BorderRadius.circular(12),
-                                color: _dateRange != null ? AppColors.primary.withValues(alpha: 0.06) : Colors.grey[50],
+                                color: _dateRange != null ? AppColors.primary.withValues(alpha: 0.06) : Colors.white,
                               ),
                               child: Row(
                                 children: [
@@ -186,12 +187,12 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                                   Expanded(
                                     child: Text(
                                       _dateRange != null
-                                          ? '${DateFormat('dd/MM/yyyy').format(_dateRange!.start)} - ${DateFormat('dd/MM/yyyy').format(_dateRange!.end)}'
+                                          ? AppDateUtils.formatThaiDateRange(_dateRange!.start, _dateRange!.end)
                                           : 'เลือกช่วงวันที่ (วันเริ่ม - วันสิ้นสุด)',
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: _dateRange != null ? FontWeight.bold : FontWeight.normal,
-                                        color: _dateRange != null ? AppColors.primary : AppColors.textSecondary,
+                                        color: AppColors.textPrimary,
                                       ),
                                     ),
                                   ),
@@ -555,11 +556,11 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
             const SizedBox(height: 8),
             Row(
               children: [
-                Icon(Icons.access_time_rounded, size: 13, color: AppColors.textHint),
+                Icon(Icons.access_time_rounded, size: 13, color: AppColors.primary),
                 const SizedBox(width: 4),
                 Text(
-                  DateFormat('dd/MM/yyyy HH:mm น.').format(item.recordedAt),
-                  style: TextStyle(fontSize: 12, color: AppColors.textHint, fontWeight: FontWeight.w500),
+                  AppDateUtils.formatThaiDate(item.recordedAt, includeTime: true),
+                  style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
                 ),
               ],
             ),

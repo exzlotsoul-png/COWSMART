@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
+import 'package:cowsmart/core/utils/date_formatter.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
@@ -131,13 +133,14 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
   }
 
   Future<void> _saveCow() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      AppFeedback.showError(context, 'กรุณากรอกข้อมูลวัวในช่องที่จำเป็นให้ถูกต้องครบถ้วน');
+      return;
+    }
 
     final currentFarm = ref.read(farmProvider).currentFarm;
     if (currentFarm == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณาเลือกฟาร์มก่อนบันทึก')),
-      );
+      AppFeedback.showError(context, 'กรุณาเลือกฟาร์มก่อนทำการบันทึกข้อมูล');
       return;
     }
 
@@ -226,16 +229,13 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
         }
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('บันทึกข้อมูลสำเร็จ!'),
-              backgroundColor: AppColors.success,
-            ),
-          );
+          AppFeedback.showSuccess(context, 'เพิ่มและบันทึกข้อมูลวัวเข้าสู่ระบบเรียบร้อยแล้ว');
           ref.read(cowProvider.notifier).clearFlags();
           ref.read(zoneProvider.notifier).fetchZones(currentFarm.id);
           context.pop();
         }
+      } else if (mounted) {
+        AppFeedback.showError(context, cowState.errorMessage!);
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -520,8 +520,8 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                                 child: InputDecorator(
                                   decoration: _buildInputDecoration('วันเกิด', Icons.cake_rounded),
                                   child: Text(
-                                    DateFormat('dd/MM/yyyy').format(_selectedDate),
-                                    style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+                                    AppDateUtils.formatThaiDate(_selectedDate),
+                                    style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ),
@@ -534,8 +534,8 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                                 child: InputDecorator(
                                   decoration: _buildInputDecoration('วันเข้าฟาร์ม', Icons.login_rounded),
                                   child: Text(
-                                    DateFormat('dd/MM/yyyy').format(_selectedEntryDate),
-                                    style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+                                    AppDateUtils.formatThaiDate(_selectedEntryDate),
+                                    style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ),
