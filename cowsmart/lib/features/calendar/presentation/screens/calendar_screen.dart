@@ -269,6 +269,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         final event = events[index];
         return _EventCard(
           event: event,
+          onTap: () => _showEventDetailSheet(context, event),
           onEdit: () => _showEditEventDialog(context, event),
           onDelete: () => _confirmDelete(context, event),
         );
@@ -556,15 +557,247 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       ),
     );
   }
+
+  void _showEventDetailSheet(BuildContext context, CalendarEvent event) {
+    Color typeColor = AppColors.primary;
+    IconData typeIcon = Icons.event_note;
+    String typeLabel = 'กิจกรรมปฏิทิน';
+
+    if (event.eventType == 'health') {
+      typeColor = Colors.orange[800]!;
+      typeIcon = Icons.medical_services_outlined;
+      typeLabel = 'นัดหมายสุขภาพ';
+    } else if (event.eventType == 'breeding') {
+      typeColor = Colors.purple;
+      typeIcon = Icons.favorite_outline;
+      typeLabel = 'กำหนดคลอด';
+    }
+
+    final allCows = ref.read(cowProvider).allCows;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.55,
+        minChildSize: 0.3,
+        maxChildSize: 0.85,
+        builder: (_, scrollCtrl) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              // Drag Handle
+              Container(
+                margin: const EdgeInsets.only(top: 10, bottom: 6),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+
+              Expanded(
+                child: ListView(
+                  controller: scrollCtrl,
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                  children: [
+                    // Header
+                    Row(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: typeColor.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Icon(typeIcon, color: typeColor, size: 26),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: typeColor.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  typeLabel,
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: typeColor),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                event.title,
+                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Date & Time
+                    _buildDetailRow(
+                      Icons.calendar_today_rounded,
+                      'วันที่',
+                      AppDateUtils.formatThaiDate(event.eventDatetime, useFullMonth: true),
+                      typeColor,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildDetailRow(
+                      Icons.access_time_rounded,
+                      'เวลา',
+                      '${event.eventDatetime.hour.toString().padLeft(2, '0')}:${event.eventDatetime.minute.toString().padLeft(2, '0')} น.',
+                      typeColor,
+                    ),
+
+                    // Description
+                    if (event.description != null && event.description!.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      _buildDetailRow(
+                        Icons.notes_rounded,
+                        'รายละเอียด',
+                        event.description!,
+                        typeColor,
+                      ),
+                    ],
+
+                    // Reminder
+                    if (event.reminderSetting != null && event.reminderSetting != 'ไม่แจ้งเตือน') ...[
+                      const SizedBox(height: 12),
+                      _buildDetailRow(
+                        Icons.notifications_active_outlined,
+                        'แจ้งเตือน',
+                        event.reminderSetting!,
+                        typeColor,
+                      ),
+                    ],
+
+                    // Cow info for single cow event
+                    if (event.cowId != null && event.cowId!.isNotEmpty && event.cowId != 'null') ...[
+                      const SizedBox(height: 12),
+                      Builder(builder: (_) {
+                        final matches = allCows.where((c) =>
+                            c.id == event.cowId || c.tagNumber == event.cowId || c.name == event.cowId
+                        ).toList();
+                        final cowText = matches.isNotEmpty
+                            ? (matches.first.name.isNotEmpty && matches.first.tagNumber.isNotEmpty && matches.first.name != matches.first.tagNumber
+                                ? '${matches.first.name} (${matches.first.tagNumber})'
+                                : (matches.first.name.isNotEmpty ? matches.first.name : matches.first.tagNumber))
+                            : event.cowId!;
+                        return _buildDetailRow(Icons.pets_rounded, 'วัว', cowText, typeColor);
+                      }),
+                    ],
+
+                    // Group cow count
+                    if (event.isGrouped && event.cowCount != null) ...[
+                      const SizedBox(height: 12),
+                      _buildDetailRow(
+                        Icons.groups_rounded,
+                        'จำนวนวัวในกลุ่ม',
+                        '${event.cowCount} ตัว',
+                        typeColor,
+                      ),
+                    ],
+
+                    const SizedBox(height: 24),
+
+                    // Action buttons
+                    if (event.eventType == 'general' || event.eventType == 'health')
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                Navigator.pop(ctx);
+                                _showEditEventDialog(context, event);
+                              },
+                              icon: const Icon(Icons.edit_outlined, size: 18),
+                              label: const Text('แก้ไข', style: TextStyle(fontWeight: FontWeight.bold)),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: typeColor,
+                                side: BorderSide(color: typeColor),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                Navigator.pop(ctx);
+                                _confirmDelete(context, event);
+                              },
+                              icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                              label: const Text('ลบ', style: TextStyle(fontWeight: FontWeight.bold)),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.error,
+                                side: const BorderSide(color: AppColors.error),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(IconData icon, String label, String value, Color accentColor) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceAlt,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: accentColor),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textHint)),
+                const SizedBox(height: 2),
+                Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _EventCard extends ConsumerWidget {
   final CalendarEvent event;
+  final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   const _EventCard({
     required this.event,
+    required this.onTap,
     required this.onEdit,
     required this.onDelete,
   });
@@ -592,7 +825,10 @@ class _EventCard extends ConsumerWidget {
         side: BorderSide(color: typeColor.withValues(alpha: 0.3)),
       ),
       color: AppColors.surface,
-      child: ListTile(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         leading: Container(
           width: 52,
@@ -713,6 +949,7 @@ class _EventCard extends ConsumerWidget {
                 ],
               )
             : null,
+      ),
       ),
     );
   }

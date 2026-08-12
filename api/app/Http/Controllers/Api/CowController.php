@@ -87,6 +87,34 @@ class CowController extends Controller
             );
         }
 
+        // Validate duplicate tag_number within the same farm
+        if (!empty($request->tag_number)) {
+            $tagExists = Cow::where('farm_id', $farmId)
+                ->where('tag_number', trim($request->tag_number))
+                ->where(function ($q) {
+                    $q->whereNotIn('status', ['sold', 'deceased', 'removed'])
+                      ->orWhereNull('status');
+                })
+                ->exists();
+            if ($tagExists) {
+                return response()->json(['message' => 'หมายเลขประจำตัว/เบอร์หู "' . trim($request->tag_number) . '" มีอยู่ในฟาร์มนี้แล้ว'], 422);
+            }
+        }
+
+        // Validate duplicate name within the same farm
+        if (!empty($request->name)) {
+            $nameExists = Cow::where('farm_id', $farmId)
+                ->where('name', trim($request->name))
+                ->where(function ($q) {
+                    $q->whereNotIn('status', ['sold', 'deceased', 'removed'])
+                      ->orWhereNull('status');
+                })
+                ->exists();
+            if ($nameExists) {
+                return response()->json(['message' => 'ชื่อวัว "' . trim($request->name) . '" มีอยู่ในฟาร์มนี้แล้ว'], 422);
+            }
+        }
+
         // Generate sequential cow_id (e.g. C001, C002, ...)
         if (empty($data['cow_id']) || str_contains($data['cow_id'], 'C-')) {
             $lastCow = Cow::where('cow_id', 'LIKE', 'C%')
@@ -128,6 +156,38 @@ class CowController extends Controller
                   ->firstOrFail();
 
         $data = $request->all();
+
+        $targetFarmId = $data['farm_id'] ?? $cow->farm_id;
+
+        // Validate duplicate tag_number in the target farm (excluding current cow)
+        if (!empty($data['tag_number'])) {
+            $tagExists = Cow::where('farm_id', $targetFarmId)
+                ->where('cow_id', '!=', $id)
+                ->where('tag_number', trim($data['tag_number']))
+                ->where(function ($q) {
+                    $q->whereNotIn('status', ['sold', 'deceased', 'removed'])
+                      ->orWhereNull('status');
+                })
+                ->exists();
+            if ($tagExists) {
+                return response()->json(['message' => 'หมายเลขประจำตัว/เบอร์หู "' . trim($data['tag_number']) . '" มีอยู่ในฟาร์มนี้แล้ว'], 422);
+            }
+        }
+
+        // Validate duplicate name in the target farm (excluding current cow)
+        if (!empty($data['name'])) {
+            $nameExists = Cow::where('farm_id', $targetFarmId)
+                ->where('cow_id', '!=', $id)
+                ->where('name', trim($data['name']))
+                ->where(function ($q) {
+                    $q->whereNotIn('status', ['sold', 'deceased', 'removed'])
+                      ->orWhereNull('status');
+                })
+                ->exists();
+            if ($nameExists) {
+                return response()->json(['message' => 'ชื่อวัว "' . trim($data['name']) . '" มีอยู่ในฟาร์มนี้แล้ว'], 422);
+            }
+        }
 
         // Check if image_url is changing or deleted
         if (array_key_exists('image_url', $data) && $cow->image_url !== $data['image_url']) {

@@ -79,6 +79,78 @@ class HealthRecordController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->has('records') && is_array($request->records)) {
+            return DB::transaction(function () use ($request) {
+                $createdRecords = [];
+                foreach ($request->records as $rData) {
+                    $payload = $rData;
+                    if (isset($payload['med_ids']) && is_array($payload['med_ids']) && count($payload['med_ids']) > 0) {
+                        $validMedId = null;
+                        foreach ($payload['med_ids'] as $mId) {
+                            if ($mId !== 'other' && !empty($mId)) {
+                                $validMedId = $mId;
+                                break;
+                            }
+                        }
+                        $payload['med_id'] = $validMedId;
+                    }
+                    if (isset($payload['vac_ids']) && is_array($payload['vac_ids']) && count($payload['vac_ids']) > 0) {
+                        $validVacId = null;
+                        foreach ($payload['vac_ids'] as $vId) {
+                            if ($vId !== 'other' && !empty($vId)) {
+                                $validVacId = $vId;
+                                break;
+                            }
+                        }
+                        $payload['vac_id'] = $validVacId;
+                    }
+                    if (isset($payload['disease_ids']) && is_array($payload['disease_ids']) && count($payload['disease_ids']) > 0) {
+                        $validDiseaseId = null;
+                        foreach ($payload['disease_ids'] as $dId) {
+                            if ($dId !== 'other' && !empty($dId)) {
+                                $validDiseaseId = $dId;
+                                break;
+                            }
+                        }
+                        $payload['disease_id'] = $validDiseaseId;
+                    }
+                    unset($payload['med_ids'], $payload['vac_ids'], $payload['disease_ids']);
+
+                    if (isset($payload['vac_id']) && ($payload['vac_id'] === 'other' || empty($payload['vac_id']))) {
+                        $payload['vac_id'] = null;
+                    }
+                    if (isset($payload['med_id']) && ($payload['med_id'] === 'other' || empty($payload['med_id']))) {
+                        $payload['med_id'] = null;
+                    }
+                    if (isset($payload['disease_id']) && ($payload['disease_id'] === 'other' || empty($payload['disease_id']))) {
+                        $payload['disease_id'] = null;
+                    }
+
+                    if (isset($payload['items_json']) && is_array($payload['items_json'])) {
+                        $payload['items_json'] = json_encode($payload['items_json']);
+                    }
+
+                    if (isset($payload['images']) && is_array($payload['images'])) {
+                        $cleaned = array_map(function($img) {
+                            if (preg_match('/storage\/(.+)$/', $img, $matches)) {
+                                return $matches[1];
+                            }
+                            return $img;
+                        }, $payload['images']);
+                        $payload['images'] = json_encode(array_slice($cleaned, 0, 3));
+                    }
+
+                    $rec = HealthRecord::create($payload);
+                    $data = $this->getJoinedQuery()
+                        ->where('health_records.health_record_id', $rec->health_record_id)
+                        ->first();
+                    $this->attachPivotDetails($data);
+                    $createdRecords[] = $data;
+                }
+                return response()->json($createdRecords, 201);
+            });
+        }
+
         $payload = $request->except(['med_ids', 'vac_ids']);
         
         // Handle med_id and vac_id from arrays if passed

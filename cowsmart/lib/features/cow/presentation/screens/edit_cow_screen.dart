@@ -255,9 +255,19 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                           labelText: 'เบอร์วัว (Tag)',
                           prefixIcon: Icon(Icons.tag),
                         ),
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'กรุณากรอกหมายเลข'
-                            : null,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'กรุณากรอกหมายเลข';
+                          }
+                          final allCows = ref.read(cowProvider).allCows;
+                          final isDup = allCows.any(
+                            (c) => c.id != widget.cow.id && c.tagNumber.trim().toLowerCase() == value.trim().toLowerCase(),
+                          );
+                          if (isDup) {
+                            return 'เบอร์วัวนี้มีในระบบแล้ว';
+                          }
+                          return null;
+                        },
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -268,9 +278,19 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                           labelText: 'ชื่อ (ถ้ามี)',
                           prefixIcon: Icon(Icons.pets),
                         ),
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'กรุณากรอกชื่อ'
-                            : null,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'กรุณากรอกชื่อ';
+                          }
+                          final allCows = ref.read(cowProvider).allCows;
+                          final isDup = allCows.any(
+                            (c) => c.id != widget.cow.id && c.name.trim().toLowerCase() == value.trim().toLowerCase(),
+                          );
+                          if (isDup) {
+                            return 'ชื่อวัวนี้มีในระบบแล้ว';
+                          }
+                          return null;
+                        },
                       ),
                     ),
                   ],

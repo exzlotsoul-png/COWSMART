@@ -21,6 +21,8 @@ import '../../features/cow/presentation/screens/cull_cow_screen.dart';
 import '../../features/cow/presentation/screens/culling_history_screen.dart';
 import '../../features/cow/presentation/screens/cow_history_list_screen.dart';
 import '../../features/cow/presentation/screens/group_cull_screen.dart';
+import '../../features/cow/presentation/screens/group_health_screen.dart';
+import '../../features/cow/presentation/screens/group_appointment_screen.dart';
 import '../../features/cow/presentation/screens/qr_scanner_screen.dart';
 import '../../features/feed/presentation/screens/feed_history_screen.dart';
 import '../../features/finance/presentation/screens/finance_overview_screen.dart';
@@ -208,6 +210,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/group_cull',
         builder: (context, state) => const GroupCullScreen(),
+      ),
+      GoRoute(
+        path: '/group_health',
+        builder: (context, state) => const GroupHealthScreen(),
+      ),
+      GoRoute(
+        path: '/group_appointment',
+        builder: (context, state) => const GroupAppointmentScreen(),
       ),
       GoRoute(
         path: '/feed_history',

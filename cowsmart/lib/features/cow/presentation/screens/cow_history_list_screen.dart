@@ -29,11 +29,11 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
-  
+
   // Health Filters
   String _healthTypeFilter = 'ALL'; // ALL, CT01, CT02, CT03
-  
-  // Growth Filter / Search
+
+  // Search Query
   String _searchQuery = '';
 
   // Breeding Filter
@@ -47,8 +47,7 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
     if (widget.initialTab == 'breeding') initialIndex = 2;
 
     _tabController = TabController(length: 3, vsync: this, initialIndex: initialIndex);
-    
-    // Ensure detail data is loaded
+
     Future.microtask(() {
       ref.read(cowDetailProvider.notifier).fetchAllData(widget.cow.id);
       ref.read(masterDataProvider.notifier).fetchAll();
@@ -68,39 +67,61 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
     final masterData = ref.watch(masterDataProvider);
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
+        elevation: 0,
+        toolbarHeight: 68.0,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        centerTitle: false,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
               'ประวัติทั้งหมด',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.white,
+              ),
             ),
+            const SizedBox(height: 3),
             Text(
               '${widget.cow.name} (${widget.cow.tagNumber})',
-              style: const TextStyle(fontSize: 13, color: Colors.white70),
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.white.withValues(alpha: 0.85),
+                fontWeight: FontWeight.normal,
+              ),
             ),
           ],
         ),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.white,
-          indicatorWeight: 3,
-          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-          unselectedLabelStyle: const TextStyle(fontSize: 14),
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          tabs: const [
-            Tab(icon: Icon(Icons.health_and_safety, size: 20), text: 'ประวัติสุขภาพ'),
-            Tab(icon: Icon(Icons.monitor_weight, size: 20), text: 'ประวัติน้ำหนัก'),
-            Tab(icon: Icon(Icons.favorite, size: 20), text: 'ประวัติผสมพันธุ์'),
-          ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(52),
+          child: Container(
+            color: AppColors.primary,
+            child: TabBar(
+              controller: _tabController,
+              indicatorColor: Colors.white,
+              indicatorWeight: 3.5,
+              indicatorSize: TabBarIndicatorSize.label,
+              labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+              labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              unselectedLabelStyle: const TextStyle(fontSize: 13),
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.white70,
+              tabs: const [
+                Tab(icon: Icon(Icons.health_and_safety_rounded, size: 18), text: 'ประวัติสุขภาพ'),
+                Tab(icon: Icon(Icons.monitor_weight_rounded, size: 18), text: 'ประวัติน้ำหนัก'),
+                Tab(icon: Icon(Icons.favorite_rounded, size: 18), text: 'ประวัติผสมพันธุ์'),
+              ],
+            ),
+          ),
         ),
       ),
       body: detailState.isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
           : TabBarView(
               controller: _tabController,
               children: [
@@ -112,9 +133,8 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
     );
   }
 
-  // --- 1. HEALTH HISTORY TAB ---
+  // ── 1. HEALTH HISTORY TAB ──
   Widget _buildHealthHistoryTab(List<HealthRecord> records, MasterDataState masterData) {
-    // Filter
     final filtered = records.where((r) {
       if (_healthTypeFilter != 'ALL' && r.checkupTypeId != _healthTypeFilter) {
         return false;
@@ -133,10 +153,19 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
 
     return Column(
       children: [
-        // Filter Bar
+        // Filter & Search Header Card
         Container(
-          padding: const EdgeInsets.all(12),
-          color: Colors.white,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
           child: Column(
             children: [
               TextField(
@@ -144,18 +173,24 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                 style: const TextStyle(fontSize: 14),
                 decoration: InputDecoration(
                   hintText: 'ค้นหาโรค, ยา, วัคซีน, หมายเหตุ...',
-                  prefixIcon: const Icon(Icons.search, size: 20),
+                  hintStyle: const TextStyle(fontSize: 13, color: AppColors.textHint),
+                  prefixIcon: const Icon(Icons.search_rounded, size: 20, color: AppColors.primary),
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(Icons.clear, size: 18),
+                          icon: const Icon(Icons.clear_rounded, size: 18),
                           onPressed: () {
                             _searchController.clear();
                             setState(() => _searchQuery = '');
                           },
                         )
                       : null,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  filled: true,
+                  fillColor: AppColors.surfaceAlt,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
                   isDense: true,
                 ),
                 onChanged: (val) => setState(() => _searchQuery = val.trim()),
@@ -186,24 +221,14 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
             ],
           ),
         ),
-        const Divider(height: 1),
         Expanded(
           child: filtered.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.search_off, size: 50, color: Colors.grey[400]),
-                      const SizedBox(height: 8),
-                      Text(
-                        records.isEmpty ? 'ยังไม่มีประวัติการรักษา' : 'ไม่พบข้อมูลที่ตรงกับตัวกรอง',
-                        style: TextStyle(fontSize: 15, color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
+              ? _buildEmptyState(
+                  icon: Icons.health_and_safety_outlined,
+                  message: records.isEmpty ? 'ยังไม่มีประวัติการรักษา' : 'ไม่พบข้อมูลที่ตรงกับคำค้นหา',
                 )
               : ListView.builder(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
                   itemCount: filtered.length,
                   itemBuilder: (ctx, index) {
                     final r = filtered[index];
@@ -228,19 +253,19 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
     switch (record.checkupTypeId) {
       case 'CT02':
         typeColor = AppColors.info;
-        icon = Icons.vaccines;
+        icon = Icons.vaccines_rounded;
         break;
       case 'CT03':
         typeColor = AppColors.error;
-        icon = Icons.medical_services;
+        icon = Icons.medical_services_rounded;
         break;
       case 'CT04':
         typeColor = AppColors.warning;
-        icon = Icons.bug_report;
+        icon = Icons.bug_report_rounded;
         break;
       default:
         typeColor = AppColors.success;
-        icon = Icons.health_and_safety;
+        icon = Icons.health_and_safety_rounded;
     }
 
     String? statusText;
@@ -266,121 +291,218 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
       dosageStr = ' ($amtStr $unit)'.trimRight();
     }
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          border: Border(left: BorderSide(color: typeColor, width: 4)),
-        ),
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: typeColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(left: BorderSide(color: typeColor, width: 4.5)),
+          ),
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header Row
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: typeColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(icon, color: typeColor, size: 22),
                   ),
-                  child: Icon(icon, color: typeColor, size: 22),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                typeLabels[record.checkupTypeId] ?? 'ตรวจสุขภาพ',
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                            if (statusText != null) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: statusBgColor.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  statusText,
+                                  style: TextStyle(
+                                    color: statusBgColor,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          AppDateUtils.formatThaiDate(record.recordDate),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (record.cost != null && record.cost! > 0)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: AppColors.warning.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '${NumberFormat('#,##0').format(record.cost)} ฿',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.secondaryDark,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+
+              // Items Section (Vaccine, Disease, Medicine) using Icons instead of Emojis
+              if (record.vaccineName != null || record.diseaseName != null || record.medicineName != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceAlt,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              typeLabels[record.checkupTypeId] ?? 'ตรวจสุขภาพ',
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          if (statusText != null) ...[
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: statusBgColor.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(6),
+                      if (record.vaccineName != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.vaccines_outlined, size: 16, color: AppColors.info),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  'วัคซีน: ${record.vaccineName!}$dosageStr',
+                                  style: const TextStyle(fontSize: 13.5, color: AppColors.textPrimary),
+                                ),
                               ),
+                            ],
+                          ),
+                        ),
+                      if (record.diseaseName != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.coronavirus_outlined, size: 16, color: AppColors.error),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  'โรค: ${record.diseaseName!}',
+                                  style: const TextStyle(fontSize: 13.5, color: AppColors.textPrimary),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      if (record.medicineName != null)
+                        Row(
+                          children: [
+                            const Icon(Icons.medication_outlined, size: 16, color: AppColors.warning),
+                            const SizedBox(width: 6),
+                            Expanded(
                               child: Text(
-                                statusText,
-                                style: TextStyle(color: statusBgColor, fontSize: 12, fontWeight: FontWeight.bold),
+                                'ยา: ${record.medicineName!}$dosageStr',
+                                style: const TextStyle(fontSize: 13.5, color: AppColors.textPrimary),
                               ),
                             ),
                           ],
-                        ],
-                      ),
-                      Text(
-                        AppDateUtils.formatThaiDate(record.recordDate),
-                        style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
-                      ),
+                        ),
                     ],
                   ),
                 ),
-                if (record.cost != null && record.cost! > 0)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.warning.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '${NumberFormat('#,##0').format(record.cost)} ฿',
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.secondaryDark, fontSize: 14),
-                    ),
-                  ),
               ],
-            ),
-            if (record.vaccineName != null || record.diseaseName != null || record.medicineName != null) ...[
-              const SizedBox(height: 10),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
+
+              // Note using Icon instead of Emoji
+              if (record.note != null && record.note!.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (record.vaccineName != null)
-                      Text('💉 วัคซีน: ${record.vaccineName!}$dosageStr', style: const TextStyle(fontSize: 14)),
-                    if (record.diseaseName != null)
-                      Text('🦠 โรค: ${record.diseaseName!}', style: const TextStyle(fontSize: 14)),
-                    if (record.medicineName != null)
-                      Text('💊 ยา: ${record.medicineName!}$dosageStr', style: const TextStyle(fontSize: 14)),
+                    const Icon(Icons.note_alt_outlined, size: 15, color: AppColors.textSecondary),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'หมายเหตุ: ${record.note!}',
+                        style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                      ),
+                    ),
                   ],
                 ),
-              ),
+              ],
+
+              // Admin name using Icon instead of Emoji
+              if (record.adminName != null && record.adminName!.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    const Icon(Icons.person_outline_rounded, size: 15, color: AppColors.primaryDark),
+                    const SizedBox(width: 6),
+                    Text(
+                      'ผู้ดำเนินการ: ${record.adminName!}',
+                      style: const TextStyle(fontSize: 12.5, color: AppColors.textHint, fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+              ],
             ],
-            if (record.note != null && record.note!.isNotEmpty) ...[
-              const SizedBox(height: 6),
-              Text('📝 หมายเหตุ: ${record.note!}', style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-            ],
-            if (record.adminName != null && record.adminName!.isNotEmpty) ...[
-              const SizedBox(height: 2),
-              Text('👤 ผู้ดำเนินการ: ${record.adminName!}', style: const TextStyle(fontSize: 13, color: AppColors.textHint)),
-            ],
-          ],
+          ),
         ),
       ),
     );
   }
 
-  // --- 2. GROWTH HISTORY TAB ---
+  // ── 2. GROWTH HISTORY TAB ──
   Widget _buildGrowthHistoryTab(List<GrowthRecord> records) {
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           color: Colors.white,
           child: Row(
             children: [
@@ -388,7 +510,7 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
               const SizedBox(width: 8),
               Text(
                 'บันทึกน้ำหนักทั้งหมด (${records.length} ครั้ง)',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.primaryDark),
               ),
             ],
           ),
@@ -396,45 +518,63 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
         const Divider(height: 1),
         Expanded(
           child: records.isEmpty
-              ? Center(
-                  child: Text('ยังไม่มีประวัติน้ำหนัก', style: TextStyle(color: Colors.grey[600])),
+              ? _buildEmptyState(
+                  icon: Icons.scale_outlined,
+                  message: 'ยังไม่มีประวัติน้ำหนัก',
                 )
               : ListView.builder(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
                   itemCount: records.length,
                   itemBuilder: (ctx, index) {
                     final r = records[index];
                     final prev = index < records.length - 1 ? records[index + 1].weight : null;
                     final diff = prev != null ? r.weight - prev : null;
 
-                    return Card(
+                    return Container(
                       margin: const EdgeInsets.only(bottom: 12),
-                      elevation: 1.5,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
                       child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                          child: const Icon(Icons.scale, color: AppColors.primary),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        leading: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.scale_rounded, color: AppColors.primary, size: 22),
                         ),
                         title: Text(
                           '${r.weight.toStringAsFixed(1)} กก.',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.textPrimary),
                         ),
-                        subtitle: Text(
-                          'วันที่ชั่ง: ${AppDateUtils.formatThaiDate(r.recordDate)}${r.girth != null ? " • รอบอก: ${r.girth!.toStringAsFixed(1)} ซม." : ""}',
-                          style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            'วันที่ชั่ง: ${AppDateUtils.formatThaiDate(r.recordDate)}${r.girth != null ? " • รอบอก: ${r.girth!.toStringAsFixed(1)} ซม." : ""}',
+                            style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
+                          ),
                         ),
                         trailing: diff != null
                             ? Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: (diff >= 0 ? Colors.green : Colors.red).withValues(alpha: 0.1),
+                                  color: (diff >= 0 ? AppColors.success : AppColors.error).withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
                                   '${diff >= 0 ? "+" : ""}${diff.toStringAsFixed(1)} กก.',
                                   style: TextStyle(
-                                    color: diff >= 0 ? Colors.green[800] : Colors.red[800],
+                                    color: diff >= 0 ? AppColors.success : AppColors.error,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 13,
                                   ),
@@ -450,7 +590,7 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
     );
   }
 
-  // --- 3. BREEDING HISTORY TAB ---
+  // ── 3. BREEDING HISTORY TAB ──
   Widget _buildBreedingHistoryTab(List<BreedingRecord> records) {
     final filtered = records.where((r) {
       if (_breedingResultFilter == 'PREGNANT' && r.pregnancyResult != 'ตั้งท้อง') return false;
@@ -490,11 +630,12 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
         const Divider(height: 1),
         Expanded(
           child: filtered.isEmpty
-              ? Center(
-                  child: Text('ไม่พบข้อมูลประวัติผสมพันธุ์', style: TextStyle(color: Colors.grey[600])),
+              ? _buildEmptyState(
+                  icon: Icons.favorite_border_rounded,
+                  message: 'ไม่พบข้อมูลประวัติผสมพันธุ์',
                 )
               : ListView.builder(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
                   itemCount: filtered.length,
                   itemBuilder: (ctx, index) {
                     final r = filtered[index];
@@ -503,14 +644,22 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                     final stageColor = r.pregnancyResult == 'ตั้งท้อง'
                         ? Colors.teal
                         : r.pregnancyResult == 'ไม่ตั้งท้อง'
-                            ? Colors.red
-                            : Colors.orange;
+                            ? AppColors.error
+                            : AppColors.warning;
 
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(color: stageColor.withValues(alpha: 0.3)),
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: stageColor.withValues(alpha: 0.3)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(14),
@@ -520,37 +669,106 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  r.heatDate != null
-                                      ? 'เป็นสัด: ${AppDateUtils.formatThaiDate(r.heatDate!)}'
-                                      : 'ผสมพันธุ์',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.favorite_rounded, color: AppColors.primary, size: 18),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      r.heatDate != null
+                                          ? 'เป็นสัด: ${AppDateUtils.formatThaiDate(r.heatDate!)}'
+                                          : 'ผสมพันธุ์',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
                                     color: stageColor.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(6),
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
                                     r.pregnancyResult ?? 'รอตรวจท้อง',
-                                    style: TextStyle(color: stageColor, fontWeight: FontWeight.bold, fontSize: 13),
+                                    style: TextStyle(
+                                      color: stageColor,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 10),
                             if (r.matingDate != null)
-                              Text('• วันที่ผสม: ${AppDateUtils.formatThaiDate(r.matingDate!, includeTime: true)}', style: const TextStyle(fontSize: 14, color: AppColors.textPrimary)),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 4),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.event_available_outlined, size: 15, color: AppColors.textSecondary),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        'วันที่ผสม: ${AppDateUtils.formatThaiDate(r.matingDate!, includeTime: true)}',
+                                        style: const TextStyle(fontSize: 13.5, color: AppColors.textPrimary),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             if (r.sireId != null)
-                              Text('• พ่อพันธุ์: ${_formatCowDisplayById(r.sireId, allCows)}', style: const TextStyle(fontSize: 14, color: AppColors.textPrimary)),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 4),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.pets_outlined, size: 15, color: AppColors.textSecondary),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        'พ่อพันธุ์: ${_formatCowDisplayById(r.sireId, allCows)}',
+                                        style: const TextStyle(fontSize: 13.5, color: AppColors.textPrimary),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             if (r.expectedCalving != null)
-                              Text('• คาดว่าจะคลอด: ${AppDateUtils.formatThaiDate(r.expectedCalving!)}', style: const TextStyle(fontSize: 14, color: AppColors.textPrimary)),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 4),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.edit_calendar_outlined, size: 15, color: AppColors.textSecondary),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        'คาดว่าจะคลอด: ${AppDateUtils.formatThaiDate(r.expectedCalving!)}',
+                                        style: const TextStyle(fontSize: 13.5, color: AppColors.textPrimary),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             if (r.calvingDate != null) ...[
                               const SizedBox(height: 4),
-                              Text(
-                                '• คลอดจริง: ${AppDateUtils.formatThaiDate(r.calvingDate!)} (${r.calvingResult ?? "-"})',
-                                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.teal, fontSize: 14),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Icon(Icons.child_care_rounded, size: 16, color: Colors.teal),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      'คลอดจริง: ${AppDateUtils.formatThaiDate(r.calvingDate!)} (${r.calvingResult ?? "-"})',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.teal,
+                                        fontSize: 13.5,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ],
@@ -571,14 +789,41 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
         label,
         style: TextStyle(
           color: isSelected ? Colors.white : AppColors.textPrimary,
-          fontSize: 13,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          fontSize: 12.5,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
         ),
       ),
       selected: isSelected,
       selectedColor: AppColors.primary,
-      backgroundColor: Colors.grey[100],
+      backgroundColor: AppColors.surfaceAlt,
+      elevation: isSelected ? 1 : 0,
+      side: BorderSide(
+        color: isSelected ? AppColors.primary : AppColors.border.withValues(alpha: 0.5),
+      ),
       onSelected: (_) => onSelect(value),
+    );
+  }
+
+  Widget _buildEmptyState({required IconData icon, required String message}) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 42, color: Colors.grey[400]),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            message,
+            style: TextStyle(fontSize: 14, color: Colors.grey[600], fontWeight: FontWeight.w500),
+          ),
+        ],
+      ),
     );
   }
 

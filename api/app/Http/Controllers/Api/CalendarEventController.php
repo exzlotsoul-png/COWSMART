@@ -52,9 +52,65 @@ class CalendarEventController extends Controller
                 ->whereIn('cow_id', $farmCowIds)
                 ->get();
 
+            // Separate grouped and ungrouped appointments
+            $grouped = [];
+            $ungrouped = [];
+
             foreach ($appts as $appt) {
+                if (!empty($appt->group_id)) {
+                    $grouped[$appt->group_id][] = $appt;
+                } else {
+                    $ungrouped[] = $appt;
+                }
+            }
+
+            // Process grouped appointments → merge into single calendar event per group
+            foreach ($grouped as $groupId => $groupAppts) {
+                $cowNames = [];
+                $firstAppt = $groupAppts[0];
+                $allApptIds = [];
+
+                foreach ($groupAppts as $appt) {
+                    $cow = $this->findCow($appt->cow_id, $farmCows, $farmId);
+                    if (!$cow) continue;
+                    $cowName = $cow->name ?: ($cow->tag_number ?: $cow->cow_id);
+                    $cowNames[] = $cowName;
+                    $allApptIds[] = str_starts_with($appt->health_appointment_id, 'HA-')
+                        ? $appt->health_appointment_id
+                        : 'HA-' . $appt->health_appointment_id;
+                }
+
+                if (empty($cowNames)) continue;
+
+                $dt = Carbon::parse($firstAppt->appoint_datetime)->toIso8601String();
+                $calEventId = 'HAG-' . $groupId;
+
+                $cowCount = count($cowNames);
+                if ($cowCount <= 3) {
+                    $cowDisplay = implode(', ', $cowNames);
+                } else {
+                    $cowDisplay = implode(', ', array_slice($cowNames, 0, 3)) . ' +' . ($cowCount - 3) . ' ตัว';
+                }
+
+                $healthEvents[] = [
+                    'calendar_event_id' => $calEventId,
+                    'farm_id' => $farmId,
+                    'title' => 'นัดหมายสุขภาพ: ' . $cowDisplay,
+                    'event_datetime' => $dt,
+                    'description' => ($firstAppt->description ?: 'นัดหมายตรวจสุขภาพ / ฉีดวัคซีน / ถ่ายพยาธิ') . ' (' . $cowCount . ' ตัว)',
+                    'reminder_setting' => $firstAppt->reminder_setting ?: 'ก่อน 1 วัน',
+                    'cow_id' => null,
+                    'event_type' => 'health',
+                    '_group_id' => $groupId,
+                    '_group_appt_ids' => $allApptIds,
+                    '_cow_count' => $cowCount,
+                ];
+            }
+
+            // Process ungrouped appointments → one event per appointment (existing behavior)
+            foreach ($ungrouped as $appt) {
                 $cow = $this->findCow($appt->cow_id, $farmCows, $farmId);
-                if (!$cow) continue; // Skip if cow doesn't belong to this farm
+                if (!$cow) continue;
 
                 $cowName = $cow->name ?: ($cow->tag_number ?: $cow->cow_id);
                 $dt = Carbon::parse($appt->appoint_datetime)->toIso8601String();
@@ -197,6 +253,18 @@ class CalendarEventController extends Controller
 
     public function destroy($id)
     {
+        // Handle grouped health appointment deletion (HAG-<group_id>)
+        if (str_starts_with($id, 'HAG-')) {
+            $groupId = substr($id, 4); // Remove 'HAG-' prefix
+            $appts = HealthAppointment::where('group_id', $groupId)->get();
+            foreach ($appts as $appt) {
+                $realId = preg_replace('/^(HA-)+/', '', $appt->health_appointment_id);
+                Notification::where('message', 'like', "%appt_{$realId}%")->delete();
+            }
+            HealthAppointment::where('group_id', $groupId)->delete();
+            return response()->json(null, 204);
+        }
+
         if (str_starts_with($id, 'HA-')) {
             $realId = preg_replace('/^(HA-)+/', '', $id);
             Notification::where('message', 'like', "%appt_{$realId}%")->delete();

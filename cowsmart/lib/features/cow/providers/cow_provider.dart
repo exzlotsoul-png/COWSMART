@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cowsmart/core/network/api_client.dart';
 import '../domain/cow.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
+import 'package:cowsmart/features/finance/providers/finance_provider.dart';
 import '../domain/culling_record.dart';
 
 class CowState {
@@ -243,6 +244,10 @@ class CowNotifier extends Notifier<CowState> {
         isLoading: false,
         isSuccess: true,
       );
+      final currentFarm = ref.read(farmProvider).currentFarm;
+      if (currentFarm != null) {
+        ref.read(financeProvider.notifier).fetchTransactions(currentFarm.id);
+      }
     } catch (e) {
       print('[ERROR] บันทึกการคัดทิ้งไม่สำเร็จ: $e');
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
@@ -267,6 +272,10 @@ class CowNotifier extends Notifier<CowState> {
         isLoading: false,
         isSuccess: true,
       );
+      final currentFarm = ref.read(farmProvider).currentFarm;
+      if (currentFarm != null) {
+        ref.read(financeProvider.notifier).fetchTransactions(currentFarm.id);
+      }
     } catch (e) {
       print('[ERROR] กู้คืนวัวไม่สำเร็จ: $e');
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
@@ -293,6 +302,10 @@ class CowNotifier extends Notifier<CowState> {
         isLoading: false,
         isSuccess: true,
       );
+      final currentFarm = ref.read(farmProvider).currentFarm;
+      if (currentFarm != null) {
+        ref.read(financeProvider.notifier).fetchTransactions(currentFarm.id);
+      }
     } catch (e) {
       print('[ERROR] บันทึกการคัดทิ้งแบบกลุ่มไม่สำเร็จ: $e');
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
@@ -356,5 +369,29 @@ final activeCowsProvider = Provider<List<Cow>>((ref) {
   final currentFarm = ref.watch(farmProvider).currentFarm;
   final cowState = ref.watch(cowProvider);
   if (currentFarm == null) return [];
-  return cowState.filteredCows;
+  
+  // Filter by current farm ID first
+  final farmCows = cowState.allCows.where((c) => c.farmId == currentFarm.id).toList();
+
+  var cows = farmCows;
+  if (cowState.searchQuery != null && cowState.searchQuery!.isNotEmpty) {
+    final q = cowState.searchQuery!.toLowerCase();
+    cows = cows
+        .where(
+          (c) =>
+              c.name.toLowerCase().contains(q) ||
+              c.tagNumber.toLowerCase().contains(q),
+        )
+        .toList();
+  }
+  if (cowState.filterStatus != null) {
+    cows = cows.where((c) => c.status == cowState.filterStatus).toList();
+  }
+  if (cowState.filterType != null) {
+    cows = cows.where((c) => c.type == cowState.filterType).toList();
+  }
+  if (cowState.filterGender != null) {
+    cows = cows.where((c) => c.gender == cowState.filterGender).toList();
+  }
+  return cows;
 });

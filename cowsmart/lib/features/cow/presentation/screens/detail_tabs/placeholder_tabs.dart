@@ -441,26 +441,18 @@ class _HealthTabState extends ConsumerState<HealthTab> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              FloatingActionButton.extended(
+              FloatingActionButton.small(
                 heroTag: 'add_health_appt_fab',
                 onPressed: _showAddHealthAppointmentDialog,
                 backgroundColor: Colors.orange[800],
-                icon: const Icon(Icons.event_available, color: Colors.white, size: 22),
-                label: const Text(
-                  'นัดหมายสุขภาพ / ฉีดวัคซีน',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: const Icon(Icons.event_available, color: Colors.white, size: 22),
               ),
               const SizedBox(height: 10),
-              FloatingActionButton.extended(
+              FloatingActionButton(
                 heroTag: 'add_health_record_fab',
                 onPressed: detailState.isSaving ? null : _showAddHealthRecordDialog,
                 backgroundColor: AppColors.primary,
-                icon: detailState.isSaving
+                child: detailState.isSaving
                     ? const SizedBox(
                         width: 22,
                         height: 22,
@@ -469,15 +461,7 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                           strokeWidth: 2,
                         ),
                       )
-                    : const Icon(Icons.add, color: Colors.white, size: 24),
-                label: const Text(
-                  'บันทึกสุขภาพและการรักษา',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                    : const Icon(Icons.add, color: Colors.white, size: 28),
               ),
             ],
           ),
@@ -1133,7 +1117,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
   String selectedType = 'CT01';
   CowStatus selectedHealthStatus = CowStatus.normal;
   List<String> selectedVaccineIds = [];
-  String? selectedDiseaseId;
+  List<String> selectedDiseaseIds = [];
   List<String> selectedMedicineIds = [];
   List<XFile> selectedImageFiles = [];
   List<String> existingImageUrls = [];
@@ -1180,7 +1164,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
       selectedVaccineIds = List<String>.from(r.vacIds);
       if (selectedVaccineIds.isEmpty && r.vacId != null) selectedVaccineIds.add(r.vacId!);
       
-      selectedDiseaseId = r.diseaseId;
+      if (r.diseaseId != null) selectedDiseaseIds.add(r.diseaseId!);
       
       selectedMedicineIds = List<String>.from(r.medIds);
       if (selectedMedicineIds.isEmpty && r.medId != null) selectedMedicineIds.add(r.medId!);
@@ -1235,7 +1219,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
   @override
   Widget build(BuildContext context) {
     final showVaccine = selectedType == 'CT02';
-    final showDisease = selectedType == 'CT03';
+    final showDisease = selectedType == 'CT03' || selectedType == 'CT01';
     final showMedicine = selectedType == 'CT03';
 
     return AlertDialog(
@@ -1353,7 +1337,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                     setState(() {
                       selectedType = val;
                       selectedVaccineIds = [];
-                      selectedDiseaseId = null;
+                      selectedDiseaseIds = [];
                       selectedMedicineIds = [];
                     });
                   }
@@ -1534,41 +1518,145 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                 const SizedBox(height: 16),
               ],
 
-              if (showDisease && !widget.masterData.isLoading)
-                DropdownButtonFormField<String?>(
-                  isExpanded: true,
-                  value: selectedDiseaseId,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    color: AppColors.textPrimary,
-                  ),
-                  decoration: const InputDecoration(
-                    labelText: 'โรค',
-                    labelStyle: TextStyle(fontSize: 15),
-                    prefixIcon: Icon(Icons.coronavirus, size: 22),
-                  ),
-                  items: [
-                    const DropdownMenuItem<String?>(
-                      value: null,
-                      child: Text('เลือกโรค',
-                          style: TextStyle(fontSize: 15),
-                          overflow: TextOverflow.ellipsis),
+              if (showDisease && !widget.masterData.isLoading) ...[
+                const SizedBox(height: 16),
+                InkWell(
+                  onTap: () async {
+                    final result = await showDialog<List<String>>(
+                      context: context,
+                      builder: (ctx) {
+                        final tempSelected = List<String>.from(selectedDiseaseIds);
+                        return StatefulBuilder(
+                          builder: (ctx, setDialogState) {
+                            String searchQuery = '';
+                            final listOptions = [
+                              ...widget.masterData.diseases.map((d) => {'id': d.id, 'name': d.name}),
+                              {'id': 'other', 'name': 'อื่นๆ (ระบุเอง)'},
+                            ];
+
+                            final filteredOptions = listOptions.where((d) {
+                              if (searchQuery.isEmpty) return true;
+                              return d['name']!.toLowerCase().contains(searchQuery.toLowerCase());
+                            }).toList();
+
+                            return AlertDialog(
+                              title: const Text('เลือกโรค (เลือกได้หลายรายการ)', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                              content: SizedBox(
+                                width: double.maxFinite,
+                                height: 360,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    TextField(
+                                      onChanged: (val) {
+                                        setDialogState(() {
+                                          searchQuery = val.trim();
+                                        });
+                                      },
+                                      decoration: InputDecoration(
+                                        hintText: 'ค้นหาโรค...',
+                                        hintStyle: const TextStyle(fontSize: 13, color: AppColors.textHint),
+                                        prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.primary),
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                        filled: true,
+                                        fillColor: AppColors.surfaceAlt,
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                          borderSide: BorderSide.none,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Expanded(
+                                      child: filteredOptions.isEmpty
+                                          ? const Center(child: Text('ไม่พบข้อมูล', style: TextStyle(color: AppColors.textHint, fontSize: 13)))
+                                          : ListView(
+                                              shrinkWrap: true,
+                                              children: filteredOptions.map((d) {
+                                                final dId = d['id']!;
+                                                final dName = d['name']!;
+                                                final checked = tempSelected.contains(dId);
+                                                return CheckboxListTile(
+                                                  title: Text(dName, style: TextStyle(fontSize: 14, fontWeight: dId == 'other' ? FontWeight.bold : FontWeight.normal, color: dId == 'other' ? AppColors.primary : null)),
+                                                  value: checked,
+                                                  activeColor: AppColors.primary,
+                                                  onChanged: (val) {
+                                                    setDialogState(() {
+                                                      if (val == true) {
+                                                        tempSelected.add(dId);
+                                                      } else {
+                                                        tempSelected.remove(dId);
+                                                      }
+                                                    });
+                                                  },
+                                                );
+                                              }).toList(),
+                                            ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx, selectedDiseaseIds),
+                                  child: const Text('ยกเลิก'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () => Navigator.pop(ctx, tempSelected),
+                                  child: const Text('ตกลง'),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                    );
+                    if (result != null) {
+                      setState(() => selectedDiseaseIds = result);
+                    }
+                  },
+                  child: InputDecorator(
+                    decoration: const InputDecoration(
+                      labelText: 'โรค (เลือกได้หลายรายการ)',
+                      labelStyle: TextStyle(fontSize: 15),
+                      prefixIcon: Icon(Icons.coronavirus, size: 22),
+                      suffixIcon: Icon(Icons.arrow_drop_down),
                     ),
-                    ...widget.masterData.diseases
-                        .where((d) => d.id.isNotEmpty)
-                        .map((d) {
-                      return DropdownMenuItem<String?>(
-                        value: d.id,
-                        child: Text(
-                          d.name,
-                          style: const TextStyle(fontSize: 15),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      );
-                    }),
-                  ],
-                  onChanged: (val) => setState(() => selectedDiseaseId = val),
+                    child: selectedDiseaseIds.isEmpty
+                        ? const Text('แตะเพื่อเลือกโรค...', style: TextStyle(fontSize: 15, color: AppColors.textHint))
+                        : Wrap(
+                            spacing: 4,
+                            runSpacing: 4,
+                            children: selectedDiseaseIds.map((id) {
+                              String name;
+                              if (id == 'other') {
+                                name = 'อื่นๆ (ระบุเอง)';
+                              } else {
+                                final matches = widget.masterData.diseases.where((d) => d.id == id);
+                                name = matches.isNotEmpty ? matches.first.name : id;
+                              }
+                              return Chip(
+                                label: Text(name, style: const TextStyle(fontSize: 13, color: Colors.white)),
+                                backgroundColor: id == 'other' ? Colors.orange[800] : AppColors.primary,
+                                visualDensity: VisualDensity.compact,
+                                padding: EdgeInsets.zero,
+                              );
+                            }).toList(),
+                          ),
+                  ),
                 ),
+                if (selectedDiseaseIds.contains('other')) ...[
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _getCustomItemNameController('other_disease'),
+                    decoration: const InputDecoration(
+                      labelText: 'ระบุชื่อโรคอื่นๆ *',
+                      hintText: 'พิมพ์ชื่อโรคเพิ่มเติมที่นี่...',
+                      prefixIcon: Icon(Icons.edit_note, size: 22, color: AppColors.primary),
+                    ),
+                  ),
+                ],
+              ],
 
               // Multiple Medicines Selection (Select Box)
               if (showMedicine && !widget.masterData.isLoading) ...[
@@ -2282,13 +2370,38 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                           totalCost = double.tryParse(costController.text) ?? 0.0;
                         }
 
+                        String? primaryDiseaseId;
+                        if (selectedDiseaseIds.isNotEmpty) {
+                          final validList = selectedDiseaseIds.where((id) => id != 'other').toList();
+                          if (validList.isNotEmpty) primaryDiseaseId = validList.first;
+                        }
+
+                        if ((selectedType == 'CT01' || selectedType == 'CT03') && selectedDiseaseIds.isNotEmpty) {
+                          for (var dId in selectedDiseaseIds) {
+                            String dName;
+                            if (dId == 'other') {
+                              final customName = _getCustomItemNameController('other_disease').text.trim();
+                              dName = customName.isNotEmpty ? customName : 'โรคอื่นๆ';
+                            } else {
+                              final matches = widget.masterData.diseases.where((item) => item.id == dId);
+                              dName = matches.isNotEmpty ? matches.first.name : dId;
+                            }
+
+                            itemsList.add(HealthRecordItem(
+                              itemId: dId,
+                              itemName: dName,
+                              itemType: 'disease',
+                            ));
+                          }
+                        }
+
                         final record = HealthRecord(
                           id: widget.initialRecord?.id ?? 'HR${DateTime.now().millisecondsSinceEpoch % 1000000}',
                           cowId: widget.cow.id,
                           recordDate: selectedDate,
                           checkupTypeId: selectedType,
                           status: selectedHealthStatus.name,
-                          diseaseId: selectedDiseaseId,
+                          diseaseId: primaryDiseaseId,
                           vacId: selectedVaccineIds.isNotEmpty ? selectedVaccineIds.first : null,
                           medId: selectedMedicineIds.isNotEmpty ? selectedMedicineIds.first : null,
                           vacIds: selectedVaccineIds,

@@ -7,6 +7,8 @@ class CalendarEvent {
   final String? reminderSetting;
   final String? cowId;
   final String eventType; // 'general', 'health', 'breeding'
+  final String? groupId;
+  final int? cowCount;
 
   CalendarEvent({
     required this.id,
@@ -17,6 +19,8 @@ class CalendarEvent {
     this.reminderSetting,
     this.cowId,
     this.eventType = 'general',
+    this.groupId,
+    this.cowCount,
   });
 
   factory CalendarEvent.fromJson(Map<String, dynamic> json) {
@@ -29,6 +33,8 @@ class CalendarEvent {
       reminderSetting: json['reminder_setting']?.toString(),
       cowId: json['cow_id']?.toString(),
       eventType: json['event_type']?.toString() ?? 'general',
+      groupId: json['_group_id']?.toString(),
+      cowCount: json['_cow_count'] != null ? int.tryParse(json['_cow_count'].toString()) : null,
     );
   }
 
@@ -41,6 +47,9 @@ class CalendarEvent {
         'cow_id': cowId,
         'event_type': eventType,
       };
+
+  /// Whether this event is a grouped health appointment
+  bool get isGrouped => groupId != null && groupId!.isNotEmpty;
 
   CalendarEvent copyWith({
     String? title,
@@ -59,6 +68,8 @@ class CalendarEvent {
       reminderSetting: reminderSetting ?? this.reminderSetting,
       cowId: cowId ?? this.cowId,
       eventType: eventType ?? this.eventType,
+      groupId: groupId,
+      cowCount: cowCount,
     );
   }
 }

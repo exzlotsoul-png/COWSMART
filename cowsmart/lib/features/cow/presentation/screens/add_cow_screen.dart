@@ -442,9 +442,19 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                               child: TextFormField(
                                 controller: _tagController,
                                 decoration: _buildInputDecoration('เบอร์วัว (Tag)', Icons.tag_rounded),
-                                validator: (value) => value == null || value.isEmpty
-                                    ? 'กรุณากรอกหมายเลข'
-                                    : null,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'กรุณากรอกหมายเลข';
+                                  }
+                                  final allCows = ref.read(cowProvider).allCows;
+                                  final isDup = allCows.any(
+                                    (c) => c.tagNumber.trim().toLowerCase() == value.trim().toLowerCase(),
+                                  );
+                                  if (isDup) {
+                                    return 'เบอร์วัวนี้มีในระบบแล้ว';
+                                  }
+                                  return null;
+                                },
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -452,9 +462,19 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                               child: TextFormField(
                                 controller: _nameController,
                                 decoration: _buildInputDecoration('ชื่อ (ถ้ามี)', Icons.pets_rounded),
-                                validator: (value) => value == null || value.isEmpty
-                                    ? 'กรุณากรอกชื่อ'
-                                    : null,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'กรุณากรอกชื่อ';
+                                  }
+                                  final allCows = ref.read(cowProvider).allCows;
+                                  final isDup = allCows.any(
+                                    (c) => c.name.trim().toLowerCase() == value.trim().toLowerCase(),
+                                  );
+                                  if (isDup) {
+                                    return 'ชื่อวัวนี้มีในระบบแล้ว';
+                                  }
+                                  return null;
+                                },
                               ),
                             ),
                           ],

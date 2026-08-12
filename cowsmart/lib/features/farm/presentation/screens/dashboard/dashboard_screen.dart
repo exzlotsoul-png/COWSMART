@@ -58,6 +58,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(farmProvider, (previous, next) {
+      if (next.currentFarm?.id != previous?.currentFarm?.id && next.currentFarm != null) {
+        ref.read(cowProvider.notifier).fetchCows(next.currentFarm!.id);
+        ref.read(zoneProvider.notifier).fetchZones(next.currentFarm!.id);
+        ref.read(financeProvider.notifier).fetchTransactions(next.currentFarm!.id);
+      }
+    });
+
     final farmState = ref.watch(farmProvider);
     final currentFarm = farmState.currentFarm;
     final cowState = ref.watch(cowProvider);
@@ -719,9 +727,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         const Text(
                           'รายรับ',
                           style: TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],
@@ -772,9 +780,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         const Text(
                           'รายจ่าย',
                           style: TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],
@@ -1049,7 +1057,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               label: 'จัดการสุขภาพ',
               subtitle: 'บันทึกการรักษา',
               color: AppColors.primary,
-              onTap: () {},
+              onTap: () => context.push('/group_health'),
             ),
             _buildActionTile(
               icon: Icons.delete_sweep_outlined,
@@ -1063,7 +1071,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               label: 'สร้างนัดหมาย',
               subtitle: 'นัดตรวจ/วัคซีน',
               color: Colors.orange[800]!,
-              onTap: () => _showAddGlobalAppointmentDialog(context),
+              onTap: () => context.push('/group_appointment'),
             ),
             _buildActionTile(
               icon: Icons.calendar_month_rounded,

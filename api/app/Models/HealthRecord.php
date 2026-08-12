@@ -14,6 +14,18 @@ class HealthRecord extends Model
     public $incrementing = false;
     protected $guarded = [];
 
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (empty($model->health_record_id)) {
+                $maxNum = \Illuminate\Support\Facades\DB::table('health_records')
+                    ->selectRaw("MAX(CAST(SUBSTRING(health_record_id, 3) AS UNSIGNED)) as max_id")
+                    ->value('max_id') ?? 0;
+                $model->health_record_id = 'HR' . str_pad($maxNum + 1, 4, '0', STR_PAD_LEFT);
+            }
+        });
+    }
+
     public function medicines()
     {
         return $table = $this->belongsToMany(Medicine::class, 'health_record_medicines', 'health_record_id', 'medicine_id');

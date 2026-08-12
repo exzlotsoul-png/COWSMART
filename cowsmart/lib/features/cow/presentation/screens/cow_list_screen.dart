@@ -39,6 +39,22 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
     final displayedCows = ref.watch(activeCowsProvider);
     final currentFarm = ref.watch(farmProvider).currentFarm;
 
+    // Listen for farm changes
+    ref.listen(farmProvider, (previous, next) {
+      if (next.currentFarm?.id != previous?.currentFarm?.id && next.currentFarm != null) {
+        ref.read(cowProvider.notifier).fetchCows(next.currentFarm!.id);
+      }
+    });
+
+    // Auto-fetch if farm changed or empty
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (currentFarm != null &&
+          !cowState.isLoading &&
+          (cowState.allCows.isEmpty || (cowState.allCows.isNotEmpty && cowState.allCows.first.farmId != currentFarm.id))) {
+        ref.read(cowProvider.notifier).fetchCows(currentFarm.id);
+      }
+    });
+
     // Listen for errors
     ref.listen<CowState>(cowProvider, (previous, next) {
       if (next.errorMessage != null &&
