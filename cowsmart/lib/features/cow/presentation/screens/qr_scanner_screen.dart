@@ -9,6 +9,7 @@ import 'package:zxing2/qrcode.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_toast.dart';
 import '../../providers/cow_provider.dart';
+import '../../../../core/services/nfc_service.dart';
 
 class QrScannerScreen extends ConsumerStatefulWidget {
   const QrScannerScreen({super.key});
@@ -27,7 +28,28 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
   bool _isProcessing = false;
 
   @override
+  void initState() {
+    super.initState();
+    _startNfcScan();
+  }
+
+  void _startNfcScan() {
+    NfcService.startReadSession(
+      onDiscovered: (payload) {
+        if (mounted) {
+          _processScannedValue(payload);
+        }
+      },
+      onError: (error) {
+        // Silently ignore NFC errors or show a small toast, don't interrupt QR
+        debugPrint('NFC Scan Error: $error');
+      },
+    );
+  }
+
+  @override
   void dispose() {
+    NfcService.stopSession();
     _controller.dispose();
     super.dispose();
   }
@@ -239,7 +261,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
                         onPressed: () => context.pop(),
                       ),
                       const Text(
-                        'สแกน QR Code วัว',
+                        'สแกน QR / NFC',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 18,
@@ -273,7 +295,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
                   child: Column(
                     children: [
                       const Text(
-                        'วาง QR Code วัวให้อยู่ในกรอบ หรือเลือกรูปจากคลังภาพ',
+                        'วาง QR Code ในกรอบ หรือ แตะเหรียญ NFC ที่หลังโทรศัพท์\n(หรือเลือกรูปจากคลังภาพ)',
                         style: TextStyle(color: Colors.white70, fontSize: 13),
                         textAlign: TextAlign.center,
                       ),

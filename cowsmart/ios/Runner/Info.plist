@@ -45,5 +45,7 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NFCReaderUsageDescription</key>
+	<string>แอปพลิเคชันจำเป็นต้องเข้าถึง NFC เพื่อใช้สำหรับการอ่านและเขียนข้อมูลประจำตัวของวัวลงในเหรียญ NFC</string>
 </dict>
 </plist>

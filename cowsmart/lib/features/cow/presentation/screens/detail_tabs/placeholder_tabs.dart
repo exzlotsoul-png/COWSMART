@@ -18,6 +18,7 @@ import '../../../providers/cow_detail_provider.dart';
 import '../../../../health/providers/master_data_provider.dart';
 import 'package:cowsmart/core/network/api_client.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
 
 class HealthTab extends ConsumerStatefulWidget {
   final Cow cow;
@@ -2101,13 +2102,45 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                     if (existingImageUrls.length + selectedImageFiles.length < 3)
                       InkWell(
                         onTap: () async {
-                          final picker = ImagePicker();
-                          final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
-                          if (picked != null) {
-                            setState(() {
-                              selectedImageFiles.add(picked);
-                            });
-                          }
+                          final uploadService = ref.read(imageUploadServiceProvider);
+                          showModalBottomSheet(
+                            context: context,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                            ),
+                            builder: (ctx) => SafeArea(
+                              child: Wrap(
+                                children: [
+                                  ListTile(
+                                    leading: const Icon(Icons.photo_library, color: AppColors.primary),
+                                    title: const Text('เลือกจากคลังภาพ'),
+                                    onTap: () async {
+                                      Navigator.pop(ctx);
+                                      final picked = await uploadService.pickImageFromGallery();
+                                      if (picked != null) {
+                                        setState(() {
+                                          selectedImageFiles.add(picked);
+                                        });
+                                      }
+                                    },
+                                  ),
+                                  ListTile(
+                                    leading: const Icon(Icons.camera_alt, color: AppColors.primary),
+                                    title: const Text('ถ่ายภาพด้วยกล้อง'),
+                                    onTap: () async {
+                                      Navigator.pop(ctx);
+                                      final picked = await uploadService.pickImageFromCamera();
+                                      if (picked != null) {
+                                        setState(() {
+                                          selectedImageFiles.add(picked);
+                                        });
+                                      }
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
                         },
                         child: Container(
                           width: 70,
@@ -2183,6 +2216,9 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                             }
                           } catch (e) {
                             print('❌ Error uploading image: $e');
+                            if (mounted) {
+                              AppFeedback.showError(context, 'อัปโหลดรูปไม่สำเร็จ: $e');
+                            }
                           }
                         }
 

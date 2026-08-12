@@ -49,12 +49,22 @@ class _AllZonesScreenState extends ConsumerState<AllZonesScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryDark,
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [AppColors.primaryDark, AppColors.primary],
+            ),
+          ),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
           onPressed: () => context.pop(),
         ),
+        titleSpacing: 0,
         title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -62,7 +72,7 @@ class _AllZonesScreenState extends ConsumerState<AllZonesScreen> {
               'โซนทั้งหมดในฟาร์ม',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 18,
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -71,7 +81,7 @@ class _AllZonesScreenState extends ConsumerState<AllZonesScreen> {
               'เลือกโซนเพื่อดูและจัดการข้อมูลวัวในโซนนั้น',
               style: TextStyle(
                 color: Colors.white70,
-                fontSize: 12,
+                fontSize: 14,
               ),
             ),
           ],
@@ -90,10 +100,14 @@ class _AllZonesScreenState extends ConsumerState<AllZonesScreen> {
           Container(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
             decoration: const BoxDecoration(
-              color: AppColors.primaryDark,
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [AppColors.primary, AppColors.primary],
+              ),
               borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(20),
-                bottomRight: Radius.circular(20),
+                bottomLeft: Radius.circular(24),
+                bottomRight: Radius.circular(24),
               ),
             ),
             child: Column(

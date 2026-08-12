@@ -14,7 +14,7 @@ class ImageController extends Controller
         $request->validate([
             'type' => 'required|string|in:avatar,farm,cow,health',
             'entity_id' => 'required|string',
-            'image' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'image' => 'required|image|mimes:jpg,jpeg,png,webp,heic,heif|max:20480',
         ]);
 
         $type = $request->input('type');

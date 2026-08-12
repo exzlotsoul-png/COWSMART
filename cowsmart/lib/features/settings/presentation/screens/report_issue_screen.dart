@@ -100,6 +100,8 @@ class _ReportIssueScreenState extends ConsumerState<ReportIssueScreen> with Sing
     final picker = ImagePicker();
     final picked = await picker.pickImage(
       source: ImageSource.gallery,
+      maxWidth: 1920,
+      maxHeight: 1920,
       imageQuality: 80,
     );
     if (picked != null) {

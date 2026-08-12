@@ -51,6 +51,8 @@ dependencies:
   path_provider: ^2.1.5
   zxing2: ^0.2.3
   image: ^4.5.4
+  nfc_manager: ^4.2.1
+  nfc_manager_ndef: ^1.1.0
 
 dev_dependencies:
   flutter_test:
