@@ -873,9 +873,19 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                             costStr = ' - ${NumberFormat('#,##0').format(item.cost)} ฿';
                           }
 
+                          IconData iconData = Icons.medication;
+                          String labelText = 'ยา';
+                          if (item.itemType == 'vaccine') {
+                            iconData = Icons.vaccines;
+                            labelText = 'วัคซีน';
+                          } else if (item.itemType == 'disease') {
+                            iconData = Icons.coronavirus;
+                            labelText = 'โรค';
+                          }
+
                           return _buildDetailRow(
-                            item.itemType == 'vaccine' ? Icons.vaccines : Icons.medication,
-                            item.itemType == 'vaccine' ? 'วัคซีน' : 'ยา',
+                            iconData,
+                            labelText,
                             '${item.itemName}$amtStr$costStr',
                           );
                         }),
