@@ -17,6 +17,7 @@ import Units from './pages/Units';
 import Settings from './pages/Settings';
 import Dashboard from './pages/Dashboard';
 import AppointmentTypes from './pages/AppointmentTypes';
+import MarketPrices from './pages/MarketPrices';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
           <Route path="/" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="users" element={<Users />} />
+            <Route path="market-prices" element={<MarketPrices />} />
             <Route path="breeds" element={<Breeds />} />
             <Route path="cow-types" element={<CowTypes />} />
             <Route path="diseases" element={<Diseases />} />

@@ -13,7 +13,8 @@ import {
   MessageSquareWarning,
   Scale,
   CalendarDays,
-  CalendarCheck
+  CalendarCheck,
+  TrendingUp
 } from 'lucide-react';
 import './layout.css';
 
@@ -35,6 +36,7 @@ const Sidebar = () => {
     {
       label: 'ข้อมูลพื้นฐาน',
       items: [
+        { path: '/market-prices', icon: <TrendingUp className="nav-icon" />, label: 'ราคาตลาดกลาง' },
         { path: '/breeds', icon: <Dna className="nav-icon" />, label: 'สายพันธุ์วัว' },
         { path: '/cow-types', icon: <Sprout className="nav-icon" />, label: 'ประเภทของวัว' },
         { path: '/diseases', icon: <Stethoscope className="nav-icon" />, label: 'โรคและอาการป่วย' },

@@ -91,6 +91,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('notifications', NotificationController::class);
     Route::apiResource('issue_reports', IssueReportController::class);
     Route::apiResource('chat_histories', ChatHistoryController::class);
+    Route::post('/market_prices/sync', [MarketPriceController::class, 'sync']);
+    Route::post('/market_prices/parse-image', [MarketPriceController::class, 'parseImageReport']);
+    Route::post('/market_prices/batch', [MarketPriceController::class, 'batchStore']);
+    Route::get('/market_prices/history', [MarketPriceController::class, 'history']);
     Route::apiResource('market_prices', MarketPriceController::class);
     Route::apiResource('users', UserController::class);
     Route::apiResource('units', UnitController::class);
