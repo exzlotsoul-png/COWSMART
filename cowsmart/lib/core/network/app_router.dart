@@ -155,6 +155,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: '/cow/:id',
+        redirect: (context, state) => '/cow_detail/${state.pathParameters['id']}',
+      ),
+      GoRoute(
         path: '/cow_detail',
         builder: (context, state) {
           final cow = state.extra as Cow;

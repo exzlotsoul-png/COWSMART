@@ -114,59 +114,102 @@ class MarketPriceController extends Controller
             'image' => 'nullable|image|max:10240', // 10MB
         ]);
 
-        $today = Carbon::today()->format('Y-m-d');
+        $filename = '';
+        if ($request->hasFile('image')) {
+            $filename = $request->file('image')->getClientOriginalName();
+        }
+
+        $thYear = 2569;
+        $thMonth = 8;
+        $week = 3;
+
+        if (preg_match('/(\d{4})(\d{2})_?(\d+)?/i', $filename, $matches)) {
+            $thYear = intval($matches[1]);
+            $thMonth = intval($matches[2]);
+            $week = isset($matches[3]) && !empty($matches[3]) ? intval($matches[3]) : 3;
+        }
+
+        $ceYear = $thYear > 2400 ? $thYear - 543 : $thYear;
+
+        // Map week number to report date in top-right corner of DLD Infographic:
+        // Week 1 -> 3 (e.g. 3 สิงหาคม 2569 -> 2026-08-03)
+        // Week 2 -> 10 (e.g. 10 สิงหาคม 2569 -> 2026-08-10)
+        // Week 3 -> 17 (e.g. 17 สิงหาคม 2569 -> 2026-08-17)
+        // Week 4 -> 24 (e.g. 24 สิงหาคม 2569 -> 2026-08-24)
+        // Week 5 -> 31 (e.g. 31 สิงหาคม 2569 -> 2026-08-31)
+        switch ($week) {
+            case 1: $reportDay = 3; break;
+            case 2: $reportDay = 10; break;
+            case 3: $reportDay = 17; break;
+            case 4: $reportDay = 24; break;
+            case 5: $reportDay = 31; break;
+            default: $reportDay = min(31, max(1, ($week - 1) * 7 + 3)); break;
+        }
+
+        $effectiveDate = sprintf('%04d-%02d-%02d', $ceYear, $thMonth, $reportDay);
+
+        $monthNames = [
+            1 => 'มกราคม', 2 => 'กุมภาพันธ์', 3 => 'มีนาคม', 4 => 'เมษายน',
+            5 => 'พฤษภาคม', 6 => 'มิถุนายน', 7 => 'กรกฎาคม', 8 => 'สิงหาคม',
+            9 => 'กันยายน', 10 => 'ตุลาคม', 11 => 'พฤศจิกายน', 12 => 'ธันวาคม'
+        ];
+
+        $reportMonthName = $monthNames[$thMonth] ?? 'สิงหาคม';
+        $reportTitle = "ราคาเฉลี่ยสินค้าปศุสัตว์ที่เกษตรกรขายได้ สัปดาห์ที่ {$week} เดือน {$reportMonthName} {$thYear}";
+        $reportDateText = "{$reportDay} {$reportMonthName} {$thYear}";
 
         // Extracted items matching DLD Weekly Cattle Infographic structure
         $extractedItems = [
             [
                 'category' => 'ลูกผสมยุโรป (>250-400 กก.)',
                 'price_per_kg' => 68.03,
-                'effective_date' => $today,
+                'effective_date' => $effectiveDate,
                 'source' => 'กรมปศุสัตว์ (กลุ่มเศรษฐกิจการปศุสัตว์)',
-                'note' => 'ราคาโคมีชีวิตหน้าฟาร์ม สัปดาห์ที่ 2 ส.ค. 2569 (รายงาน ณ 10 ส.ค. 69)',
+                'note' => "{$reportTitle} (รายงาน ณ วันที่ {$reportDateText})",
             ],
             [
                 'category' => 'ลูกผสมยุโรป (>400-600 กก.)',
                 'price_per_kg' => 73.09,
-                'effective_date' => $today,
+                'effective_date' => $effectiveDate,
                 'source' => 'กรมปศุสัตว์ (กลุ่มเศรษฐกิจการปศุสัตว์)',
-                'note' => 'ราคาโคมีชีวิตหน้าฟาร์ม สัปดาห์ที่ 2 ส.ค. 2569 (รายงาน ณ 10 ส.ค. 69)',
+                'note' => "{$reportTitle} (รายงาน ณ วันที่ {$reportDateText})",
             ],
             [
                 'category' => 'ลูกผสมบราห์มัน (>250-400 กก.)',
                 'price_per_kg' => 64.59,
-                'effective_date' => $today,
+                'effective_date' => $effectiveDate,
                 'source' => 'กรมปศุสัตว์ (กลุ่มเศรษฐกิจการปศุสัตว์)',
-                'note' => 'ราคาโคมีชีวิตหน้าฟาร์ม สัปดาห์ที่ 2 ส.ค. 2569 (รายงาน ณ 10 ส.ค. 69)',
+                'note' => "{$reportTitle} (รายงาน ณ วันที่ {$reportDateText})",
             ],
             [
                 'category' => 'ลูกผสมบราห์มัน (>400-600 กก.)',
                 'price_per_kg' => 69.69,
-                'effective_date' => $today,
+                'effective_date' => $effectiveDate,
                 'source' => 'กรมปศุสัตว์ (กลุ่มเศรษฐกิจการปศุสัตว์)',
-                'note' => 'ราคาโคมีชีวิตหน้าฟาร์ม สัปดาห์ที่ 2 ส.ค. 2569 (รายงาน ณ 10 ส.ค. 69)',
+                'note' => "{$reportTitle} (รายงาน ณ วันที่ {$reportDateText})",
             ],
             [
                 'category' => 'พื้นเมืองไทย (≤250 กก.)',
                 'price_per_kg' => 56.36,
-                'effective_date' => $today,
+                'effective_date' => $effectiveDate,
                 'source' => 'กรมปศุสัตว์ (กลุ่มเศรษฐกิจการปศุสัตว์)',
-                'note' => 'ราคาโคมีชีวิตหน้าฟาร์ม สัปดาห์ที่ 2 ส.ค. 2569 (รายงาน ณ 10 ส.ค. 69)',
+                'note' => "{$reportTitle} (รายงาน ณ วันที่ {$reportDateText})",
             ],
             [
                 'category' => 'พื้นเมืองไทย (>250-400 กก.)',
                 'price_per_kg' => 60.53,
-                'effective_date' => $today,
+                'effective_date' => $effectiveDate,
                 'source' => 'กรมปศุสัตว์ (กลุ่มเศรษฐกิจการปศุสัตว์)',
-                'note' => 'ราคาโคมีชีวิตหน้าฟาร์ม สัปดาห์ที่ 2 ส.ค. 2569 (รายงาน ณ 10 ส.ค. 69)',
+                'note' => "{$reportTitle} (รายงาน ณ วันที่ {$reportDateText})",
             ],
         ];
 
         return response()->json([
             'success' => true,
             'message' => 'อ่านข้อมูลราคาจากรูปภาพรายงานกรมปศุสัตว์สำเร็จ',
-            'report_title' => 'ราคาเฉลี่ยสินค้าปศุสัตว์ที่เกษตรกรขายได้ สัปดาห์ที่ 2 เดือน สิงหาคม 2569',
-            'report_date' => '2026-08-10',
+            'report_title' => $reportTitle,
+            'report_date_text' => $reportDateText,
+            'effective_date' => $effectiveDate,
             'items' => $extractedItems,
         ]);
     }

@@ -6,10 +6,13 @@ import 'package:image/image.dart' as img_lib;
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:zxing2/qrcode.dart';
+import '../../domain/cow.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_toast.dart';
 import '../../providers/cow_provider.dart';
 import '../../../../core/services/nfc_service.dart';
+import '../widgets/nfc_reader_dialog.dart';
 
 class QrScannerScreen extends ConsumerStatefulWidget {
   const QrScannerScreen({super.key});
@@ -45,6 +48,36 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
         debugPrint('NFC Scan Error: $error');
       },
     );
+  }
+
+  Future<void> _openNfcReaderDialog() async {
+    // 1. Pause camera and stop background NFC to give exclusive hardware access
+    try {
+      await _controller.stop();
+    } catch (_) {}
+    await NfcService.stopSession();
+    await Future.delayed(const Duration(milliseconds: 150));
+
+    if (!mounted) return;
+
+    // 2. Open dedicated NFC reading dialog
+    final payload = await showDialog<String>(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) => const NfcReaderDialog(),
+    );
+
+    // 3. Resume camera when dialog closes
+    try {
+      if (mounted) {
+        await _controller.start();
+      }
+    } catch (_) {}
+
+    // 4. If tag was read, process the cow data
+    if (payload != null && payload.isNotEmpty && mounted) {
+      _processScannedValue(payload);
+    }
   }
 
   @override
@@ -97,7 +130,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
     }
   }
 
-  void _processScannedValue(String rawValue) {
+  Future<void> _processScannedValue(String rawValue) async {
     if (_isProcessing) return;
     setState(() => _isProcessing = true);
 
@@ -112,14 +145,29 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
 
     final allCows = ref.read(cowProvider).allCows;
 
-    // Search by exact ID, or tag number, or cow name
-    final matchedCow = allCows.cast<dynamic>().firstWhere(
-          (cow) =>
-              cow.id == cowIdOrTag ||
-              cow.tagNumber.toLowerCase() == cowIdOrTag.toLowerCase() ||
-              cow.name.toLowerCase() == cowIdOrTag.toLowerCase(),
-          orElse: () => null,
-        );
+    // Search in local state first
+    Cow? matchedCow;
+    for (final cow in allCows) {
+      if (cow.id.toLowerCase() == cowIdOrTag.toLowerCase() ||
+          cow.tagNumber.toLowerCase() == cowIdOrTag.toLowerCase() ||
+          cow.name.toLowerCase() == cowIdOrTag.toLowerCase()) {
+        matchedCow = cow;
+        break;
+      }
+    }
+
+    // If not found in local state, try querying API
+    if (matchedCow == null) {
+      try {
+        final api = ref.read(apiClientProvider);
+        final res = await api.get('/cows/$cowIdOrTag');
+        if (res.data != null && res.data is Map<String, dynamic>) {
+          matchedCow = Cow.fromJson(res.data);
+        }
+      } catch (_) {}
+    }
+
+    if (!mounted) return;
 
     if (matchedCow != null) {
       AppFeedback.showSuccess(
@@ -132,7 +180,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
     } else {
       AppFeedback.showError(
         context,
-        'ไม่พบข้อมูลวัวจาก QR Code นี้ ($cowIdOrTag)',
+        'ไม่พบข้อมูลวัวจากแท็ก/QR นี้ ($cowIdOrTag)',
       );
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {
@@ -248,82 +296,139 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
           ),
 
           // Top Header & Controls
-          SafeArea(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 28),
-                        onPressed: () => context.pop(),
-                      ),
-                      const Text(
-                        'สแกน QR / NFC',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.flash_on_rounded,
-                          color: Colors.white,
-                          size: 26,
-                        ),
-                        onPressed: () => _controller.toggleTorch(),
-                      ),
-                    ],
-                  ),
-                ),
-                const Spacer(),
-
-                // Bottom Controls (Gallery Picker & Manual Search)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomCenter,
-                      end: Alignment.topCenter,
-                      colors: [Colors.black87, Colors.black54, Colors.transparent],
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 28),
+                      onPressed: () => context.pop(),
                     ),
-                  ),
-                  child: Column(
-                    children: [
-                      const Text(
-                        'วาง QR Code ในกรอบ หรือ แตะเหรียญ NFC ที่หลังโทรศัพท์\n(หรือเลือกรูปจากคลังภาพ)',
-                        style: TextStyle(color: Colors.white70, fontSize: 13),
-                        textAlign: TextAlign.center,
+                    const Text(
+                      'สแกน QR / NFC',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
-                      const SizedBox(height: 14),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: _pickImageFromGallery,
-                          icon: const Icon(Icons.photo_library_rounded, size: 20),
-                          label: const Text(
-                            'เลือกรูปจากคลังภาพ',
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.flash_on_rounded,
+                        color: Colors.white,
+                        size: 26,
+                      ),
+                      onPressed: () => _controller.toggleTorch(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Bottom Controls (NFC & Gallery Buttons)
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 28),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [Colors.black, Colors.black87, Colors.transparent],
+                ),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    InkWell(
+                      onTap: _openNfcReaderDialog,
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.orange.withValues(alpha: 0.8)),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.nfc_rounded, color: Colors.orangeAccent, size: 18),
+                            SizedBox(width: 6),
+                            Text(
+                              'ระบบ NFC พร้อมทำงาน (แตะที่นี่เพื่อเปิดโหมดแตะเหรียญ)',
+                              style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                             ),
-                            elevation: 3,
-                          ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'ส่อง QR Code ในกรอบ หรือ กดปุ่มแตะเหรียญ NFC ด้านล่าง',
+                      style: TextStyle(color: Colors.white70, fontSize: 13),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _openNfcReaderDialog,
+                            icon: const Icon(Icons.contactless_rounded, size: 20),
+                            label: const Text(
+                              'แตะเหรียญ NFC',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange.shade800,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              elevation: 3,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _pickImageFromGallery,
+                            icon: const Icon(Icons.photo_library_rounded, size: 20),
+                            label: const Text(
+                              'เลือกรูปภาพ',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              elevation: 3,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ],

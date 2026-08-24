@@ -182,6 +182,15 @@ const MarketPrices = () => {
     setExtractedData({ ...extractedData, items: updated });
   };
 
+  const handleBatchDateChange = (newDate) => {
+    if (!extractedData || !extractedData.items) return;
+    const updated = extractedData.items.map(item => ({
+      ...item,
+      effective_date: newDate,
+    }));
+    setExtractedData({ ...extractedData, effective_date: newDate, items: updated });
+  };
+
   const handleSaveBatchPrices = async () => {
     if (!extractedData || !extractedData.items) return;
     try {
@@ -292,12 +301,32 @@ const MarketPrices = () => {
   };
 
   const getPriceForCategory = (catName) => {
-    const found = latestByCategory.find(p => p.category && p.category.includes(catName));
+    let found = latestByCategory.find(p => p.category === catName);
+    if (!found) {
+      const normCat = catName.replace(/≤/g, '<=').replace(/\s+/g, '');
+      found = latestByCategory.find(p => {
+        const itemNorm = (p.category || '').replace(/≤/g, '<=').replace(/\s+/g, '');
+        return itemNorm === normCat;
+      });
+    }
+    if (!found) {
+      found = latestByCategory.find(p => p.category && p.category.includes(catName));
+    }
     return found ? `${parseFloat(found.price_per_kg).toFixed(2)} บาท` : '-';
   };
 
   const getSourceForCategory = (catName) => {
-    const found = latestByCategory.find(p => p.category && p.category.includes(catName));
+    let found = latestByCategory.find(p => p.category === catName);
+    if (!found) {
+      const normCat = catName.replace(/≤/g, '<=').replace(/\s+/g, '');
+      found = latestByCategory.find(p => {
+        const itemNorm = (p.category || '').replace(/≤/g, '<=').replace(/\s+/g, '');
+        return itemNorm === normCat;
+      });
+    }
+    if (!found) {
+      found = latestByCategory.find(p => p.category && p.category.includes(catName));
+    }
     return found?.source || 'NABC AGRI API';
   };
 
@@ -355,7 +384,7 @@ const MarketPrices = () => {
         </div>
       )}
 
-      {/* 4 Summary Stat Cards Grid */}
+      {/* 4 Summary Stat Cards Grid - Showing lowest weight tier of each breed */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
@@ -363,10 +392,10 @@ const MarketPrices = () => {
         marginBottom: '24px'
       }}>
         {[
-          { title: 'โคเนื้อ (สศก. กลางประเทศ)', cat: 'โค', color: '#c2410c', bg: '#fff7ed' },
-          { title: 'ลูกผสมบราห์มัน (>250-400 กก.)', cat: 'บราห์มัน', color: '#1565c0', bg: '#e3f2fd' },
-          { title: 'ลูกผสมยุโรป (>400-600 กก.)', cat: 'ยุโรป', color: '#2d5a43', bg: '#e8f0eb' },
-          { title: 'พื้นเมืองไทย (>250-400 กก.)', cat: 'พื้นเมือง', color: '#6a1b9a', bg: '#f3e5f5' },
+          { title: 'โคเนื้อ (สศก. กลางประเทศ)', cat: 'โคพันธุ์ลูกผสม ขนาดกลาง', color: '#c2410c', bg: '#fff7ed' },
+          { title: 'ลูกผสมบราห์มัน (>250-400 กก.)', cat: 'ลูกผสมบราห์มัน (>250-400 กก.)', color: '#1565c0', bg: '#e3f2fd' },
+          { title: 'ลูกผสมยุโรป (>250-400 กก.)', cat: 'ลูกผสมยุโรป (>250-400 กก.)', color: '#2d5a43', bg: '#e8f0eb' },
+          { title: 'พื้นเมืองไทย (≤250 กก.)', cat: 'พื้นเมืองไทย (≤250 กก.)', color: '#6a1b9a', bg: '#f3e5f5' },
         ].map((card, idx) => (
           <div key={idx} className="card" style={{ padding: '20px', margin: 0, borderTop: `4px solid ${card.color}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
@@ -821,11 +850,48 @@ const MarketPrices = () => {
                     <span>อ่านข้อมูลสำเร็จ: {extractedData.report_title}</span>
                   </div>
 
+                  {/* Effective Date Selector */}
+                  <div style={{
+                    padding: '10px 14px',
+                    backgroundColor: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    marginBottom: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '12px'
+                  }}>
+                    <div>
+                      <label style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-main)', display: 'block' }}>
+                        📅 วันที่ของราคา (Effective Date):
+                      </label>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        ตรงตามข้อความ "(รายงาน ณ วันที่ ...)" มุมบนขวาของรูปภาพ ({extractedData.report_date_text || '17 สิงหาคม 2569'})
+                      </span>
+                    </div>
+                    <input
+                      type="date"
+                      value={extractedData.effective_date || extractedData.items[0]?.effective_date || ''}
+                      onChange={(e) => handleBatchDateChange(e.target.value)}
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        border: '1px solid var(--border-color)',
+                        fontSize: '0.85rem',
+                        fontWeight: '600',
+                        color: 'var(--text-main)',
+                        backgroundColor: '#fff'
+                      }}
+                    />
+                  </div>
+
                   <div style={{ maxHeight: '220px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
                     <table className="data-table" style={{ fontSize: '0.82rem' }}>
                       <thead>
                         <tr>
                           <th>สายพันธุ์ / พิกัดน้ำหนัก</th>
+                          <th style={{ width: '120px' }}>วันที่บันทึก</th>
                           <th style={{ width: '130px' }}>ราคา (บาท/กก.)</th>
                         </tr>
                       </thead>
@@ -833,6 +899,19 @@ const MarketPrices = () => {
                         {extractedData.items.map((item, idx) => (
                           <tr key={idx}>
                             <td style={{ fontWeight: '500' }}>{item.category}</td>
+                            <td>
+                              <span style={{
+                                display: 'inline-block',
+                                padding: '2px 8px',
+                                borderRadius: '4px',
+                                backgroundColor: '#f1f5f9',
+                                color: '#475569',
+                                fontSize: '0.75rem',
+                                fontWeight: '600'
+                              }}>
+                                {item.effective_date}
+                              </span>
+                            </td>
                             <td>
                               <input
                                 type="number"

@@ -236,7 +236,7 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
               border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const Expanded(
                   child: Column(
@@ -245,7 +245,7 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
                       Text(
                         'ราคากลางโคเนื้อ (สศก. / NABC)',
                         style: TextStyle(
-                          fontSize: 15,
+                          fontSize: 14.5,
                           fontWeight: FontWeight.bold,
                           color: AppColors.textPrimary,
                         ),
@@ -253,20 +253,21 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
                       SizedBox(height: 3),
                       Text(
                         'โคพันธุ์ลูกผสม ขนาดกลาง (เฉลี่ยทั่วประเทศ)',
-                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                        style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
                       ),
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
                       '฿ $nabcPrice',
                       style: const TextStyle(
-                        fontSize: 24,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary, // ดำเข้มคมชัด
+                        color: AppColors.textPrimary,
                         letterSpacing: -0.3,
                       ),
                     ),
@@ -284,16 +285,20 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'ราคาโคมีชีวิตหน้าฟาร์ม (กรมปศุสัตว์)',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                const Expanded(
+                  child: Text(
+                    'ราคาโคมีชีวิตหน้าฟาร์ม (กรมปศุสัตว์)',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                const SizedBox(width: 8),
                 InkWell(
                   onTap: () {
                     Navigator.push(
@@ -303,9 +308,16 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
                       ),
                     );
                   },
-                  child: const Text(
-                    'ประวัติทั้งหมด ➔',
-                    style: TextStyle(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.bold),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'ประวัติทั้งหมด',
+                        style: TextStyle(fontSize: 12.5, color: AppColors.primary, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(width: 2),
+                      Icon(Icons.arrow_forward_rounded, size: 14, color: AppColors.primary),
+                    ],
                   ),
                 ),
               ],

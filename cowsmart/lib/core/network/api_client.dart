@@ -5,8 +5,8 @@ class ApiClient {
   final Dio _dio;
   String? _token;
 
-  // Base URL: Use 127.0.0.1 for windows/web, 10.0.2.2 for android emulator
-  static const String baseUrl = 'http://127.0.0.1:8000/api';
+  // Base URL: Use current machine IPv4 on Wi-Fi
+  static const String baseUrl = 'http://192.168.1.36:8000/api';
 
   ApiClient()
     : _dio = Dio(
