@@ -53,6 +53,8 @@ dependencies:
   image: ^4.5.4
   nfc_manager: ^4.1.1
   nfc_manager_ndef: ^1.1.0
+  pdf: ^3.11.1
+  printing: ^5.13.2
 
 dev_dependencies:
   flutter_test:

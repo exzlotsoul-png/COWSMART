@@ -10,10 +10,13 @@ import 'package:cowsmart/features/cow/providers/breed_provider.dart';
 import 'package:cowsmart/features/cow/domain/breed.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
 import 'package:cowsmart/features/finance/providers/finance_provider.dart';
+import 'package:cowsmart/features/finance/domain/finance.dart';
 import 'package:cowsmart/features/market/providers/market_price_provider.dart';
 import 'package:cowsmart/features/notifications/providers/notification_provider.dart';
 import 'package:cowsmart/features/auth/providers/auth_provider.dart';
 import 'package:cowsmart/features/calendar/providers/calendar_provider.dart';
+import 'package:cowsmart/features/farm/services/farm_pdf_export_service.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
 import 'package:cowsmart/core/network/api_client.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -290,6 +293,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           // Action Buttons
           Row(
             children: [
+              _buildCircleAction(
+                icon: Icons.picture_as_pdf_rounded,
+                onTap: _exportFarmPdfReport,
+                tooltip: 'ส่งออกรายงาน PDF',
+              ),
+              const SizedBox(width: 8),
               _buildCircleAction(
                 icon: Icons.swap_horiz_rounded,
                 onTap: () => context.go('/select-farm'),
@@ -1098,6 +1107,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               onTap: () => context.push('/market_price'),
             ),
             _buildActionTile(
+              icon: Icons.picture_as_pdf_rounded,
+              label: 'รายงานฟาร์ม',
+              subtitle: 'ส่งออกไฟล์ PDF',
+              color: const Color(0xFFC2410C),
+              onTap: _exportFarmPdfReport,
+            ),
+            _buildActionTile(
               icon: Icons.add_business_rounded,
               label: 'เพิ่มฟาร์ม',
               subtitle: 'สร้างฟาร์มใหม่',
@@ -1588,5 +1604,92 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       },
     ),
     );
+  }
+
+  Future<void> _exportFarmPdfReport() async {
+    final currentFarm = ref.read(farmProvider).currentFarm;
+    if (currentFarm == null) {
+      AppFeedback.showError(context, 'ไม่พบข้อมูลฟาร์มสำหรับการส่งออกรายงาน');
+      return;
+    }
+
+    try {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 16,
+                ),
+              ],
+            ),
+            child: const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(color: AppColors.primary),
+                SizedBox(height: 16),
+                Text(
+                  'กำลังประมวลผลข้อมูลรายงาน PDF...',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      final cows = ref.read(cowProvider).allCows;
+      final breeds = ref.read(breedProvider);
+      final zones = ref.read(zoneProvider).zones;
+      final marketState = ref.read(marketPriceProvider);
+      final financeState = ref.read(financeProvider);
+      final user = ref.read(authProvider).user;
+      final userName = user != null
+          ? '${user['first_name'] ?? ''} ${user['last_name'] ?? ''}'.trim()
+          : null;
+
+      final totalIncome = financeState.transactions
+          .where((t) => t.type == TransactionType.income)
+          .fold(0.0, (sum, t) => sum + t.amount);
+      final totalExpense = financeState.transactions
+          .where((t) => t.type == TransactionType.expense)
+          .fold(0.0, (sum, t) => sum + t.amount);
+      final netBalance = totalIncome - totalExpense;
+
+      await FarmPdfExportService.exportFarmOverviewReport(
+        farm: currentFarm,
+        cows: cows,
+        breeds: breeds,
+        zones: zones,
+        marketState: marketState,
+        totalIncome: totalIncome,
+        totalExpense: totalExpense,
+        netBalance: netBalance,
+        issuedBy: userName,
+      );
+
+      if (mounted) {
+        AppFeedback.showSuccess(context, 'ส่งออกรายงาน PDF เรียบร้อยแล้ว');
+      }
+    } catch (e) {
+      if (mounted) {
+        AppFeedback.showError(context, 'เกิดข้อผิดพลาดในการสร้าง PDF: $e');
+      }
+    } finally {
+      if (mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+    }
   }
 }
