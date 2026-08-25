@@ -185,19 +185,25 @@ class AIchatbotController extends Controller
             }])->find($cowId);
 
             if ($cow) {
+                $cowIdVal = $cow->cow_id ?? $cow->id;
+                $tagVal = $cow->tag_number ?? $cow->ear_tag ?? $cow->tag_id ?? $cowIdVal;
+                $weightVal = $cow->latest_weight ?? $cow->weight;
+
                 $cowInfo = [
-                    'id' => $cow->id,
-                    'tag_number' => $cow->tag_number,
-                    'name' => $cow->name,
-                    'breed' => $cow->breed,
-                    'sex' => $cow->sex === 'male' ? 'เพศผู้' : 'เพศเมีย',
-                    'weight' => $cow->weight ? "{$cow->weight} กก." : 'ไม่ระบุ',
+                    'id' => $cowIdVal,
+                    'tag_number' => $tagVal,
+                    'name' => $cow->name ?? $tagVal,
+                    'breed' => $cow->breed ?? 'ไม่ระบุ',
+                    'sex' => ($cow->sex === 'male' || $cow->gender === 'male') ? 'เพศผู้' : 'เพศเมีย',
+                    'weight' => $weightVal ? "{$weightVal} กก." : 'ไม่ระบุ',
                 ];
 
-                $cowContextText = "ข้อมูลวัวที่กำลังปรึกษา: ชื่อ {$cow->name} (รหัส {$cow->tag_number}), พันธุ์ {$cow->breed}, เพศ {$cowInfo['sex']}, น้ำหนัก {$cowInfo['weight']}";
+                $cowContextText = "ข้อมูลวัวที่กำลังปรึกษา: ชื่อ {$cowInfo['name']} (รหัส {$cowInfo['tag_number']}), พันธุ์ {$cowInfo['breed']}, เพศ {$cowInfo['sex']}, น้ำหนัก {$cowInfo['weight']}";
                 if ($cow->healthRecords && $cow->healthRecords->isNotEmpty()) {
                     $recentHealth = $cow->healthRecords->map(function ($r) {
-                        return "{$r->record_date}: {$r->diagnosis} ({$r->treatment})";
+                        $date = $r->record_date ?? $r->created_at;
+                        $diag = $r->diagnosis ?? $r->notes ?? $r->note ?? $r->disease_id ?? 'ตรวจสุขภาพ';
+                        return "{$date}: {$diag}";
                     })->implode(', ');
                     $cowContextText .= " | ประวัติการรักษาก่อนหน้า: {$recentHealth}";
                 }

@@ -33,4 +33,29 @@ class Cow extends Model
     {
         return $this->belongsTo(Farm::class, 'farm_id', 'farm_id');
     }
+
+    public function healthRecords()
+    {
+        return $this->hasMany(HealthRecord::class, 'cow_id', 'cow_id');
+    }
+
+    public function growthRecords()
+    {
+        return $this->hasMany(GrowthRecord::class, 'cow_id', 'cow_id');
+    }
+
+    public function breedingRecords()
+    {
+        return $this->hasMany(BreedingRecord::class, 'cow_id', 'cow_id');
+    }
+
+    public function cullingRecord()
+    {
+        return $this->hasOne(CullingRecord::class, 'cow_id', 'cow_id');
+    }
+
+    public function feedingRecords()
+    {
+        return $this->hasMany(FeedingRecord::class, 'cow_id', 'cow_id');
+    }
 }
