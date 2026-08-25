@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Users, Tractor, PawPrint, Baby, AlertCircle, Lightbulb, MessageSquare, RefreshCw, Printer, FileDown } from 'lucide-react';
+import { Users, Tractor, PawPrint, Baby, AlertCircle, Lightbulb, MessageSquare, RefreshCw } from 'lucide-react';
 import { 
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip
 } from 'recharts';
@@ -162,19 +162,8 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-container">
-      <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-        <div>
-          <h2 style={{ fontSize: '2rem', fontWeight: 'bold', margin: 0, color: 'var(--text-main)' }}>แดชบอร์ดภาพรวม</h2>
-          <p style={{ margin: '4px 0 0 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>ระบบวิเคราะห์และสรุปข้อมูลสถิติภาพรวม COWSMART</p>
-        </div>
-        <button
-          onClick={() => window.print()}
-          className="export-pdf-btn"
-          title="พิมพ์หรือบันทึกรายงานเป็นไฟล์ PDF"
-        >
-          <Printer size={18} />
-          <span>ส่งออกรายงาน (PDF / พิมพ์)</span>
-        </button>
+      <div style={{ marginBottom: '24px' }}>
+        <h2 style={{ fontSize: '2rem', fontWeight: 'bold', margin: 0, color: 'var(--text-main)' }}>แดชบอร์ดภาพรวม</h2>
       </div>
 
       {/* --- Top Summary Cards --- */}
