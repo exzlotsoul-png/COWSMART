@@ -224,14 +224,23 @@ class _NfcReaderDialogState extends State<NfcReaderDialog> with SingleTickerProv
                   color: Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Text(
-                  '💡 ตำแหน่ง NFC (Huawei Mate 20 Pro):\nอยู่บริเวณ "ขอบบนของกล้องหลัง"',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                    height: 1.3,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(Icons.lightbulb_outline_rounded, size: 16, color: AppColors.primary),
+                    SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'ตำแหน่ง NFC (Huawei Mate 20 Pro):\nอยู่บริเวณ "ขอบบนของกล้องหลัง"',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                          height: 1.3,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 18),

@@ -12,7 +12,9 @@ const AdminLayout = () => {
     return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>Loading...</div>;
   }
 
-  if (!user) {
+  const isAdmin = user && (user.role === 1 || user.role === '1' || user.role === 'admin');
+
+  if (!user || !isAdmin) {
     return <Navigate to="/login" replace />;
   }
 

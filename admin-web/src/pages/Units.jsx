@@ -30,12 +30,24 @@ const Units = () => {
     }
   };
 
+  const getNextId = () => {
+    let max = 0;
+    units.forEach(u => {
+      const match = (u.unit_id || '').match(/(\d+)/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > max) max = num;
+      }
+    });
+    return 'U' + String(max + 1).padStart(3, '0');
+  };
+
   const handleOpenModal = (unit = null) => {
     if (unit) {
       setCurrentUnit(unit);
       setIsEditing(true);
     } else {
-      setCurrentUnit({ unit_id: '', name: '', type: '', abbreviation: '' });
+      setCurrentUnit({ unit_id: getNextId(), name: '', type: '', abbreviation: '' });
       setIsEditing(false);
     }
     setIsModalOpen(true);
@@ -137,11 +149,11 @@ const Units = () => {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>รหัส</th>
+                    <th style={{ width: '120px' }}>รหัส</th>
                     <th>ชื่อหน่วยวัด</th>
-                    <th>ตัวย่อ</th>
-                    <th>ประเภทการวัด</th>
-                    <th>จัดการ</th>
+                    <th style={{ width: '140px' }}>ตัวย่อ</th>
+                    <th style={{ width: '160px' }}>ประเภทการวัด</th>
+                    <th style={{ width: '120px', textAlign: 'right', paddingRight: '24px' }}>จัดการ</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -149,11 +161,11 @@ const Units = () => {
                     currentItems.map((unit) => (
                       <tr key={unit.unit_id}>
                         <td>{unit.unit_id}</td>
-                        <td>{unit.name}</td>
+                        <td style={{ fontWeight: '500' }}>{unit.name}</td>
                         <td>{unit.abbreviation}</td>
                         <td>{unit.type}</td>
-                        <td>
-                          <div className="action-links">
+                        <td style={{ textAlign: 'right' }}>
+                          <div className="action-links" style={{ justifyContent: 'flex-end', paddingRight: '4px' }}>
                             <button className="action-btn edit" onClick={() => handleOpenModal(unit)}>
                               <Edit size={16} />
                             </button>

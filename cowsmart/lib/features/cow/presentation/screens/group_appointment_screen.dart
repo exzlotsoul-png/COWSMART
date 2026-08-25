@@ -9,6 +9,7 @@ import 'package:cowsmart/features/cow/domain/cow.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
+import 'package:cowsmart/features/calendar/providers/appointment_type_provider.dart';
 
 class GroupAppointmentScreen extends ConsumerStatefulWidget {
   const GroupAppointmentScreen({super.key});
@@ -63,6 +64,7 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
         ref.read(cowProvider.notifier).fetchCows(currentFarm.id);
         ref.read(zoneProvider.notifier).fetchZones(currentFarm.id);
       }
+      ref.read(appointmentTypeProvider.notifier).fetchAppointmentTypes();
     });
   }
 
@@ -690,6 +692,15 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
 
   // ── STEP 2: APPOINTMENT DETAILS FORM ──
   Widget _buildStep2AppointmentForm() {
+    final dbAppointmentTypes = ref.watch(appointmentTypeProvider);
+    final availableTypes = dbAppointmentTypes.isNotEmpty
+        ? dbAppointmentTypes.map((t) => t.name).toList()
+        : _appointmentTypes;
+
+    final currentSelectedType = availableTypes.contains(_selectedType)
+        ? _selectedType
+        : (availableTypes.isNotEmpty ? availableTypes.first : _selectedType);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Form(
@@ -725,7 +736,7 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
             // Appointment Type Selection
             DropdownButtonFormField<String>(
               isExpanded: true,
-              initialValue: _selectedType,
+              initialValue: currentSelectedType,
               decoration: InputDecoration(
                 labelText: 'ประเภทนัดหมาย *',
                 filled: true,
@@ -733,7 +744,7 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
                 prefixIcon: const Icon(Icons.category_outlined, color: AppColors.primary),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              items: _appointmentTypes
+              items: availableTypes
                   .map((t) => DropdownMenuItem(value: t, child: Text(t)))
                   .toList(),
               onChanged: (val) {

@@ -30,12 +30,24 @@ const CowTypes = () => {
     }
   };
 
+  const getNextId = () => {
+    let max = 0;
+    cowTypes.forEach(t => {
+      const match = (t.cow_type_id || '').match(/(\d+)/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > max) max = num;
+      }
+    });
+    return 'T' + String(max + 1).padStart(3, '0');
+  };
+
   const handleOpenModal = (cowType = null) => {
     if (cowType) {
       setCurrentCowType(cowType);
       setIsEditing(true);
     } else {
-      setCurrentCowType({ cow_type_id: '', cow_type_name: '' });
+      setCurrentCowType({ cow_type_id: getNextId(), cow_type_name: '' });
       setIsEditing(false);
     }
     setIsModalOpen(true);
@@ -135,9 +147,9 @@ const CowTypes = () => {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>รหัสประเภทวัว</th>
+                    <th style={{ width: '220px' }}>รหัสประเภทวัว</th>
                     <th>ชื่อประเภท</th>
-                    <th>จัดการ</th>
+                    <th style={{ width: '120px', textAlign: 'right', paddingRight: '24px' }}>จัดการ</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -145,9 +157,9 @@ const CowTypes = () => {
                     currentItems.map((type) => (
                       <tr key={type.cow_type_id}>
                         <td>{type.cow_type_id}</td>
-                        <td>{type.cow_type_name}</td>
-                        <td>
-                          <div className="action-links">
+                        <td style={{ fontWeight: '500' }}>{type.cow_type_name}</td>
+                        <td style={{ textAlign: 'right' }}>
+                          <div className="action-links" style={{ justifyContent: 'flex-end', paddingRight: '4px' }}>
                             <button className="action-btn edit" onClick={() => handleOpenModal(type)}>
                               <Edit size={16} />
                             </button>

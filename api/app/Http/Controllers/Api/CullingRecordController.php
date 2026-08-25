@@ -41,15 +41,6 @@ class CullingRecordController extends Controller
                         continue;
                     }
                     
-                    if (empty($rData['culling_record_id']) || str_contains($rData['culling_record_id'], 'CL-')) {
-                        $lastRecord = CullingRecord::where('culling_record_id', 'LIKE', 'CUL%')
-                            ->whereRaw('culling_record_id REGEXP "^CUL[0-9]+$"')
-                            ->orderByRaw('CAST(SUBSTRING(culling_record_id, 4) AS UNSIGNED) DESC')
-                            ->first();
-                        $nextNum = $lastRecord ? ((int)substr($lastRecord->culling_record_id, 3)) + 1 : 1;
-                        $rData['culling_record_id'] = 'CUL' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
-                    }
-
                     // Create culling record
                     $record = CullingRecord::create($rData);
                     $createdRecords[] = $record;
@@ -108,14 +99,6 @@ class CullingRecordController extends Controller
 
         return DB::transaction(function () use ($request) {
             $data = $request->all();
-            if (empty($data['culling_record_id']) || str_contains($data['culling_record_id'], 'CL-')) {
-                $lastRecord = CullingRecord::where('culling_record_id', 'LIKE', 'CUL%')
-                    ->whereRaw('culling_record_id REGEXP "^CUL[0-9]+$"')
-                    ->orderByRaw('CAST(SUBSTRING(culling_record_id, 4) AS UNSIGNED) DESC')
-                    ->first();
-                $nextNum = $lastRecord ? ((int)substr($lastRecord->culling_record_id, 3)) + 1 : 1;
-                $data['culling_record_id'] = 'CUL' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
-            }
 
             // Create culling record
             $record = CullingRecord::create($data);

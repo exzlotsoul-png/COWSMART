@@ -1,0 +1,395 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\AiChatbot;
+use App\Models\ChatHistory;
+use App\Models\Cow;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
+
+class AIchatbotController extends Controller
+{
+    /**
+     * Admin: List all knowledge base items from ai_chatbot table
+     */
+    public function index(Request $request)
+    {
+        $query = AiChatbot::query();
+
+        if ($request->filled('category') && $request->category !== 'all') {
+            $query->where('category', $request->category);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('keywords', 'like', "%{$search}%")
+                  ->orWhere('prompt', 'like', "%{$search}%")
+                  ->orWhere('answer', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->has('is_active')) {
+            $query->where('is_active', filter_var($request->is_active, FILTER_VALIDATE_BOOLEAN));
+        }
+
+        $items = $query->orderBy('sort_order', 'asc')
+                       ->orderBy('id', 'asc')
+                       ->get();
+
+        $categories = AiChatbot::distinct()->pluck('category')->filter()->values();
+
+        return response()->json([
+            'success' => true,
+            'data' => $items,
+            'categories' => $categories,
+        ]);
+    }
+
+    /**
+     * Admin: Create new knowledge base item in ai_chatbot table
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'category' => 'required|string|max:100',
+            'title' => 'required|string|max:255',
+            'keywords' => 'nullable|string',
+            'prompt' => 'required|string',
+            'answer' => 'required|string',
+            'suggested_actions' => 'nullable|array',
+            'is_active' => 'boolean',
+            'sort_order' => 'integer',
+        ]);
+
+        $item = AiChatbot::create($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'บันทึกชุดข้อมูลคำถาม-คำตอบ AI สำเร็จ',
+            'data' => $item,
+        ], 201);
+    }
+
+    /**
+     * Admin: Show a single knowledge item
+     */
+    public function show($id)
+    {
+        $item = AiChatbot::findOrFail($id);
+        return response()->json([
+            'success' => true,
+            'data' => $item,
+        ]);
+    }
+
+    /**
+     * Admin: Update knowledge item
+     */
+    public function update(Request $request, $id)
+    {
+        $item = AiChatbot::findOrFail($id);
+
+        $validated = $request->validate([
+            'category' => 'sometimes|required|string|max:100',
+            'title' => 'sometimes|required|string|max:255',
+            'keywords' => 'nullable|string',
+            'prompt' => 'sometimes|required|string',
+            'answer' => 'sometimes|required|string',
+            'suggested_actions' => 'nullable|array',
+            'is_active' => 'boolean',
+            'sort_order' => 'integer',
+        ]);
+
+        $item->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'อัปเดตชุดข้อมูล AI สำเร็จ',
+            'data' => $item,
+        ]);
+    }
+
+    /**
+     * Admin: Delete knowledge item
+     */
+    public function destroy($id)
+    {
+        $item = AiChatbot::findOrFail($id);
+        $item->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'ลบข้อมูลสำเร็จ',
+        ]);
+    }
+
+    /**
+     * Mobile / App: Get suggested topics dynamically from ai_chatbot Database table
+     */
+    public function getSuggestedTopics()
+    {
+        $knowledges = AiChatbot::where('is_active', true)
+            ->orderBy('sort_order', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        $grouped = $knowledges->groupBy('category');
+
+        $result = [];
+        foreach ($grouped as $category => $items) {
+            $result[] = [
+                'category' => $category,
+                'items' => $items->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'title' => $item->title,
+                        'prompt' => $item->prompt,
+                    ];
+                })->values(),
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $result,
+        ]);
+    }
+
+    /**
+     * Mobile / App: Consult AI Doctor with DB Knowledge Matching + Cow Context (No Emojis)
+     */
+    public function consult(Request $request)
+    {
+        $request->validate([
+            'message' => 'required|string|max:1000',
+            'cow_id' => 'nullable|string',
+        ]);
+
+        $userMessage = trim($request->input('message'));
+        $cowId = $request->input('cow_id');
+        $userEmail = $request->user() ? $request->user()->email : ($request->input('email') ?? 'farmer@cowsmart.com');
+
+        $cowContextText = '';
+        $cowInfo = null;
+
+        if ($cowId) {
+            $cow = Cow::with(['healthRecords' => function ($q) {
+                $q->latest()->take(3);
+            }])->find($cowId);
+
+            if ($cow) {
+                $cowInfo = [
+                    'id' => $cow->id,
+                    'tag_number' => $cow->tag_number,
+                    'name' => $cow->name,
+                    'breed' => $cow->breed,
+                    'sex' => $cow->sex === 'male' ? 'เพศผู้' : 'เพศเมีย',
+                    'weight' => $cow->weight ? "{$cow->weight} กก." : 'ไม่ระบุ',
+                ];
+
+                $cowContextText = "ข้อมูลวัวที่กำลังปรึกษา: ชื่อ {$cow->name} (รหัส {$cow->tag_number}), พันธุ์ {$cow->breed}, เพศ {$cowInfo['sex']}, น้ำหนัก {$cowInfo['weight']}";
+                if ($cow->healthRecords && $cow->healthRecords->isNotEmpty()) {
+                    $recentHealth = $cow->healthRecords->map(function ($r) {
+                        return "{$r->record_date}: {$r->diagnosis} ({$r->treatment})";
+                    })->implode(', ');
+                    $cowContextText .= " | ประวัติการรักษาก่อนหน้า: {$recentHealth}";
+                }
+            }
+        }
+
+        // 1. Search ai_chatbot table in Database
+        $matchedKnowledge = $this->matchKnowledgeFromDatabase($userMessage);
+        $suggestedActions = [
+            ['action' => 'create_appointment', 'label' => 'สร้างนัดหมายตรวจสุขภาพ'],
+            ['action' => 'record_health', 'label' => 'บันทึกการรักษา'],
+        ];
+
+        $aiResponse = null;
+
+        if ($matchedKnowledge) {
+            $cowPrefix = $cowInfo ? "สำหรับ {$cowInfo['name']} (พันธุ์ {$cowInfo['breed']})\n\n" : "";
+            $aiResponse = $cowPrefix . $matchedKnowledge->answer;
+            if (!empty($matchedKnowledge->suggested_actions)) {
+                $actionList = [];
+                foreach ($matchedKnowledge->suggested_actions as $actKey) {
+                    if ($actKey === 'create_appointment') {
+                        $actionList[] = ['action' => 'create_appointment', 'label' => 'สร้างนัดหมายตรวจสุขภาพ'];
+                    } elseif ($actKey === 'record_health') {
+                        $actionList[] = ['action' => 'record_health', 'label' => 'บันทึกการรักษา'];
+                    }
+                }
+                if (!empty($actionList)) {
+                    $suggestedActions = $actionList;
+                }
+            }
+        }
+
+        // 2. Fallback to Gemini API if configured
+        if (!$aiResponse) {
+            $geminiApiKey = config('services.gemini.api_key') ?: env('GEMINI_API_KEY');
+            if (!empty($geminiApiKey)) {
+                $aiResponse = $this->callGeminiApi($userMessage, $cowContextText, $geminiApiKey);
+            }
+        }
+
+        // 3. Fallback when no match found in database and no external AI
+        if (!$aiResponse) {
+            $cowPrefix = $cowInfo ? "สำหรับ {$cowInfo['name']} (พันธุ์ {$cowInfo['breed']})\n\n" : "";
+            $aiResponse = $cowPrefix . "ขออภัยครับ ระบบยังไม่พบข้อมูลคำตอบสำหรับคำถามหรืออาการดังกล่าวในฐานข้อมูล\n\n"
+                . "คำแนะนำ: กรุณาติดต่อปรึกษาสัตวแพทย์ในพื้นที่เพื่อตรวจดูอาการโดยตรง หรือเลือกแตะหัวข้ออาการที่แนะนำจากรายการด้านล่างครับ";
+        }
+
+        // Save into ChatHistory
+        $chatRecord = null;
+        try {
+            $chatRecord = ChatHistory::create([
+                'email' => $userEmail,
+                'user_message' => $userMessage,
+                'ai_response' => $aiResponse,
+                'chat_datetime' => Carbon::now(),
+            ]);
+        } catch (\Exception $e) {
+            Log::warning("Could not persist chat history: " . $e->getMessage());
+        }
+
+        $chatId = $chatRecord ? $chatRecord->id : 'CH0001';
+
+        return response()->json([
+            'success' => true,
+            'chat_id' => $chatId,
+            'user_message' => $userMessage,
+            'ai_response' => $aiResponse,
+            'cow' => $cowInfo,
+            'timestamp' => Carbon::now()->toISOString(),
+            'suggested_actions' => $suggestedActions,
+        ]);
+    }
+
+    /**
+     * Match user message against ai_chatbot Database table
+     */
+    private function matchKnowledgeFromDatabase(string $message): ?AiChatbot
+    {
+        $cleanMsg = mb_strtolower(trim($message));
+
+        // Ignore DB match if user is specifically asking about other animals
+        $otherAnimals = ['หมู', 'สุกร', 'ไก่', 'เป็ด', 'สุนัข', 'หมา', 'แมว', 'ม้า', 'แพะ', 'แกะ', 'ปลา', 'กุ้ง'];
+        $cattleKeywords = ['วัว', 'ลูกวัว', 'แม่วัว'];
+        
+        $mentionsOtherAnimal = false;
+        foreach ($otherAnimals as $animal) {
+            if (str_contains($cleanMsg, $animal)) {
+                $mentionsOtherAnimal = true;
+                break;
+            }
+        }
+
+        $mentionsCattle = false;
+        foreach ($cattleKeywords as $cattle) {
+            if (str_contains($cleanMsg, $cattle)) {
+                $mentionsCattle = true;
+                break;
+            }
+        }
+
+        if ($mentionsOtherAnimal && !$mentionsCattle) {
+            return null; // Skip DB match so guardrails can refuse
+        }
+
+        // 1. Direct prompt or title match
+        $directMatch = AiChatbot::where('is_active', true)
+            ->where(function ($q) use ($cleanMsg) {
+                $q->whereRaw('LOWER(prompt) = ?', [$cleanMsg])
+                  ->orWhereRaw('LOWER(title) = ?', [$cleanMsg]);
+            })->first();
+
+        if ($directMatch) {
+            return $directMatch;
+        }
+
+        // 2. Keyword matching from all active records
+        $allActive = AiChatbot::where('is_active', true)
+            ->orderBy('sort_order', 'asc')
+            ->get();
+
+        foreach ($allActive as $item) {
+            if (!empty($item->keywords)) {
+                $kwList = array_map('trim', explode(',', mb_strtolower($item->keywords)));
+                foreach ($kwList as $kw) {
+                    if (!empty($kw) && str_contains($cleanMsg, $kw)) {
+                        return $item;
+                    }
+                }
+            }
+
+            if (!empty($item->title) && str_contains($cleanMsg, mb_strtolower($item->title))) {
+                return $item;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Call Google Gemini API without emojis
+     */
+    private function callGeminiApi(string $prompt, string $cowContext, string $apiKey): ?string
+    {
+        try {
+            $systemInstruction = "คุณคือ 'หมอวัว CowSmart' สัตวแพทย์ผู้เชี่ยวชาญด้านสุขภาพและการดูแล 'วัว' ประจำฟาร์มเท่านั้น\n\n"
+                . "กฎเหล็กและขอบเขตหน้าที่ (Strict Domain Guardrails):\n"
+                . "1. ให้ใช้คำว่า 'วัว' เสมอ ห้ามใช้คำว่า 'โค' หรือ 'กระบือ' ในข้อความคำตอบ\n"
+                . "2. ตอบเฉพาะคำถามที่เกี่ยวกับ 'วัว' เท่านั้น (สุขภาพวัว, อาการป่วยของวัว, โรคในวัว, การปฐมพยาบาลวัว, วัคซีนและยาสำหรับวัว, การคลอดและการดูแลลูกวัว, อาหารและการจัดการฟาร์มวัว)\n"
+                . "3. หากผู้ใช้ถามเรื่องสัตว์ชนิดอื่น (เช่น หมู, ไก่, เป็ด, สุนัข, แมว, ม้า, แพะ, แกะ ฯลฯ) หรือถามเรื่องทั่วไปที่ไม่เกี่ยวข้องกับการดูแลวัว (เช่น การเมือง, วิทยาศาสตร์ทั่วไป, เขียนโปรแกรม, ชวนคุยเล่นนอกเรื่อง):\n"
+                . "   คุณต้องปฏิเสธอย่างสุภาพทันที โดยใช้ข้อความรูปแบบนี้เท่านั้น:\n"
+                . "   'ขออภัยครับ ผมคือ \"หมอวัว CowSmart\" ผู้ช่วยสัตวแพทย์ที่เชี่ยวชาญเฉพาะด้านสุขภาพและการดูแลวัวเท่านั้น จึงไม่สามารถให้คำแนะนำเกี่ยวกับสัตว์ชนิดอื่นหรือเรื่องนอกเหนือจากการดูแลวัวได้ครับ หากท่านมีข้อสงสัยเกี่ยวกับสุขภาพหรืออาการป่วยของวัวในฟาร์ม สามารถพิมพ์สอบถามเข้ามาได้เลยครับ'\n"
+                . "4. ห้ามตอบข้อมูลสัตว์ชนิดอื่นหรือข้อมูลนอกขอบเขตเด็ดขาด แม้ผู้ใช้จะขอร้องก็ตาม\n"
+                . "5. ห้ามใส่อีโมจิลงในข้อความคำตอบ จัดหัวข้อให้อ่านง่ายเป็นระเบียบด้วย Markdown หรือข้อความธรรมดา เช่น [การประเมินเบื้องต้น], [การดูแลและปฐมพยาบาลเบื้องต้น], [สัญญาณอันตราย], [ข้อควรปฏิบัติ]\n"
+                . "6. หากเป็นอาการป่วยรุนแรง ให้แนะนำให้ติดต่อสัตวแพทย์ในพื้นที่ทันที";
+
+            if (!empty($cowContext)) {
+                $systemInstruction .= "\n\n[บริบทวัวที่กำลังปรึกษา: {$cowContext}]";
+            }
+
+            $models = ['gemini-3.6-flash', 'gemini-2.5-flash', 'gemini-1.5-flash-8b'];
+
+            foreach ($models as $model) {
+                $response = Http::timeout(45)->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}", [
+                    'system_instruction' => [
+                        'parts' => [['text' => $systemInstruction]]
+                    ],
+                    'contents' => [
+                        [
+                            'role' => 'user',
+                            'parts' => [['text' => $prompt]]
+                        ]
+                    ],
+                    'generationConfig' => [
+                        'temperature' => 0.4,
+                        'maxOutputTokens' => 2048,
+                    ]
+                ]);
+
+                if ($response->successful()) {
+                    $data = $response->json();
+                    $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+                    if (!empty($text)) {
+                        return $text;
+                    }
+                } else {
+                    Log::warning("Gemini API ({$model}) failed with status {$response->status()}: " . $response->body());
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error("Gemini API call exception: " . $e->getMessage());
+        }
+        return null;
+    }
+}

@@ -57,8 +57,7 @@ class BasicInfoTab extends ConsumerWidget {
         )
         .name;
 
-    final marketPrice =
-        ref.watch(marketPriceProvider).latest?.pricePerKg ?? 120.0;
+    final marketState = ref.watch(marketPriceProvider);
 
     final zones = ref.watch(zoneProvider).zones;
     final zoneName = zones.isNotEmpty
@@ -72,7 +71,8 @@ class BasicInfoTab extends ConsumerWidget {
     final latestWeight = growthRecords.isNotEmpty
         ? growthRecords.first.weight
         : cow.latestWeight;
-    final estimatedValue = latestWeight * marketPrice;
+    final pricePerKg = marketState.calculatePricePerKg(breedName: breedName, weight: latestWeight);
+    final estimatedValue = latestWeight * pricePerKg;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),

@@ -20,7 +20,7 @@ const Login = () => {
     try {
       await login(email, password);
     } catch (err) {
-      setError('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+      setError(err.message || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
     }
   };
 

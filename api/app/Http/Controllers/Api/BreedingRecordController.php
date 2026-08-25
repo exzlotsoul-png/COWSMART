@@ -34,9 +34,6 @@ class BreedingRecordController extends Controller
     public function store(Request $request)
     {
         $data = $request->all();
-        if (empty($data['breeding_record_id'])) {
-            $data['breeding_record_id'] = 'BR-' . substr(md5(uniqid(mt_rand(), true)), 0, 7);
-        }
         $record = BreedingRecord::create($data);
         self::syncNotificationForBreedingRecord($record);
         return response()->json($record, 201);

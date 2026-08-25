@@ -4,9 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
 import 'package:cowsmart/core/network/api_client.dart';
 import 'package:cowsmart/features/auth/providers/auth_provider.dart';
 import 'package:cowsmart/core/services/image_upload_service.dart';
+import 'package:cowsmart/features/settings/providers/report_topic_provider.dart';
 
 class ReportIssueScreen extends ConsumerStatefulWidget {
   const ReportIssueScreen({super.key});
@@ -43,6 +45,9 @@ class _ReportIssueScreenState extends ConsumerState<ReportIssueScreen> with Sing
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _fetchHistory();
+    Future.microtask(() {
+      ref.read(reportTopicProvider.notifier).fetchReportTopics();
+    });
   }
 
   @override
@@ -129,8 +134,8 @@ class _ReportIssueScreenState extends ConsumerState<ReportIssueScreen> with Sing
             imageFile: _selectedImage!,
           );
           imageUrl = res['url'] ?? res['path'];
-        } catch (e) {
-          print('❌ Upload issue image failed: $e');
+        } catch (_) {
+          // Upload error handled
         }
       }
 
@@ -164,6 +169,8 @@ class _ReportIssueScreenState extends ConsumerState<ReportIssueScreen> with Sing
 
       // Refresh history & switch tab
       await _fetchHistory();
+
+      if (!mounted) return;
 
       showDialog(
         context: context,
@@ -204,6 +211,62 @@ class _ReportIssueScreenState extends ConsumerState<ReportIssueScreen> with Sing
     }
   }
 
+  Future<void> _deleteReport(dynamic id) async {
+    if (id == null) return;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: const [
+            Icon(Icons.delete_forever_rounded, color: Colors.red, size: 26),
+            SizedBox(width: 8),
+            Text('ยืนยันการลบรายงาน', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+          ],
+        ),
+        content: Text(
+          'คุณต้องการลบประวัติการแจ้งรายงาน ID: $id ใช่หรือไม่?\n(ข้อมูลจะถูกลบออกจากระบบอย่างถาวร)',
+          style: const TextStyle(fontSize: 14.5, height: 1.4),
+        ),
+        actions: [
+          OutlinedButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            style: OutlinedButton.styleFrom(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('ยกเลิก'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('ลบรายงาน'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final api = ref.read(apiClientProvider);
+      await api.delete('/issue_reports/$id');
+      setState(() {
+        _historyReports.removeWhere((r) => (r['id'] ?? r['report_id']).toString() == id.toString());
+      });
+      if (mounted) {
+        AppFeedback.showSuccess(context, 'ลบประวัติรายงานเรียบร้อยแล้ว');
+      }
+    } catch (e) {
+      if (mounted) {
+        AppFeedback.showError(context, 'ลบรายงานไม่สำเร็จ: $e');
+      }
+    }
+  }
+
   String _formatDate(String? rawDate) {
     if (rawDate == null || rawDate.isEmpty) return '-';
     try {
@@ -222,6 +285,14 @@ class _ReportIssueScreenState extends ConsumerState<ReportIssueScreen> with Sing
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(authProvider).user;
+    final dbTopics = ref.watch(reportTopicProvider);
+    final availableTopics = dbTopics.isNotEmpty
+        ? dbTopics.map((t) => t.name).toList()
+        : _topics;
+
+    final currentSelectedTopic = availableTopics.contains(_selectedTopic)
+        ? _selectedTopic
+        : (availableTopics.isNotEmpty ? availableTopics.first : _selectedTopic);
 
     return Scaffold(
       appBar: AppBar(
@@ -313,7 +384,7 @@ class _ReportIssueScreenState extends ConsumerState<ReportIssueScreen> with Sing
                   ),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
-                    initialValue: _selectedTopic,
+                    initialValue: currentSelectedTopic,
                     isExpanded: true,
                     style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
                     decoration: InputDecoration(
@@ -321,7 +392,7 @@ class _ReportIssueScreenState extends ConsumerState<ReportIssueScreen> with Sing
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                     ),
-                    items: _topics.map((t) {
+                    items: availableTopics.map((t) {
                       return DropdownMenuItem(
                         value: t,
                         child: Text(t, overflow: TextOverflow.ellipsis),
@@ -526,18 +597,24 @@ class _ReportIssueScreenState extends ConsumerState<ReportIssueScreen> with Sing
                               final dateStr = _formatDate(item['created_at']);
                               final imageUrl = item['image_url'] != null ? _formatImageUrl(item['image_url'].toString()) : null;
 
+                              final reportId = item['id'] ?? item['report_id'] ?? '';
+
                               return Card(
                                 margin: const EdgeInsets.only(bottom: 14),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                                elevation: 2,
-                                shadowColor: Colors.black12,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  side: BorderSide(color: AppColors.border.withValues(alpha: 0.6)),
+                                ),
+                                elevation: 1.5,
+                                shadowColor: Colors.black.withValues(alpha: 0.05),
+                                color: Colors.white,
                                 child: Padding(
                                   padding: const EdgeInsets.all(16),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Expanded(
                                             child: Text(
@@ -546,27 +623,59 @@ class _ReportIssueScreenState extends ConsumerState<ReportIssueScreen> with Sing
                                                 fontSize: 16,
                                                 fontWeight: FontWeight.bold,
                                                 color: AppColors.textPrimary,
+                                                height: 1.2,
                                               ),
                                             ),
                                           ),
+                                          const SizedBox(width: 8),
                                           Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                                             decoration: BoxDecoration(
-                                              color: isResolved ? const Color(0xFFD1FAE5) : const Color(0xFFFEE2E2),
-                                              borderRadius: BorderRadius.circular(12),
+                                              color: isResolved ? const Color(0xFFE8F2E6) : const Color(0xFFFFF7ED),
+                                              borderRadius: BorderRadius.circular(10),
+                                              border: Border.all(
+                                                color: isResolved
+                                                    ? AppColors.primary.withValues(alpha: 0.35)
+                                                    : const Color(0xFFFDBA74).withValues(alpha: 0.6),
+                                                width: 1,
+                                              ),
                                             ),
-                                            child: Text(
-                                              isResolved ? 'แก้ไขแล้ว' : 'รอดำเนินการ',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.bold,
-                                                color: isResolved ? const Color(0xFF065F46) : const Color(0xFF991B1B),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  isResolved ? Icons.check_circle_rounded : Icons.hourglass_top_rounded,
+                                                  size: 13,
+                                                  color: isResolved ? const Color(0xFF334A2E) : const Color(0xFFC2410C),
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  isResolved ? 'แก้ไขแล้ว' : 'รอดำเนินการ',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: isResolved ? const Color(0xFF334A2E) : const Color(0xFFC2410C),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          InkWell(
+                                            onTap: () => _deleteReport(reportId),
+                                            borderRadius: BorderRadius.circular(8),
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(4),
+                                              child: Icon(
+                                                Icons.delete_outline_rounded,
+                                                size: 20,
+                                                color: Colors.red[400],
                                               ),
                                             ),
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: 6),
+                                      const SizedBox(height: 8),
                                       Row(
                                         children: [
                                           const Icon(Icons.access_time, size: 14, color: AppColors.textHint),
@@ -575,17 +684,24 @@ class _ReportIssueScreenState extends ConsumerState<ReportIssueScreen> with Sing
                                             dateStr,
                                             style: const TextStyle(fontSize: 12, color: AppColors.textHint),
                                           ),
-                                          const SizedBox(width: 12),
-                                          Text(
-                                            'ID: ${item['id'] ?? item['report_id'] ?? ''}',
-                                            style: const TextStyle(fontSize: 12, color: AppColors.textHint),
+                                          const SizedBox(width: 10),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.surfaceAlt,
+                                              borderRadius: BorderRadius.circular(6),
+                                            ),
+                                            child: Text(
+                                              'ID: $reportId',
+                                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                                            ),
                                           ),
                                         ],
                                       ),
                                       const Divider(height: 20),
                                       Text(
                                         desc,
-                                        style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, height: 1.4),
+                                        style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, height: 1.45),
                                       ),
                                       if (imageUrl != null) ...[
                                         const SizedBox(height: 12),

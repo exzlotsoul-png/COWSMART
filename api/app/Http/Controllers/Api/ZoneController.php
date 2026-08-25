@@ -35,9 +35,6 @@ class ZoneController extends Controller
         }
 
         $data = $request->all();
-        // Auto generate zone_id (max 10 chars)
-        $data['zone_id'] = 'Z-' . substr(md5(uniqid(mt_rand(), true)), 0, 8);
-        
         $zone = Zone::create($data);
         return response()->json($zone, 201);
     }

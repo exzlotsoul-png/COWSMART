@@ -10,7 +10,7 @@ const Diseases = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentDisease, setCurrentDisease] = useState({
-    disease_id: '', name: '', cause: '', symptoms: '', observation: '', treatment: '', prevention: ''
+    disease_id: '', name: '', cause: '', observation: '', treatment: '', prevention: ''
   });
   const [isEditing, setIsEditing] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,12 +32,24 @@ const Diseases = () => {
     }
   };
 
+  const getNextId = () => {
+    let max = 0;
+    diseases.forEach(d => {
+      const match = (d.disease_id || '').match(/(\d+)/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > max) max = num;
+      }
+    });
+    return 'DIS' + String(max + 1).padStart(3, '0');
+  };
+
   const handleOpenModal = (disease = null) => {
     if (disease) {
       setCurrentDisease(disease);
       setIsEditing(true);
     } else {
-      setCurrentDisease({ disease_id: '', name: '', cause: '', symptoms: '', observation: '', treatment: '', prevention: '' });
+      setCurrentDisease({ disease_id: getNextId(), name: '', cause: '', observation: '', treatment: '', prevention: '' });
       setIsEditing(false);
     }
     setIsModalOpen(true);
@@ -45,7 +57,7 @@ const Diseases = () => {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setCurrentDisease({ disease_id: '', name: '', cause: '', symptoms: '', observation: '', treatment: '', prevention: '' });
+    setCurrentDisease({ disease_id: '', name: '', cause: '', observation: '', treatment: '', prevention: '' });
     setIsEditing(false);
   };
 
@@ -85,8 +97,7 @@ const Diseases = () => {
   const filteredAndSorted = diseases
     .filter(d => 
       (d.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-      (d.disease_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (d.symptoms || '').toLowerCase().includes(searchTerm.toLowerCase())
+      (d.disease_id || '').toLowerCase().includes(searchTerm.toLowerCase())
     )
     .sort((a, b) => {
       const compare = (b.disease_id || '').localeCompare(a.disease_id || '');
@@ -138,10 +149,9 @@ const Diseases = () => {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>รหัสโรค</th>
+                    <th style={{ width: '220px' }}>รหัสโรค</th>
                     <th>ชื่อโรค/อาการ</th>
-                    <th>ลักษณะอาการ</th>
-                    <th>จัดการ</th>
+                    <th style={{ width: '120px', textAlign: 'right', paddingRight: '24px' }}>จัดการ</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -149,12 +159,9 @@ const Diseases = () => {
                     currentItems.map((disease) => (
                       <tr key={disease.disease_id}>
                         <td>{disease.disease_id}</td>
-                        <td>{disease.name}</td>
-                        <td style={{ maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {disease.symptoms}
-                        </td>
-                        <td>
-                          <div className="action-links">
+                        <td style={{ fontWeight: '500' }}>{disease.name}</td>
+                        <td style={{ textAlign: 'right' }}>
+                          <div className="action-links" style={{ justifyContent: 'flex-end', paddingRight: '4px' }}>
                             <button className="action-btn edit" onClick={() => handleOpenModal(disease)}>
                               <Edit size={16} />
                             </button>
@@ -167,7 +174,7 @@ const Diseases = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="4" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>
+                      <td colSpan="3" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>
                     </tr>
                   )}
                 </tbody>
@@ -205,10 +212,6 @@ const Diseases = () => {
                 <div className="form-group">
                   <label className="form-label" htmlFor="cause">สาเหตุการเกิดโรค</label>
                   <textarea id="cause" name="cause" className="form-control" rows="2" value={currentDisease.cause || ''} onChange={handleChange} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="symptoms">ลักษณะอาการ</label>
-                  <textarea id="symptoms" name="symptoms" className="form-control" rows="2" value={currentDisease.symptoms || ''} onChange={handleChange} />
                 </div>
                 <div className="form-group">
                   <label className="form-label" htmlFor="observation">วิธีสังเกตอาการ</label>

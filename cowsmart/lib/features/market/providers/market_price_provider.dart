@@ -40,6 +40,103 @@ class MarketPriceState {
       errorMessage: errorMessage ?? this.errorMessage,
     );
   }
+
+  /// ดึงราคากลางโคพันธุ์ลูกผสม ขนาดกลาง (สศก. / NABC)
+  double get nabcCentralPrice {
+    try {
+      final match = allPrices.firstWhere(
+        (p) => (p.category != null && p.category!.contains('โคพันธุ์ลูกผสม')) ||
+               (p.source != null && p.source!.contains('NABC')),
+      );
+      if (match.pricePerKg > 0) return match.pricePerKg;
+    } catch (_) {
+      try {
+        final match = byCategory.firstWhere(
+          (p) => (p.category != null && p.category!.contains('โคพันธุ์ลูกผสม')) ||
+                 (p.source != null && p.source!.contains('NABC')),
+        );
+        if (match.pricePerKg > 0) return match.pricePerKg;
+      } catch (_) {}
+    }
+    return 95.43; // default fallback
+  }
+
+  /// ดึงราคาตามชื่อหมวดหมู่ (เช่น 'ลูกผสมบราห์มัน (>400')
+  double? getPriceForCategory(String keyword) {
+    try {
+      final match = allPrices.firstWhere(
+        (p) => p.category != null && p.category!.contains(keyword),
+      );
+      return match.pricePerKg > 0 ? match.pricePerKg : null;
+    } catch (_) {
+      try {
+        final match = byCategory.firstWhere(
+          (p) => p.category != null && p.category!.contains(keyword),
+        );
+        return match.pricePerKg > 0 ? match.pricePerKg : null;
+      } catch (_) {
+        return null;
+      }
+    }
+  }
+
+  /// คำนวณราคาต่อกิโลกรัมตามสายพันธุ์และน้ำหนักตัวของวัว
+  /// หากสายพันธุ์ไม่มีในราคาตลาดของกรมปศุสัตว์ ให้อิงตาม "ราคากลางโคพันธุ์ลูกผสม ขนาดกลาง" (สศก. / NABC)
+  double calculatePricePerKg({String? breedName, double weight = 0.0}) {
+    final bName = (breedName ?? '').toLowerCase().trim();
+
+    // 1. ตระกูลบราห์มัน (Brahman)
+    if (bName.contains('บราห์มัน') || bName.contains('brahman')) {
+      if (weight > 400) {
+        final p = getPriceForCategory('ลูกผสมบราห์มัน (>400');
+        if (p != null) return p;
+      } else {
+        final p = getPriceForCategory('ลูกผสมบราห์มัน (>250');
+        if (p != null) return p;
+      }
+    }
+
+    // 2. ตระกูลพื้นเมืองไทย (Thai Native)
+    if (bName.contains('พื้นเมือง') || bName.contains('native')) {
+      if (weight > 250) {
+        final p = getPriceForCategory('พื้นเมืองไทย (>250');
+        if (p != null) return p;
+      } else {
+        final p = getPriceForCategory('พื้นเมืองไทย (≤250') ?? getPriceForCategory('พื้นเมืองไทย (<=250');
+        if (p != null) return p;
+      }
+    }
+
+    // 3. ตระกูลลูกผสมยุโรป (European Crossbred เช่น ชาร์โรเลส์, เฮียฟอร์ด, ซิมเมนทัล, ลิมูซิน)
+    if (bName.contains('ยุโรป') ||
+        bName.contains('ชาร์โรเลส์') ||
+        bName.contains('charolais') ||
+        bName.contains('เฮียฟอร์ด') ||
+        bName.contains('hereford') ||
+        bName.contains('ซิมเมนทัล') ||
+        bName.contains('simmental') ||
+        bName.contains('ลิมูซิน') ||
+        bName.contains('limousin')) {
+      if (weight > 400) {
+        final p = getPriceForCategory('ลูกผสมยุโรป (>400');
+        if (p != null) return p;
+      } else {
+        final p = getPriceForCategory('ลูกผสมยุโรป (>250');
+        if (p != null) return p;
+      }
+    }
+
+    // 4. พันธุ์อื่นๆ ที่ไม่มีในราคาตลาด หรือระบุไม่ชัดเจน
+    // ให้อิงตาม "ราคากลางโคพันธุ์ลูกผสม ขนาดกลาง" (สศก. / NABC)
+    return nabcCentralPrice;
+  }
+
+  /// คำนวณมูลค่ารวมของวัว (น้ำหนักตัว × ราคาต่อ กก. ตามตลาด)
+  double calculateEstimatedValue({String? breedName, double weight = 0.0}) {
+    if (weight <= 0) return 0.0;
+    final pricePerKg = calculatePricePerKg(breedName: breedName, weight: weight);
+    return weight * pricePerKg;
+  }
 }
 
 class MarketPriceNotifier extends Notifier<MarketPriceState> {
@@ -48,6 +145,7 @@ class MarketPriceNotifier extends Notifier<MarketPriceState> {
   @override
   MarketPriceState build() {
     _api = ref.watch(apiClientProvider);
+    Future.microtask(() => fetchLatest());
     return MarketPriceState();
   }
 

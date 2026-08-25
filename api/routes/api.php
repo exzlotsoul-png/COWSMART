@@ -28,12 +28,14 @@ use App\Http\Controllers\Api\ChatHistoryController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\MarketPriceController;
+use App\Http\Controllers\Api\AIchatbotController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UnitController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\AppointmentTypeController;
 use App\Http\Controllers\Api\CowCostController;
+use App\Http\Controllers\Api\ReportTopicController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
@@ -100,4 +102,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('units', UnitController::class);
     Route::apiResource('settings', SettingController::class);
     Route::apiResource('appointment_types', AppointmentTypeController::class);
+    Route::apiResource('report_topics', ReportTopicController::class);
+    Route::apiResource('ai_chatbot', AIchatbotController::class);
+    Route::apiResource('ai_knowledges', AIchatbotController::class);
+    Route::get('/ai/suggested-topics', [AIchatbotController::class, 'getSuggestedTopics']);
+    Route::post('/ai/consult', [AIchatbotController::class, 'consult']);
 });

@@ -34,9 +34,6 @@ class HealthAppointmentController extends Controller
     public function store(Request $request)
     {
         $data = $request->all();
-        if (empty($data['health_appointment_id'])) {
-            $data['health_appointment_id'] = 'HA-' . substr(md5(uniqid(mt_rand(), true)), 0, 7);
-        }
         $appt = HealthAppointment::create($data);
         self::syncNotificationForHealthAppt($appt);
         return response()->json($appt, 201);

@@ -105,8 +105,8 @@ class MasterDataSeeder extends Seeder
         $reports = [
             [
                 'id' => 'REP001',
-                'email' => 'thanapat.tienatnunt@gmail.com',
-                'topic' => 'สอบถามขั้นตอนการเพิ่มบันทึกวัคซีน',
+                'email' => 'thanapat.tientanunt@gmail.com',
+                'topic' => 'สอบถามการใช้งานทั่วไป',
                 'description' => 'อยากทราบว่าเมื่อบันทึกฉีดวัคซีนแล้ว สามารถเลือกหน่วยวัดโดสเพิ่มเติมได้จากตรงไหนครับ',
                 'status' => 1,
                 'created_at' => now()->subDays(3),
@@ -114,8 +114,8 @@ class MasterDataSeeder extends Seeder
             ],
             [
                 'id' => 'REP002',
-                'email' => 'thanapat.tienatnunt@gmail.com',
-                'topic' => 'กราฟการเติบโตแสดงผลช้า',
+                'email' => 'thanapat.tientanunt@gmail.com',
+                'topic' => 'ปัญหาการใช้งานแอปพลิเคชัน',
                 'description' => 'เมื่อเลือกดูแท็บการเจริญเติบโตรวมของวัวขุน กราฟใช้เวลาโหลดเล็กน้อย',
                 'status' => 0,
                 'created_at' => now()->subDays(1),
@@ -124,7 +124,7 @@ class MasterDataSeeder extends Seeder
             [
                 'id' => 'REP003',
                 'email' => 'admin@cowsmart.com',
-                'topic' => 'เสนอเพิ่มระบบส่งการแจ้งเตือนทาง SMS',
+                'topic' => 'ข้อเสนอแนะ / ติชม',
                 'description' => 'อยากให้ระบบส่ง SMS แจ้งเตือนวันกำหนดคลอดล่วงหน้า 3 วันครับ',
                 'status' => 0,
                 'created_at' => now()->subHours(5),

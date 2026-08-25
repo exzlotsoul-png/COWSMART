@@ -34,6 +34,18 @@ const Medicines = () => {
     }
   };
 
+  const getNextId = () => {
+    let max = 0;
+    medicines.forEach(m => {
+      const match = (m.medicine_id || '').match(/(\d+)/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > max) max = num;
+      }
+    });
+    return 'MED' + String(max + 1).padStart(3, '0');
+  };
+
   const handleOpenModal = (medicine = null) => {
     if (medicine) {
       setCurrentMedicine({
@@ -43,7 +55,7 @@ const Medicines = () => {
       });
       setIsEditing(true);
     } else {
-      setCurrentMedicine({ medicine_id: '', category: '', name: '' });
+      setCurrentMedicine({ medicine_id: getNextId(), category: '', name: '' });
       setIsEditing(false);
     }
     setIsModalOpen(true);
@@ -165,10 +177,10 @@ const Medicines = () => {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>รหัสยา</th>
-                    <th>หมวดหมู่</th>
+                    <th style={{ width: '160px' }}>รหัสยา</th>
+                    <th style={{ width: '200px' }}>หมวดหมู่</th>
                     <th>ชื่อยา</th>
-                    <th>จัดการ</th>
+                    <th style={{ width: '120px', textAlign: 'right', paddingRight: '24px' }}>จัดการ</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -177,9 +189,9 @@ const Medicines = () => {
                       <tr key={medicine.medicine_id}>
                         <td>{medicine.medicine_id}</td>
                         <td>{medicine.category}</td>
-                        <td>{medicine.name}</td>
-                        <td>
-                          <div className="action-links">
+                        <td style={{ fontWeight: '500' }}>{medicine.name}</td>
+                        <td style={{ textAlign: 'right' }}>
+                          <div className="action-links" style={{ justifyContent: 'flex-end', paddingRight: '4px' }}>
                             <button className="action-btn edit" onClick={() => handleOpenModal(medicine)}>
                               <Edit size={16} />
                             </button>

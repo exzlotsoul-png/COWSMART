@@ -471,14 +471,33 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
                                           ),
                                         ),
                                         const SizedBox(height: 4),
-                                        Text(
-                                          isNew ? '✨ โซนใหม่ (ยังไม่บันทึก)' : 'วัวในโซน: ${zone.cowCount} ตัว',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: isNew ? FontWeight.bold : FontWeight.normal,
-                                            color: isNew ? AppColors.primary : AppColors.textSecondary,
-                                          ),
-                                        ),
+                                        isNew
+                                            ? Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: const [
+                                                  Icon(
+                                                    Icons.auto_awesome,
+                                                    size: 14,
+                                                    color: AppColors.primary,
+                                                  ),
+                                                  SizedBox(width: 4),
+                                                  Text(
+                                                    'โซนใหม่ (ยังไม่บันทึก)',
+                                                    style: TextStyle(
+                                                      fontSize: 13,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: AppColors.primary,
+                                                    ),
+                                                  ),
+                                                ],
+                                              )
+                                            : Text(
+                                                'วัวในโซน: ${zone.cowCount} ตัว',
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                  color: AppColors.textSecondary,
+                                                ),
+                                              ),
                                       ],
                                     ),
                                   ),

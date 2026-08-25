@@ -199,9 +199,6 @@ class CalendarEventController extends Controller
     public function store(Request $request)
     {
         $data = $request->except(['event_type']);
-        if (empty($data['calendar_event_id'])) {
-            $data['calendar_event_id'] = 'CE-' . substr(md5(uniqid(mt_rand(), true)), 0, 7);
-        }
         $event = CalendarEvent::create($data);
         $this->syncNotificationForEvent($event);
 

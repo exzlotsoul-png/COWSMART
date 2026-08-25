@@ -9,6 +9,8 @@ import 'package:cowsmart/core/constants/app_constants.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
 import 'package:cowsmart/features/cow/domain/culling_record.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
+import 'package:cowsmart/features/cow/providers/breed_provider.dart';
+import 'package:cowsmart/features/cow/domain/breed.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/market/providers/market_price_provider.dart';
@@ -313,9 +315,17 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
                     if (_selectedType == CullType.sold) ...[
                       Builder(
                         builder: (context) {
-                          final marketPrice = ref.watch(marketPriceProvider).latest?.pricePerKg ?? 120.0;
+                          final marketState = ref.watch(marketPriceProvider);
+                          final breeds = ref.watch(breedProvider);
+                          final breedName = breeds
+                              .firstWhere(
+                                (b) => b.id == widget.cow.breed,
+                                orElse: () => Breed(id: widget.cow.breed, name: widget.cow.breed),
+                              )
+                              .name;
                           final weight = widget.cow.latestWeight;
-                          final estimatedVal = weight * marketPrice;
+                          final pricePerKg = marketState.calculatePricePerKg(breedName: breedName, weight: weight);
+                          final estimatedVal = weight * pricePerKg;
 
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -346,7 +356,7 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
                                             ),
                                             const SizedBox(height: 2),
                                             Text(
-                                              'คำนวณจากน้ำหนัก ${weight.toStringAsFixed(0)} กก. × ${marketPrice.toStringAsFixed(0)} ฿/กก.',
+                                              'คำนวณจากน้ำหนัก ${weight.toStringAsFixed(0)} กก. × ${pricePerKg.toStringAsFixed(2)} ฿/กก.',
                                               style: TextStyle(
                                                 fontSize: 13,
                                                 color: Colors.grey[800],

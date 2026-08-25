@@ -6,6 +6,8 @@ import '../../../../../core/theme/app_colors.dart';
 import 'package:cowsmart/core/utils/date_formatter.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
+import 'package:cowsmart/features/cow/providers/breed_provider.dart';
+import 'package:cowsmart/features/cow/domain/breed.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
 import 'package:cowsmart/features/finance/providers/finance_provider.dart';
 import 'package:cowsmart/features/market/providers/market_price_provider.dart';
@@ -69,8 +71,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final farmState = ref.watch(farmProvider);
     final currentFarm = farmState.currentFarm;
     final cowState = ref.watch(cowProvider);
-    final marketPrice =
-        ref.watch(marketPriceProvider).latest?.pricePerKg ?? 120.0;
+    final marketState = ref.watch(marketPriceProvider);
+    final breeds = ref.watch(breedProvider);
 
     if (farmState.isLoading) {
       return const Scaffold(
@@ -87,7 +89,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final zoneCount = ref.watch(zoneProvider).zones.length;
     final totalValue = cowState.allCows.fold<double>(
       0,
-      (sum, cow) => sum + (cow.latestWeight * marketPrice),
+      (sum, cow) {
+        final bName = breeds
+            .firstWhere(
+              (b) => b.id == cow.breed,
+              orElse: () => Breed(id: cow.breed, name: cow.breed),
+            )
+            .name;
+        return sum + marketState.calculateEstimatedValue(breedName: bName, weight: cow.latestWeight);
+      },
     );
 
     return Scaffold(
@@ -1050,7 +1060,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               label: 'ผู้ช่วยหมอ',
               subtitle: 'ปรึกษาอาการวัว',
               color: AppColors.info,
-              onTap: () {},
+              onTap: () => context.push('/ai_chat'),
             ),
             _buildActionTile(
               icon: Icons.health_and_safety_rounded,

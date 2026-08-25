@@ -12,7 +12,7 @@ class ImageController extends Controller
     public function upload(Request $request)
     {
         $request->validate([
-            'type' => 'required|string|in:avatar,farm,cow,health',
+            'type' => 'required|string|in:avatar,farm,cow,health,issue',
             'entity_id' => 'required|string',
             'image' => 'required|image|mimes:jpg,jpeg,png,webp,heic,heif|max:20480',
         ]);
@@ -92,6 +92,15 @@ class ImageController extends Controller
                 $path = $request->file('image')->store('health', 'public');
                 $response = [
                     'message' => 'อัปโหลดรูปแผล/อาการสำเร็จ',
+                    'path' => $path,
+                    'url' => asset('storage/' . $path),
+                ];
+                break;
+
+            case 'issue':
+                $path = $request->file('image')->store('issues', 'public');
+                $response = [
+                    'message' => 'อัปโหลดรูปภาพรายงานปัญหาสำเร็จ',
                     'path' => $path,
                     'url' => asset('storage/' . $path),
                 ];

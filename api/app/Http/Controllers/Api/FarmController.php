@@ -28,9 +28,6 @@ class FarmController extends Controller
         $data = $request->all();
         $data['email'] = $user->email;
         
-        // Generate unique farm_id (max 10 chars)
-        $data['farm_id'] = 'F-' . substr(md5(uniqid(mt_rand(), true)), 0, 8);
-        
         $farm = Farm::create($data);
         return response()->json($farm, 201);
     }

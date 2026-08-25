@@ -14,7 +14,30 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index()
+    private array $thaiMonths = [
+        'มกราคม' => 1, 'กุมภาพันธ์' => 2, 'มีนาคม' => 3, 'เมษายน' => 4,
+        'พฤษภาคม' => 5, 'มิถุนายน' => 6, 'กรกฎาคม' => 7, 'สิงหาคม' => 8,
+        'กันยายน' => 9, 'ตุลาคม' => 10, 'พฤศจิกายน' => 11, 'ธันวาคม' => 12
+    ];
+
+    private function parseMonth($month): ?int
+    {
+        if (!$month || $month === 'all') return null;
+        if (is_numeric($month)) return (int)$month;
+        return $this->thaiMonths[$month] ?? null;
+    }
+
+    private function parseYear($year): ?int
+    {
+        if (!$year || $year === 'all') return null;
+        $y = (int)$year;
+        if ($y > 2400) {
+            $y -= 543; // Convert Thai Buddhist Year to AD
+        }
+        return $y;
+    }
+
+    public function index(Request $request)
     {
         try {
             $totalCows = Cow::count();
@@ -30,10 +53,23 @@ class DashboardController extends Controller
                 ->take(4)
                 ->get();
 
-            // Top 5 Diseases
-            $topDiseases = DB::table('health_records')
+            // Top 5 Diseases filtered by Month & Year
+            $diseaseMonth = $this->parseMonth($request->query('disease_month'));
+            $diseaseYear = $this->parseYear($request->query('disease_year'));
+
+            $topDiseasesQuery = DB::table('health_records')
                 ->join('diseases', 'health_records.disease_id', '=', 'diseases.disease_id')
-                ->select('diseases.name as disease_name', DB::raw('count(*) as count'))
+                ->select('diseases.name as disease_name', DB::raw('count(*) as count'));
+
+            if ($diseaseYear) {
+                $topDiseasesQuery->whereYear(DB::raw('COALESCE(health_records.record_date, health_records.created_at)'), $diseaseYear);
+            }
+
+            if ($diseaseMonth) {
+                $topDiseasesQuery->whereMonth(DB::raw('COALESCE(health_records.record_date, health_records.created_at)'), $diseaseMonth);
+            }
+
+            $topDiseases = $topDiseasesQuery
                 ->groupBy('health_records.disease_id', 'diseases.name')
                 ->orderByDesc('count')
                 ->take(5)
@@ -45,7 +81,7 @@ class DashboardController extends Controller
                 ->select('breeds.name as breed_name', DB::raw('count(*) as count'))
                 ->groupBy('cows.breed_id', 'breeds.name')
                 ->orderByDesc('count')
-                ->take(4) // fetch top 4 or 3
+                ->take(4)
                 ->get();
 
             // Health Proportion (Active cows only)

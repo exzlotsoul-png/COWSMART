@@ -14,7 +14,8 @@ import {
   Scale,
   CalendarDays,
   CalendarCheck,
-  TrendingUp
+  TrendingUp,
+  Bot
 } from 'lucide-react';
 import './layout.css';
 
@@ -27,8 +28,9 @@ const Sidebar = () => {
       ]
     },
     {
-      label: 'จัดการผู้ใช้',
+      label: 'จัดการผู้ใช้ & AI',
       items: [
+        { path: '/ai-chatbot', icon: <Bot className="nav-icon" />, label: 'AI ผู้ช่วยหมอ' },
         { path: '/users', icon: <Users className="nav-icon" />, label: 'ผู้ใช้งาน' },
         { path: '/issue-reports', icon: <MessageSquareWarning className="nav-icon" />, label: 'รายงานการใช้งาน' },
       ]

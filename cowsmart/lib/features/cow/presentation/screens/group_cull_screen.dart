@@ -7,6 +7,8 @@ import 'package:cowsmart/core/utils/date_formatter.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
 import 'package:cowsmart/features/cow/domain/culling_record.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
+import 'package:cowsmart/features/cow/providers/breed_provider.dart';
+import 'package:cowsmart/features/cow/domain/breed.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/market/providers/market_price_provider.dart';
@@ -686,9 +688,17 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                                           14, 0, 14, 14),
                                       child: Builder(
                                         builder: (context) {
-                                          final marketPrice = ref.watch(marketPriceProvider).latest?.pricePerKg ?? 120.0;
+                                          final marketState = ref.watch(marketPriceProvider);
+                                          final breeds = ref.watch(breedProvider);
+                                          final breedName = breeds
+                                              .firstWhere(
+                                                (b) => b.id == cow.breed,
+                                                orElse: () => Breed(id: cow.breed, name: cow.breed),
+                                              )
+                                              .name;
                                           final weight = cow.latestWeight;
-                                          final estVal = weight * marketPrice;
+                                          final pricePerKg = marketState.calculatePricePerKg(breedName: breedName, weight: weight);
+                                          final estVal = weight * pricePerKg;
 
                                           return Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -698,7 +708,7 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                   children: [
                                                     Text(
-                                                      'ราคาประเมิน: ฿${NumberFormat('#,##0').format(estVal)} (${weight.toStringAsFixed(0)}กก. × ${marketPrice.toStringAsFixed(0)}฿)',
+                                                      'ราคาประเมิน: ฿${NumberFormat('#,##0').format(estVal)} (${weight.toStringAsFixed(0)}กก. × ${pricePerKg.toStringAsFixed(2)}฿)',
                                                       style: TextStyle(
                                                         fontSize: 12,
                                                         fontWeight: FontWeight.bold,

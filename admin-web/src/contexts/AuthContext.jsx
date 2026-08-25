@@ -16,7 +16,16 @@ export const AuthProvider = ({ children }) => {
         try {
           // Fetch user info using sanctum endpoint
           const response = await api.get('/user');
-          setUser(response.data);
+          const userData = response.data.user || response.data;
+          
+          // Verify if user has admin role (1 = admin)
+          if (userData.role === 1 || userData.role === '1' || userData.role === 'admin') {
+            setUser(userData);
+          } else {
+            console.warn("User is not an admin, access denied");
+            localStorage.removeItem('auth_token');
+            setUser(null);
+          }
         } catch (error) {
           console.error("Authentication check failed", error);
           localStorage.removeItem('auth_token');
@@ -32,9 +41,17 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await api.post('/login', { email, password });
-      if (response.data && response.data.access_token) {
-        localStorage.setItem('auth_token', response.data.access_token);
-        setUser(response.data.user);
+      if (response.data && (response.data.access_token || response.data.token)) {
+        const token = response.data.access_token || response.data.token;
+        const userData = response.data.user;
+
+        // Check if user is admin (role 1)
+        if (userData.role !== 1 && userData.role !== '1' && userData.role !== 'admin') {
+          throw new Error('คุณไม่มีสิทธิ์เข้าใช้งานระบบแอดมิน (สำหรับผู้ดูแลระบบเท่านั้น)');
+        }
+
+        localStorage.setItem('auth_token', token);
+        setUser(userData);
         return true;
       }
       return false;

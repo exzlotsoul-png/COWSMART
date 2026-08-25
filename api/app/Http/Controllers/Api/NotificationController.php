@@ -26,9 +26,6 @@ class NotificationController extends Controller
         if (empty($data['email'])) {
             $data['email'] = Auth::user()->email;
         }
-        if (empty($data['id'])) {
-            $data['id'] = 'N-' . substr(md5(uniqid(mt_rand(), true)), 0, 8);
-        }
         $notif = Notification::create($data);
         return response()->json($notif, 201);
     }

@@ -30,12 +30,24 @@ const CheckupTypes = () => {
     }
   };
 
+  const getNextId = () => {
+    let max = 0;
+    checkupTypes.forEach(t => {
+      const match = (t.checkup_types_id || '').match(/(\d+)/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > max) max = num;
+      }
+    });
+    return 'CT' + String(max + 1).padStart(2, '0');
+  };
+
   const handleOpenModal = (checkupType = null) => {
     if (checkupType) {
       setCurrentCheckupType(checkupType);
       setIsEditing(true);
     } else {
-      setCurrentCheckupType({ checkup_types_id: '', type_name: '' });
+      setCurrentCheckupType({ checkup_types_id: getNextId(), type_name: '' });
       setIsEditing(false);
     }
     setIsModalOpen(true);
@@ -136,9 +148,9 @@ const CheckupTypes = () => {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>รหัสประเภทการตรวจ</th>
+                    <th style={{ width: '220px' }}>รหัสประเภทการตรวจ</th>
                     <th>ชื่อประเภท</th>
-                    <th>จัดการ</th>
+                    <th style={{ width: '120px', textAlign: 'right', paddingRight: '24px' }}>จัดการ</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -146,9 +158,9 @@ const CheckupTypes = () => {
                     currentItems.map((type) => (
                       <tr key={type.checkup_types_id}>
                         <td>{type.checkup_types_id}</td>
-                        <td>{type.type_name}</td>
-                        <td>
-                          <div className="action-links">
+                        <td style={{ fontWeight: '500' }}>{type.type_name}</td>
+                        <td style={{ textAlign: 'right' }}>
+                          <div className="action-links" style={{ justifyContent: 'flex-end', paddingRight: '4px' }}>
                             <button className="action-btn edit" onClick={() => handleOpenModal(type)}>
                               <Edit size={16} />
                             </button>

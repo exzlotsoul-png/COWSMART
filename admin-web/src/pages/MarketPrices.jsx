@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { RefreshCw, Plus, Edit, Trash2, Search, ArrowUpDown, TrendingUp, Tag, Calendar, CheckCircle2, AlertCircle, History, Upload, Image as ImageIcon, Sparkles, Check, X, Filter } from 'lucide-react';
+import { 
+  RefreshCw, Plus, Edit, Trash2, Search, ArrowUpDown, TrendingUp, TrendingDown, Tag, 
+  Calendar, CheckCircle2, AlertCircle, History, Upload, Image as ImageIcon, 
+  Sparkles, Check, X, Filter, Scale, PawPrint, Coins, Award
+} from 'lucide-react';
 import api from '../lib/axios';
 import Pagination from '../components/layout/Pagination';
 
@@ -330,6 +334,27 @@ const MarketPrices = () => {
     return found?.source || 'NABC AGRI API';
   };
 
+  const getPriceTrendForCategory = (catName) => {
+    const normCat = catName.replace(/≤/g, '<=').replace(/\s+/g, '');
+    const items = prices.filter(p => {
+      if (p.category === catName) return true;
+      const itemNorm = (p.category || '').replace(/≤/g, '<=').replace(/\s+/g, '');
+      if (itemNorm === normCat) return true;
+      return p.category && p.category.includes(catName);
+    }).sort((a, b) => (b.effective_date || '').localeCompare(a.effective_date || ''));
+
+    if (items.length >= 2) {
+      const latestPrice = parseFloat(items[0].price_per_kg || 0);
+      const prevPrice = parseFloat(items[1].price_per_kg || 0);
+      if (latestPrice < prevPrice) {
+        return 'down'; // price dropped -> orange/peach
+      } else {
+        return 'up'; // price equal or up -> green
+      }
+    }
+    return 'up';
+  };
+
   // Base list depending on View Mode
   const baseList = viewMode === 'latest' ? latestByCategory : prices;
 
@@ -384,41 +409,28 @@ const MarketPrices = () => {
         </div>
       )}
 
-      {/* 4 Summary Stat Cards Grid - Showing lowest weight tier of each breed */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
-        gap: '16px',
-        marginBottom: '24px'
-      }}>
+      {/* 4 Summary Stat Cards Grid matching Dashboard */}
+      <div className="summary-cards-grid">
         {[
-          { title: 'โคเนื้อ (สศก. กลางประเทศ)', cat: 'โคพันธุ์ลูกผสม ขนาดกลาง', color: '#c2410c', bg: '#fff7ed' },
-          { title: 'ลูกผสมบราห์มัน (>250-400 กก.)', cat: 'ลูกผสมบราห์มัน (>250-400 กก.)', color: '#1565c0', bg: '#e3f2fd' },
-          { title: 'ลูกผสมยุโรป (>250-400 กก.)', cat: 'ลูกผสมยุโรป (>250-400 กก.)', color: '#2d5a43', bg: '#e8f0eb' },
-          { title: 'พื้นเมืองไทย (≤250 กก.)', cat: 'พื้นเมืองไทย (≤250 กก.)', color: '#6a1b9a', bg: '#f3e5f5' },
-        ].map((card, idx) => (
-          <div key={idx} className="card" style={{ padding: '20px', margin: 0, borderTop: `4px solid ${card.color}` }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)' }}>{card.title}</span>
-              <span style={{
-                padding: '4px 8px',
-                borderRadius: '6px',
-                fontSize: '0.75rem',
-                fontWeight: '600',
-                backgroundColor: card.bg,
-                color: card.color
-              }}>
-                / กก.
-              </span>
+          { title: 'โคเนื้อ (สศก. กลางประเทศ)', cat: 'โคพันธุ์ลูกผสม ขนาดกลาง' },
+          { title: 'ลูกผสมบราห์มัน (>250-400 กก.)', cat: 'ลูกผสมบราห์มัน (>250-400 กก.)' },
+          { title: 'ลูกผสมยุโรป (>250-400 กก.)', cat: 'ลูกผสมยุโรป (>250-400 กก.)' },
+          { title: 'พื้นเมืองไทย (≤250 กก.)', cat: 'พื้นเมืองไทย (≤250 กก.)' },
+        ].map((card, idx) => {
+          const trend = getPriceTrendForCategory(card.cat);
+          const isDown = trend === 'down';
+          return (
+            <div key={idx} className="summary-card">
+              <div className="summary-info">
+                <p>{card.title}</p>
+                <h3>{getPriceForCategory(card.cat)}</h3>
+              </div>
+              <div className={`summary-icon ${isDown ? 'orange-icon' : 'green-icon'}`}>
+                {isDown ? <TrendingDown size={24} /> : <TrendingUp size={24} />}
+              </div>
             </div>
-            <div style={{ fontSize: '1.65rem', fontWeight: '700', color: 'var(--text-main)', margin: '4px 0' }}>
-              {getPriceForCategory(card.cat)}
-            </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px' }}>
-              <span>{getSourceForCategory(card.cat)}</span>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Main Table Card */}

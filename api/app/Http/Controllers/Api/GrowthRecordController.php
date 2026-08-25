@@ -40,9 +40,6 @@ class GrowthRecordController extends Controller
         }
 
         $data = $request->all();
-        // Generate unique growth_records_id (max 10 chars)
-        $data['growth_records_id'] = 'G-' . substr(md5(uniqid(mt_rand(), true)), 0, 8);
-
         $record = GrowthRecord::create($data);
         return response()->json($record, 201);
     }

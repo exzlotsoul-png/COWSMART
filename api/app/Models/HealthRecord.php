@@ -4,35 +4,27 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasSequentialId;
 
 class HealthRecord extends Model
 {
-    use HasFactory;
+    use HasFactory, HasSequentialId;
     protected $table = 'health_records';
     protected $primaryKey = 'health_record_id';
     protected $keyType = 'string';
     public $incrementing = false;
     protected $guarded = [];
 
-    protected static function booted()
-    {
-        static::creating(function ($model) {
-            if (empty($model->health_record_id)) {
-                $maxNum = \Illuminate\Support\Facades\DB::table('health_records')
-                    ->selectRaw("MAX(CAST(SUBSTRING(health_record_id, 3) AS UNSIGNED)) as max_id")
-                    ->value('max_id') ?? 0;
-                $model->health_record_id = 'HR' . str_pad($maxNum + 1, 4, '0', STR_PAD_LEFT);
-            }
-        });
-    }
+    protected string $idPrefix = 'HR';
+    protected int $idPadLength = 4;
 
     public function medicines()
     {
-        return $table = $this->belongsToMany(Medicine::class, 'health_record_medicines', 'health_record_id', 'medicine_id');
+        return $this->belongsToMany(Medicine::class, 'health_record_medicines', 'health_record_id', 'medicine_id');
     }
 
     public function vaccines()
     {
-        return $table = $this->belongsToMany(Vaccine::class, 'health_record_vaccines', 'health_record_id', 'vaccine_id');
+        return $this->belongsToMany(Vaccine::class, 'health_record_vaccines', 'health_record_id', 'vaccine_id');
     }
 }

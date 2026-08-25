@@ -35,6 +35,18 @@ const Vaccines = () => {
     }
   };
 
+  const getNextId = () => {
+    let max = 0;
+    vaccines.forEach(v => {
+      const match = (v.vaccine_id || '').match(/(\d+)/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > max) max = num;
+      }
+    });
+    return 'VAC' + String(max + 1).padStart(3, '0');
+  };
+
   const handleOpenModal = (vaccine = null) => {
     if (vaccine) {
       setCurrentVaccine({
@@ -44,7 +56,7 @@ const Vaccines = () => {
       });
       setIsEditing(true);
     } else {
-      setCurrentVaccine({ vaccine_id: '', category: '', name: '' });
+      setCurrentVaccine({ vaccine_id: getNextId(), category: '', name: '' });
       setIsEditing(false);
     }
     setIsModalOpen(true);
@@ -155,10 +167,10 @@ const Vaccines = () => {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>รหัสวัคซีน</th>
-                    <th>หมวดหมู่</th>
+                    <th style={{ width: '160px' }}>รหัสวัคซีน</th>
+                    <th style={{ width: '200px' }}>หมวดหมู่</th>
                     <th>ชื่อวัคซีน</th>
-                    <th>จัดการ</th>
+                    <th style={{ width: '120px', textAlign: 'right', paddingRight: '24px' }}>จัดการ</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -167,9 +179,9 @@ const Vaccines = () => {
                       <tr key={vaccine.vaccine_id}>
                         <td>{vaccine.vaccine_id}</td>
                         <td>{vaccine.category}</td>
-                        <td>{vaccine.name}</td>
-                        <td>
-                          <div className="action-links">
+                        <td style={{ fontWeight: '500' }}>{vaccine.name}</td>
+                        <td style={{ textAlign: 'right' }}>
+                          <div className="action-links" style={{ justifyContent: 'flex-end', paddingRight: '4px' }}>
                             <button className="action-btn edit" onClick={() => handleOpenModal(vaccine)}>
                               <Edit size={16} />
                             </button>

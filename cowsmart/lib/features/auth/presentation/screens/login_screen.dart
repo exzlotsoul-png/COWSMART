@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
 import 'package:cowsmart/core/constants/app_constants.dart';
 import 'package:cowsmart/features/auth/providers/auth_provider.dart';
+import 'package:cowsmart/core/widgets/cowsmart_logo.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -66,8 +67,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 60),
-              // Logo or App Name placeholder
-              const Icon(Icons.pets, size: 80, color: AppColors.primary),
+              const Center(
+                child: CowSmartLogo(size: 96, borderRadius: 24),
+              ),
               const SizedBox(height: 24),
               Text(
                 'ยินดีต้อนรับสู่\n${AppConstants.appName}',

@@ -23,9 +23,6 @@ class FeedInventoryController extends Controller
     public function store(Request $request)
     {
         $data = $request->all();
-        // ID format: F-XXXXXX (1+1+6 = 8 chars, within 10 char limit)
-        $data['feed_inventory_id'] = 'F-' . strtoupper(Str::random(6));
-        
         $feedInventory = new FeedInventory($data);
         if ($request->has('created_at')) {
             $feedInventory->created_at = $request->created_at;

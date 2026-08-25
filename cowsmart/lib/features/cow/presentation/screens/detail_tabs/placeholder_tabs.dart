@@ -16,6 +16,9 @@ import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import '../../../providers/cow_detail_provider.dart';
 import '../../../../health/providers/master_data_provider.dart';
+import 'package:cowsmart/features/market/providers/market_price_provider.dart';
+import 'package:cowsmart/features/cow/providers/breed_provider.dart';
+import 'package:cowsmart/features/cow/domain/breed.dart';
 import 'package:cowsmart/core/network/api_client.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cowsmart/core/utils/app_toast.dart';
@@ -1160,6 +1163,15 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
   @override
   void initState() {
     super.initState();
+    Future.microtask(() {
+      final current = ref.read(masterDataProvider);
+      if (current.diseases.isEmpty &&
+          current.medicines.isEmpty &&
+          current.vaccines.isEmpty &&
+          !current.isLoading) {
+        ref.read(masterDataProvider.notifier).fetchAll();
+      }
+    });
     selectedHealthStatus = widget.cow.status;
     if (selectedHealthStatus != CowStatus.normal &&
         selectedHealthStatus != CowStatus.sick &&
@@ -1228,8 +1240,9 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final masterData = ref.watch(masterDataProvider);
     final showVaccine = selectedType == 'CT02';
-    final showDisease = selectedType == 'CT03' || selectedType == 'CT01';
+    final showDisease = selectedType == 'CT03' || (selectedType == 'CT01' && selectedHealthStatus == CowStatus.sick);
     final showMedicine = selectedType == 'CT03';
 
     return AlertDialog(
@@ -1383,13 +1396,18 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                   ],
                   onChanged: (val) {
                     if (val != null) {
-                      setState(() => selectedHealthStatus = val);
+                      setState(() {
+                        selectedHealthStatus = val;
+                        if (val != CowStatus.sick && selectedType == 'CT01') {
+                          selectedDiseaseIds = [];
+                        }
+                      });
                     }
                   },
                 ),
               ],
               const SizedBox(height: 16),
-              if (widget.masterData.isLoading)
+              if (masterData.isLoading)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 8),
                   child: Center(
@@ -1400,7 +1418,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                     ),
                   ),
                 ),
-              if (showVaccine && !widget.masterData.isLoading) ...[
+              if (showVaccine && !masterData.isLoading) ...[
                 InkWell(
                   onTap: () async {
                     final result = await showDialog<List<String>>(
@@ -1411,7 +1429,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                           builder: (ctx, setDialogState) {
                             String searchQuery = '';
                             final listOptions = [
-                              ...widget.masterData.vaccines.map((v) => {'id': v.id, 'name': v.name}),
+                              ...masterData.vaccines.map((v) => {'id': v.id, 'name': v.name}),
                               {'id': 'other', 'name': 'อื่นๆ (ระบุเอง)'},
                             ];
 
@@ -1513,9 +1531,9 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                               if (id == 'other') {
                                 name = 'อื่นๆ (ระบุเอง)';
                               } else {
-                                name = widget.masterData.vaccines.firstWhere((v) => v.id == id, orElse: () => widget.masterData.vaccines.first).name;
+                                name = masterData.vaccines.firstWhere((v) => v.id == id, orElse: () => masterData.vaccines.first).name;
                               }
-                                                            return Chip(
+                              return Chip(
                                 label: Text(name, style: const TextStyle(fontSize: 13, color: Colors.white)),
                                 backgroundColor: id == 'other' ? Colors.orange[800] : AppColors.primary,
                                 visualDensity: VisualDensity.compact,
@@ -1528,8 +1546,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                 const SizedBox(height: 16),
               ],
 
-              if (showDisease && !widget.masterData.isLoading) ...[
-                const SizedBox(height: 16),
+              if (showDisease && !masterData.isLoading) ...[
                 InkWell(
                   onTap: () async {
                     final result = await showDialog<List<String>>(
@@ -1540,7 +1557,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                           builder: (ctx, setDialogState) {
                             String searchQuery = '';
                             final listOptions = [
-                              ...widget.masterData.diseases.map((d) => {'id': d.id, 'name': d.name}),
+                              ...masterData.diseases.map((d) => {'id': d.id, 'name': d.name}),
                               {'id': 'other', 'name': 'อื่นๆ (ระบุเอง)'},
                             ];
 
@@ -1642,7 +1659,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                               if (id == 'other') {
                                 name = 'อื่นๆ (ระบุเอง)';
                               } else {
-                                final matches = widget.masterData.diseases.where((d) => d.id == id);
+                                final matches = masterData.diseases.where((d) => d.id == id);
                                 name = matches.isNotEmpty ? matches.first.name : id;
                               }
                               return Chip(
@@ -1666,10 +1683,11 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                     ),
                   ),
                 ],
+                const SizedBox(height: 16),
               ],
 
               // Multiple Medicines Selection (Select Box)
-              if (showMedicine && !widget.masterData.isLoading) ...[
+              if (showMedicine && !masterData.isLoading) ...[
                 const SizedBox(height: 16),
                 InkWell(
                   onTap: () async {
@@ -1681,7 +1699,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                           builder: (ctx, setDialogState) {
                             String searchQuery = '';
                             final listOptions = [
-                              ...widget.masterData.medicines.map((m) => {'id': m.id, 'name': m.name}),
+                              ...masterData.medicines.map((m) => {'id': m.id, 'name': m.name}),
                               {'id': 'other', 'name': 'อื่นๆ (ระบุเอง)'},
                             ];
 
@@ -1783,7 +1801,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                               if (id == 'other') {
                                 name = 'อื่นๆ (ระบุเอง)';
                               } else {
-                                name = widget.masterData.medicines.firstWhere((m) => m.id == id, orElse: () => widget.masterData.medicines.first).name;
+                                name = masterData.medicines.firstWhere((m) => m.id == id, orElse: () => masterData.medicines.first).name;
                               }
                               return Chip(
                                 label: Text(name, style: const TextStyle(fontSize: 13, color: Colors.white)),
@@ -1830,7 +1848,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                 const SizedBox(height: 10),
                 ...selectedVaccineIds.map((vId) {
                   final isOther = vId == 'other';
-                  final vName = isOther ? 'วัคซีนอื่นๆ' : widget.masterData.vaccines.firstWhere((v) => v.id == vId, orElse: () => widget.masterData.vaccines.first).name;
+                  final vName = isOther ? 'วัคซีนอื่นๆ' : masterData.vaccines.firstWhere((v) => v.id == vId, orElse: () => masterData.vaccines.first).name;
                   final customNameCtrl = _getCustomItemNameController(vId);
                   final amtCtrl = _getItemAmountController(vId);
                   final costCtrl = _getItemCostController(vId);
@@ -1905,7 +1923,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                                     value: null,
                                     child: Text('เลือกหน่วย', style: TextStyle(fontSize: 13)),
                                   ),
-                                  ...widget.masterData.units.map((unit) {
+                                  ...masterData.units.map((unit) {
                                     final idInt = int.tryParse(unit.id);
                                     final abbr = unit.abbreviation != null && unit.abbreviation!.isNotEmpty
                                         ? ' (${unit.abbreviation})'
@@ -1949,7 +1967,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                 const SizedBox(height: 10),
                 ...selectedMedicineIds.map((mId) {
                   final isOther = mId == 'other';
-                  final mName = isOther ? 'ยาอื่นๆ' : widget.masterData.medicines.firstWhere((m) => m.id == mId, orElse: () => widget.masterData.medicines.first).name;
+                  final mName = isOther ? 'ยาอื่นๆ' : masterData.medicines.firstWhere((m) => m.id == mId, orElse: () => masterData.medicines.first).name;
                   final customNameCtrl = _getCustomItemNameController(mId);
                   final amtCtrl = _getItemAmountController(mId);
                   final costCtrl = _getItemCostController(mId);
@@ -2024,7 +2042,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                                     value: null,
                                     child: Text('เลือกหน่วย', style: TextStyle(fontSize: 13)),
                                   ),
-                                  ...widget.masterData.units.map((unit) {
+                                  ...masterData.units.map((unit) {
                                     final idInt = int.tryParse(unit.id);
                                     final abbr = unit.abbreviation != null && unit.abbreviation!.isNotEmpty
                                         ? ' (${unit.abbreviation})'
@@ -2287,7 +2305,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
             const SizedBox(width: 12),
             Expanded(
               child: ElevatedButton(
-                onPressed: (widget.masterData.isLoading || isUploading)
+                onPressed: (masterData.isLoading || isUploading)
                     ? null
                     : () async {
                         if (currentStep == 1) {
@@ -2333,7 +2351,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                               final customName = _getCustomItemNameController(vId).text.trim();
                               vName = customName.isNotEmpty ? customName : 'วัคซีนอื่นๆ';
                             } else {
-                              vName = widget.masterData.vaccines.firstWhere((item) => item.id == vId, orElse: () => widget.masterData.vaccines.first).name;
+                              vName = masterData.vaccines.firstWhere((item) => item.id == vId, orElse: () => masterData.vaccines.first).name;
                             }
 
                             final c = double.tryParse(_itemCostControllers[vId]?.text ?? '');
@@ -2358,7 +2376,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                               final customName = _getCustomItemNameController(mId).text.trim();
                               mName = customName.isNotEmpty ? customName : 'ยาอื่นๆ';
                             } else {
-                              mName = widget.masterData.medicines.firstWhere((item) => item.id == mId, orElse: () => widget.masterData.medicines.first).name;
+                              mName = masterData.medicines.firstWhere((item) => item.id == mId, orElse: () => masterData.medicines.first).name;
                             }
 
                             final c = double.tryParse(_itemCostControllers[mId]?.text ?? '');
@@ -2393,7 +2411,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                               final customName = _getCustomItemNameController('other_disease').text.trim();
                               dName = customName.isNotEmpty ? customName : 'โรคอื่นๆ';
                             } else {
-                              final matches = widget.masterData.diseases.where((item) => item.id == dId);
+                              final matches = masterData.diseases.where((item) => item.id == dId);
                               dName = matches.isNotEmpty ? matches.first.name : dId;
                             }
 
@@ -4776,7 +4794,16 @@ class _CostTabState extends ConsumerState<CostTab> {
   }
 
   Widget _buildValueComparisonCard(double totalCost, Cow cow) {
-    final estimatedValue = cow.estimatedValue;
+    final marketState = ref.watch(marketPriceProvider);
+    final breeds = ref.watch(breedProvider);
+    final breedName = breeds
+        .firstWhere(
+          (b) => b.id == cow.breed,
+          orElse: () => Breed(id: cow.breed, name: cow.breed),
+        )
+        .name;
+    final pricePerKg = marketState.calculatePricePerKg(breedName: breedName, weight: cow.latestWeight);
+    final estimatedValue = cow.latestWeight * pricePerKg;
     final profit = estimatedValue - totalCost;
     final isProfitable = profit >= 0;
 
@@ -4830,7 +4857,7 @@ class _CostTabState extends ConsumerState<CostTab> {
                         ),
                       ),
                       Text(
-                        '(${cow.latestWeight.toStringAsFixed(0)} กก. × 120 ฿/กก.)',
+                        '(${cow.latestWeight.toStringAsFixed(0)} กก. × ${pricePerKg.toStringAsFixed(2)} ฿/กก.)',
                         style: TextStyle(fontSize: 11, color: Colors.grey[500]),
                       ),
                     ],

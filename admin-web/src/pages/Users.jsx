@@ -46,13 +46,20 @@ const Users = () => {
   // Pagination calculations
   const filteredAndSorted = users
     .filter(item => {
+      const isAdmin = item.role === 1 || item.role === '1' || item.role === 'admin';
+      const roleText = isAdmin ? 'แอดมิน admin' : 'ผู้ใช้ user';
+
       const matchSearch = 
         (item.first_name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
         (item.last_name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
         (item.email || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-        (item.role || '').toLowerCase().includes(searchTerm.toLowerCase());
+        roleText.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchRole = roleFilter === 'all' || item.role === roleFilter;
+      const matchRole = roleFilter === 'all' || 
+        (roleFilter === 'admin' && isAdmin) || 
+        (roleFilter === 'user' && !isAdmin) || 
+        item.role === roleFilter;
+
       const matchStatus = statusFilter === 'all' || 
         (statusFilter === 'active' && item.is_active) || 
         (statusFilter === 'inactive' && !item.is_active);
@@ -94,9 +101,8 @@ const Users = () => {
               style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: '#fff', color: 'var(--text-main)', fontSize: '0.875rem' }}
             >
               <option value="all">ทุกบทบาท</option>
-              {uniqueRoles.map(role => (
-                <option key={role} value={role}>{role}</option>
-              ))}
+              <option value="admin">แอดมิน</option>
+              <option value="user">ผู้ใช้</option>
             </select>
 
             <select
@@ -131,7 +137,7 @@ const Users = () => {
                     <th>อีเมล</th>
                     <th>ชื่อ</th>
                     <th>นามสกุล</th>
-                    <th>Role</th>
+                    <th>บทบาท</th>
                     <th>วันที่สมัคร</th>
                     <th>สถานะ</th>
                     <th>จัดการ</th>
@@ -139,42 +145,62 @@ const Users = () => {
                 </thead>
                 <tbody>
                   {currentUsers.length > 0 ? (
-                    currentUsers.map((user) => (
-                      <tr key={user.email}>
-                        <td>{user.email}</td>
-                        <td>{user.first_name}</td>
-                        <td>{user.last_name}</td>
-                        <td>{user.role}</td>
-                        <td>{new Date(user.created_at).toLocaleDateString('th-TH')}</td>
-                        <td>
-                          <span style={{ 
-                            padding: '4px 8px', 
-                            borderRadius: '12px', 
-                            fontSize: '0.85rem',
-                            backgroundColor: user.is_active ? '#d1fae5' : '#fee2e2',
-                            color: user.is_active ? '#065f46' : '#991b1b'
-                          }}>
-                            {user.is_active ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="action-links">
-                            {currentUser?.email === user.email ? (
-                              <span style={{ color: '#9ca3af', fontSize: '0.85rem' }}>บัญชีของคุณ</span>
-                            ) : (
-                              <button 
-                                className="action-btn" 
-                                style={{ color: user.is_active ? '#10b981' : '#9ca3af' }}
-                                onClick={() => handleToggleActive(user.email, user.is_active)}
-                                title={user.is_active ? "ปิดใช้งานบัญชี" : "เปิดใช้งานบัญชี"}
-                              >
-                                {user.is_active ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                    currentUsers.map((user) => {
+                      const isAdmin = user.role === 1 || user.role === '1' || user.role === 'admin';
+                      return (
+                        <tr key={user.email}>
+                          <td>{user.email}</td>
+                          <td>{user.first_name}</td>
+                          <td>{user.last_name}</td>
+                          <td>
+                            <span style={{ 
+                              display: 'inline-block',
+                              whiteSpace: 'nowrap',
+                              padding: '4px 10px', 
+                              borderRadius: '10px', 
+                              fontSize: '0.8rem',
+                              fontWeight: '600',
+                              backgroundColor: isAdmin ? '#ede9fe' : '#f3f4f6',
+                              color: isAdmin ? '#6d28d9' : '#4b5563',
+                              border: isAdmin ? '1px solid #ddd6fe' : '1px solid #e5e7eb',
+                            }}>
+                              {isAdmin ? 'แอดมิน' : 'ผู้ใช้'}
+                            </span>
+                          </td>
+                          <td>{new Date(user.created_at).toLocaleDateString('th-TH')}</td>
+                          <td>
+                            <span style={{ 
+                              display: 'inline-block',
+                              whiteSpace: 'nowrap',
+                              padding: '4px 12px', 
+                              borderRadius: '12px', 
+                              fontSize: '0.85rem',
+                              fontWeight: '700',
+                              backgroundColor: user.is_active ? 'var(--primary-light)' : '#fee2e2',
+                              color: user.is_active ? 'var(--primary-color)' : '#991b1b'
+                            }}>
+                              {user.is_active ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="action-links">
+                              {currentUser?.email === user.email ? (
+                                <span style={{ color: '#9ca3af', fontSize: '0.85rem' }}>บัญชีของคุณ</span>
+                              ) : (
+                                <button 
+                                  className="action-btn" 
+                                  style={{ color: user.is_active ? 'var(--primary-color)' : '#9ca3af' }}
+                                  onClick={() => handleToggleActive(user.email, user.is_active)}
+                                  title={user.is_active ? "ปิดใช้งานบัญชี" : "เปิดใช้งานบัญชี"}
+                                >
+                                  {user.is_active ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
                   ) : (
                     <tr>
                       <td colSpan="7" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>

@@ -4,19 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasSequentialId;
 
 class Unit extends Model
 {
-    use HasFactory;
-
+    use HasFactory, HasSequentialId;
     protected $table = 'units';
     protected $primaryKey = 'unit_id';
-    public $incrementing = true;
-    protected $keyType = 'int';
+    protected $keyType = 'string';
+    public $incrementing = false;
+    protected $guarded = [];
 
-    protected $fillable = [
-        'name',
-        'type',
-        'abbreviation'
-    ];
+    protected string $idPrefix = 'U';
+    protected int $idPadLength = 3;
 }

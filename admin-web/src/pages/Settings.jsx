@@ -76,8 +76,9 @@ const Settings = () => {
                 padding: '10px 15px', 
                 marginBottom: '20px', 
                 borderRadius: '8px', 
-                backgroundColor: message.includes('เรียบร้อย') ? '#d1fae5' : '#fee2e2',
-                color: message.includes('เรียบร้อย') ? '#065f46' : '#991b1b'
+                fontWeight: '600',
+                backgroundColor: message.includes('เรียบร้อย') ? 'var(--primary-light)' : '#fee2e2',
+                color: message.includes('เรียบร้อย') ? 'var(--primary-color)' : '#991b1b'
               }}>
                 {message}
               </div>

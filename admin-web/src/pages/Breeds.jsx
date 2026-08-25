@@ -7,7 +7,7 @@ const Breeds = () => {
   const [breeds, setBreeds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentBreed, setCurrentBreed] = useState({ breed_id: '', name: '', description: '' });
+  const [currentBreed, setCurrentBreed] = useState({ breed_id: '', name: '' });
   const [isEditing, setIsEditing] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -21,7 +21,6 @@ const Breeds = () => {
   const fetchBreeds = async () => {
     try {
       const response = await api.get('/breeds');
-      // The API might return { data: [...] } or just an array depending on Laravel Resource
       setBreeds(response.data.data || response.data);
       setCurrentPage(1);
     } catch (error) {
@@ -31,12 +30,24 @@ const Breeds = () => {
     }
   };
 
+  const getNextId = () => {
+    let max = 0;
+    breeds.forEach(b => {
+      const match = (b.breed_id || '').match(/(\d+)/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > max) max = num;
+      }
+    });
+    return 'B' + String(max + 1).padStart(3, '0');
+  };
+
   const handleOpenModal = (breed = null) => {
     if (breed) {
       setCurrentBreed(breed);
       setIsEditing(true);
     } else {
-      setCurrentBreed({ breed_id: '', name: '', description: '' });
+      setCurrentBreed({ breed_id: getNextId(), name: '' });
       setIsEditing(false);
     }
     setIsModalOpen(true);
@@ -44,7 +55,7 @@ const Breeds = () => {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setCurrentBreed({ breed_id: '', name: '', description: '' });
+    setCurrentBreed({ breed_id: '', name: '' });
     setIsEditing(false);
   };
 
@@ -81,6 +92,19 @@ const Breeds = () => {
     }
   };
 
+  const filteredAndSorted = breeds
+    .filter(b => 
+      (b.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+      (b.breed_id || '').toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      const compare = (b.breed_id || '').localeCompare(a.breed_id || '');
+      return sortOrder === 'newest' ? compare : -compare;
+    });
+
+  const totalPages = Math.ceil(filteredAndSorted.length / itemsPerPage) || 1;
+  const currentItems = filteredAndSorted.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
     <div>
       <div className="card">
@@ -100,7 +124,10 @@ const Breeds = () => {
               placeholder="ค้นหา..." 
               style={{ border: 'none', backgroundColor: 'transparent', outline: 'none', width: '100%' }}
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
             />
           </div>
           <button 
@@ -114,42 +141,26 @@ const Breeds = () => {
         </div>
 
         {loading ? (
-          <p>กำลังโหลดข้อมูล...</p>
+          <p style={{ padding: '24px' }}>กำลังโหลดข้อมูล...</p>
         ) : (
           <>
             <div className="table-container">
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>รหัสสายพันธุ์</th>
+                    <th style={{ width: '220px' }}>รหัสสายพันธุ์</th>
                     <th>ชื่อสายพันธุ์</th>
-                    <th>รายละเอียด</th>
-                    <th>จัดการ</th>
+                    <th style={{ width: '120px', textAlign: 'right', paddingRight: '24px' }}>จัดการ</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(() => {
-                    const filteredAndSorted = breeds
-                      .filter(b => 
-                        (b.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-                        (b.breed_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        (b.description || '').toLowerCase().includes(searchTerm.toLowerCase())
-                      )
-                      .sort((a, b) => {
-                        const compare = (b.breed_id || '').localeCompare(a.breed_id || '');
-                        return sortOrder === 'newest' ? compare : -compare;
-                      });
-                    
-                    const currentItems = filteredAndSorted.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-                    
-                    if (currentItems.length > 0) {
-                      return currentItems.map((breed) => (
+                  {currentItems.length > 0 ? (
+                    currentItems.map((breed) => (
                       <tr key={breed.breed_id}>
                         <td>{breed.breed_id}</td>
-                        <td>{breed.name}</td>
-                        <td>{breed.description}</td>
-                        <td>
-                          <div className="action-links">
+                        <td style={{ fontWeight: '500' }}>{breed.name}</td>
+                        <td style={{ textAlign: 'right' }}>
+                          <div className="action-links" style={{ justifyContent: 'flex-end', paddingRight: '4px' }}>
                             <button className="action-btn edit" onClick={() => handleOpenModal(breed)}>
                               <Edit size={16} />
                             </button>
@@ -160,33 +171,20 @@ const Breeds = () => {
                         </td>
                       </tr>
                     ))
-                    } else {
-                      return (
-                        <tr>
-                          <td colSpan="4" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>
-                        </tr>
-                      );
-                    }
-                  })()}
+                  ) : (
+                    <tr>
+                      <td colSpan="3" style={{ textAlign: 'center' }}>ไม่พบข้อมูล</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
 
             <Pagination
               currentPage={currentPage}
-              totalPages={Math.ceil(breeds
-                .filter(b => 
-                  (b.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-                  (b.breed_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  (b.description || '').toLowerCase().includes(searchTerm.toLowerCase())
-                ).length / itemsPerPage) || 1}
+              totalPages={totalPages}
               onPageChange={setCurrentPage}
-              totalItems={breeds
-                .filter(b => 
-                  (b.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-                  (b.breed_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  (b.description || '').toLowerCase().includes(searchTerm.toLowerCase())
-                ).length}
+              totalItems={filteredAndSorted.length}
               itemsPerPage={itemsPerPage}
             />
           </>
@@ -195,7 +193,7 @@ const Breeds = () => {
 
       {isModalOpen && (
         <div className="modal-overlay" onClick={handleCloseModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
             <div className="modal-header">
               <h3 className="modal-title">{isEditing ? 'แก้ไขสายพันธุ์' : 'เพิ่มสายพันธุ์ใหม่'}</h3>
               <button className="modal-close" onClick={handleCloseModal}>&times;</button>
@@ -212,7 +210,7 @@ const Breeds = () => {
                     value={currentBreed.breed_id}
                     onChange={handleChange}
                     required
-                    disabled={isEditing} // รหัสไม่ควรเปลี่ยนหลังจากการสร้าง
+                    disabled={isEditing}
                   />
                 </div>
                 <div className="form-group">
@@ -225,17 +223,6 @@ const Breeds = () => {
                     value={currentBreed.name}
                     onChange={handleChange}
                     required
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="description">รายละเอียด</label>
-                  <textarea
-                    id="description"
-                    name="description"
-                    className="form-control"
-                    value={currentBreed.description || ''}
-                    onChange={handleChange}
-                    rows="3"
                   />
                 </div>
               </div>

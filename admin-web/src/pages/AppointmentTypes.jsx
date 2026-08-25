@@ -30,12 +30,24 @@ const AppointmentTypes = () => {
     }
   };
 
+  const getNextId = () => {
+    let max = 0;
+    appointmentTypes.forEach(t => {
+      const match = String(t.id || '').match(/(\d+)/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > max) max = num;
+      }
+    });
+    return 'AT' + String(max + 1).padStart(2, '0');
+  };
+
   const handleOpenModal = (type = null) => {
     if (type) {
       setCurrentType(type);
       setIsEditing(true);
     } else {
-      setCurrentType({ id: '', name: '' });
+      setCurrentType({ id: getNextId(), name: '' });
       setIsEditing(false);
     }
     setIsModalOpen(true);
@@ -136,9 +148,9 @@ const AppointmentTypes = () => {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>รหัส</th>
+                    <th style={{ width: '220px' }}>รหัส</th>
                     <th>ชื่อประเภทนัดหมาย</th>
-                    <th>จัดการ</th>
+                    <th style={{ width: '120px', textAlign: 'right', paddingRight: '24px' }}>จัดการ</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -146,9 +158,9 @@ const AppointmentTypes = () => {
                     currentItems.map((type) => (
                       <tr key={type.id}>
                         <td>{type.id}</td>
-                        <td>{type.name}</td>
-                        <td>
-                          <div className="action-links">
+                        <td style={{ fontWeight: '500' }}>{type.name}</td>
+                        <td style={{ textAlign: 'right' }}>
+                          <div className="action-links" style={{ justifyContent: 'flex-end', paddingRight: '4px' }}>
                             <button className="action-btn edit" onClick={() => handleOpenModal(type)}>
                               <Edit size={16} />
                             </button>
