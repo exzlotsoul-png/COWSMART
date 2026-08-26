@@ -64,10 +64,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     ref.listen(farmProvider, (previous, next) {
-      if (next.currentFarm?.id != previous?.currentFarm?.id && next.currentFarm != null) {
+      if (next.currentFarm?.id != previous?.currentFarm?.id &&
+          next.currentFarm != null) {
         ref.read(cowProvider.notifier).fetchCows(next.currentFarm!.id);
         ref.read(zoneProvider.notifier).fetchZones(next.currentFarm!.id);
-        ref.read(financeProvider.notifier).fetchTransactions(next.currentFarm!.id);
+        ref
+            .read(financeProvider.notifier)
+            .fetchTransactions(next.currentFarm!.id);
       }
     });
 
@@ -80,7 +83,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (farmState.isLoading) {
       return const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
       );
     }
 
@@ -90,18 +95,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     final totalCows = cowState.allCows.length;
     final zoneCount = ref.watch(zoneProvider).zones.length;
-    final totalValue = cowState.allCows.fold<double>(
-      0,
-      (sum, cow) {
-        final bName = breeds
-            .firstWhere(
-              (b) => b.id == cow.breed,
-              orElse: () => Breed(id: cow.breed, name: cow.breed),
-            )
-            .name;
-        return sum + marketState.calculateEstimatedValue(breedName: bName, weight: cow.latestWeight);
-      },
-    );
+    final culledThisMonth = ref.watch(currentMonthCulledCountProvider);
+    final totalValue = cowState.allCows.fold<double>(0, (sum, cow) {
+      final bName = breeds
+          .firstWhere(
+            (b) => b.id == cow.breed,
+            orElse: () => Breed(id: cow.breed, name: cow.breed),
+          )
+          .name;
+      return sum +
+          marketState.calculateEstimatedValue(
+            breedName: bName,
+            weight: cow.latestWeight,
+          );
+    });
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -124,7 +131,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               // ── 3. Stats Unified Card ──
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                child: _buildUnifiedStatsCard(totalCows, zoneCount, totalValue),
+                child: _buildUnifiedStatsCard(
+                  totalCows,
+                  zoneCount,
+                  totalValue,
+                  culledThisMonth,
+                ),
               ),
 
               // ── 4. Finance Dual Cards ──
@@ -196,13 +208,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 child: ElevatedButton.icon(
                   onPressed: () => context.push('/create_farm'),
                   icon: const Icon(Icons.add_rounded),
-                  label: const Text('สร้างฟาร์มแรกของคุณ',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  label: const Text(
+                    'สร้างฟาร์มแรกของคุณ',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                   ),
                 ),
@@ -228,8 +243,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             child: Builder(
               builder: (context) {
                 final user = ref.watch(authProvider).user;
-                final userName =
-                    user != null ? '${user['first_name'] ?? ''}' : 'ผู้ใช้งาน';
+                final userName = user != null
+                    ? '${user['first_name'] ?? ''}'
+                    : 'ผู้ใช้งาน';
                 final hour = DateTime.now().hour;
                 final String greetingText;
                 final IconData greetingIcon;
@@ -266,11 +282,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           ),
                         ),
                         const SizedBox(width: 4),
-                        Icon(
-                          greetingIcon,
-                          size: 16,
-                          color: iconColor,
-                        ),
+                        Icon(greetingIcon, size: 16, color: iconColor),
                       ],
                     ),
                     const SizedBox(height: 2),
@@ -364,7 +376,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     color: AppColors.error,
                     shape: BoxShape.circle,
                   ),
-                  constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                  constraints: const BoxConstraints(
+                    minWidth: 18,
+                    minHeight: 18,
+                  ),
                   child: Text(
                     unread > 99 ? '99+' : '$unread',
                     style: const TextStyle(
@@ -452,10 +467,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             fontWeight: FontWeight.bold,
                             letterSpacing: 0.3,
                             shadows: [
-                              Shadow(
-                                blurRadius: 8,
-                                color: Colors.black38,
-                              ),
+                              Shadow(blurRadius: 8, color: Colors.black38),
                             ],
                           ),
                           maxLines: 1,
@@ -464,7 +476,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 5),
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(10),
@@ -475,8 +489,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.edit_rounded,
-                                color: Colors.white, size: 14),
+                            Icon(
+                              Icons.edit_rounded,
+                              color: Colors.white,
+                              size: 14,
+                            ),
                             SizedBox(width: 4),
                             Text(
                               'แก้ไข',
@@ -501,9 +518,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           : farm.ownerEmail;
                       return Row(
                         children: [
-                          Icon(Icons.person_outline_rounded,
-                              color: Colors.white.withValues(alpha: 0.8),
-                              size: 15),
+                          Icon(
+                            Icons.person_outline_rounded,
+                            color: Colors.white.withValues(alpha: 0.8),
+                            size: 15,
+                          ),
                           const SizedBox(width: 5),
                           Expanded(
                             child: Text(
@@ -530,17 +549,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   // ────────────────────────────────────────────────────────
-  //  3. UNIFIED STATS CARD — single card with 3 columns
+  //  3. UNIFIED STATS CARD — 3 Columns + Black Amount Valuation Row
   // ────────────────────────────────────────────────────────
   Widget _buildUnifiedStatsCard(
-      int totalCows, int zoneCount, double totalValue) {
+    int totalCows,
+    int zoneCount,
+    double totalValue,
+    int culledThisMonth,
+  ) {
     final formatter = NumberFormat('#,##0');
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 18),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -549,44 +572,103 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
         ],
       ),
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            Expanded(
-              child: _buildStatColumn(
-                Icons.pets_rounded,
-                AppColors.primary,
-                '$totalCows',
-                'วัวทั้งหมด',
+      child: Column(
+        children: [
+          // Row 1: 3 Core Stat Columns (วัวทั้งหมด, โซน, คัดทิ้งเดือนนี้)
+          IntrinsicHeight(
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildStatColumn(
+                    Icons.pets_rounded,
+                    AppColors.primary,
+                    '$totalCows',
+                    'วัวทั้งหมด',
+                  ),
+                ),
+                Container(
+                  width: 1,
+                  color: AppColors.border.withValues(alpha: 0.5),
+                ),
+                Expanded(
+                  child: _buildStatColumn(
+                    Icons.grass_rounded,
+                    AppColors.secondary,
+                    '$zoneCount',
+                    'โซน',
+                  ),
+                ),
+                Container(
+                  width: 1,
+                  color: AppColors.border.withValues(alpha: 0.5),
+                ),
+                Expanded(
+                  child: _buildStatColumn(
+                    Icons.output_rounded,
+                    const Color(0xFFF59E0B),
+                    '$culledThisMonth',
+                    'คัดทิ้งเดือนนี้',
+                    onTap: () => context.push('/culling_history'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Row 2: Dedicated Farm Valuation Banner
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.accent.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.accent.withValues(alpha: 0.22),
               ),
             ),
-            Container(
-              width: 1,
-              color: AppColors.border.withValues(alpha: 0.5),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppColors.accent.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.payments_rounded,
+                    color: AppColors.accent,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'มูลค่ารวมฟาร์ม',
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '฿${formatter.format(totalValue)}',
+                  style: const TextStyle(
+                    fontSize: 18.5,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary, // สีดำหลัก
+                    letterSpacing: -0.2,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
-            Expanded(
-              child: _buildStatColumn(
-                Icons.grass_rounded,
-                AppColors.secondary,
-                '$zoneCount',
-                'โซน',
-              ),
-            ),
-            Container(
-              width: 1,
-              color: AppColors.border.withValues(alpha: 0.5),
-            ),
-            Expanded(
-              child: _buildStatColumn(
-                Icons.payments_rounded,
-                AppColors.accent,
-                '฿${formatter.format(totalValue)}',
-                'มูลค่ารวม',
-                isCompact: true,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -596,40 +678,46 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     Color color,
     String value,
     String label, {
-    bool isCompact = false,
+    VoidCallback? onTap,
   }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 22),
           ),
-          child: Icon(icon, color: color, size: 22),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: isCompact ? 16 : 24,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary, // สีดำหลักคมชัด
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: AppColors.textSecondary,
-            fontWeight: FontWeight.w500,
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.textPrimary, // สีดำหลักคมชัด
+              fontWeight: FontWeight.w600,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -643,6 +731,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final balance = income - expense;
     final formatter = NumberFormat('#,##0');
 
+    final now = DateTime.now();
+    final fullThaiMonths = [
+      '',
+      'มกราคม',
+      'กุมภาพันธ์',
+      'มีนาคม',
+      'เมษายน',
+      'พฤษภาคม',
+      'มิถุนายน',
+      'กรกฎาคม',
+      'สิงหาคม',
+      'กันยายน',
+      'ตุลาคม',
+      'พฤศจิกายน',
+      'ธันวาคม',
+    ];
+    final thaiYear = now.year > 2400 ? now.year : now.year + 543;
+    final currentMonthLabel = '${fullThaiMonths[now.month]} $thaiYear';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -653,44 +760,54 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 4,
-                    height: 18,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(2),
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 18,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'การเงินเดือนนี้',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'การเงินเดือน $currentMonthLabel',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Row(
                 children: [
                   Text(
                     '฿${formatter.format(balance)}',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 17,
                       fontWeight: FontWeight.bold,
                       color: balance >= 0 ? AppColors.success : AppColors.error,
                     ),
                   ),
                   const SizedBox(width: 4),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
-                      color: (balance >= 0 ? AppColors.success : AppColors.error)
-                          .withValues(alpha: 0.12),
+                      color:
+                          (balance >= 0 ? AppColors.success : AppColors.error)
+                              .withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -705,8 +822,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  const Icon(Icons.arrow_forward_ios_rounded,
-                      size: 14, color: AppColors.textSecondary),
+                  const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 14,
+                    color: AppColors.textSecondary,
+                  ),
                 ],
               ),
             ],
@@ -729,7 +849,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Row(
                       children: [
@@ -739,8 +859,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             color: AppColors.success.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(Icons.arrow_downward_rounded,
-                              color: AppColors.success, size: 16),
+                          child: const Icon(
+                            Icons.arrow_downward_rounded,
+                            color: AppColors.success,
+                            size: 16,
+                          ),
                         ),
                         const SizedBox(width: 8),
                         const Text(
@@ -754,15 +877,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      '฿${formatter.format(income)}',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.success,
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        '฿${formatter.format(income)}',
+                        style: const TextStyle(
+                          fontSize: 21,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.success,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -782,7 +908,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Row(
                       children: [
@@ -792,8 +918,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             color: AppColors.error.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(Icons.arrow_upward_rounded,
-                              color: AppColors.error, size: 16),
+                          child: const Icon(
+                            Icons.arrow_upward_rounded,
+                            color: AppColors.error,
+                            size: 16,
+                          ),
                         ),
                         const SizedBox(width: 8),
                         const Text(
@@ -807,15 +936,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      '฿${formatter.format(expense)}',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.error,
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        '฿${formatter.format(expense)}',
+                        style: const TextStyle(
+                          fontSize: 21,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.error,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -863,8 +995,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
             TextButton.icon(
               onPressed: () => context.push('/create_zone'),
-              icon: const Icon(Icons.add_rounded,
-                  size: 16, color: AppColors.primary),
+              icon: const Icon(
+                Icons.add_rounded,
+                size: 16,
+                color: AppColors.primary,
+              ),
               label: const Text(
                 'เพิ่มโซน',
                 style: TextStyle(
@@ -885,8 +1020,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: AppColors.border),
             ),
-            child:
-                const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+            child: const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            ),
           )
         else if (zones.isEmpty)
           Container(
@@ -899,9 +1035,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
             child: Column(
               children: [
-                Icon(Icons.grass_rounded,
-                    size: 32,
-                    color: AppColors.primary.withValues(alpha: 0.4)),
+                Icon(
+                  Icons.grass_rounded,
+                  size: 32,
+                  color: AppColors.primary.withValues(alpha: 0.4),
+                ),
                 const SizedBox(height: 8),
                 const Text(
                   'ยังไม่มีข้อมูลโซน',
@@ -914,10 +1052,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
           )
         else ...[
-          ...zones.take(5).map((zone) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: _buildZoneRow(context, zone),
-              )),
+          ...zones
+              .take(5)
+              .map(
+                (zone) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: _buildZoneRow(context, zone),
+                ),
+              ),
           if (zones.length > 5)
             Padding(
               padding: const EdgeInsets.only(top: 4),
@@ -933,7 +1075,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primary,
-                  side: BorderSide(color: AppColors.primary.withValues(alpha: 0.5)),
+                  side: BorderSide(
+                    color: AppColors.primary.withValues(alpha: 0.5),
+                  ),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   minimumSize: const Size(double.infinity, 44),
                   shape: RoundedRectangleBorder(
@@ -973,8 +1117,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.grass_rounded,
-                  color: AppColors.primary, size: 22),
+              child: const Icon(
+                Icons.grass_rounded,
+                color: AppColors.primary,
+                size: 22,
+              ),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -1003,8 +1150,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
             ),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
@@ -1019,8 +1165,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
             ),
             const SizedBox(width: 6),
-            const Icon(Icons.chevron_right_rounded,
-                color: AppColors.textHint, size: 22),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.textHint,
+              size: 22,
+            ),
           ],
         ),
       ),
@@ -1196,7 +1345,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Future<void> _showAddGlobalAppointmentDialog(BuildContext context) async {
-    final titleCtrl = TextEditingController(text: 'นัดหมายฉีดวัคซีน/ตรวจสุขภาพ');
+    final titleCtrl = TextEditingController(
+      text: 'นัดหมายฉีดวัคซีน/ตรวจสุขภาพ',
+    );
     final descCtrl = TextEditingController();
     DateTime selectedDate = DateTime.now().add(const Duration(days: 7));
     TimeOfDay selectedTime = const TimeOfDay(hour: 9, minute: 0);
@@ -1234,7 +1385,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       'ก่อน 1 วัน',
       'ก่อน 3 วัน',
       'ก่อน 7 วัน',
-      'ไม่แจ้งเตือน'
+      'ไม่แจ้งเตือน',
     ];
 
     final allCows = ref.read(cowProvider).allCows;
@@ -1246,14 +1397,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         builder: (ctx, setDialogState) {
           final selectedCowNames = allCows
               .where((c) => selectedCowIds.contains(c.id))
-              .map((c) => c.name.isNotEmpty ? '${c.name} (${c.tagNumber})' : c.tagNumber)
+              .map(
+                (c) => c.name.isNotEmpty
+                    ? '${c.name} (${c.tagNumber})'
+                    : c.tagNumber,
+              )
               .join(', ');
 
           return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             title: Row(
               children: [
-                Icon(Icons.medical_services_outlined, color: Colors.orange[800], size: 24),
+                Icon(
+                  Icons.medical_services_outlined,
+                  color: Colors.orange[800],
+                  size: 24,
+                ),
                 const SizedBox(width: 8),
                 const Expanded(
                   child: Text(
@@ -1288,23 +1449,34 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                   const Expanded(
                                     child: Text(
                                       'เลือกวัวที่ต้องการนัดหมาย',
-                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                   TextButton(
                                     onPressed: () {
                                       setSelectState(() {
-                                        if (tempSelected.length == allCows.length) {
+                                        if (tempSelected.length ==
+                                            allCows.length) {
                                           tempSelected.clear();
                                         } else {
-                                          tempSelected.addAll(allCows.map((c) => c.id));
+                                          tempSelected.addAll(
+                                            allCows.map((c) => c.id),
+                                          );
                                         }
                                       });
                                     },
                                     child: Text(
-                                      tempSelected.length == allCows.length ? 'ยกเลิกทั้งหมด' : 'เลือกทั้งหมด',
-                                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                      tempSelected.length == allCows.length
+                                          ? 'ยกเลิกทั้งหมด'
+                                          : 'เลือกทั้งหมด',
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -1323,11 +1495,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                       },
                                       decoration: InputDecoration(
                                         hintText: 'ค้นหาชื่อ หรือ เบอร์หู...',
-                                        hintStyle: const TextStyle(fontSize: 13, color: AppColors.textHint),
-                                        prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.primary),
+                                        hintStyle: const TextStyle(
+                                          fontSize: 13,
+                                          color: AppColors.textHint,
+                                        ),
+                                        prefixIcon: const Icon(
+                                          Icons.search,
+                                          size: 20,
+                                          color: AppColors.primary,
+                                        ),
                                         suffixIcon: dialogSearchQuery.isNotEmpty
                                             ? IconButton(
-                                                icon: const Icon(Icons.clear, size: 18),
+                                                icon: const Icon(
+                                                  Icons.clear,
+                                                  size: 18,
+                                                ),
                                                 onPressed: () {
                                                   setSelectState(() {
                                                     dialogSearchQuery = '';
@@ -1335,11 +1517,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                                 },
                                               )
                                             : null,
-                                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                              vertical: 8,
+                                            ),
                                         filled: true,
                                         fillColor: AppColors.surfaceAlt,
                                         border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(10),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
                                           borderSide: BorderSide.none,
                                         ),
                                       ),
@@ -1348,25 +1536,51 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                     Expanded(
                                       child: filteredCows.isEmpty
                                           ? const Center(
-                                              child: Text('ไม่พบข้อมูลวัวที่ค้นหา', style: TextStyle(color: AppColors.textHint, fontSize: 13)),
+                                              child: Text(
+                                                'ไม่พบข้อมูลวัวที่ค้นหา',
+                                                style: TextStyle(
+                                                  color: AppColors.textHint,
+                                                  fontSize: 13,
+                                                ),
+                                              ),
                                             )
                                           : ListView.builder(
                                               shrinkWrap: true,
                                               itemCount: filteredCows.length,
                                               itemBuilder: (cCtx, i) {
                                                 final cow = filteredCows[i];
-                                                final isChecked = tempSelected.contains(cow.id);
+                                                final isChecked = tempSelected
+                                                    .contains(cow.id);
                                                 return CheckboxListTile(
                                                   value: isChecked,
-                                                  activeColor: Colors.orange[800],
-                                                  title: Text(cow.name.isNotEmpty ? '${cow.name} (${cow.tagNumber})' : cow.tagNumber, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                                                  subtitle: Text('แท็ก: ${cow.tagNumber} · ${cow.type.label}', style: const TextStyle(fontSize: 12)),
+                                                  activeColor:
+                                                      Colors.orange[800],
+                                                  title: Text(
+                                                    cow.name.isNotEmpty
+                                                        ? '${cow.name} (${cow.tagNumber})'
+                                                        : cow.tagNumber,
+                                                    style: const TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                  subtitle: Text(
+                                                    'แท็ก: ${cow.tagNumber} · ${cow.type.label}',
+                                                    style: const TextStyle(
+                                                      fontSize: 12,
+                                                    ),
+                                                  ),
                                                   onChanged: (val) {
                                                     setSelectState(() {
                                                       if (val == true) {
-                                                        tempSelected.add(cow.id);
+                                                        tempSelected.add(
+                                                          cow.id,
+                                                        );
                                                       } else {
-                                                        tempSelected.remove(cow.id);
+                                                        tempSelected.remove(
+                                                          cow.id,
+                                                        );
                                                       }
                                                     });
                                                   },
@@ -1379,13 +1593,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               ),
                               actions: [
                                 TextButton(
-                                  onPressed: () => Navigator.pop(selectCtx, null),
+                                  onPressed: () =>
+                                      Navigator.pop(selectCtx, null),
                                   child: const Text('ยกเลิก'),
                                 ),
                                 ElevatedButton(
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.orange[800]),
-                                  onPressed: () => Navigator.pop(selectCtx, tempSelected),
-                                  child: const Text('ตกลง', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.orange[800],
+                                  ),
+                                  onPressed: () =>
+                                      Navigator.pop(selectCtx, tempSelected),
+                                  child: const Text(
+                                    'ตกลง',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
                               ],
                             );
@@ -1413,8 +1637,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             : 'เลือกแล้ว ${selectedCowIds.length} ตัว: $selectedCowNames',
                         style: TextStyle(
                           fontSize: 14,
-                          color: selectedCowIds.isEmpty ? AppColors.textHint : AppColors.textPrimary,
-                          fontWeight: selectedCowIds.isEmpty ? FontWeight.normal : FontWeight.w600,
+                          color: selectedCowIds.isEmpty
+                              ? AppColors.textHint
+                              : AppColors.textPrimary,
+                          fontWeight: selectedCowIds.isEmpty
+                              ? FontWeight.normal
+                              : FontWeight.w600,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -1425,13 +1653,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   DropdownButtonFormField<String>(
                     isExpanded: true,
                     initialValue: selectedType,
-                    style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: AppColors.textPrimary,
+                    ),
                     decoration: const InputDecoration(
                       labelText: 'ประเภทนัดหมาย *',
                       labelStyle: TextStyle(fontSize: 15),
                       prefixIcon: Icon(Icons.category),
                     ),
-                    items: types.map((t) => DropdownMenuItem(value: t, child: Text(t, style: const TextStyle(fontSize: 15)))).toList(),
+                    items: types
+                        .map(
+                          (t) => DropdownMenuItem(
+                            value: t,
+                            child: Text(
+                              t,
+                              style: const TextStyle(fontSize: 15),
+                            ),
+                          ),
+                        )
+                        .toList(),
                     onChanged: (v) {
                       if (v != null) {
                         setDialogState(() {
@@ -1441,168 +1682,244 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       }
                     },
                   ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: titleCtrl,
-                  style: const TextStyle(fontSize: 15),
-                  decoration: const InputDecoration(
-                    labelText: 'หัวข้อการนัดหมาย *',
-                    labelStyle: TextStyle(fontSize: 15),
-                    prefixIcon: Icon(Icons.title),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: titleCtrl,
+                    style: const TextStyle(fontSize: 15),
+                    decoration: const InputDecoration(
+                      labelText: 'หัวข้อการนัดหมาย *',
+                      labelStyle: TextStyle(fontSize: 15),
+                      prefixIcon: Icon(Icons.title),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.calendar_today, color: AppColors.primary),
-                  title: const Text('วันนัดหมาย', style: TextStyle(fontSize: 15)),
-                  subtitle: Text(AppDateUtils.formatThaiDate(selectedDate, useFullMonth: true), style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: ctx,
-                      initialDate: selectedDate,
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime(2030),
-                      helpText: 'เลือกวันที่',
-                      cancelText: 'ยกเลิก',
-                      confirmText: 'ตกลง',
-                    );
-                    if (picked != null) setDialogState(() => selectedDate = picked);
-                  },
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.access_time, color: AppColors.primary),
-                  title: const Text('เวลานัดหมาย', style: TextStyle(fontSize: 15)),
-                  subtitle: Text(
-                    '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')} น.',
-                    style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                  const SizedBox(height: 12),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(
+                      Icons.calendar_today,
+                      color: AppColors.primary,
+                    ),
+                    title: const Text(
+                      'วันนัดหมาย',
+                      style: TextStyle(fontSize: 15),
+                    ),
+                    subtitle: Text(
+                      AppDateUtils.formatThaiDate(
+                        selectedDate,
+                        useFullMonth: true,
+                      ),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: ctx,
+                        initialDate: selectedDate,
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime(2030),
+                        helpText: 'เลือกวันที่',
+                        cancelText: 'ยกเลิก',
+                        confirmText: 'ตกลง',
+                      );
+                      if (picked != null)
+                        setDialogState(() => selectedDate = picked);
+                    },
                   ),
-                  onTap: () async {
-                    final picked = await showTimePicker(
-                      context: ctx,
-                      initialTime: selectedTime,
-                      helpText: 'ระบุเวลา',
-                      cancelText: 'ยกเลิก',
-                      confirmText: 'ตกลง',
-                      hourLabelText: 'ชั่วโมง',
-                      minuteLabelText: 'นาที',
-                    );
-                    if (picked != null) setDialogState(() => selectedTime = picked);
-                  },
-                ),
-                const SizedBox(height: 4),
-                TextField(
-                  controller: descCtrl,
-                  maxLines: 2,
-                  style: const TextStyle(fontSize: 15),
-                  decoration: const InputDecoration(
-                    labelText: 'รายละเอียด/หมายเหตุ (ไม่บังคับ)',
-                    labelStyle: TextStyle(fontSize: 15),
-                    prefixIcon: Icon(Icons.notes),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(
+                      Icons.access_time,
+                      color: AppColors.primary,
+                    ),
+                    title: const Text(
+                      'เวลานัดหมาย',
+                      style: TextStyle(fontSize: 15),
+                    ),
+                    subtitle: Text(
+                      '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')} น.',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onTap: () async {
+                      final picked = await showTimePicker(
+                        context: ctx,
+                        initialTime: selectedTime,
+                        helpText: 'ระบุเวลา',
+                        cancelText: 'ยกเลิก',
+                        confirmText: 'ตกลง',
+                        hourLabelText: 'ชั่วโมง',
+                        minuteLabelText: 'นาที',
+                      );
+                      if (picked != null)
+                        setDialogState(() => selectedTime = picked);
+                    },
                   ),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  isExpanded: true,
-                  initialValue: selectedReminder,
-                  style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
-                  decoration: const InputDecoration(
-                    labelText: 'แจ้งเตือนล่วงหน้า',
-                    labelStyle: TextStyle(fontSize: 15),
-                    prefixIcon: Icon(Icons.notifications_active_outlined),
+                  const SizedBox(height: 4),
+                  TextField(
+                    controller: descCtrl,
+                    maxLines: 2,
+                    style: const TextStyle(fontSize: 15),
+                    decoration: const InputDecoration(
+                      labelText: 'รายละเอียด/หมายเหตุ (ไม่บังคับ)',
+                      labelStyle: TextStyle(fontSize: 15),
+                      prefixIcon: Icon(Icons.notes),
+                    ),
                   ),
-                  items: reminderOptions.map((r) => DropdownMenuItem(value: r, child: Text(r, style: const TextStyle(fontSize: 15)))).toList(),
-                  onChanged: (v) {
-                    if (v != null) {
-                      setDialogState(() => selectedReminder = v);
-                    }
-                  },
-                ),
-              ],
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    isExpanded: true,
+                    initialValue: selectedReminder,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: AppColors.textPrimary,
+                    ),
+                    decoration: const InputDecoration(
+                      labelText: 'แจ้งเตือนล่วงหน้า',
+                      labelStyle: TextStyle(fontSize: 15),
+                      prefixIcon: Icon(Icons.notifications_active_outlined),
+                    ),
+                    items: reminderOptions
+                        .map(
+                          (r) => DropdownMenuItem(
+                            value: r,
+                            child: Text(
+                              r,
+                              style: const TextStyle(fontSize: 15),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (v) {
+                      if (v != null) {
+                        setDialogState(() => selectedReminder = v);
+                      }
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
-          actions: [
-            Row(children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
-                  child: const Text('ยกเลิก', style: TextStyle(fontSize: 15)),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange[800],
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+            actions: [
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Text(
+                        'ยกเลิก',
+                        style: TextStyle(fontSize: 15),
+                      ),
+                    ),
                   ),
-                  onPressed: () async {
-                    final title = titleCtrl.text.trim();
-                    if (title.isEmpty) return;
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange[800],
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onPressed: () async {
+                        final title = titleCtrl.text.trim();
+                        if (title.isEmpty) return;
 
-                    final dt = DateTime(
-                      selectedDate.year,
-                      selectedDate.month,
-                      selectedDate.day,
-                      selectedTime.hour,
-                      selectedTime.minute,
-                    );
+                        final dt = DateTime(
+                          selectedDate.year,
+                          selectedDate.month,
+                          selectedDate.day,
+                          selectedTime.hour,
+                          selectedTime.minute,
+                        );
 
-                    Navigator.pop(ctx);
+                        Navigator.pop(ctx);
 
-                    final messenger = ScaffoldMessenger.of(context);
+                        final messenger = ScaffoldMessenger.of(context);
 
-                    try {
-                      final api = ref.read(apiClientProvider);
-                      final farmId = ref.read(farmProvider).currentFarm?.id ?? '';
+                        try {
+                          final api = ref.read(apiClientProvider);
+                          final farmId =
+                              ref.read(farmProvider).currentFarm?.id ?? '';
 
-                      if (selectedCowIds.isEmpty) {
-                        await api.post('/health_appointments', data: {
-                          'cow_id': null,
-                          'appoint_datetime': dt.toIso8601String(),
-                          'description': '$title ${descCtrl.text.trim()}'.trim(),
-                          'reminder_setting': selectedReminder,
-                          'status': 0,
-                        });
-                      } else {
-                        for (final cowId in selectedCowIds) {
-                          await api.post('/health_appointments', data: {
-                            'cow_id': cowId,
-                            'appoint_datetime': dt.toIso8601String(),
-                            'description': '$title ${descCtrl.text.trim()}'.trim(),
-                            'reminder_setting': selectedReminder,
-                            'status': 0,
-                          });
+                          if (selectedCowIds.isEmpty) {
+                            await api.post(
+                              '/health_appointments',
+                              data: {
+                                'cow_id': null,
+                                'appoint_datetime': dt.toIso8601String(),
+                                'description': '$title ${descCtrl.text.trim()}'
+                                    .trim(),
+                                'reminder_setting': selectedReminder,
+                                'status': 0,
+                              },
+                            );
+                          } else {
+                            for (final cowId in selectedCowIds) {
+                              await api.post(
+                                '/health_appointments',
+                                data: {
+                                  'cow_id': cowId,
+                                  'appoint_datetime': dt.toIso8601String(),
+                                  'description':
+                                      '$title ${descCtrl.text.trim()}'.trim(),
+                                  'reminder_setting': selectedReminder,
+                                  'status': 0,
+                                },
+                              );
+                            }
+                          }
+
+                          if (farmId.isNotEmpty) {
+                            ref
+                                .read(calendarProvider.notifier)
+                                .fetchEvents(farmId);
+                          }
+
+                          messenger.showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                selectedCowIds.isEmpty
+                                    ? 'บันทึกวันนัดหมายสุขภาพทั้งฟาร์มแล้ว'
+                                    : 'บันทึกวันนัดหมายสุขภาพสำหรับวัว ${selectedCowIds.length} ตัวแล้ว',
+                                style: const TextStyle(fontSize: 15),
+                              ),
+                              backgroundColor: AppColors.success,
+                            ),
+                          );
+                        } catch (e) {
+                          messenger.showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'เกิดข้อผิดพลาดในการบันทึก: $e',
+                                style: const TextStyle(fontSize: 15),
+                              ),
+                              backgroundColor: AppColors.error,
+                            ),
+                          );
                         }
-                      }
-
-                      if (farmId.isNotEmpty) {
-                        ref.read(calendarProvider.notifier).fetchEvents(farmId);
-                      }
-
-                      messenger.showSnackBar(SnackBar(
-                        content: Text(selectedCowIds.isEmpty
-                            ? 'บันทึกวันนัดหมายสุขภาพทั้งฟาร์มแล้ว'
-                            : 'บันทึกวันนัดหมายสุขภาพสำหรับวัว ${selectedCowIds.length} ตัวแล้ว', style: const TextStyle(fontSize: 15)),
-                        backgroundColor: AppColors.success,
-                      ));
-                    } catch (e) {
-                      messenger.showSnackBar(SnackBar(
-                        content: Text('เกิดข้อผิดพลาดในการบันทึก: $e', style: const TextStyle(fontSize: 15)),
-                        backgroundColor: AppColors.error,
-                      ));
-                    }
-                  },
-                  child: const Text('บันทึกนัดหมาย', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
-                ),
+                      },
+                      child: const Text(
+                        'บันทึกนัดหมาย',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ]),
-          ],
-        );
-      },
-    ),
+            ],
+          );
+        },
+      ),
     );
   }
 

@@ -452,7 +452,7 @@ class FarmPdfExportService {
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       pw.Text(
-                        '3. สถานะสุขภาพและการกระจายในคอก',
+                        '3. สถานะสุขภาพและการกระจายในฟาร์ม',
                         style: pw.TextStyle(
                           fontSize: 12,
                           fontWeight: pw.FontWeight.bold,

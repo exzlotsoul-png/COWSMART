@@ -4210,12 +4210,12 @@ class _CostTabState extends ConsumerState<CostTab> {
           AppColors.error,
           Icons.medical_services_outlined,
         ),
-      if (directCost > 0)
+      if (feedCost > 0)
         _CostPart(
-          'ค่าใช้จ่ายตรง',
-          directCost,
-          Colors.blue,
-          Icons.receipt_long_outlined,
+          'ค่าอาหาร',
+          feedCost,
+          Colors.green,
+          Icons.grass_rounded,
         ),
     ];
 
@@ -4238,7 +4238,7 @@ class _CostTabState extends ConsumerState<CostTab> {
           _buildValueComparisonCard(totalCost, widget.cow),
           const SizedBox(height: 16),
 
-          // Summary cards row
+          // Summary cards row (3 cards: ราคาซื้อ, ค่ารักษา, ค่าอาหาร)
           Row(
             children: [
               Expanded(
@@ -4249,7 +4249,7 @@ class _CostTabState extends ConsumerState<CostTab> {
                   isBornInFarm: isBornInFarm,
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
               Expanded(
                 child: _buildMiniSummary(
                   'ค่ารักษา',
@@ -4257,13 +4257,9 @@ class _CostTabState extends ConsumerState<CostTab> {
                   AppColors.error,
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
               Expanded(
                 child: _buildMiniSummary('ค่าอาหาร', feedCost, Colors.green),
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: _buildMiniSummary('อื่นๆ', directCost, Colors.blue),
               ),
             ],
           ),
@@ -4462,9 +4458,9 @@ class _CostTabState extends ConsumerState<CostTab> {
             const SizedBox(height: 6),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[750],
+              style: const TextStyle(
+                fontSize: 12.5,
+                color: AppColors.textPrimary,
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
@@ -4525,6 +4521,8 @@ class _CostTabState extends ConsumerState<CostTab> {
   }
 
   Widget _buildProportionBar(List<_CostPart> parts, double total) {
+    final partsSum = parts.fold<double>(0, (sum, p) => sum + p.amount);
+    final effectiveTotal = partsSum > 0 ? partsSum : total;
     return Card(
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -4539,7 +4537,7 @@ class _CostTabState extends ConsumerState<CostTab> {
                 height: 18,
                 child: Row(
                   children: parts.map((p) {
-                    final ratio = p.amount / total;
+                    final ratio = effectiveTotal > 0 ? p.amount / effectiveTotal : 0.0;
                     return Expanded(
                       flex: (ratio * 100).round().clamp(1, 100),
                       child: Container(color: p.color),
@@ -4551,8 +4549,8 @@ class _CostTabState extends ConsumerState<CostTab> {
             const SizedBox(height: 12),
             // Legend
             ...parts.map((p) {
-              final pct = total > 0
-                  ? (p.amount / total * 100).toStringAsFixed(0)
+              final pct = effectiveTotal > 0
+                  ? (p.amount / effectiveTotal * 100).toStringAsFixed(0)
                   : '0';
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 3),
@@ -4572,12 +4570,20 @@ class _CostTabState extends ConsumerState<CostTab> {
                     Expanded(
                       child: Text(
                         p.label,
-                        style: const TextStyle(fontSize: 13),
+                        style: const TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
                     ),
                     Text(
                       '${NumberFormat('#,##0').format(p.amount)} ฿ ($pct%)',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                   ],
                 ),

@@ -395,3 +395,31 @@ final activeCowsProvider = Provider<List<Cow>>((ref) {
   }
   return cows;
 });
+
+final cullingRecordsProvider = FutureProvider.autoDispose<List<CullingRecord>>((ref) async {
+  final farmId = ref.watch(farmProvider).currentFarm?.id;
+  if (farmId == null) return [];
+  final api = ref.read(apiClientProvider);
+  try {
+    final response = await api.get(
+      '/culling_records',
+      query: {'farm_id': farmId},
+    );
+    final list = (response.data as List)
+        .map((j) => CullingRecord.fromJson(j))
+        .toList();
+    list.sort((a, b) => b.cullDate.compareTo(a.cullDate));
+    return list;
+  } catch (e) {
+    return [];
+  }
+});
+
+final currentMonthCulledCountProvider = Provider<int>((ref) {
+  final cullingList = ref.watch(cullingRecordsProvider).value ?? [];
+  final now = DateTime.now();
+  return cullingList.where((rec) =>
+    rec.cullDate.year == now.year && rec.cullDate.month == now.month
+  ).length;
+});
+

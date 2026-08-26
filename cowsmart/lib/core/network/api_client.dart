@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,8 +6,10 @@ class ApiClient {
   final Dio _dio;
   String? _token;
 
-  // Base URL: Use current machine IPv4 on Wi-Fi
-  static const String baseUrl = 'http://192.168.1.36:8000/api';
+  // Base URL: Use 127.0.0.1 on Web/Desktop, or current machine IPv4 (192.168.1.31) on Mobile devices
+  static String get baseUrl => kIsWeb 
+      ? 'http://127.0.0.1:8000/api' 
+      : 'http://192.168.1.31:8000/api';
 
   ApiClient()
     : _dio = Dio(
