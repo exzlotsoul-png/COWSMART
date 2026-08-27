@@ -1618,17 +1618,36 @@ class _BreedTabState extends ConsumerState<BreedTab> {
         title: const Text('ยืนยันการลบ'),
         content: const Text('คุณต้องการลบข้อมูลประวัติการผสมพันธุ์นี้ใช่หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('ยกเลิก'),
-          ),
-          TextButton(
-            onPressed: () {
-              ref.read(cowDetailProvider.notifier).deleteBreedingRecord(record.id);
-              Navigator.pop(ctx);
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('ลบ'),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('ยกเลิก'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    elevation: 0,
+                  ),
+                  onPressed: () {
+                    ref.read(cowDetailProvider.notifier).deleteBreedingRecord(record.id);
+                    Navigator.pop(ctx);
+                  },
+                  child: const Text('ลบ'),
+                ),
+              ),
+            ],
           ),
         ],
       ),

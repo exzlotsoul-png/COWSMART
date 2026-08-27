@@ -300,22 +300,37 @@ class _CullingCard extends ConsumerWidget {
           'สถานะของวัวจะเปลี่ยนเป็นปกติ และยอดเงินรายรับจากการขาย (หากมี) ในระบบการเงินจะถูกลบออกโดยอัตโนมัติ',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('ยกเลิก', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            onPressed: () async {
-              Navigator.pop(ctx);
-              await ref.read(cowProvider.notifier).restoreCulledCow(record.id, displayCow);
-              ref.invalidate(_cullingHistoryProvider);
-            },
-            child: const Text('ยืนยันดึงกลับ'),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: const Text('ยกเลิก', style: TextStyle(color: AppColors.textSecondary)),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    elevation: 0,
+                  ),
+                  onPressed: () async {
+                    Navigator.pop(ctx);
+                    await ref.read(cowProvider.notifier).restoreCulledCow(record.id, displayCow);
+                    ref.invalidate(_cullingHistoryProvider);
+                  },
+                  child: const Text('ยืนยันดึงกลับ'),
+                ),
+              ),
+            ],
           ),
         ],
       ),

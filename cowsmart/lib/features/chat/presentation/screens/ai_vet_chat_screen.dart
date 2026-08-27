@@ -155,23 +155,39 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
         title: const Text('ล้างประวัติการสนทนา', style: TextStyle(fontWeight: FontWeight.bold)),
         content: const Text('ต้องการเริ่มการสนทนาใหม่และล้างข้อความทั้งหมดใช่หรือไม่?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('ยกเลิก', style: TextStyle(color: AppColors.textSecondary)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              setState(() {
-                _messages.clear();
-                _initWelcomeMessage();
-              });
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            child: const Text('เริ่มใหม่', style: TextStyle(color: Colors.white)),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: const Text('ยกเลิก', style: TextStyle(color: AppColors.textSecondary)),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    setState(() {
+                      _messages.clear();
+                      _initWelcomeMessage();
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    elevation: 0,
+                  ),
+                  child: const Text('เริ่มใหม่'),
+                ),
+              ),
+            ],
           ),
         ],
       ),

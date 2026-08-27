@@ -653,27 +653,42 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
         ),
         content: Text('คุณต้องการลบบันทึก "${item.name}" ใช่หรือไม่?', style: const TextStyle(fontSize: 15)),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('ยกเลิก', style: TextStyle(fontSize: 15)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              final currentFarm = ref.read(farmProvider).currentFarm;
-              if (currentFarm != null) {
-                await ref.read(feedProvider.notifier).deleteFeed(item.id);
-                if (context.mounted) {
-                  AppFeedback.showWarning(context, 'ลบรายการอาหารเรียบร้อยแล้ว');
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            child: const Text('ลบ', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: const Text('ยกเลิก', style: TextStyle(fontSize: 15)),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    Navigator.pop(ctx);
+                    final currentFarm = ref.read(farmProvider).currentFarm;
+                    if (currentFarm != null) {
+                      await ref.read(feedProvider.notifier).deleteFeed(item.id);
+                      if (context.mounted) {
+                        AppFeedback.showWarning(context, 'ลบรายการอาหารเรียบร้อยแล้ว');
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.error,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    elevation: 0,
+                  ),
+                  child: const Text('ลบ', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
           ),
         ],
       ),

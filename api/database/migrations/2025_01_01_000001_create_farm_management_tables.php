@@ -12,11 +12,6 @@ return new class extends Migration
         Schema::create('diseases', function (Blueprint $table) {
             $table->string('disease_id', 10)->primary()->comment('รหัสโรค (เช่น DIS-0001)');
             $table->string('name', 150)->nullable()->comment('ชื่อโรคและอาการป่วย');
-            $table->text('cause')->nullable()->comment('สาเหตุการเกิดโรคและการแพร่โรค');
-            $table->text('symptoms')->nullable()->comment('ลักษณะอาการของโรค');
-            $table->text('observation')->nullable()->comment('วิธีสังเกตอาการเบื้องต้น');
-            $table->text('treatment')->nullable()->comment('วิธีการดูแลรักษาเบื้องต้น');
-            $table->text('prevention')->nullable()->comment('การควบคุมและการป้องกันโรค');
             $table->timestamps();
         });
 
@@ -25,7 +20,6 @@ return new class extends Migration
             $table->string('category', 100)->nullable()->comment('หมวดหมู่ยา');
             $table->string('name', 150)->nullable()->comment('ชื่อยา');
             $table->text('indications')->nullable()->comment('ข้อบ่งใช้');
-            $table->text('dosage_usage')->nullable()->comment('ขนาดและวิธีการใช้ยา');
             $table->timestamps();
         });
 
@@ -34,7 +28,6 @@ return new class extends Migration
             $table->string('category', 100)->nullable()->comment('หมวดหมู่วัคซีน');
             $table->string('name', 150)->nullable()->comment('ชื่อวัคซีน');
             $table->text('indications')->nullable()->comment('ข้อบ่งใช้');
-            $table->text('dosage_usage')->nullable()->comment('ขนาดและวิธีการฉีดวัคซีน');
             $table->timestamps();
         });
 

@@ -1483,7 +1483,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               ),
                               content: SizedBox(
                                 width: double.maxFinite,
-                                height: 380,
+                                height: MediaQuery.of(context).size.height * 0.65,
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
@@ -1592,24 +1592,40 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                 ),
                               ),
                               actions: [
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(selectCtx, null),
-                                  child: const Text('ยกเลิก'),
-                                ),
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.orange[800],
-                                  ),
-                                  onPressed: () =>
-                                      Navigator.pop(selectCtx, tempSelected),
-                                  child: const Text(
-                                    'ตกลง',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: OutlinedButton(
+                                        style: OutlinedButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          side: const BorderSide(color: AppColors.textSecondary),
+                                        ),
+                                        onPressed: () => Navigator.pop(selectCtx, null),
+                                        child: const Text(
+                                          'ยกเลิก',
+                                          style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.bold, fontSize: 14),
+                                        ),
+                                      ),
                                     ),
-                                  ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.orange[800],
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          elevation: 0,
+                                        ),
+                                        onPressed: () => Navigator.pop(selectCtx, tempSelected),
+                                        child: Text(
+                                          'ตกลง (${tempSelected.length})',
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             );

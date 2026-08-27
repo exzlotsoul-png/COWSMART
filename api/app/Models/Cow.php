@@ -14,7 +14,7 @@ class Cow extends Model
     public $incrementing = false;
     protected $guarded = [];
 
-    protected $appends = ['image_full_url'];
+    protected $appends = ['image_full_url', 'latest_disease_name'];
 
     public function getImageFullUrlAttribute(): ?string
     {
@@ -27,6 +27,20 @@ class Cow extends Model
         }
 
         return url('api/storage/' . $this->image_url);
+    }
+
+    public function getLatestDiseaseNameAttribute(): ?string
+    {
+        $latestRecord = \Illuminate\Support\Facades\DB::table('health_records')
+            ->join('diseases', 'health_records.disease_id', '=', 'diseases.disease_id')
+            ->where('health_records.cow_id', $this->cow_id)
+            ->whereNotNull('health_records.disease_id')
+            ->orderBy('health_records.record_date', 'desc')
+            ->orderBy('health_records.created_at', 'desc')
+            ->select('diseases.name')
+            ->first();
+
+        return $latestRecord ? $latestRecord->name : null;
     }
 
     public function farm()

@@ -109,39 +109,54 @@ class _EditFarmScreenState extends ConsumerState<EditFarmScreen> {
           style: const TextStyle(fontSize: 14, height: 1.4),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('ยกเลิก', style: TextStyle(fontSize: 15)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              setState(() => _isLoading = true);
-              final success = await ref.read(farmProvider.notifier).deleteFarm(widget.farm.id);
-              if (mounted) {
-                setState(() => _isLoading = false);
-                if (success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('ลบฟาร์มเรียบร้อยแล้ว'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                  context.go('/select-farm');
-                } else {
-                  final error = ref.read(farmProvider).errorMessage ?? 'เกิดข้อผิดพลาดในการลบฟาร์ม';
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(error), backgroundColor: AppColors.error),
-                  );
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            child: const Text('ลบฟาร์ม', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: const Text('ยกเลิก', style: TextStyle(fontSize: 15)),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    Navigator.pop(ctx);
+                    setState(() => _isLoading = true);
+                    final success = await ref.read(farmProvider.notifier).deleteFarm(widget.farm.id);
+                    if (mounted) {
+                      setState(() => _isLoading = false);
+                      if (success) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('ลบฟาร์มเรียบร้อยแล้ว'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                        context.go('/select-farm');
+                      } else {
+                        final error = ref.read(farmProvider).errorMessage ?? 'เกิดข้อผิดพลาดในการลบฟาร์ม';
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(error), backgroundColor: AppColors.error),
+                        );
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.error,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    elevation: 0,
+                  ),
+                  child: const Text('ลบฟาร์ม', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
           ),
         ],
       ),

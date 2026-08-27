@@ -400,6 +400,15 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
       return true;
     }).toList();
 
+    // เรียงลำดับให้วัวที่ป่วยขึ้นมาก่อนเป็นอันดับแรก (Sort sick cows first)
+    availableCows.sort((a, b) {
+      final aIsSick = a.status == CowStatus.sick || (a.latestDiseaseName != null && a.latestDiseaseName!.isNotEmpty && a.status != CowStatus.normal);
+      final bIsSick = b.status == CowStatus.sick || (b.latestDiseaseName != null && b.latestDiseaseName!.isNotEmpty && b.status != CowStatus.normal);
+      if (aIsSick && !bIsSick) return -1;
+      if (!aIsSick && bIsSick) return 1;
+      return a.tagNumber.compareTo(b.tagNumber);
+    });
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -705,6 +714,11 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                   itemBuilder: (ctx, index) {
                     final cow = availableCows[index];
                     final isChecked = _selectedCowIds.contains(cow.id);
+                    final isCowSick = cow.status == CowStatus.sick ||
+                        (cow.latestDiseaseName != null &&
+                            cow.latestDiseaseName!.isNotEmpty &&
+                            cow.status != CowStatus.normal);
+                    final diseaseName = cow.latestDiseaseName;
 
                     final genderDisplay = (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male') ? 'ผู้' : 'เมีย';
                     final breedDisplay = cow.breed.isNotEmpty ? cow.breed : '-';
@@ -712,11 +726,19 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                     return Container(
                       margin: const EdgeInsets.only(bottom: 10),
                       decoration: BoxDecoration(
-                        color: isChecked ? AppColors.primary.withValues(alpha: 0.05) : Colors.white,
+                        color: isChecked
+                            ? AppColors.primary.withValues(alpha: 0.05)
+                            : isCowSick
+                                ? const Color(0xFFFEF2F2)
+                                : Colors.white,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: isChecked ? AppColors.primary : AppColors.border.withValues(alpha: 0.5),
-                          width: isChecked ? 1.5 : 1,
+                          color: isChecked
+                              ? AppColors.primary
+                              : isCowSick
+                                  ? const Color(0xFFFCA5A5)
+                                  : AppColors.border.withValues(alpha: 0.5),
+                          width: isChecked ? 1.5 : (isCowSick ? 1.2 : 1),
                         ),
                       ),
                       child: InkWell(
@@ -791,6 +813,38 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                                       'สายพันธุ์: $breedDisplay • เพศ: $genderDisplay',
                                       style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
                                     ),
+                                    if (isCowSick) ...[
+                                      const SizedBox(height: 5),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.error.withValues(alpha: 0.12),
+                                          borderRadius: BorderRadius.circular(6),
+                                          border: Border.all(color: AppColors.error.withValues(alpha: 0.35), width: 0.8),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(Icons.coronavirus_outlined, size: 13, color: AppColors.error),
+                                            const SizedBox(width: 4),
+                                            Flexible(
+                                              child: Text(
+                                                (diseaseName != null && diseaseName.isNotEmpty)
+                                                    ? 'ป่วย: $diseaseName'
+                                                    : 'สถานะ: ป่วย',
+                                                style: const TextStyle(
+                                                  fontSize: 11,
+                                                  color: AppColors.error,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),
@@ -1043,8 +1097,8 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                 color: AppColors.info,
                 selectedIds: _selectedVaccineIds,
                 options: [
-                  ...masterData.vaccines.map((v) => {'id': v.id, 'name': v.name}),
-                  {'id': 'other', 'name': 'อื่นๆ (ระบุเอง)'},
+                  ...masterData.vaccines.map((v) => {'id': v.id, 'name': v.name, 'category': v.category ?? ''}),
+                  {'id': 'other', 'name': 'อื่นๆ (ระบุเอง)', 'category': ''},
                 ],
                 customController: _customVaccineController,
                 hintText: 'แตะเพื่อเลือกวัคซีน...',
@@ -1080,8 +1134,8 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                 color: const Color(0xFFD97706),
                 selectedIds: _selectedMedicineIds,
                 options: [
-                  ...masterData.medicines.map((m) => {'id': m.id, 'name': m.name}),
-                  {'id': 'other', 'name': 'อื่นๆ (ระบุเอง)'},
+                  ...masterData.medicines.map((m) => {'id': m.id, 'name': m.name, 'category': m.category ?? ''}),
+                  {'id': 'other', 'name': 'อื่นๆ (ระบุเอง)', 'category': ''},
                 ],
                 customController: _customMedicineController,
                 hintText: 'แตะเพื่อเลือกยารักษา...',
@@ -1296,6 +1350,7 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                                     const SizedBox(height: 8),
                                     ...targetItemIds.map((itemId) {
                                       String itemName;
+                                      String? itemCategory;
                                       if (itemId == 'other') {
                                         itemName = _selectedType == 'CT02'
                                             ? (_customVaccineController.text.trim().isNotEmpty ? _customVaccineController.text.trim() : 'อื่นๆ (ระบุเอง)')
@@ -1304,9 +1359,11 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                                         if (_selectedType == 'CT02') {
                                           final match = masterData.vaccines.where((v) => v.id == itemId).toList();
                                           itemName = match.isNotEmpty ? match.first.name : itemId;
+                                          itemCategory = match.isNotEmpty ? match.first.category : null;
                                         } else {
                                           final match = masterData.medicines.where((m) => m.id == itemId).toList();
                                           itemName = match.isNotEmpty ? match.first.name : itemId;
+                                          itemCategory = match.isNotEmpty ? match.first.category : null;
                                         }
                                       }
 
@@ -1322,17 +1379,31 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Row(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
-                                                Icon(
-                                                  _selectedType == 'CT02' ? Icons.vaccines_outlined : Icons.medication_outlined,
-                                                  size: 16,
-                                                  color: _selectedType == 'CT02' ? AppColors.info : const Color(0xFFD97706),
+                                                Padding(
+                                                  padding: const EdgeInsets.only(top: 2),
+                                                  child: Icon(
+                                                    _selectedType == 'CT02' ? Icons.vaccines_outlined : Icons.medication_outlined,
+                                                    size: 16,
+                                                    color: _selectedType == 'CT02' ? AppColors.info : const Color(0xFFD97706),
+                                                  ),
                                                 ),
                                                 const SizedBox(width: 6),
                                                 Expanded(
-                                                  child: Text(
-                                                    itemName,
-                                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                                  child: Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Text(
+                                                        itemName,
+                                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                                      ),
+                                                      if (itemCategory != null && itemCategory.isNotEmpty)
+                                                        Text(
+                                                          'หมวดหมู่: $itemCategory',
+                                                          style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                                        ),
+                                                    ],
                                                   ),
                                                 ),
                                               ],
@@ -1484,7 +1555,7 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                       ),
                       content: SizedBox(
                         width: double.maxFinite,
-                        height: 380,
+                        height: MediaQuery.of(context).size.height * 0.65,
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -1518,17 +1589,28 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                                         final item = filteredOptions[index];
                                         final id = item['id']!;
                                         final name = item['name']!;
+                                        final category = item['category'];
                                         final checked = tempSelected.contains(id);
 
                                         return CheckboxListTile(
+                                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
                                           title: Text(
                                             name,
                                             style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: id == 'other' ? FontWeight.bold : FontWeight.normal,
-                                              color: id == 'other' ? color : null,
+                                              fontSize: 14.5,
+                                              fontWeight: id == 'other' ? FontWeight.bold : FontWeight.w600,
+                                              color: id == 'other' ? color : AppColors.textPrimary,
                                             ),
                                           ),
+                                          subtitle: (category != null && category.isNotEmpty)
+                                              ? Text(
+                                                  'หมวดหมู่: $category',
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color: AppColors.textSecondary,
+                                                  ),
+                                                )
+                                              : null,
                                           value: checked,
                                           activeColor: color,
                                           onChanged: (val) {
@@ -1548,14 +1630,40 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                         ),
                       ),
                       actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          child: const Text('ยกเลิก', style: TextStyle(color: AppColors.textSecondary)),
-                        ),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(backgroundColor: color, foregroundColor: Colors.white),
-                          onPressed: () => Navigator.pop(ctx, tempSelected),
-                          child: Text('ตกลง (${tempSelected.length})'),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  side: const BorderSide(color: AppColors.textSecondary),
+                                ),
+                                onPressed: () => Navigator.pop(ctx),
+                                child: const Text(
+                                  'ยกเลิก',
+                                  style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.bold, fontSize: 14),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: color,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  elevation: 0,
+                                ),
+                                onPressed: () => Navigator.pop(ctx, tempSelected),
+                                child: Text(
+                                  'ตกลง (${tempSelected.length})',
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     );

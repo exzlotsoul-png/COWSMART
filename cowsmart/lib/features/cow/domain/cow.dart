@@ -47,6 +47,7 @@ class Cow {
   final CowStatus status;
   final String? imageUrl;
   final String? imageFullUrl;
+  final String? latestDiseaseName;
 
   Cow({
     required this.id,
@@ -66,6 +67,7 @@ class Cow {
     this.status = CowStatus.normal,
     this.imageUrl,
     this.imageFullUrl,
+    this.latestDiseaseName,
   });
 
   factory Cow.fromJson(Map<String, dynamic> json) {
@@ -88,6 +90,7 @@ class Cow {
       status: CowStatus.values.firstWhere((e) => e.name == json['status'], orElse: () => CowStatus.normal),
       imageUrl: json['image_url'],
       imageFullUrl: json['image_full_url'],
+      latestDiseaseName: json['latest_disease_name']?.toString() ?? json['disease_name']?.toString(),
     );
   }
 
@@ -184,6 +187,7 @@ class Cow {
     CowStatus? status,
     String? imageUrl,
     String? imageFullUrl,
+    String? latestDiseaseName,
   }) {
     return Cow(
       id: id ?? this.id,
@@ -202,6 +206,7 @@ class Cow {
       status: status ?? this.status,
       imageUrl: imageUrl ?? this.imageUrl,
       imageFullUrl: imageFullUrl ?? this.imageFullUrl,
+      latestDiseaseName: latestDiseaseName ?? this.latestDiseaseName,
     );
   }
 }

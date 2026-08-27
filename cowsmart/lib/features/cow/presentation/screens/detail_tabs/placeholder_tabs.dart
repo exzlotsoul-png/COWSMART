@@ -805,17 +805,36 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                             title: const Text('ยืนยันการลบ'),
                             content: const Text('คุณต้องการลบข้อมูลประวัติสุขภาพนี้ใช่หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้'),
                             actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(ctx),
-                                child: const Text('ยกเลิก'),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  ref.read(cowDetailProvider.notifier).deleteHealthRecord(record.id);
-                                  Navigator.pop(ctx);
-                                },
-                                style: TextButton.styleFrom(foregroundColor: Colors.red),
-                                child: const Text('ลบ'),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: OutlinedButton(
+                                      style: OutlinedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(vertical: 12),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                      ),
+                                      onPressed: () => Navigator.pop(ctx),
+                                      child: const Text('ยกเลิก'),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red,
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(vertical: 12),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                        elevation: 0,
+                                      ),
+                                      onPressed: () {
+                                        ref.read(cowDetailProvider.notifier).deleteHealthRecord(record.id);
+                                        Navigator.pop(ctx);
+                                      },
+                                      child: const Text('ลบ'),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -1429,8 +1448,8 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                           builder: (ctx, setDialogState) {
                             String searchQuery = '';
                             final listOptions = [
-                              ...masterData.vaccines.map((v) => {'id': v.id, 'name': v.name}),
-                              {'id': 'other', 'name': 'อื่นๆ (ระบุเอง)'},
+                              ...masterData.vaccines.map((v) => {'id': v.id, 'name': v.name, 'category': v.category ?? ''}),
+                              {'id': 'other', 'name': 'อื่นๆ (ระบุเอง)', 'category': ''},
                             ];
 
                             final filteredOptions = listOptions.where((v) {
@@ -1442,7 +1461,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                               title: const Text('เลือกวัคซีน (เลือกได้หลายรายการ)', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
                               content: SizedBox(
                                 width: double.maxFinite,
-                                height: 360,
+                                height: MediaQuery.of(context).size.height * 0.65,
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
@@ -1474,9 +1493,24 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                                               children: filteredOptions.map((v) {
                                                 final vId = v['id']!;
                                                 final vName = v['name']!;
+                                                final vCat = v['category'];
                                                 final checked = tempSelected.contains(vId);
                                                 return CheckboxListTile(
-                                                  title: Text(vName, style: TextStyle(fontSize: 14, fontWeight: vId == 'other' ? FontWeight.bold : FontWeight.normal, color: vId == 'other' ? AppColors.primary : null)),
+                                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                                                  title: Text(
+                                                    vName,
+                                                    style: TextStyle(
+                                                      fontSize: 14.5,
+                                                      fontWeight: vId == 'other' ? FontWeight.bold : FontWeight.w600,
+                                                      color: vId == 'other' ? AppColors.primary : AppColors.textPrimary,
+                                                    ),
+                                                  ),
+                                                  subtitle: (vCat != null && vCat.isNotEmpty)
+                                                      ? Text(
+                                                          'หมวดหมู่: $vCat',
+                                                          style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                                        )
+                                                      : null,
                                                   value: checked,
                                                   activeColor: AppColors.primary,
                                                   onChanged: (val) {
@@ -1496,13 +1530,40 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                                 ),
                               ),
                               actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(ctx, selectedVaccineIds),
-                                  child: const Text('ยกเลิก'),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () => Navigator.pop(ctx, tempSelected),
-                                  child: const Text('ตกลง'),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: OutlinedButton(
+                                        style: OutlinedButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          side: const BorderSide(color: AppColors.textSecondary),
+                                        ),
+                                        onPressed: () => Navigator.pop(ctx, selectedVaccineIds),
+                                        child: const Text(
+                                          'ยกเลิก',
+                                          style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.bold, fontSize: 14),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppColors.primary,
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          elevation: 0,
+                                        ),
+                                        onPressed: () => Navigator.pop(ctx, tempSelected),
+                                        child: Text(
+                                          'ตกลง (${tempSelected.length})',
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             );
@@ -1570,7 +1631,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                               title: const Text('เลือกโรค (เลือกได้หลายรายการ)', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
                               content: SizedBox(
                                 width: double.maxFinite,
-                                height: 360,
+                                height: MediaQuery.of(context).size.height * 0.65,
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
@@ -1624,13 +1685,40 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                                 ),
                               ),
                               actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(ctx, selectedDiseaseIds),
-                                  child: const Text('ยกเลิก'),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () => Navigator.pop(ctx, tempSelected),
-                                  child: const Text('ตกลง'),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: OutlinedButton(
+                                        style: OutlinedButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          side: const BorderSide(color: AppColors.textSecondary),
+                                        ),
+                                        onPressed: () => Navigator.pop(ctx, selectedDiseaseIds),
+                                        child: const Text(
+                                          'ยกเลิก',
+                                          style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.bold, fontSize: 14),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppColors.primary,
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          elevation: 0,
+                                        ),
+                                        onPressed: () => Navigator.pop(ctx, tempSelected),
+                                        child: Text(
+                                          'ตกลง (${tempSelected.length})',
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             );
@@ -1699,8 +1787,8 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                           builder: (ctx, setDialogState) {
                             String searchQuery = '';
                             final listOptions = [
-                              ...masterData.medicines.map((m) => {'id': m.id, 'name': m.name}),
-                              {'id': 'other', 'name': 'อื่นๆ (ระบุเอง)'},
+                              ...masterData.medicines.map((m) => {'id': m.id, 'name': m.name, 'category': m.category ?? ''}),
+                              {'id': 'other', 'name': 'อื่นๆ (ระบุเอง)', 'category': ''},
                             ];
 
                             final filteredOptions = listOptions.where((m) {
@@ -1712,7 +1800,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                               title: const Text('เลือกยา (เลือกได้หลายรายการ)', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
                               content: SizedBox(
                                 width: double.maxFinite,
-                                height: 360,
+                                height: MediaQuery.of(context).size.height * 0.65,
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
@@ -1744,9 +1832,24 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                                               children: filteredOptions.map((m) {
                                                 final mId = m['id']!;
                                                 final mName = m['name']!;
+                                                final mCat = m['category'];
                                                 final checked = tempSelected.contains(mId);
                                                 return CheckboxListTile(
-                                                  title: Text(mName, style: TextStyle(fontSize: 14, fontWeight: mId == 'other' ? FontWeight.bold : FontWeight.normal, color: mId == 'other' ? AppColors.primary : null)),
+                                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                                                  title: Text(
+                                                    mName,
+                                                    style: TextStyle(
+                                                      fontSize: 14.5,
+                                                      fontWeight: mId == 'other' ? FontWeight.bold : FontWeight.w600,
+                                                      color: mId == 'other' ? AppColors.primary : AppColors.textPrimary,
+                                                    ),
+                                                  ),
+                                                  subtitle: (mCat != null && mCat.isNotEmpty)
+                                                      ? Text(
+                                                          'หมวดหมู่: $mCat',
+                                                          style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                                        )
+                                                      : null,
                                                   value: checked,
                                                   activeColor: AppColors.primary,
                                                   onChanged: (val) {
@@ -1766,13 +1869,40 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                                 ),
                               ),
                               actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(ctx, selectedMedicineIds),
-                                  child: const Text('ยกเลิก'),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () => Navigator.pop(ctx, tempSelected),
-                                  child: const Text('ตกลง'),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: OutlinedButton(
+                                        style: OutlinedButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          side: const BorderSide(color: AppColors.textSecondary),
+                                        ),
+                                        onPressed: () => Navigator.pop(ctx, selectedMedicineIds),
+                                        child: const Text(
+                                          'ยกเลิก',
+                                          style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.bold, fontSize: 14),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppColors.primary,
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          elevation: 0,
+                                        ),
+                                        onPressed: () => Navigator.pop(ctx, tempSelected),
+                                        child: Text(
+                                          'ตกลง (${tempSelected.length})',
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             );

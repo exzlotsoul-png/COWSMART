@@ -141,6 +141,14 @@ class HealthRecordController extends Controller
                     }
 
                     $rec = HealthRecord::create($payload);
+                    if (!empty($rec->cow_id)) {
+                        if (isset($payload['status']) && in_array($payload['status'], ['sick', 'injured', 'normal'])) {
+                            \App\Models\Cow::where('cow_id', $rec->cow_id)->update(['status' => $payload['status']]);
+                        } elseif (!empty($payload['disease_id'])) {
+                            \App\Models\Cow::where('cow_id', $rec->cow_id)->update(['status' => 'sick']);
+                        }
+                    }
+
                     $data = $this->getJoinedQuery()
                         ->where('health_records.health_record_id', $rec->health_record_id)
                         ->first();
@@ -184,10 +192,18 @@ class HealthRecordController extends Controller
             $payload['images'] = json_encode(array_slice($cleaned, 0, 3));
         }
 
-        $record = HealthRecord::create($payload);
+        $rec = HealthRecord::create($payload);
+
+        if (!empty($rec->cow_id)) {
+            if (isset($payload['status']) && in_array($payload['status'], ['sick', 'injured', 'normal'])) {
+                \App\Models\Cow::where('cow_id', $rec->cow_id)->update(['status' => $payload['status']]);
+            } elseif (!empty($payload['disease_id'])) {
+                \App\Models\Cow::where('cow_id', $rec->cow_id)->update(['status' => 'sick']);
+            }
+        }
 
         $data = $this->getJoinedQuery()
-            ->where('health_records.health_record_id', $record->health_record_id)
+            ->where('health_records.health_record_id', $rec->health_record_id)
             ->first();
 
         $this->attachPivotDetails($data);

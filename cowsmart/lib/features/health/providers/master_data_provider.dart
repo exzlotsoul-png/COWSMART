@@ -22,14 +22,24 @@ class Disease {
 class Medicine {
   final String id;
   final String name;
+  final String? category;
+  final String? indications;
   final String? description;
 
-  Medicine({required this.id, required this.name, this.description});
+  Medicine({
+    required this.id,
+    required this.name,
+    this.category,
+    this.indications,
+    this.description,
+  });
 
   factory Medicine.fromJson(Map<String, dynamic> json) {
     return Medicine(
       id: json['medicine_id'] ?? json['id'] ?? '',
       name: json['medicine_name'] ?? json['name'] ?? '',
+      category: json['category']?.toString(),
+      indications: json['indications']?.toString(),
       description: json['description'],
     );
   }
@@ -39,14 +49,24 @@ class Medicine {
 class Vaccine {
   final String id;
   final String name;
+  final String? category;
+  final String? indications;
   final String? description;
 
-  Vaccine({required this.id, required this.name, this.description});
+  Vaccine({
+    required this.id,
+    required this.name,
+    this.category,
+    this.indications,
+    this.description,
+  });
 
   factory Vaccine.fromJson(Map<String, dynamic> json) {
     return Vaccine(
       id: json['vaccine_id'] ?? json['id'] ?? '',
       name: json['vaccine_name'] ?? json['name'] ?? '',
+      category: json['category']?.toString(),
+      indications: json['indications']?.toString(),
       description: json['description'],
     );
   }
