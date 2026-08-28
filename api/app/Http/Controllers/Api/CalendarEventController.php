@@ -209,6 +209,74 @@ class CalendarEventController extends Controller
 
     public function show($id)
     {
+        // Handle grouped health appointments (HAG-<group_id>)
+        if (str_starts_with($id, 'HAG-')) {
+            $groupId = substr($id, 4);
+            $appts = HealthAppointment::where('group_id', $groupId)->get();
+            if ($appts->isNotEmpty()) {
+                $firstAppt = $appts[0];
+                $cowIds = $appts->pluck('cow_id')->filter()->toArray();
+                $cows = Cow::whereIn('cow_id', $cowIds)->get();
+                $cowNames = $cows->map(fn($c) => $c->name ?: ($c->tag_number ?: $c->cow_id))->toArray();
+                $cowCount = count($cowNames);
+                $cowDisplay = $cowCount <= 3 ? implode(', ', $cowNames) : implode(', ', array_slice($cowNames, 0, 3)) . ' +' . ($cowCount - 3) . ' ตัว';
+
+                return response()->json([
+                    'calendar_event_id' => $id,
+                    'farm_id' => $firstAppt->farm_id,
+                    'title' => 'นัดหมายสุขภาพ: ' . $cowDisplay,
+                    'event_datetime' => Carbon::parse($firstAppt->appoint_datetime)->toIso8601String(),
+                    'description' => ($firstAppt->description ?: 'นัดหมายตรวจสุขภาพ / ฉีดวัคซีน / ถ่ายพยาธิ') . ' (' . $cowCount . ' ตัว)',
+                    'reminder_setting' => $firstAppt->reminder_setting ?: 'ก่อน 1 วัน',
+                    'cow_id' => null,
+                    'event_type' => 'health',
+                    '_group_id' => $groupId,
+                    '_cow_count' => $cowCount,
+                ]);
+            }
+        }
+
+        // Handle single health appointment (HA-<id>)
+        if (str_starts_with($id, 'HA-')) {
+            $realId = preg_replace('/^(HA-)+/', '', $id);
+            $appt = HealthAppointment::find($realId) ?? HealthAppointment::find('HA-' . $realId);
+            if ($appt) {
+                $cow = Cow::find($appt->cow_id);
+                $cowName = $cow ? ($cow->name ?: ($cow->tag_number ?: $cow->cow_id)) : $appt->cow_id;
+                return response()->json([
+                    'calendar_event_id' => str_starts_with($appt->health_appointment_id, 'HA-') ? $appt->health_appointment_id : 'HA-' . $appt->health_appointment_id,
+                    'farm_id' => $appt->farm_id,
+                    'title' => 'นัดหมายสุขภาพ: ' . $cowName,
+                    'event_datetime' => Carbon::parse($appt->appoint_datetime)->toIso8601String(),
+                    'description' => $appt->description ?: 'นัดหมายตรวจสุขภาพ / ฉีดวัคซีน / ถ่ายพยาธิ',
+                    'reminder_setting' => $appt->reminder_setting ?: 'ก่อน 1 วัน',
+                    'cow_id' => $appt->cow_id,
+                    'event_type' => 'health',
+                ]);
+            }
+        }
+
+        // Handle breeding record (BR-<id>)
+        if (str_starts_with($id, 'BR-')) {
+            $realId = preg_replace('/^(BR-)+/', '', $id);
+            $rec = BreedingRecord::find($realId) ?? BreedingRecord::find('BR-' . $realId);
+            if ($rec) {
+                $cow = Cow::find($rec->dam_id);
+                $cowName = $cow ? ($cow->name ?: ($cow->tag_number ?: $cow->cow_id)) : $rec->dam_id;
+                $sireInfo = $rec->sire_id ? " (พ่อพันธุ์: {$rec->sire_id})" : '';
+                return response()->json([
+                    'calendar_event_id' => str_starts_with($rec->breeding_record_id, 'BR-') ? $rec->breeding_record_id : 'BR-' . $rec->breeding_record_id,
+                    'farm_id' => $rec->farm_id,
+                    'title' => 'กำหนดวันคลอด: ' . $cowName,
+                    'event_datetime' => Carbon::parse($rec->expected_calving)->setTime(8, 0)->toIso8601String(),
+                    'description' => 'คาดว่าจะคลอดลูกวัว' . $sireInfo,
+                    'reminder_setting' => $rec->reminder_setting ?: 'ก่อน 7 วัน',
+                    'cow_id' => $rec->dam_id,
+                    'event_type' => 'breeding',
+                ]);
+            }
+        }
+
         $event = CalendarEvent::findOrFail($id);
         $res = $event->toArray();
         $res['event_type'] = 'general';
@@ -217,6 +285,23 @@ class CalendarEventController extends Controller
 
     public function update(Request $request, $id)
     {
+        // Handle grouped health appointments (HAG-<group_id>)
+        if (str_starts_with($id, 'HAG-')) {
+            $groupId = substr($id, 4);
+            $appts = HealthAppointment::where('group_id', $groupId)->get();
+            if ($appts->isNotEmpty()) {
+                foreach ($appts as $appt) {
+                    $appt->update([
+                        'appoint_datetime' => $request->get('event_datetime', $appt->appoint_datetime),
+                        'description' => $request->get('description', $appt->description),
+                        'reminder_setting' => $request->get('reminder_setting', $appt->reminder_setting),
+                    ]);
+                    HealthAppointmentController::syncNotificationForHealthAppt($appt);
+                }
+                return $this->show($id);
+            }
+        }
+
         if (str_starts_with($id, 'HA-')) {
             $realId = preg_replace('/^(HA-)+/', '', $id);
             $appt = HealthAppointment::find($realId) ?? HealthAppointment::find('HA-' . $realId);
@@ -228,13 +313,18 @@ class CalendarEventController extends Controller
                     'reminder_setting' => $request->get('reminder_setting', $appt->reminder_setting),
                 ]);
                 HealthAppointmentController::syncNotificationForHealthAppt($appt);
-                $res = $appt->toArray();
-                $res['calendar_event_id'] = str_starts_with($appt->health_appointment_id, 'HA-') ? $appt->health_appointment_id : 'HA-' . $appt->health_appointment_id;
-                $res['title'] = $request->get('title', 'นัดหมายสุขภาพ');
-                $res['event_datetime'] = Carbon::parse($appt->appoint_datetime)->toIso8601String();
-                $res['reminder_setting'] = $appt->reminder_setting ?: 'ก่อน 1 วัน';
-                $res['event_type'] = 'health';
-                return response()->json($res);
+                return $this->show($id);
+            }
+        }
+
+        if (str_starts_with($id, 'BR-')) {
+            $realId = preg_replace('/^(BR-)+/', '', $id);
+            $rec = BreedingRecord::find($realId) ?? BreedingRecord::find('BR-' . $realId);
+            if ($rec) {
+                $rec->update([
+                    'reminder_setting' => $request->get('reminder_setting', $rec->reminder_setting),
+                ]);
+                return $this->show($id);
             }
         }
 
