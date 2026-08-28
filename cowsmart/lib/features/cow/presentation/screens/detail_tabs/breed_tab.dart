@@ -1085,8 +1085,9 @@ class _BreedTabState extends ConsumerState<BreedTab> {
           children: [
             if (!isMale) ...[
               if (isRecovering && latestCalvingRecord != null && daysPassed < 45)
-                _buildRecoveryCard(daysPassed, 45, latestCalvingRecord.calvingDate!),
-              _buildCurrentBreedingCards(context, records),
+                _buildRecoveryCard(daysPassed, 45, latestCalvingRecord.calvingDate!)
+              else
+                _buildCurrentBreedingCards(context, records),
               const SizedBox(height: 20),
             ],
 

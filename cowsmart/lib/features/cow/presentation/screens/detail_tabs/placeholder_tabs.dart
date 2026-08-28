@@ -1353,7 +1353,9 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: selectedType,
+                value: checkupTypes.any((type) => type['id'] == selectedType)
+                    ? selectedType
+                    : (checkupTypes.isNotEmpty ? checkupTypes.first['id'] : null),
                 isExpanded: true,
                 style: const TextStyle(
                   fontSize: 15,

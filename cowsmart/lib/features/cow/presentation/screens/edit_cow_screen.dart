@@ -313,15 +313,15 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                               ? _selectedBreedId
                               : null;
 
-                          return DropdownButtonFormField<String>(
-                            initialValue: safeValue,
+                          return DropdownButtonFormField<String?>(
+                            value: safeValue,
                             isExpanded: true,
                             decoration: const InputDecoration(
                               labelText: 'สายพันธุ์',
                               prefixIcon: Icon(Icons.category),
                             ),
                             items: uniqueBreeds.map((breed) {
-                              return DropdownMenuItem(
+                              return DropdownMenuItem<String?>(
                                 value: breed.id,
                                 child: Text(breed.name, overflow: TextOverflow.ellipsis),
                               );
@@ -413,7 +413,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<CowType>(
-                  initialValue: _selectedType,
+                  value: _selectedType,
                   isExpanded: true,
                   decoration: const InputDecoration(
                     labelText: 'ประเภทวัว',
@@ -446,9 +446,12 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                   builder: (context, ref, child) {
                     final zoneState = ref.watch(zoneProvider);
                     final zones = zoneState.zones;
+                    final validZoneId = (_selectedZoneId != null && zones.any((z) => z.id == _selectedZoneId))
+                        ? _selectedZoneId
+                        : null;
 
-                    return DropdownButtonFormField<String>(
-                      initialValue: _selectedZoneId,
+                    return DropdownButtonFormField<String?>(
+                      value: validZoneId,
                       isExpanded: true,
                       decoration: const InputDecoration(
                         labelText: 'เลือกโซน',
@@ -456,12 +459,12 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                         prefixIcon: Icon(Icons.fence_outlined),
                       ),
                       items: [
-                        const DropdownMenuItem(
+                        const DropdownMenuItem<String?>(
                           value: null,
                           child: Text('ไม่ระบุโซน', overflow: TextOverflow.ellipsis),
                         ),
                         ...zones.map((zone) {
-                          return DropdownMenuItem(
+                          return DropdownMenuItem<String?>(
                             value: zone.id,
                             child: Text(zone.name, overflow: TextOverflow.ellipsis),
                           );
@@ -485,62 +488,80 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: DropdownButtonFormField<String>(
-                        initialValue: _selectedFatherId,
-                        isExpanded: true,
-                        decoration: const InputDecoration(
-                          labelText: 'พ่อพันธุ์ (Sire)',
-                          prefixIcon: Icon(Icons.male),
-                        ),
-                        items: [
-                          const DropdownMenuItem(
-                            value: null,
-                            child: Text('ไม่ระบุพ่อพันธุ์', overflow: TextOverflow.ellipsis),
-                          ),
-                          ...cowState.allCows
+                      child: Builder(
+                        builder: (context) {
+                          final fathers = cowState.allCows
                               .where((c) => c.gender == 'M' && c.id != widget.cow.id)
-                              .map((cow) {
-                            return DropdownMenuItem(
-                              value: cow.id,
-                              child: Text(
-                                cow.name.isNotEmpty ? '${cow.name} (${cow.tagNumber})' : cow.tagNumber,
-                                overflow: TextOverflow.ellipsis,
+                              .toList();
+                          final validFatherId = (_selectedFatherId != null && fathers.any((c) => c.id == _selectedFatherId))
+                              ? _selectedFatherId
+                              : null;
+
+                          return DropdownButtonFormField<String?>(
+                            value: validFatherId,
+                            isExpanded: true,
+                            decoration: const InputDecoration(
+                              labelText: 'พ่อพันธุ์ (Sire)',
+                              prefixIcon: Icon(Icons.male),
+                            ),
+                            items: [
+                              const DropdownMenuItem<String?>(
+                                value: null,
+                                child: Text('ไม่ระบุพ่อพันธุ์', overflow: TextOverflow.ellipsis),
                               ),
-                            );
-                          }),
-                        ],
-                        onChanged: (val) =>
-                            setState(() => _selectedFatherId = val),
+                              ...fathers.map((cow) {
+                                return DropdownMenuItem<String?>(
+                                  value: cow.id,
+                                  child: Text(
+                                    cow.name.isNotEmpty ? '${cow.name} (${cow.tagNumber})' : cow.tagNumber,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                );
+                              }),
+                            ],
+                            onChanged: (val) =>
+                                setState(() => _selectedFatherId = val),
+                          );
+                        },
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: DropdownButtonFormField<String>(
-                        initialValue: _selectedMotherId,
-                        isExpanded: true,
-                        decoration: const InputDecoration(
-                          labelText: 'แม่พันธุ์ (Dam)',
-                          prefixIcon: Icon(Icons.female),
-                        ),
-                        items: [
-                          const DropdownMenuItem(
-                            value: null,
-                            child: Text('ไม่ระบุแม่พันธุ์', overflow: TextOverflow.ellipsis),
-                          ),
-                          ...cowState.allCows
+                      child: Builder(
+                        builder: (context) {
+                          final mothers = cowState.allCows
                               .where((c) => c.gender == 'F' && c.id != widget.cow.id)
-                              .map((cow) {
-                            return DropdownMenuItem(
-                              value: cow.id,
-                              child: Text(
-                                cow.name.isNotEmpty ? '${cow.name} (${cow.tagNumber})' : cow.tagNumber,
-                                overflow: TextOverflow.ellipsis,
+                              .toList();
+                          final validMotherId = (_selectedMotherId != null && mothers.any((c) => c.id == _selectedMotherId))
+                              ? _selectedMotherId
+                              : null;
+
+                          return DropdownButtonFormField<String?>(
+                            value: validMotherId,
+                            isExpanded: true,
+                            decoration: const InputDecoration(
+                              labelText: 'แม่พันธุ์ (Dam)',
+                              prefixIcon: Icon(Icons.female),
+                            ),
+                            items: [
+                              const DropdownMenuItem<String?>(
+                                value: null,
+                                child: Text('ไม่ระบุแม่พันธุ์', overflow: TextOverflow.ellipsis),
                               ),
-                            );
-                          }),
-                        ],
-                        onChanged: (val) =>
-                            setState(() => _selectedMotherId = val),
+                              ...mothers.map((cow) {
+                                return DropdownMenuItem<String?>(
+                                  value: cow.id,
+                                  child: Text(
+                                    cow.name.isNotEmpty ? '${cow.name} (${cow.tagNumber})' : cow.tagNumber,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                );
+                              }),
+                            ],
+                            onChanged: (val) =>
+                                setState(() => _selectedMotherId = val),
+                          );
+                        },
                       ),
                     ),
                   ],
@@ -556,7 +577,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                 ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<CowStatus>(
-                  initialValue: _selectedStatus,
+                  value: _selectedStatus,
                   isExpanded: true,
                   decoration: const InputDecoration(
                     labelText: 'สถานะ',
