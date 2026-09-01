@@ -14,6 +14,8 @@ class NotificationScreen extends ConsumerStatefulWidget {
 }
 
 class _NotificationScreenState extends ConsumerState<NotificationScreen> {
+  String _selectedFilter = 'all'; // 'all', 'unread', 'broadcast', 'calving', 'health', 'calendar'
+
   @override
   void initState() {
     super.initState();
@@ -25,6 +27,37 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(notificationProvider);
+
+    final filteredNotifications = state.notifications.where((n) {
+      if (_selectedFilter == 'all') return true;
+      if (_selectedFilter == 'unread') return !n.isRead;
+
+      final t = n.title.toLowerCase();
+      final m = n.message.toLowerCase();
+
+      final isBroadcast = m.contains('[broadcast:') ||
+          t.contains('ประกาศ') ||
+          t.contains('ประชาสัมพันธ์') ||
+          t.contains('admin') ||
+          t.contains('แอดมิน') ||
+          t.contains('เตือนภัย');
+
+      if (_selectedFilter == 'broadcast') return isBroadcast;
+
+      if (_selectedFilter == 'calving') {
+        return !isBroadcast && (t.contains('คลอด') || t.contains('ผสม') || t.contains('breed'));
+      }
+
+      if (_selectedFilter == 'health') {
+        return !isBroadcast && (t.contains('สุขภาพ') || t.contains('ป่วย') || t.contains('health') || t.contains('วัคซีน') || t.contains('vaccine') || t.contains('ยา'));
+      }
+
+      if (_selectedFilter == 'calendar') {
+        return !isBroadcast && (t.contains('ปฏิทิน') || t.contains('กิจกรรม') || m.contains('[ref:cal_') || t.contains('calendar'));
+      }
+
+      return true;
+    }).toList();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -54,6 +87,9 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
           // Header summary bar
           _buildSummaryBar(state),
 
+          // Filter Chips bar
+          _buildFilterChips(state),
+
           // Notification list
           Expanded(
             child: state.isLoading
@@ -61,13 +97,13 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                 : RefreshIndicator(
                     onRefresh: () =>
                         ref.read(notificationProvider.notifier).fetchNotifications(),
-                    child: state.notifications.isEmpty
+                    child: filteredNotifications.isEmpty
                         ? _buildEmpty()
                         : ListView.builder(
                             padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
-                            itemCount: state.notifications.length,
+                            itemCount: filteredNotifications.length,
                             itemBuilder: (context, index) {
-                              final notif = state.notifications[index];
+                              final notif = filteredNotifications[index];
                               return _NotificationCard(
                                 notification: notif,
                                 onTap: () => _onTap(notif),
@@ -80,6 +116,92 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                   ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChips(NotificationState state) {
+    final filterCategories = [
+      {
+        'key': 'all',
+        'label': 'ทั้งหมด',
+        'icon': Icons.apps,
+        'color': AppColors.primary,
+      },
+      {
+        'key': 'unread',
+        'label': 'ยังไม่อ่าน',
+        'icon': Icons.mark_email_unread_outlined,
+        'color': AppColors.error,
+      },
+      {
+        'key': 'broadcast',
+        'label': 'ประกาศ / แอดมิน',
+        'icon': Icons.campaign_rounded,
+        'color': const Color(0xFFD97706),
+      },
+      {
+        'key': 'calving',
+        'label': 'กำหนดคลอด',
+        'icon': Icons.favorite_outline,
+        'color': const Color(0xFF9333EA),
+      },
+      {
+        'key': 'health',
+        'label': 'สุขภาพ / นัดหมาย',
+        'icon': Icons.medical_services_outlined,
+        'color': const Color(0xFFDC2626),
+      },
+      {
+        'key': 'calendar',
+        'label': 'กิจกรรมปฏิทิน',
+        'icon': Icons.calendar_month_outlined,
+        'color': const Color(0xFF0284C7),
+      },
+    ];
+
+    return Container(
+      color: AppColors.surface,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: filterCategories.map((cat) {
+            final isSelected = _selectedFilter == cat['key'];
+            final color = cat['color'] as Color;
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ChoiceChip(
+                showCheckmark: false,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                avatar: Icon(
+                  cat['icon'] as IconData,
+                  size: 16,
+                  color: isSelected ? Colors.white : color,
+                ),
+                label: Text(
+                  cat['label'] as String,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                    color: isSelected ? Colors.white : AppColors.textPrimary,
+                  ),
+                ),
+                selected: isSelected,
+                selectedColor: color,
+                backgroundColor: color.withValues(alpha: 0.08),
+                side: BorderSide(
+                  color: isSelected ? color : color.withValues(alpha: 0.25),
+                ),
+                onSelected: (_) {
+                  setState(() {
+                    _selectedFilter = cat['key'] as String;
+                  });
+                },
+              ),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
@@ -278,6 +400,61 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
   }
 
   Widget _buildEmpty() {
+    if (_selectedFilter != 'all') {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceAlt,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.filter_list_off_rounded,
+                  size: 64,
+                  color: AppColors.textHint,
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'ไม่พบการแจ้งเตือนในหมวดนี้',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'ลองเปลี่ยนหมวดหมู่หรือเลือกดูทั้งหมด',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
+              ),
+              const SizedBox(height: 24),
+              OutlinedButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _selectedFilter = 'all';
+                  });
+                },
+                icon: const Icon(Icons.apps, size: 18),
+                label: const Text('ดูการแจ้งเตือนทั้งหมด', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  side: const BorderSide(color: AppColors.primary),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -545,7 +722,7 @@ class _NotificationCard extends StatelessWidget {
       return const Color(0xFF7B61FF); // Purple
     }
     if (t.contains('คลอด') || t.contains('ผสม') || t.contains('breed')) {
-      return const Color(0xFFE25590); // Pink
+      return const Color(0xFF9333EA); // Purple
     }
     if (t.contains('อาหาร') || t.contains('feed')) {
       return AppColors.success;

@@ -883,7 +883,8 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
         textColor = Colors.white;
         break;
       case CowStatus.pregnant:
-        bgColor = AppColors.info;
+        bgColor = const Color(0xFF9333EA); // Purple
+        textColor = Colors.white;
         break;
       case CowStatus.recovering:
         bgColor = const Color(0xFF9333EA); // Violet / Purple for resting

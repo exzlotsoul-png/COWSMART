@@ -1590,7 +1590,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                             ),
                             Text(
                               AppDateUtils.formatThaiDate(current.matingDate!),
-                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.indigo),
+                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                             ),
                           ],
                         ),
@@ -1661,7 +1661,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
 
     if (isMale) {
       final stageColor = record.pregnancyResult == 'ตั้งท้อง'
-          ? Colors.teal
+          ? Colors.purple
           : record.pregnancyResult == 'ไม่ตั้งท้อง'
           ? Colors.red
           : Colors.orange;
@@ -1733,8 +1733,10 @@ class _BreedTabState extends ConsumerState<BreedTab> {
         ? 'รอผสม'
         : 'ไม่ระบุ';
 
-    final stageColor = (record.calvingResult != null || record.pregnancyResult == 'ตั้งท้อง')
+    final stageColor = record.calvingResult != null
         ? Colors.teal
+        : record.pregnancyResult == 'ตั้งท้อง'
+        ? Colors.purple
         : record.pregnancyResult == 'ไม่ตั้งท้อง' || record.pregnancyResult == 'แท้ง'
         ? Colors.red
         : record.matingDate != null

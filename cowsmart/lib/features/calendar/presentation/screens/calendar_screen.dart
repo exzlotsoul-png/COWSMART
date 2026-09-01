@@ -82,8 +82,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   Widget _buildFilterChips(CalendarState calState) {
     final categories = [
       {'key': 'all', 'label': 'ทั้งหมด', 'icon': Icons.apps, 'color': AppColors.primary},
-      {'key': 'general', 'label': 'กิจกรรมทั่วไป', 'icon': Icons.event_note, 'color': AppColors.primary},
-      {'key': 'health', 'label': 'นัดหมายสุขภาพ', 'icon': Icons.medical_services_outlined, 'color': Colors.orange[800]},
+      {'key': 'general', 'label': 'กิจกรรมทั่วไป', 'icon': Icons.event_note, 'color': const Color(0xFF0284C7)},
+      {'key': 'health', 'label': 'นัดหมายสุขภาพ', 'icon': Icons.medical_services_outlined, 'color': const Color(0xFFDC2626)},
       {'key': 'breeding', 'label': 'กำหนดคลอด', 'icon': Icons.favorite_outline, 'color': Colors.purple},
     ];
 
@@ -218,8 +218,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: events.take(3).map((e) {
-                  Color dotColor = AppColors.primary;
-                  if (e.eventType == 'health') dotColor = Colors.orange[800]!;
+                  Color dotColor = const Color(0xFF0284C7);
+                  if (e.eventType == 'health') dotColor = const Color(0xFFDC2626);
                   if (e.eventType == 'breeding') dotColor = Colors.purple;
                   return Container(
                     margin: const EdgeInsets.symmetric(horizontal: 1.5),
@@ -559,12 +559,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   }
 
   void _showEventDetailSheet(BuildContext context, CalendarEvent event) {
-    Color typeColor = AppColors.primary;
-    IconData typeIcon = Icons.event_note;
+    Color typeColor = const Color(0xFF0284C7);
+    IconData typeIcon = Icons.calendar_month_outlined;
     String typeLabel = 'กิจกรรมปฏิทิน';
 
     if (event.eventType == 'health') {
-      typeColor = Colors.orange[800]!;
+      typeColor = const Color(0xFFDC2626);
       typeIcon = Icons.medical_services_outlined;
       typeLabel = 'นัดหมายสุขภาพ';
     } else if (event.eventType == 'breeding') {
@@ -804,12 +804,12 @@ class _EventCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    Color typeColor = AppColors.primary;
-    IconData typeIcon = Icons.event_note;
+    Color typeColor = const Color(0xFF0284C7);
+    IconData typeIcon = Icons.calendar_month_outlined;
     String typeLabel = 'กิจกรรมปฏิทิน';
 
     if (event.eventType == 'health') {
-      typeColor = Colors.orange[800]!;
+      typeColor = const Color(0xFFDC2626);
       typeIcon = Icons.medical_services_outlined;
       typeLabel = 'นัดหมายสุขภาพ';
     } else if (event.eventType == 'breeding') {

@@ -241,10 +241,6 @@ const BroadcastNotifications = () => {
                 สร้างและกระจายข้อความแจ้งเตือนถึงผู้ใช้งานแอปพลิเคชัน CowSmart ทุกคนพร้อมกันแบบ Real-time
               </p>
             </div>
-            <div className="header-badge" style={{ margin: 0 }}>
-              <Sparkles size={15} />
-              <span>Broadcast Engine Active</span>
-            </div>
           </div>
 
           <div className="card-body">

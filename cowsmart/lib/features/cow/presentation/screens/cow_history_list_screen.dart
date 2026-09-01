@@ -642,7 +642,7 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                     final allCows = ref.watch(cowProvider).allCows;
 
                     final stageColor = r.pregnancyResult == 'ตั้งท้อง'
-                        ? Colors.teal
+                        ? Colors.purple
                         : r.pregnancyResult == 'ไม่ตั้งท้อง'
                             ? AppColors.error
                             : AppColors.warning;
