@@ -90,6 +90,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('feed_inventories', FeedInventoryController::class);
     Route::apiResource('financial_records', FinancialRecordController::class);
     Route::apiResource('calendar_events', CalendarEventController::class);
+    Route::get('/admin/broadcast-notifications', [NotificationController::class, 'adminBroadcastIndex']);
+    Route::post('/admin/broadcast-notifications', [NotificationController::class, 'broadcast']);
+    Route::post('/admin/broadcast-notifications/delete-group', [NotificationController::class, 'deleteBroadcastByGroup']);
     Route::apiResource('notifications', NotificationController::class);
     Route::apiResource('issue_reports', IssueReportController::class);
     Route::apiResource('chat_histories', ChatHistoryController::class);

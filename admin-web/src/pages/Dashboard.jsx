@@ -347,11 +347,11 @@ const Dashboard = () => {
                       let statusColor = 'var(--primary-color)';
                       let barColor = 'var(--primary-color)';
 
-                      if (disease.count >= 4 || idx === 0 && disease.count >= 3) {
+                      if (disease.count >= 7) {
                         statusText = 'กำลังระบาด';
                         statusColor = '#ef4444';
                         barColor = '#ef4444';
-                      } else if (disease.count >= 2 || idx === 1) {
+                      } else if (disease.count >= 4) {
                         statusText = 'เฝ้าระวัง';
                         statusColor = '#d97706';
                         barColor = '#f59e0b';

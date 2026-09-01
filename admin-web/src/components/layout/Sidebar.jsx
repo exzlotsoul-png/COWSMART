@@ -15,7 +15,8 @@ import {
   CalendarDays,
   CalendarCheck,
   TrendingUp,
-  Bot
+  Bot,
+  Megaphone
 } from 'lucide-react';
 import './layout.css';
 
@@ -30,6 +31,7 @@ const Sidebar = () => {
     {
       label: 'จัดการผู้ใช้ & AI',
       items: [
+        { path: '/broadcast-notifications', icon: <Megaphone className="nav-icon" />, label: 'ส่งแจ้งเตือน / ประกาศ' },
         { path: '/ai-chatbot', icon: <Bot className="nav-icon" />, label: 'AI ผู้ช่วยหมอ' },
         { path: '/users', icon: <Users className="nav-icon" />, label: 'ผู้ใช้งาน' },
         { path: '/issue-reports', icon: <MessageSquareWarning className="nav-icon" />, label: 'รายงานการใช้งาน' },

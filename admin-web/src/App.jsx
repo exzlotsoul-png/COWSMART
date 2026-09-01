@@ -19,6 +19,7 @@ import Dashboard from './pages/Dashboard';
 import AppointmentTypes from './pages/AppointmentTypes';
 import MarketPrices from './pages/MarketPrices';
 import AiChatbotManagement from './pages/AiChatbotManagement';
+import BroadcastNotifications from './pages/BroadcastNotifications';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
           
           <Route path="/" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
+            <Route path="broadcast-notifications" element={<BroadcastNotifications />} />
             <Route path="ai-chatbot" element={<AiChatbotManagement />} />
             <Route path="users" element={<Users />} />
             <Route path="market-prices" element={<MarketPrices />} />

@@ -164,6 +164,11 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         notif.message.contains('[ref:cal_') ||
         notif.title.contains('กิจกรรม');
 
+    final isBroadcast = notif.message.contains('[broadcast:') ||
+        notif.title.contains('ประกาศ') ||
+        notif.title.contains('admin') ||
+        notif.title.contains('แอดมิน');
+
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -176,12 +181,14 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
+                color: (isBroadcast ? const Color(0xFFD97706) : AppColors.primary).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
-                isCalendarNotif ? Icons.calendar_month : Icons.notifications_active,
-                color: AppColors.primary,
+                isBroadcast
+                    ? Icons.campaign_rounded
+                    : (isCalendarNotif ? Icons.calendar_month : Icons.notifications_active),
+                color: isBroadcast ? const Color(0xFFD97706) : AppColors.primary,
                 size: 26,
               ),
             ),
@@ -500,9 +507,15 @@ class _NotificationCard extends StatelessWidget {
   }
 
   Widget _buildIconBadge() {
-    final iconData = _iconForTitle(notification.title);
+    final isBroadcast = notification.message.contains('[broadcast:') ||
+        notification.title.contains('ประกาศ') ||
+        notification.title.contains('ประชาสัมพันธ์') ||
+        notification.title.contains('admin') ||
+        notification.title.contains('แอดมิน');
+
+    final iconData = isBroadcast ? Icons.campaign_rounded : _iconForTitle(notification.title);
     final isUnread = !notification.isRead;
-    final iconColor = _colorForTitle(notification.title);
+    final iconColor = isBroadcast ? const Color(0xFFD97706) : _colorForTitle(notification.title);
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -519,6 +532,9 @@ class _NotificationCard extends StatelessWidget {
 
   Color _colorForTitle(String title) {
     final t = title.toLowerCase();
+    if (t.contains('ประกาศ') || t.contains('ประชาสัมพันธ์') || t.contains('admin') || t.contains('แอดมิน') || t.contains('เตือนภัย')) {
+      return const Color(0xFFD97706); // Amber Gold for Broadcast Announcements
+    }
     if (t.contains('ปฏิทิน') || t.contains('กิจกรรม') || t.contains('calendar')) {
       return AppColors.info;
     }
@@ -542,6 +558,9 @@ class _NotificationCard extends StatelessWidget {
 
   IconData _iconForTitle(String title) {
     final t = title.toLowerCase();
+    if (t.contains('ประกาศ') || t.contains('ประชาสัมพันธ์') || t.contains('admin') || t.contains('แอดมิน') || t.contains('เตือนภัย')) {
+      return Icons.campaign_rounded; // Megaphone for Broadcast Announcements
+    }
     if (t.contains('ปฏิทิน') || t.contains('กิจกรรม') || t.contains('calendar')) {
       return Icons.calendar_month_outlined;
     }

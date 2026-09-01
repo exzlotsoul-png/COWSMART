@@ -56,20 +56,8 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<void> _checkPersistedToken() async {
     final prefs = await SharedPreferences.getInstance();
-    var token = prefs.getString('auth_token');
-    var userJson = prefs.getString('user_data');
-
-    if (token == null && kIsWeb) {
-      token = '52|IryJ7X4WIgSUDQkRi5cTGDmUgW1t32x5omVGQ2Qs0a59fa4d';
-      userJson = json.encode({
-        'email': 'admin@cowsmart.com',
-        'first_name': 'จิตร',
-        'last_name': 'เกษตรกร',
-        'role': '1',
-      });
-      await prefs.setString('auth_token', token);
-      await prefs.setString('user_data', userJson);
-    }
+    final token = prefs.getString('auth_token');
+    final userJson = prefs.getString('user_data');
 
     if (token != null) {
       _api.setToken(token);
