@@ -6,8 +6,10 @@ import {
 } from 'lucide-react';
 import api from '../lib/axios';
 import Pagination from '../components/layout/Pagination';
+import { useToast } from '../contexts/ToastContext';
 
 const IssueReports = () => {
+  const { showToast } = useToast();
   const [reports, setReports] = useState([]);
   const [topics, setTopics] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -26,7 +28,6 @@ const IssueReports = () => {
   const [topicNameInput, setTopicNameInput] = useState('');
   const [isSavingTopic, setIsSavingTopic] = useState(false);
   const [topicDeleteConfirm, setTopicDeleteConfirm] = useState(null);
-  const [notification, setNotification] = useState(null);
 
   useEffect(() => {
     fetchReports();
@@ -34,8 +35,7 @@ const IssueReports = () => {
   }, []);
 
   const showNotification = (text, type = 'success') => {
-    setNotification({ text, type });
-    setTimeout(() => setNotification(null), 4000);
+    showToast(text, type);
   };
 
   const fetchReports = async () => {
@@ -202,26 +202,6 @@ const IssueReports = () => {
 
   return (
     <div>
-      {/* Top Banner Alert Message */}
-      {notification && (
-        <div style={{
-          padding: '12px 18px',
-          marginBottom: '20px',
-          borderRadius: '12px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          fontSize: '0.9rem',
-          fontWeight: '500',
-          backgroundColor: notification.type === 'success' ? '#e8f5e9' : '#ffebee',
-          color: notification.type === 'success' ? '#2e7d32' : '#c62828',
-          border: `1px solid ${notification.type === 'success' ? '#c8e6c9' : '#ffcdd2'}`
-        }}>
-          {notification.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
-          <span>{notification.text}</span>
-        </div>
-      )}
-
       <div className="card">
         <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <div>

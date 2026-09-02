@@ -7,14 +7,15 @@ import {
   ChevronLeft, CheckCheck
 } from 'lucide-react';
 import api from '../lib/axios';
+import { useToast } from '../contexts/ToastContext';
 import './BroadcastNotifications.css';
 
 const BroadcastNotifications = () => {
+  const { showToast } = useToast();
   const [broadcasts, setBroadcasts] = useState([]);
   const [stats, setStats] = useState({ total_users: 0, total_broadcasts: 0, total_notifications: 0 });
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [notification, setNotification] = useState(null);
 
   // Form State
   const [title, setTitle] = useState('');
@@ -77,11 +78,6 @@ const BroadcastNotifications = () => {
   useEffect(() => {
     fetchBroadcasts();
   }, []);
-
-  const showToast = (text, type = 'success') => {
-    setNotification({ text, type });
-    setTimeout(() => setNotification(null), 4000);
-  };
 
   const fetchBroadcasts = async () => {
     setLoading(true);
@@ -170,30 +166,6 @@ const BroadcastNotifications = () => {
 
   return (
     <div className="broadcast-page">
-      {/* Toast Notification */}
-      {notification && (
-        <div style={{
-          position: 'fixed',
-          top: '24px',
-          right: '24px',
-          zIndex: 1000,
-          background: notification.type === 'error' ? '#ef4444' : notification.type === 'info' ? '#3b82f6' : '#2d5a43',
-          color: '#fff',
-          padding: '14px 20px',
-          borderRadius: '14px',
-          boxShadow: '0 10px 25px -5px rgba(0,0,0,0.2)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          fontWeight: '600',
-          fontSize: '0.9rem',
-          animation: 'slideDown 0.3s ease'
-        }}>
-          {notification.type === 'error' ? <AlertTriangle size={18} /> : <CheckCircle2 size={18} />}
-          <span>{notification.text}</span>
-        </div>
-      )}
-
       {/* 3 Summary Stat Cards */}
       <div className="broadcast-summary-grid">
         <div className="summary-card">

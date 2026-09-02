@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Save } from 'lucide-react';
 import api from '../lib/axios';
+import { useToast } from '../contexts/ToastContext';
 
 const Settings = () => {
+  const { showToast } = useToast();
   const [gestationDays, setGestationDays] = useState('283'); // Default 283 days
   const [settingId, setSettingId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState('');
 
   useEffect(() => {
     fetchSettings();
@@ -25,6 +26,7 @@ const Settings = () => {
       }
     } catch (error) {
       console.error("Error fetching settings:", error);
+      showToast("ไม่สามารถดึงข้อมูลการตั้งค่าได้", "error");
     } finally {
       setLoading(false);
     }
@@ -33,7 +35,6 @@ const Settings = () => {
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
-    setMessage('');
     
     try {
       if (settingId) {
@@ -50,11 +51,10 @@ const Settings = () => {
         });
         setSettingId(response.data.setting_id || response.data.id);
       }
-      setMessage('บันทึกการตั้งค่าเรียบร้อยแล้ว');
-      setTimeout(() => setMessage(''), 3000);
+      showToast('บันทึกการตั้งค่าระบบเรียบร้อยแล้ว', 'success');
     } catch (error) {
       console.error("Error saving setting:", error);
-      setMessage('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+      showToast('เกิดข้อผิดพลาดในการบันทึกข้อมูลการตั้งค่า', 'error');
     } finally {
       setSaving(false);
     }
@@ -71,19 +71,6 @@ const Settings = () => {
           <p style={{ padding: '24px' }}>กำลังโหลดข้อมูล...</p>
         ) : (
           <form onSubmit={handleSave} style={{ padding: '24px' }}>
-            {message && (
-              <div style={{ 
-                padding: '10px 15px', 
-                marginBottom: '20px', 
-                borderRadius: '8px', 
-                fontWeight: '600',
-                backgroundColor: message.includes('เรียบร้อย') ? 'var(--primary-light)' : '#fee2e2',
-                color: message.includes('เรียบร้อย') ? 'var(--primary-color)' : '#991b1b'
-              }}>
-                {message}
-              </div>
-            )}
-            
             <div className="form-group">
               <label className="form-label" htmlFor="gestation_days">
                 ระยะเวลาตั้งท้องเฉลี่ย (จำนวนวัน)

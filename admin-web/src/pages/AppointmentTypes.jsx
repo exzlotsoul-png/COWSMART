@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, ArrowUpDown } from 'lucide-react';
 import api from '../lib/axios';
 import Pagination from '../components/layout/Pagination';
+import { useToast } from '../contexts/ToastContext';
 
 const AppointmentTypes = () => {
+  const { showToast } = useToast();
   const [types, setTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -25,6 +27,7 @@ const AppointmentTypes = () => {
       setCurrentPage(1);
     } catch (error) {
       console.error("Error fetching appointment types:", error);
+      showToast("ไม่สามารถดึงข้อมูลประเภทนัดหมายได้", "error");
     } finally {
       setLoading(false);
     }
@@ -69,25 +72,28 @@ const AppointmentTypes = () => {
     try {
       if (isEditing) {
         await api.put(`/appointment_types/${currentType.id}`, currentType);
+        showToast(`แก้ไขข้อมูลประเภทนัดหมาย "${currentType.name}" สำเร็จ`, "success");
       } else {
         await api.post('/appointment_types', currentType);
+        showToast(`เพิ่มประเภทนัดหมายใหม่ "${currentType.name}" สำเร็จ`, "success");
       }
       fetchTypes();
       handleCloseModal();
     } catch (error) {
       console.error("Error saving appointment type:", error);
-      alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+      showToast("เกิดข้อผิดพลาดในการบันทึกข้อมูลประเภทนัดหมาย", "error");
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("คุณแน่ใจหรือไม่ว่าต้องการลบประเภทนัดหมายนี้?")) {
+  const handleDelete = async (id, name = '') => {
+    if (window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบประเภทนัดหมาย "${name || id}"?`)) {
       try {
         await api.delete(`/appointment_types/${id}`);
+        showToast(`ลบประเภทนัดหมาย "${name || id}" เรียบร้อยแล้ว`, "info");
         fetchTypes();
       } catch (error) {
         console.error("Error deleting appointment type:", error);
-        alert("เกิดข้อผิดพลาดในการลบข้อมูล");
+        showToast("เกิดข้อผิดพลาดในการลบข้อมูลประเภทนัดหมาย", "error");
       }
     }
   };
@@ -164,7 +170,7 @@ const AppointmentTypes = () => {
                             <button className="action-btn edit" onClick={() => handleOpenModal(type)}>
                               <Edit size={16} />
                             </button>
-                            <button className="action-btn delete" onClick={() => handleDelete(type.id)}>
+                            <button className="action-btn delete" onClick={() => handleDelete(type.id, type.name)}>
                               <Trash2 size={16} />
                             </button>
                           </div>

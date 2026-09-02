@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, ArrowUpDown } from 'lucide-react';
 import api from '../lib/axios';
 import Pagination from '../components/layout/Pagination';
+import { useToast } from '../contexts/ToastContext';
 
 const Breeds = () => {
+  const { showToast } = useToast();
   const [breeds, setBreeds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -25,6 +27,7 @@ const Breeds = () => {
       setCurrentPage(1);
     } catch (error) {
       console.error("Error fetching breeds:", error);
+      showToast("ไม่สามารถดึงข้อมูลสายพันธุ์ได้", "error");
     } finally {
       setLoading(false);
     }
@@ -69,25 +72,28 @@ const Breeds = () => {
     try {
       if (isEditing) {
         await api.put(`/breeds/${currentBreed.breed_id}`, currentBreed);
+        showToast(`แก้ไขข้อมูลสายพันธุ์ "${currentBreed.name}" สำเร็จ`, "success");
       } else {
         await api.post('/breeds', currentBreed);
+        showToast(`เพิ่มสายพันธุ์ใหม่ "${currentBreed.name}" สำเร็จ`, "success");
       }
       fetchBreeds();
       handleCloseModal();
     } catch (error) {
       console.error("Error saving breed:", error);
-      alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+      showToast("เกิดข้อผิดพลาดในการบันทึกข้อมูลสายพันธุ์", "error");
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลนี้?")) {
+  const handleDelete = async (id, name = '') => {
+    if (window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบสายพันธุ์ "${name || id}"?`)) {
       try {
         await api.delete(`/breeds/${id}`);
+        showToast(`ลบสายพันธุ์ "${name || id}" เรียบร้อยแล้ว`, "info");
         fetchBreeds();
       } catch (error) {
         console.error("Error deleting breed:", error);
-        alert("เกิดข้อผิดพลาดในการลบข้อมูล");
+        showToast("เกิดข้อผิดพลาดในการลบข้อมูลสายพันธุ์", "error");
       }
     }
   };
@@ -164,7 +170,7 @@ const Breeds = () => {
                             <button className="action-btn edit" onClick={() => handleOpenModal(breed)}>
                               <Edit size={16} />
                             </button>
-                            <button className="action-btn delete" onClick={() => handleDelete(breed.breed_id)}>
+                            <button className="action-btn delete" onClick={() => handleDelete(breed.breed_id, breed.name)}>
                               <Trash2 size={16} />
                             </button>
                           </div>

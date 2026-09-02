@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { ToggleLeft, ToggleRight, Trash2, Search, ArrowUpDown } from 'lucide-react';
 import api from '../lib/axios';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import Pagination from '../components/layout/Pagination';
 
 const Users = () => {
   const { user: currentUser } = useAuth();
+  const { showToast } = useToast();
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('newest');
@@ -27,19 +29,21 @@ const Users = () => {
       setCurrentPage(1); // reset to page 1 on fetch
     } catch (error) {
       console.error("Error fetching users:", error);
+      showToast("ไม่สามารถดึงข้อมูลผู้ใช้งานได้", "error");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleToggleActive = async (email, currentStatus) => {
+  const handleToggleActive = async (email, currentStatus, userName = '') => {
     try {
       const newStatus = !currentStatus;
       await api.put(`/users/${email}`, { is_active: newStatus });
+      showToast(`${newStatus ? 'เปิดใช้งาน' : 'ระงับการใช้งาน'} บัญชี "${userName || email}" เรียบร้อยแล้ว`, newStatus ? "success" : "info");
       fetchUsers();
     } catch (error) {
       console.error("Error updating user status:", error);
-      alert("เกิดข้อผิดพลาดในการอัปเดตสถานะผู้ใช้งาน");
+      showToast("เกิดข้อผิดพลาดในการอัปเดตสถานะผู้ใช้งาน", "error");
     }
   };
 
@@ -190,7 +194,7 @@ const Users = () => {
                                 <button 
                                   className="action-btn" 
                                   style={{ color: user.is_active ? 'var(--primary-color)' : '#9ca3af' }}
-                                  onClick={() => handleToggleActive(user.email, user.is_active)}
+                                  onClick={() => handleToggleActive(user.email, user.is_active, `${user.first_name || ''} ${user.last_name || ''}`.trim())}
                                   title={user.is_active ? "ปิดใช้งานบัญชี" : "เปิดใช้งานบัญชี"}
                                 >
                                   {user.is_active ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}

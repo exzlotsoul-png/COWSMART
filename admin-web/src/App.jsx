@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
 import AdminLayout from './components/layout/AdminLayout';
 import Login from './pages/Login';
 
@@ -24,29 +25,31 @@ import BroadcastNotifications from './pages/BroadcastNotifications';
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          
-          <Route path="/" element={<AdminLayout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="broadcast-notifications" element={<BroadcastNotifications />} />
-            <Route path="ai-chatbot" element={<AiChatbotManagement />} />
-            <Route path="users" element={<Users />} />
-            <Route path="market-prices" element={<MarketPrices />} />
-            <Route path="breeds" element={<Breeds />} />
-            <Route path="cow-types" element={<CowTypes />} />
-            <Route path="diseases" element={<Diseases />} />
-            <Route path="medicines" element={<Medicines />} />
-            <Route path="vaccines" element={<Vaccines />} />
-            <Route path="checkup-types" element={<CheckupTypes />} />
-            <Route path="issue-reports" element={<IssueReports />} />
-            <Route path="units" element={<Units />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="appointment-types" element={<AppointmentTypes />} />
-          </Route>
-        </Routes>
-      </Router>
+      <ToastProvider>
+        <Router>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            
+            <Route path="/" element={<AdminLayout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="broadcast-notifications" element={<BroadcastNotifications />} />
+              <Route path="ai-chatbot" element={<AiChatbotManagement />} />
+              <Route path="users" element={<Users />} />
+              <Route path="market-prices" element={<MarketPrices />} />
+              <Route path="breeds" element={<Breeds />} />
+              <Route path="cow-types" element={<CowTypes />} />
+              <Route path="diseases" element={<Diseases />} />
+              <Route path="medicines" element={<Medicines />} />
+              <Route path="vaccines" element={<Vaccines />} />
+              <Route path="checkup-types" element={<CheckupTypes />} />
+              <Route path="issue-reports" element={<IssueReports />} />
+              <Route path="units" element={<Units />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="appointment-types" element={<AppointmentTypes />} />
+            </Route>
+          </Routes>
+        </Router>
+      </ToastProvider>
     </AuthProvider>
   );
 }

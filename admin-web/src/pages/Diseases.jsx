@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, ArrowUpDown } from 'lucide-react';
 import api from '../lib/axios';
 import Pagination from '../components/layout/Pagination';
+import { useToast } from '../contexts/ToastContext';
 
 const Diseases = () => {
+  const { showToast } = useToast();
   const [diseases, setDiseases] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('newest');
@@ -27,6 +29,7 @@ const Diseases = () => {
       setCurrentPage(1);
     } catch (error) {
       console.error("Error fetching diseases:", error);
+      showToast("ไม่สามารถดึงข้อมูลโรคได้", "error");
     } finally {
       setLoading(false);
     }
@@ -71,25 +74,28 @@ const Diseases = () => {
     try {
       if (isEditing) {
         await api.put(`/diseases/${currentDisease.disease_id}`, currentDisease);
+        showToast(`แก้ไขข้อมูลโรค "${currentDisease.name}" สำเร็จ`, "success");
       } else {
         await api.post('/diseases', currentDisease);
+        showToast(`เพิ่มข้อมูลโรคใหม่ "${currentDisease.name}" สำเร็จ`, "success");
       }
       fetchDiseases();
       handleCloseModal();
     } catch (error) {
       console.error("Error saving disease:", error);
-      alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+      showToast("เกิดข้อผิดพลาดในการบันทึกข้อมูลโรค", "error");
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลนี้?")) {
+  const handleDelete = async (id, name = '') => {
+    if (window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลโรค "${name || id}"?`)) {
       try {
         await api.delete(`/diseases/${id}`);
+        showToast(`ลบข้อมูลโรค "${name || id}" เรียบร้อยแล้ว`, "info");
         fetchDiseases();
       } catch (error) {
         console.error("Error deleting disease:", error);
-        alert("เกิดข้อผิดพลาดในการลบข้อมูล");
+        showToast("เกิดข้อผิดพลาดในการลบข้อมูลโรค", "error");
       }
     }
   };
@@ -165,7 +171,7 @@ const Diseases = () => {
                             <button className="action-btn edit" onClick={() => handleOpenModal(disease)}>
                               <Edit size={16} />
                             </button>
-                            <button className="action-btn delete" onClick={() => handleDelete(disease.disease_id)}>
+                            <button className="action-btn delete" onClick={() => handleDelete(disease.disease_id, disease.name)}>
                               <Trash2 size={16} />
                             </button>
                           </div>

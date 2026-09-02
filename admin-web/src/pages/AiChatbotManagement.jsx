@@ -6,8 +6,10 @@ import {
   Database, Smartphone, Stethoscope
 } from 'lucide-react';
 import api from '../lib/axios';
+import { useToast } from '../contexts/ToastContext';
 
 const AiChatbotManagement = () => {
+  const { showToast } = useToast();
   const [knowledges, setKnowledges] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,8 +42,6 @@ const AiChatbotManagement = () => {
   const [testLoading, setTestLoading] = useState(false);
   const [testResponse, setTestResponse] = useState(null);
 
-  const [notification, setNotification] = useState(null);
-
   const defaultCategories = [
     'อาการทางเดินอาหาร',
     'โรคติดเชื้อและไข้',
@@ -54,8 +54,7 @@ const AiChatbotManagement = () => {
   }, [selectedCategory]);
 
   const showNotification = (text, type = 'success') => {
-    setNotification({ text, type });
-    setTimeout(() => setNotification(null), 4000);
+    showToast(text, type);
   };
 
   const fetchKnowledges = async () => {
@@ -227,26 +226,6 @@ const AiChatbotManagement = () => {
 
   return (
     <div>
-      {/* Notification Banner */}
-      {notification && (
-        <div style={{
-          padding: '12px 18px',
-          marginBottom: '20px',
-          borderRadius: '12px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          fontSize: '0.9rem',
-          fontWeight: '500',
-          backgroundColor: notification.type === 'success' ? '#e8f5e9' : '#ffebee',
-          color: notification.type === 'success' ? '#2e7d32' : '#c62828',
-          border: `1px solid ${notification.type === 'success' ? '#c8e6c9' : '#ffcdd2'}`
-        }}>
-          {notification.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
-          <span>{notification.text}</span>
-        </div>
-      )}
-
       {/* 4 Summary Stat Cards matching Dashboard */}
       <div className="summary-cards-grid">
         <div className="summary-card">

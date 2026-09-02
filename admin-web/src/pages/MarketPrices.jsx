@@ -6,8 +6,10 @@ import {
 } from 'lucide-react';
 import api from '../lib/axios';
 import Pagination from '../components/layout/Pagination';
+import { useToast } from '../contexts/ToastContext';
 
 const MarketPrices = () => {
+  const { showToast } = useToast();
   const [prices, setPrices] = useState([]);
   const [latestByCategory, setLatestByCategory] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -106,6 +108,7 @@ const MarketPrices = () => {
       setCurrentPage(1);
     } catch (error) {
       console.error("Error fetching market prices:", error);
+      showToast("ไม่สามารถดึงข้อมูลราคากลางได้", "error");
     } finally {
       setLoading(false);
     }
@@ -124,7 +127,8 @@ const MarketPrices = () => {
         params.month = selectedMonth;
       }
 
-      await api.post('/market_prices/sync', params);
+      const response = await api.post('/market_prices/sync', params);
+      showToast(response.data.message || 'ซิงก์ราคากลางสำเร็จ!', 'success');
       setSyncMessage({
         type: 'success',
         text: selectedYear !== 'all' || selectedMonth !== 'all'
@@ -134,6 +138,7 @@ const MarketPrices = () => {
       await fetchPrices();
     } catch (error) {
       console.error("Error syncing market prices:", error);
+      showToast('เกิดข้อผิดพลาดในการซิงก์ราคา', 'error');
       setSyncMessage({ type: 'error', text: 'เกิดข้อผิดพลาดในการซิงก์ราคา' });
     } finally {
       setSyncing(false);
@@ -147,6 +152,8 @@ const MarketPrices = () => {
       setSelectedFile(file);
       setPreviewUrl(URL.createObjectURL(file));
       setExtractedData(null);
+    } else {
+      showToast('กรุณาเลือกไฟล์รูปภาพเท่านั้น', 'warning');
     }
   };
 
@@ -170,10 +177,11 @@ const MarketPrices = () => {
 
       if (response.data.success) {
         setExtractedData(response.data);
+        showToast('อ่านข้อมูลจากรูปภาพสำเร็จ', 'success');
       }
     } catch (error) {
       console.error("Error parsing image:", error);
-      alert("เกิดข้อผิดพลาดในการอ่านรูปภาพรายงาน");
+      showToast("เกิดข้อผิดพลาดในการอ่านรูปภาพรายงาน", "error");
     } finally {
       setParsingImage(false);
     }
@@ -204,11 +212,12 @@ const MarketPrices = () => {
       setSelectedFile(null);
       setPreviewUrl(null);
       setExtractedData(null);
+      showToast(`บันทึกราคากลางจากรูปภาพรายงานสำเร็จ ${extractedData.items.length} รายการ!`, "success");
       setSyncMessage({ type: 'success', text: `บันทึกราคากลางจากรูปภาพรายงานสำเร็จ ${extractedData.items.length} รายการ!` });
       await fetchPrices();
     } catch (error) {
       console.error("Error saving batch prices:", error);
-      alert("เกิดข้อผิดพลาดในการบันทึกข้อมูลราคา");
+      showToast("เกิดข้อผิดพลาดในการบันทึกข้อมูลราคา", "error");
     } finally {
       setSavingBatch(false);
       setTimeout(() => setSyncMessage(null), 4000);
@@ -261,24 +270,28 @@ const MarketPrices = () => {
     try {
       if (isEditing) {
         await api.put(`/market_prices/${currentPrice.id}`, currentPrice);
+        showToast("แก้ไขข้อมูลราคากลางเรียบร้อยแล้ว", "success");
       } else {
         await api.post('/market_prices', currentPrice);
+        showToast("เพิ่มข้อมูลราคากลางใหม่เรียบร้อยแล้ว", "success");
       }
       handleCloseModal();
       fetchPrices();
     } catch (error) {
       console.error("Error saving market price:", error);
-      alert("เกิดข้อผิดพลาดในการบันทึกข้อมูลราคา");
+      showToast("เกิดข้อผิดพลาดในการบันทึกข้อมูลราคา", "error");
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("คุณแน่ใจหรือไม่ที่จะลบรายการราคานี้?")) {
+  const handleDelete = async (id, category = '') => {
+    if (window.confirm(`คุณแน่ใจหรือไม่ที่จะลบรายการราคา "${category || id}"?`)) {
       try {
         await api.delete(`/market_prices/${id}`);
+        showToast(`ลบรายการราคา "${category || id}" เรียบร้อยแล้ว`, "info");
         fetchPrices();
       } catch (error) {
         console.error("Error deleting market price:", error);
+        showToast("เกิดข้อผิดพลาดในการลบรายการราคา", "error");
       }
     }
   };
@@ -733,7 +746,7 @@ const MarketPrices = () => {
                             <button className="action-btn edit" title="แก้ไข" onClick={() => handleOpenModal(item)}>
                               <Edit size={16} />
                             </button>
-                            <button className="action-btn delete" title="ลบ" onClick={() => handleDelete(item.id)}>
+                            <button className="action-btn delete" title="ลบ" onClick={() => handleDelete(item.id, item.category)}>
                               <Trash2 size={16} />
                             </button>
                           </div>

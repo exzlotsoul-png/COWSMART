@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, ArrowUpDown } from 'lucide-react';
 import api from '../lib/axios';
 import Pagination from '../components/layout/Pagination';
+import { useToast } from '../contexts/ToastContext';
 
 const CheckupTypes = () => {
+  const { showToast } = useToast();
   const [checkupTypes, setCheckupTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -25,6 +27,7 @@ const CheckupTypes = () => {
       setCurrentPage(1);
     } catch (error) {
       console.error("Error fetching checkup types:", error);
+      showToast("ไม่สามารถดึงข้อมูลประเภทการตรวจได้", "error");
     } finally {
       setLoading(false);
     }
@@ -69,25 +72,28 @@ const CheckupTypes = () => {
     try {
       if (isEditing) {
         await api.put(`/checkup_types/${currentCheckupType.checkup_types_id}`, currentCheckupType);
+        showToast(`แก้ไขข้อมูลประเภทการตรวจ "${currentCheckupType.type_name}" สำเร็จ`, "success");
       } else {
         await api.post('/checkup_types', currentCheckupType);
+        showToast(`เพิ่มประเภทการตรวจใหม่ "${currentCheckupType.type_name}" สำเร็จ`, "success");
       }
       fetchCheckupTypes();
       handleCloseModal();
     } catch (error) {
       console.error("Error saving checkup type:", error);
-      alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+      showToast("เกิดข้อผิดพลาดในการบันทึกข้อมูลประเภทการตรวจ", "error");
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลนี้?")) {
+  const handleDelete = async (id, name = '') => {
+    if (window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบประเภทการตรวจ "${name || id}"?`)) {
       try {
         await api.delete(`/checkup_types/${id}`);
+        showToast(`ลบประเภทการตรวจ "${name || id}" เรียบร้อยแล้ว`, "info");
         fetchCheckupTypes();
       } catch (error) {
         console.error("Error deleting checkup type:", error);
-        alert("เกิดข้อผิดพลาดในการลบข้อมูล");
+        showToast("เกิดข้อผิดพลาดในการลบข้อมูลประเภทการตรวจ", "error");
       }
     }
   };
@@ -164,7 +170,7 @@ const CheckupTypes = () => {
                             <button className="action-btn edit" onClick={() => handleOpenModal(type)}>
                               <Edit size={16} />
                             </button>
-                            <button className="action-btn delete" onClick={() => handleDelete(type.checkup_types_id)}>
+                            <button className="action-btn delete" onClick={() => handleDelete(type.checkup_types_id, type.type_name)}>
                               <Trash2 size={16} />
                             </button>
                           </div>

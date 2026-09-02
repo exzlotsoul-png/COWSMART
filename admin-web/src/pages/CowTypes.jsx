@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, ArrowUpDown } from 'lucide-react';
 import api from '../lib/axios';
 import Pagination from '../components/layout/Pagination';
+import { useToast } from '../contexts/ToastContext';
 
 const CowTypes = () => {
+  const { showToast } = useToast();
   const [cowTypes, setCowTypes] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('newest');
@@ -25,6 +27,7 @@ const CowTypes = () => {
       setCurrentPage(1);
     } catch (error) {
       console.error("Error fetching cow types:", error);
+      showToast("ไม่สามารถดึงข้อมูลประเภทวัวได้", "error");
     } finally {
       setLoading(false);
     }
@@ -69,25 +72,28 @@ const CowTypes = () => {
     try {
       if (isEditing) {
         await api.put(`/cow_types/${currentCowType.cow_type_id}`, currentCowType);
+        showToast(`แก้ไขข้อมูลประเภทวัว "${currentCowType.cow_type_name}" สำเร็จ`, "success");
       } else {
         await api.post('/cow_types', currentCowType);
+        showToast(`เพิ่มประเภทวัวใหม่ "${currentCowType.cow_type_name}" สำเร็จ`, "success");
       }
       fetchCowTypes();
       handleCloseModal();
     } catch (error) {
       console.error("Error saving cow type:", error);
-      alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+      showToast("เกิดข้อผิดพลาดในการบันทึกข้อมูลประเภทวัว", "error");
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลนี้?")) {
+  const handleDelete = async (id, name = '') => {
+    if (window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบประเภทวัว "${name || id}"?`)) {
       try {
         await api.delete(`/cow_types/${id}`);
+        showToast(`ลบประเภทวัว "${name || id}" เรียบร้อยแล้ว`, "info");
         fetchCowTypes();
       } catch (error) {
         console.error("Error deleting cow type:", error);
-        alert("เกิดข้อผิดพลาดในการลบข้อมูล");
+        showToast("เกิดข้อผิดพลาดในการลบข้อมูลประเภทวัว", "error");
       }
     }
   };
@@ -163,7 +169,7 @@ const CowTypes = () => {
                             <button className="action-btn edit" onClick={() => handleOpenModal(type)}>
                               <Edit size={16} />
                             </button>
-                            <button className="action-btn delete" onClick={() => handleDelete(type.cow_type_id)}>
+                            <button className="action-btn delete" onClick={() => handleDelete(type.cow_type_id, type.cow_type_name)}>
                               <Trash2 size={16} />
                             </button>
                           </div>

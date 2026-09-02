@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, ArrowUpDown } from 'lucide-react';
 import api from '../lib/axios';
 import Pagination from '../components/layout/Pagination';
+import { useToast } from '../contexts/ToastContext';
 
 const Vaccines = () => {
+  const { showToast } = useToast();
   const [vaccines, setVaccines] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('newest');
@@ -30,6 +32,7 @@ const Vaccines = () => {
       setCurrentPage(1);
     } catch (error) {
       console.error("Error fetching vaccines:", error);
+      showToast("ไม่สามารถดึงข้อมูลวัคซีนได้", "error");
     } finally {
       setLoading(false);
     }
@@ -78,25 +81,28 @@ const Vaccines = () => {
     try {
       if (isEditing) {
         await api.put(`/vaccines/${currentVaccine.vaccine_id}`, currentVaccine);
+        showToast(`แก้ไขข้อมูลวัคซีน "${currentVaccine.name}" สำเร็จ`, "success");
       } else {
         await api.post('/vaccines', currentVaccine);
+        showToast(`เพิ่มข้อมูลวัคซีนใหม่ "${currentVaccine.name}" สำเร็จ`, "success");
       }
       fetchVaccines();
       handleCloseModal();
     } catch (error) {
       console.error("Error saving vaccine:", error);
-      alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+      showToast("เกิดข้อผิดพลาดในการบันทึกข้อมูลวัคซีน", "error");
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลนี้?")) {
+  const handleDelete = async (id, name = '') => {
+    if (window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลวัคซีน "${name || id}"?`)) {
       try {
         await api.delete(`/vaccines/${id}`);
+        showToast(`ลบข้อมูลวัคซีน "${name || id}" เรียบร้อยแล้ว`, "info");
         fetchVaccines();
       } catch (error) {
         console.error("Error deleting vaccine:", error);
-        alert("เกิดข้อผิดพลาดในการลบข้อมูล");
+        showToast("เกิดข้อผิดพลาดในการลบข้อมูลวัคซีน", "error");
       }
     }
   };
@@ -185,7 +191,7 @@ const Vaccines = () => {
                             <button className="action-btn edit" onClick={() => handleOpenModal(vaccine)}>
                               <Edit size={16} />
                             </button>
-                            <button className="action-btn delete" onClick={() => handleDelete(vaccine.vaccine_id)}>
+                            <button className="action-btn delete" onClick={() => handleDelete(vaccine.vaccine_id, vaccine.name)}>
                               <Trash2 size={16} />
                             </button>
                           </div>
