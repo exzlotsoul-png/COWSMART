@@ -55,6 +55,10 @@ dependencies:
   nfc_manager_ndef: ^1.1.0
   pdf: ^3.11.1
   printing: ^5.13.2
+  flutter_local_notifications: ^22.3.0
+  timezone: ^0.11.1
+  permission_handler: ^13.0.2
+  flutter_timezone: ^5.1.0
 
 dev_dependencies:
   flutter_test:

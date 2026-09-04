@@ -6,13 +6,21 @@ import 'core/theme/app_theme.dart';
 import 'core/constants/app_constants.dart';
 import 'core/network/app_router.dart';
 
+import 'package:cowsmart/core/services/local_notification_service.dart';
 import 'core/utils/thai_date_localization.dart';
 import 'features/settings/providers/app_settings_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('th_TH', null);
-  runApp(const ProviderScope(child: MyApp()));
+  
+  final container = ProviderContainer();
+  await container.read(localNotificationProvider).init();
+  
+  runApp(UncontrolledProviderScope(
+    container: container,
+    child: const MyApp(),
+  ));
 }
 
 class MyApp extends ConsumerWidget {

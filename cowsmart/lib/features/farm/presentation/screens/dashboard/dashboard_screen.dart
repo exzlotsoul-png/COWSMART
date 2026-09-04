@@ -19,6 +19,7 @@ import 'package:cowsmart/features/calendar/providers/calendar_provider.dart';
 import 'package:cowsmart/features/farm/services/farm_pdf_export_service.dart';
 import 'package:cowsmart/core/utils/app_toast.dart';
 import 'package:cowsmart/core/network/api_client.dart';
+import 'package:cowsmart/core/services/local_notification_service.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -45,6 +46,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ref.read(zoneProvider.notifier).fetchZones(currentFarm.id);
       ref.read(financeProvider.notifier).fetchTransactions(currentFarm.id);
       ref.read(notificationProvider.notifier).fetchNotifications();
+      ref.read(localNotificationProvider).requestPermission();
     }
   }
 
