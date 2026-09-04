@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
 import '../../providers/market_price_provider.dart';
 import '../../domain/market_price.dart';
 import 'market_price_history_screen.dart';
@@ -112,9 +113,7 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
                           month: _selectedMonth,
                         );
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('ซิงก์ราคาตลาดกลางจาก NABC สำเร็จแล้ว')),
-                      );
+                      AppFeedback.showSuccess(context, 'ซิงก์ราคาตลาดกลางจาก NABC สำเร็จแล้ว');
                     }
                   },
           ),

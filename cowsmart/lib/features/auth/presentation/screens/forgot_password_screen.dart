@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
+import 'package:cowsmart/features/auth/providers/auth_provider.dart';
 import 'package:cowsmart/core/network/api_client.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -15,6 +17,7 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _emailController = TextEditingController();
   bool _isLoading = false;
+  String? _emailError;
 
   @override
   void dispose() {
@@ -25,9 +28,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   Future<void> _sendOtp() async {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณากรอกอีเมลของคุณ')),
-      );
+      setState(() => _emailError = 'กรุณากรอกอีเมลของคุณ');
       return;
     }
 
@@ -107,12 +108,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppFeedback.showError(context, e.toString());
       }
     } finally {
       if (mounted) {
@@ -156,13 +152,17 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               ),
               const SizedBox(height: 32),
               
-              TextField(
+              TextFormField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
+                onChanged: (val) {
+                  if (_emailError != null) setState(() => _emailError = null);
+                },
+                decoration: InputDecoration(
                   labelText: 'อีเมล',
                   hintText: 'example@email.com',
-                  prefixIcon: Icon(Icons.email_outlined),
+                  prefixIcon: const Icon(Icons.email_outlined),
+                  errorText: _emailError,
                 ),
               ),
               const SizedBox(height: 32),

@@ -1884,68 +1884,54 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
                         Navigator.pop(ctx);
 
-                        final messenger = ScaffoldMessenger.of(context);
+                        if (mounted) {
+                          try {
+                            final api = ref.read(apiClientProvider);
+                            final farmId = ref.read(farmProvider).currentFarm?.id ?? '';
 
-                        try {
-                          final api = ref.read(apiClientProvider);
-                          final farmId =
-                              ref.read(farmProvider).currentFarm?.id ?? '';
-
-                          if (selectedCowIds.isEmpty) {
-                            await api.post(
-                              '/health_appointments',
-                              data: {
-                                'cow_id': null,
-                                'appoint_datetime': dt.toIso8601String(),
-                                'description': '$title ${descCtrl.text.trim()}'
-                                    .trim(),
-                                'reminder_setting': selectedReminder,
-                                'status': 0,
-                              },
-                            );
-                          } else {
-                            for (final cowId in selectedCowIds) {
+                            if (selectedCowIds.isEmpty) {
                               await api.post(
                                 '/health_appointments',
                                 data: {
-                                  'cow_id': cowId,
+                                  'cow_id': null,
                                   'appoint_datetime': dt.toIso8601String(),
-                                  'description':
-                                      '$title ${descCtrl.text.trim()}'.trim(),
+                                  'description': '$title ${descCtrl.text.trim()}'.trim(),
                                   'reminder_setting': selectedReminder,
                                   'status': 0,
                                 },
                               );
+                            } else {
+                              for (final cowId in selectedCowIds) {
+                                await api.post(
+                                  '/health_appointments',
+                                  data: {
+                                    'cow_id': cowId,
+                                    'appoint_datetime': dt.toIso8601String(),
+                                    'description': '$title ${descCtrl.text.trim()}'.trim(),
+                                    'reminder_setting': selectedReminder,
+                                    'status': 0,
+                                  },
+                                );
+                              }
                             }
-                          }
 
-                          if (farmId.isNotEmpty) {
-                            ref
-                                .read(calendarProvider.notifier)
-                                .fetchEvents(farmId);
-                          }
+                            if (farmId.isNotEmpty) {
+                              ref.read(calendarProvider.notifier).fetchEvents(farmId);
+                            }
 
-                          messenger.showSnackBar(
-                            SnackBar(
-                              content: Text(
+                            if (mounted) {
+                              AppFeedback.showSuccess(
+                                context,
                                 selectedCowIds.isEmpty
                                     ? 'บันทึกวันนัดหมายสุขภาพทั้งฟาร์มแล้ว'
                                     : 'บันทึกวันนัดหมายสุขภาพสำหรับวัว ${selectedCowIds.length} ตัวแล้ว',
-                                style: const TextStyle(fontSize: 15),
-                              ),
-                              backgroundColor: AppColors.success,
-                            ),
-                          );
-                        } catch (e) {
-                          messenger.showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'เกิดข้อผิดพลาดในการบันทึก: $e',
-                                style: const TextStyle(fontSize: 15),
-                              ),
-                              backgroundColor: AppColors.error,
-                            ),
-                          );
+                              );
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              AppFeedback.showError(context, 'เกิดข้อผิดพลาดในการบันทึก: $e');
+                            }
+                          }
                         }
                       },
                       child: const Text(

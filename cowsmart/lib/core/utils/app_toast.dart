@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 
 class AppFeedback {
   /// Shows a success notification banner (green tint, check icon, smooth floating banner)
-  static void showSuccess(BuildContext context, String message, {String title = 'บันทึกสำเร็จ'}) {
+  static void showSuccess(
+    BuildContext context,
+    String message, {
+    String title = 'บันทึกสำเร็จ',
+  }) {
     _showSnackBar(
       context,
       message: message,
@@ -14,7 +18,11 @@ class AppFeedback {
   }
 
   /// Shows an error / validation failure notification banner (red tint, error icon)
-  static void showError(BuildContext context, String message, {String title = 'ข้อผิดพลาด'}) {
+  static void showError(
+    BuildContext context,
+    String message, {
+    String title = 'ข้อผิดพลาด',
+  }) {
     _showSnackBar(
       context,
       message: message,
@@ -26,7 +34,11 @@ class AppFeedback {
   }
 
   /// Shows a warning notification banner (amber/orange tint, warning icon)
-  static void showWarning(BuildContext context, String message, {String title = 'แจ้งเตือน'}) {
+  static void showWarning(
+    BuildContext context,
+    String message, {
+    String title = 'แจ้งเตือน',
+  }) {
     _showSnackBar(
       context,
       message: message,
@@ -38,7 +50,11 @@ class AppFeedback {
   }
 
   /// Shows an info notification banner (blue tint, info icon)
-  static void showInfo(BuildContext context, String message, {String title = 'แจ้งเพื่อทราบ'}) {
+  static void showInfo(
+    BuildContext context,
+    String message, {
+    String title = 'แจ้งเพื่อทราบ',
+  }) {
     _showSnackBar(
       context,
       message: message,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
 import 'package:cowsmart/core/widgets/cow_icon.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
@@ -60,15 +61,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
     ref.listen<CowState>(cowProvider, (previous, next) {
       if (next.errorMessage != null &&
           previous?.errorMessage != next.errorMessage) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              next.errorMessage!,
-              style: const TextStyle(fontSize: 15),
-            ),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppFeedback.showError(context, next.errorMessage!);
         ref.read(cowProvider.notifier).clearFlags();
       }
     });

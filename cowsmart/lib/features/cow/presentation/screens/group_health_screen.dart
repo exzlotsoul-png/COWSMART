@@ -6,6 +6,7 @@ import 'package:cowsmart/core/network/api_client.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
 import 'package:cowsmart/core/widgets/cow_icon.dart';
 import 'package:cowsmart/core/utils/date_formatter.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
@@ -120,12 +121,7 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
 
   void _submitGroupHealthRecord() async {
     if (_selectedCowIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('กรุณาเลือกวัวอย่างน้อย 1 ตัวที่ต้องการบันทึกสุขภาพ', style: TextStyle(fontSize: 15)),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppFeedback.showError(context, 'กรุณาเลือกวัวอย่างน้อย 1 ตัวที่ต้องการบันทึกสุขภาพ');
       return;
     }
 
@@ -350,22 +346,12 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('บันทึกสุขภาพกลุ่มสำเร็จจำนวน ${recordsPayload.length} ตัว', style: const TextStyle(fontSize: 15)),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        AppFeedback.showSuccess(context, 'บันทึกสุขภาพกลุ่มสำเร็จจำนวน ${recordsPayload.length} ตัว');
         context.pop();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('เกิดข้อผิดพลาดในการบันทึก: $e', style: const TextStyle(fontSize: 14)),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppFeedback.showError(context, 'เกิดข้อผิดพลาดในการบันทึก: $e');
       }
     } finally {
       if (mounted) {

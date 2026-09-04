@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
 import 'package:cowsmart/features/farm/domain/zone.dart';
 import '../../../../core/network/api_client.dart';
 import 'package:dio/dio.dart';
@@ -250,20 +251,13 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
             ),
           );
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('บันทึกข้อมูลเรียบร้อยแล้ว')),
-          );
+          AppFeedback.showSuccess(context, 'บันทึกข้อมูลเรียบร้อยแล้ว');
           context.go('/dashboard');
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('เกิดข้อผิดพลาดในการบันทึก: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppFeedback.showError(context, 'เกิดข้อผิดพลาดในการบันทึก: $e');
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

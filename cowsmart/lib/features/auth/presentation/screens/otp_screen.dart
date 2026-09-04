@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import 'package:cowsmart/core/network/api_client.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
 
 class OtpScreen extends ConsumerStatefulWidget {
   final String email;
@@ -24,6 +25,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   final _otpController = TextEditingController();
   bool _isLoading = false;
   int _cooldownSeconds = 0;
+  String? _otpError;
   Timer? _timer;
 
   @override
@@ -56,9 +58,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   Future<void> _verifyOtp() async {
     final otp = _otpController.text.trim();
     if (otp.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณากรอกรหัส OTP ให้ครบ 6 หลัก')),
-      );
+      setState(() => _otpError = 'กรุณากรอกรหัส OTP ให้ครบ 6 หลัก');
       return;
     }
 
@@ -80,19 +80,12 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('หน้านี้สงวนไว้สำหรับลืมรหัสผ่านเท่านั้น')),
-          );
+          AppFeedback.showError(context, 'หน้านี้สงวนไว้สำหรับลืมรหัสผ่านเท่านั้น');
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppFeedback.showError(context, e.toString());
       }
     } finally {
       if (mounted) {
@@ -103,9 +96,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
 
   Future<void> _resendOtp() async {
     if (widget.email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ไม่พบอีเมลสำหรับการขอส่งรหัส OTP ใหม่')),
-      );
+      AppFeedback.showError(context, 'ไม่พบอีเมลสำหรับการขอส่งรหัส OTP ใหม่');
       return;
     }
 
@@ -168,12 +159,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppFeedback.showError(context, e.toString());
       }
     } finally {
       if (mounted) {
@@ -218,15 +204,19 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                 ),
                 const SizedBox(height: 48),
                 
-                TextField(
+                TextFormField(
                   controller: _otpController,
                   keyboardType: TextInputType.number,
                   maxLength: 6,
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 24, letterSpacing: 8),
-                  decoration: const InputDecoration(
+                  onChanged: (val) {
+                    if (_otpError != null) setState(() => _otpError = null);
+                  },
+                  decoration: InputDecoration(
                     hintText: '000000',
                     counterText: '',
+                    errorText: _otpError,
                   ),
                 ),
                 const SizedBox(height: 32),

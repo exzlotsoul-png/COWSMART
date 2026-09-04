@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
 import 'package:cowsmart/core/constants/app_constants.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
 import 'package:cowsmart/features/auth/providers/auth_provider.dart';
 import 'package:cowsmart/core/widgets/cowsmart_logo.dart';
 
@@ -54,12 +55,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
       if (next.errorMessage != null &&
           next.errorMessage != previous?.errorMessage) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.errorMessage!),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppFeedback.showError(context, next.errorMessage!);
       }
     });
 

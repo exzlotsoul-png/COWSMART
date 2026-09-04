@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/constants/app_constants.dart';
+import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
+import 'package:cowsmart/core/constants/app_constants.dart';
 import 'package:cowsmart/core/network/api_client.dart';
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
@@ -25,6 +26,8 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  String? _passwordError;
+  String? _confirmPasswordError;
 
   @override
   void dispose() {
@@ -38,23 +41,20 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     final confirmPassword = _confirmPasswordController.text;
 
     if (password.isEmpty || confirmPassword.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณากรอกข้อมูลให้ครบถ้วน')),
-      );
+      setState(() {
+        if (password.isEmpty) _passwordError = 'กรุณากรอกรหัสผ่าน';
+        if (confirmPassword.isEmpty) _confirmPasswordError = 'กรุณากรอกรหัสผ่าน';
+      });
       return;
     }
 
     if (password.length < 8) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร')),
-      );
+      setState(() => _passwordError = 'รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร');
       return;
     }
 
     if (password != confirmPassword) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('รหัสผ่านไม่ตรงกัน')),
-      );
+      setState(() => _confirmPasswordError = 'รหัสผ่านไม่ตรงกัน');
       return;
     }
 
@@ -70,22 +70,12 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('เปลี่ยนรหัสผ่านสำเร็จ! กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่'),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        AppFeedback.showSuccess(context, 'เปลี่ยนรหัสผ่านสำเร็จ! กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่');
         context.go('/login');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppFeedback.showError(context, e.toString());
       }
     } finally {
       if (mounted) {
@@ -129,13 +119,17 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               ),
               const SizedBox(height: 32),
               
-              TextField(
+              TextFormField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
+                onChanged: (val) {
+                  if (_passwordError != null) setState(() => _passwordError = null);
+                },
                 decoration: InputDecoration(
                   labelText: 'รหัสผ่านใหม่',
                   hintText: 'กรอกรหัสผ่านใหม่อย่างน้อย 8 ตัวอักษร',
                   prefixIcon: const Icon(Icons.lock_outline),
+                  errorText: _passwordError,
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword ? Icons.visibility_off : Icons.visibility,
@@ -151,13 +145,17 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               ),
               const SizedBox(height: 16),
               
-              TextField(
+              TextFormField(
                 controller: _confirmPasswordController,
                 obscureText: _obscureConfirmPassword,
+                onChanged: (val) {
+                  if (_confirmPasswordError != null) setState(() => _confirmPasswordError = null);
+                },
                 decoration: InputDecoration(
                   labelText: 'ยืนยันรหัสผ่านใหม่',
                   hintText: 'กรอกรหัสผ่านใหม่อีกครั้งเพื่อยืนยัน',
                   prefixIcon: const Icon(Icons.lock_outline),
+                  errorText: _confirmPasswordError,
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,

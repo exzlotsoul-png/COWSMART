@@ -6,6 +6,7 @@ import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cowsmart/core/widgets/image_picker_widget.dart';
 import 'package:cowsmart/core/services/image_upload_service.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
 
 class CreateFarmScreen extends ConsumerStatefulWidget {
   const CreateFarmScreen({super.key});
@@ -75,9 +76,7 @@ class _CreateFarmScreenState extends ConsumerState<CreateFarmScreen> {
         final error =
             ref.read(farmProvider).errorMessage ??
             'เกิดข้อผิดพลาดในการสร้างฟาร์ม';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error), backgroundColor: AppColors.error),
-        );
+        AppFeedback.showError(context, error);
       }
     } finally {
       if (mounted) {

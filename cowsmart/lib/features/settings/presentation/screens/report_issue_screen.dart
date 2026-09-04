@@ -192,12 +192,7 @@ class _ReportIssueScreenState extends ConsumerState<ReportIssueScreen> with Sing
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('เกิดข้อผิดพลาดในการส่งรายงาน: $e'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppFeedback.showError(context, 'เกิดข้อผิดพลาดในการส่งรายงาน: $e');
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }

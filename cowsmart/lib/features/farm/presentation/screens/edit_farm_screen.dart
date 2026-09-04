@@ -7,6 +7,7 @@ import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/farm/domain/farm.dart';
 import 'package:cowsmart/core/widgets/image_picker_widget.dart';
 import 'package:cowsmart/core/services/image_upload_service.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
 import 'package:cowsmart/features/auth/providers/auth_provider.dart';
 
 class EditFarmScreen extends ConsumerStatefulWidget {
@@ -43,9 +44,7 @@ class _EditFarmScreenState extends ConsumerState<EditFarmScreen> {
     final address = _addressController.text.trim();
 
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณากรอกชื่อฟาร์ม')),
-      );
+      AppFeedback.showError(context, 'กรุณากรอกชื่อฟาร์ม');
       return;
     }
 
@@ -70,22 +69,12 @@ class _EditFarmScreenState extends ConsumerState<EditFarmScreen> {
       await ref.read(farmProvider.notifier).fetchFarms();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('บันทึกข้อมูลฟาร์มเรียบร้อยแล้ว'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        AppFeedback.showSuccess(context, 'บันทึกข้อมูลฟาร์มเรียบร้อยแล้ว');
         context.pop();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('เกิดข้อผิดพลาด: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppFeedback.showError(context, 'เกิดข้อผิดพลาด: $e');
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -131,18 +120,11 @@ class _EditFarmScreenState extends ConsumerState<EditFarmScreen> {
                     if (mounted) {
                       setState(() => _isLoading = false);
                       if (success) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('ลบฟาร์มเรียบร้อยแล้ว'),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
+                        AppFeedback.showSuccess(context, 'ลบฟาร์มเรียบร้อยแล้ว');
                         context.go('/select-farm');
                       } else {
                         final error = ref.read(farmProvider).errorMessage ?? 'เกิดข้อผิดพลาดในการลบฟาร์ม';
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(error), backgroundColor: AppColors.error),
-                        );
+                        AppFeedback.showError(context, error);
                       }
                     }
                   },

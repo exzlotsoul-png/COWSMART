@@ -64,7 +64,6 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
 
   void _submitCull() async {
     if (!_formKey.currentState!.validate()) {
-      AppFeedback.showError(context, 'กรุณาตรวจสอบและระบุสาเหตุการคัดออกให้ครบถ้วน');
       return;
     }
 

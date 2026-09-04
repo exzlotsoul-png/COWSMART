@@ -5,6 +5,7 @@ import 'package:cowsmart/core/network/api_client.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
 import 'package:cowsmart/core/widgets/cow_icon.dart';
 import 'package:cowsmart/core/utils/date_formatter.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
 import 'package:cowsmart/features/calendar/providers/calendar_provider.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
@@ -28,6 +29,8 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
   int _currentStep = 1; // 1: Select Cows, 2: Appointment Details
   bool _isWholeFarm = false; // true if whole farm / general appointment
   final Set<String> _selectedCowIds = {};
+
+  String? _titleError;
 
   // Filters for Step 1
   String _searchQuery = '';
@@ -102,22 +105,12 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
   void _submitGroupAppointment() async {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('กรุณาระบุหัวข้อการนัดหมาย', style: TextStyle(fontSize: 15)),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      setState(() => _titleError = 'กรุณาระบุหัวข้อการนัดหมาย');
       return;
     }
 
     if (!_isWholeFarm && _selectedCowIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('กรุณาเลือกวัวอย่างน้อย 1 ตัว หรือเลือก "ทั้งฟาร์ม"', style: TextStyle(fontSize: 15)),
-          backgroundColor: AppColors.warning,
-        ),
-      );
+      AppFeedback.showError(context, 'กรุณาเลือกวัวอย่างน้อย 1 ตัว หรือเลือก "ทั้งฟาร์ม"');
       return;
     }
 
@@ -171,27 +164,17 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              _isWholeFarm || _selectedCowIds.isEmpty
-                  ? 'บันทึกวันนัดหมายสุขภาพทั้งฟาร์มสำเร็จแล้ว'
-                  : 'บันทึกวันนัดหมายสุขภาพสำหรับวัว ${_selectedCowIds.length} ตัวสำเร็จแล้ว',
-              style: const TextStyle(fontSize: 15),
-            ),
-            backgroundColor: AppColors.success,
-          ),
+        AppFeedback.showSuccess(
+          context,
+          _isWholeFarm || _selectedCowIds.isEmpty
+              ? 'บันทึกวันนัดหมายสุขภาพทั้งฟาร์มสำเร็จแล้ว'
+              : 'บันทึกวันนัดหมายสุขภาพสำหรับวัว ${_selectedCowIds.length} ตัวสำเร็จแล้ว',
         );
         context.pop();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('เกิดข้อผิดพลาดในการบันทึก: $e', style: const TextStyle(fontSize: 14)),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppFeedback.showError(context, 'เกิดข้อผิดพลาดในการบันทึก: $e');
       }
     } finally {
       if (mounted) {
@@ -769,10 +752,14 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
             // Appointment Title Input
             TextFormField(
               controller: _titleController,
+              onChanged: (val) {
+                if (_titleError != null) setState(() => _titleError = null);
+              },
               style: TextStyle(fontSize: 15, color: AppColors.text(context)),
               decoration: InputDecoration(
                 labelText: 'หัวข้อการนัดหมาย *',
                 hintText: 'เช่น นัดหมายฉีดวัคซีนปากเท้าเปื่อย',
+                errorText: _titleError,
                 filled: true,
                 fillColor: AppColors.surfAlt(context),
                 prefixIcon: const Icon(Icons.title_rounded, color: AppColors.primary),

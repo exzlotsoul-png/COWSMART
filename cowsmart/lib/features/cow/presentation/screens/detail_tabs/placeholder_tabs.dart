@@ -6,11 +6,15 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:cowsmart/core/theme/app_colors.dart';
 import 'package:cowsmart/core/utils/date_formatter.dart';
+import 'package:cowsmart/core/widgets/custom_date_range_picker.dart';
 import 'package:cowsmart/core/services/image_upload_service.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
 import 'package:cowsmart/features/cow/domain/health_record.dart';
 import 'package:cowsmart/features/cow/domain/growth_record.dart';
 import 'package:cowsmart/features/calendar/domain/calendar_event.dart';
+import 'package:cowsmart/core/widgets/image_picker_widget.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
+import 'package:cowsmart/features/calendar/providers/appointment_type_provider.dart';
 import 'package:cowsmart/features/calendar/providers/calendar_provider.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
@@ -275,17 +279,11 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                       }
 
                       if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text('บันทึกวันนัดหมายสุขภาพและการแจ้งเตือนลงปฏิทินแล้ว', style: TextStyle(fontSize: 15)),
-                          backgroundColor: AppColors.success,
-                        ));
+                        AppFeedback.showSuccess(context, 'บันทึกวันนัดหมายสุขภาพและการแจ้งเตือนลงปฏิทินแล้ว');
                       }
                     } catch (e) {
                       if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text('เกิดข้อผิดพลาดในการบันทึกนัดหมาย: $e', style: const TextStyle(fontSize: 14)),
-                          backgroundColor: AppColors.error,
-                        ));
+                        AppFeedback.showError(context, 'เกิดข้อผิดพลาดในการบันทึกนัดหมาย: $e');
                       }
                     }
                   },
@@ -306,23 +304,10 @@ class _HealthTabState extends ConsumerState<HealthTab> {
 
     ref.listen<CowDetailState>(cowDetailProvider, (prev, next) {
       if (next.isSuccess && prev?.isSuccess == false) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'บันทึกการรักษาสำเร็จ!',
-              style: TextStyle(fontSize: 15),
-            ),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        AppFeedback.showSuccess(context, 'บันทึกการรักษาสำเร็จ!');
         ref.read(cowDetailProvider.notifier).clearFlags();
       } else if (next.error != null && prev?.error != next.error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error!, style: const TextStyle(fontSize: 15)),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppFeedback.showError(context, next.error!);
         ref.read(cowDetailProvider.notifier).clearFlags();
       }
     });
@@ -2970,14 +2955,7 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                     onPressed: () {
                       final w = double.tryParse(weightCtrl.text);
                       if (w == null || w <= 0) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'กรุณากรอกน้ำหนักให้ถูกต้อง',
-                              style: TextStyle(fontSize: 15),
-                            ),
-                          ),
-                        );
+                        AppFeedback.showError(context, 'กรุณากรอกน้ำหนักให้ถูกต้อง');
                         return;
                       }
                       final record = GrowthRecord(
@@ -3173,31 +3151,15 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                         else
                           ElevatedButton.icon(
                             onPressed: () async {
-                              final range = await showDateRangePicker(
-                                context: ctx,
-                                initialDateRange:
-                                    selectedRange ??
+                              final range = await CustomDateRangePicker.show(
+                                ctx,
+                                initialRange: selectedRange ??
                                     DateTimeRange(
                                       start: DateTime.now().subtract(
                                         const Duration(days: 90),
                                       ),
                                       end: DateTime.now(),
                                     ),
-                                firstDate: DateTime(2020),
-                                lastDate: DateTime.now(),
-                                builder: (context, child) {
-                                  return Theme(
-                                    data: Theme.of(context).copyWith(
-                                      colorScheme: const ColorScheme.light(
-                                        primary: AppColors.primary,
-                                        onPrimary: Colors.white,
-                                        surface: AppColors.surface,
-                                        onSurface: AppColors.textPrimary,
-                                      ),
-                                    ),
-                                    child: child!,
-                                  );
-                                },
                               );
                               if (range != null) {
                                 setSheetState(() {
@@ -3443,23 +3405,10 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
 
     ref.listen<CowDetailState>(cowDetailProvider, (prev, next) {
       if (next.isSuccess && prev?.isSuccess == false) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'บันทึกน้ำหนักเรียบร้อยแล้ว!',
-              style: TextStyle(fontSize: 15),
-            ),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        AppFeedback.showSuccess(context, 'บันทึกน้ำหนักเรียบร้อยแล้ว!');
         ref.read(cowDetailProvider.notifier).clearFlags();
       } else if (next.error != null && prev?.error != next.error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error!, style: const TextStyle(fontSize: 15)),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppFeedback.showError(context, next.error!);
         ref.read(cowDetailProvider.notifier).clearFlags();
       }
     });

@@ -350,34 +350,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       await ref.read(authProvider.notifier).refreshUser();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Row(
-              children: [
-                Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-                SizedBox(width: 10),
-                Text('บันทึกข้อมูลสำเร็จ'),
-              ],
-            ),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            margin: const EdgeInsets.all(16),
-          ),
-        );
+        AppFeedback.showSuccess(context, 'บันทึกข้อมูลสำเร็จ');
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('เกิดข้อผิดพลาด: $e'),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            margin: const EdgeInsets.all(16),
-          ),
-        );
+        AppFeedback.showError(context, 'เกิดข้อผิดพลาด: $e');
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -657,6 +635,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   bool _obscureNew = true;
   bool _obscureConfirm = true;
   bool _isLoading = false;
+  String? _confirmPasswordError;
 
   @override
   void dispose() {
@@ -670,21 +649,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     if (_newPasswordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Row(
-            children: [
-              Icon(Icons.warning_amber_rounded, color: Colors.white, size: 20),
-              SizedBox(width: 10),
-              Text('รหัสผ่านใหม่ไม่ตรงกัน'),
-            ],
-          ),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          margin: const EdgeInsets.all(16),
-        ),
-      );
+      setState(() => _confirmPasswordError = 'รหัสผ่านใหม่ไม่ตรงกัน');
       return;
     }
 
@@ -705,21 +670,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-                const SizedBox(width: 10),
-                Text(response.data['message'] ?? 'เปลี่ยนรหัสผ่านสำเร็จ'),
-              ],
-            ),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            margin: const EdgeInsets.all(16),
-          ),
-        );
+        AppFeedback.showSuccess(context, response.data['message'] ?? 'เปลี่ยนรหัสผ่านสำเร็จ');
         Navigator.pop(context);
       }
     } on DioException catch (e) {
@@ -731,27 +682,11 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
             errorMsg = data['message'];
           }
         }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMsg),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            margin: const EdgeInsets.all(16),
-          ),
-        );
+        AppFeedback.showError(context, errorMsg);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('เกิดข้อผิดพลาด: $e'),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            margin: const EdgeInsets.all(16),
-          ),
-        );
+        AppFeedback.showError(context, 'เกิดข้อผิดพลาด: $e');
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -762,9 +697,11 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     required String label,
     required bool obscure,
     required VoidCallback onToggle,
+    String? errorText,
   }) {
     return InputDecoration(
       labelText: label,
+      errorText: errorText,
       labelStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
       prefixIcon: Container(
         margin: const EdgeInsets.only(left: 12, right: 8),
@@ -1006,10 +943,14 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                             controller: _confirmPasswordController,
                             obscureText: _obscureConfirm,
                             style: TextStyle(color: AppColors.text(context)),
+                            onChanged: (val) {
+                              if (_confirmPasswordError != null) setState(() => _confirmPasswordError = null);
+                            },
                             decoration: _pwInputDecoration(
                               label: 'ยืนยันรหัสผ่านใหม่',
                               obscure: _obscureConfirm,
                               onToggle: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                              errorText: _confirmPasswordError,
                             ),
                             validator: (v) => v?.isEmpty ?? true ? 'กรุณายืนยันรหัสผ่าน' : null,
                           ),

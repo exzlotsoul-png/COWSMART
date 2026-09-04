@@ -27,7 +27,22 @@ class IssueReportController extends Controller
     public function update(Request $request, $id)
     {
         $data = IssueReport::findOrFail($id);
+        $oldStatus = (int) $data->status;
+        
         $data->update($request->all());
+        
+        $newStatus = (int) $data->status;
+
+        if ($oldStatus !== 1 && $newStatus === 1 && !empty($data->email)) {
+            \App\Models\Notification::create([
+                'email' => $data->email,
+                'title' => 'รายงานการใช้งานได้รับการแก้ไขแล้ว',
+                'message' => 'ปัญหา/ข้อเสนอแนะเรื่อง "' . $data->topic . '" ของคุณได้รับการดำเนินการเรียบร้อยแล้ว ขอบคุณที่ร่วมพัฒนาแอปพลิเคชันของเรา',
+                'notify_datetime' => now(),
+                'is_read' => 0
+            ]);
+        }
+
         return response()->json($data);
     }
 

@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cowsmart/core/services/image_upload_service.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
 import 'package:cowsmart/core/widgets/cow_icon.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
 
 /// Reusable image picker widget with preview-then-upload flow.
 ///
@@ -242,26 +243,14 @@ class _ImagePickerWidgetState extends ConsumerState<ImagePickerWidget> {
           }
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(response['message'] ?? 'อัปโหลดรูปภาพสำเร็จ'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        AppFeedback.showSuccess(context, response['message'] ?? 'อัปโหลดรูปภาพสำเร็จ');
 
         widget.onUploadSuccess?.call(response);
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isUploading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('อัปโหลดไม่สำเร็จ: $e'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        AppFeedback.showError(context, 'อัปโหลดไม่สำเร็จ: $e');
       }
     }
   }

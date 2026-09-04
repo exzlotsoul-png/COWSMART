@@ -7,6 +7,7 @@ import 'package:cowsmart/features/farm/domain/zone.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 
 class ZoneDetailScreen extends ConsumerStatefulWidget {
@@ -131,22 +132,12 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
               .updateCowZone(cow.id, '', currentFarm.id);
           await ref.read(zoneProvider.notifier).fetchZones(currentFarm.id);
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('นำ ${cow.name} ออกจากโซนแล้ว', style: const TextStyle(fontSize: 15)),
-                backgroundColor: AppColors.success,
-              ),
-            );
+            AppFeedback.showSuccess(context, 'นำ ${cow.name} ออกจากโซนแล้ว');
           }
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('เกิดข้อผิดพลาด: $e', style: const TextStyle(fontSize: 15)),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          AppFeedback.showError(context, 'เกิดข้อผิดพลาด: $e');
         }
       } finally {
         setState(() => _isLoading = false);
@@ -180,24 +171,18 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
     setState(() => _isLoading = false);
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'เพิ่มวัวสำเร็จ $successCount ตัว${failCount > 0 ? ', ไม่สำเร็จ $failCount ตัว' : ''}',
-            style: const TextStyle(fontSize: 15),
-          ),
-          backgroundColor: failCount > 0 ? AppColors.warning : AppColors.success,
-        ),
-      );
+      if (failCount > 0) {
+        AppFeedback.showError(context, 'เพิ่มวัวสำเร็จ $successCount ตัว, ไม่สำเร็จ $failCount ตัว');
+      } else {
+        AppFeedback.showSuccess(context, 'เพิ่มวัวสำเร็จ $successCount ตัว');
+      }
     }
   }
 
   void _showAddCowBottomSheet() {
     final allCowsInFarm = _cowsNotInZone; // All cows not in this specific current zone
     if (allCowsInFarm.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ไม่มีวัวที่สามารถเพิ่มเข้าโซนนี้ได้', style: TextStyle(fontSize: 15))),
-      );
+      AppFeedback.showError(context, 'ไม่มีวัวที่สามารถเพิ่มเข้าโซนนี้ได้');
       return;
     }
 

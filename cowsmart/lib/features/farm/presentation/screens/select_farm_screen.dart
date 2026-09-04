@@ -5,6 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
 import 'package:cowsmart/features/auth/providers/auth_provider.dart';
 
 class SelectFarmScreen extends ConsumerStatefulWidget {
@@ -43,9 +44,7 @@ class _SelectFarmScreenState extends ConsumerState<SelectFarmScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('เกิดข้อผิดพลาดในการดึงข้อมูลฟาร์ม: $e')),
-        );
+        AppFeedback.showError(context, 'เกิดข้อผิดพลาดในการดึงข้อมูลฟาร์ม: $e');
       }
     } finally {
       if (mounted) {

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
 import 'package:cowsmart/core/utils/date_formatter.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
 import '../../providers/notification_provider.dart';
 import '../../domain/app_notification.dart';
 
@@ -492,17 +493,11 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                   .read(notificationProvider.notifier)
                   .createTestNotification();
               if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      ok ? 'สร้างการแจ้งเตือนทดสอบแล้ว' : 'เกิดข้อผิดพลาด',
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                    backgroundColor: ok ? AppColors.success : AppColors.error,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                );
+                if (ok) {
+                  AppFeedback.showSuccess(context, 'สร้างการแจ้งเตือนทดสอบแล้ว');
+                } else {
+                  AppFeedback.showError(context, 'เกิดข้อผิดพลาด');
+                }
               }
             },
             icon: const Icon(Icons.science_outlined, size: 20),

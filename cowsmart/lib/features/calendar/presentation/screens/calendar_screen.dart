@@ -5,6 +5,8 @@ import 'package:intl/intl.dart' hide TextDirection;
 import 'package:cowsmart/core/theme/app_colors.dart';
 import 'package:cowsmart/core/widgets/cow_icon.dart';
 import 'package:cowsmart/core/utils/date_formatter.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
+import 'package:cowsmart/features/calendar/domain/calendar_event.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import '../../domain/calendar_event.dart';
@@ -291,11 +293,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   void _showEditEventDialog(BuildContext context, CalendarEvent event) {
     if (event.eventType == 'breeding') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('กำหนดวันคลอดคำนวณจากการผสมพันธุ์แม่วัว หากต้องการแก้ไขให้จัดการที่ประวัติแม่วัวตัวนั้นๆ', style: TextStyle(fontSize: 14)),
-        ),
-      );
+      AppFeedback.showWarning(context, 'กำหนดวันคลอดคำนวณจากการผสมพันธุ์แม่วัว หากต้องการแก้ไขให้จัดการที่ประวัติแม่วัวตัวนั้นๆ');
       return;
     }
     _showEventDialog(context, event);
@@ -514,10 +512,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     }
 
                     if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text(ok ? 'บันทึกกิจกรรมและการแจ้งเตือนแล้ว' : 'เกิดข้อผิดพลาดในการบันทึก', style: const TextStyle(fontSize: 15)),
-                        backgroundColor: ok ? AppColors.success : AppColors.error,
-                      ));
+                      if (ok) {
+                        AppFeedback.showSuccess(context, 'บันทึกกิจกรรมและการแจ้งเตือนแล้ว');
+                      } else {
+                        AppFeedback.showError(context, 'เกิดข้อผิดพลาดในการบันทึก');
+                      }
                     }
                   },
                   child: const Text('บันทึก', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -532,11 +531,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   void _confirmDelete(BuildContext context, CalendarEvent event) {
     if (event.eventType == 'breeding') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('กำหนดวันคลอดคำนวณจากการผสมพันธุ์แม่วัว หากต้องการลบให้จัดการที่ประวัติแม่วัวตัวนั้นๆ', style: TextStyle(fontSize: 14)),
-        ),
-      );
+      AppFeedback.showWarning(context, 'กำหนดวันคลอดคำนวณจากการผสมพันธุ์แม่วัว หากต้องการลบให้จัดการที่ประวัติแม่วัวตัวนั้นๆ');
       return;
     }
     showDialog(
@@ -562,10 +557,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       .read(calendarProvider.notifier)
                       .deleteEvent(event.id);
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(ok ? 'ลบการนัดหมายและการแจ้งเตือนแล้ว' : 'เกิดข้อผิดพลาดในการลบ', style: const TextStyle(fontSize: 15)),
-                      backgroundColor: ok ? AppColors.success : AppColors.error,
-                    ));
+                    if (ok) {
+                      AppFeedback.showSuccess(context, 'ลบการนัดหมายและการแจ้งเตือนแล้ว');
+                    } else {
+                      AppFeedback.showError(context, 'เกิดข้อผิดพลาดในการลบ');
+                    }
                   }
                 },
                 child: const Text('ลบ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),

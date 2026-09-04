@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
 import 'package:cowsmart/core/widgets/cow_icon.dart';
 import 'package:cowsmart/core/utils/date_formatter.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
@@ -68,13 +69,7 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
 
   void _submitGroupCull() async {
     if (_selectedCowIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('กรุณาเลือกวัวอย่างน้อย 1 ตัวที่ต้องการจำหน่าย/คัดออก',
-              style: TextStyle(fontSize: 15)),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppFeedback.showError(context, 'กรุณาเลือกวัวอย่างน้อย 1 ตัวที่ต้องการจำหน่าย/คัดออก');
       return;
     }
 
@@ -109,15 +104,7 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
       if (mounted) {
         final state = ref.read(cowProvider);
         if (state.errorMessage == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'บันทึกการ${_selectedType.label}วัวแบบกลุ่ม (${records.length} ตัว) เรียบร้อยแล้ว',
-                style: const TextStyle(fontSize: 15),
-              ),
-              backgroundColor: AppColors.success,
-            ),
-          );
+          AppFeedback.showSuccess(context, 'บันทึกการ${_selectedType.label}วัวแบบกลุ่ม (${records.length} ตัว) เรียบร้อยแล้ว');
 
           // Refresh zone counts
           final currentFarm = ref.read(farmProvider).currentFarm;
@@ -127,13 +114,7 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
 
           context.go('/dashboard');
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.errorMessage!,
-                  style: const TextStyle(fontSize: 15)),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          AppFeedback.showError(context, state.errorMessage!);
         }
       }
     }

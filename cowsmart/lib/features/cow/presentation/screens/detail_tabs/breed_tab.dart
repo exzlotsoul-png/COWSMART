@@ -8,6 +8,9 @@ import '../../../providers/cow_provider.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
 import 'package:cowsmart/core/widgets/cow_icon.dart';
 import 'package:cowsmart/core/utils/date_formatter.dart';
+import 'package:cowsmart/core/widgets/image_picker_widget.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
+import 'package:cowsmart/features/calendar/providers/appointment_type_provider.dart';
 import 'package:go_router/go_router.dart';
 
 // Provider to get male cows (bulls) for breeding
@@ -451,12 +454,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
           .toList();
 
       if (pendingHeats.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('ไม่มีรายการเป็นสัดที่รอผสม กรุณาบันทึกเป็นสัดก่อน'),
-            backgroundColor: Colors.orange,
-          ),
-        );
+        AppFeedback.showWarning(context, 'ไม่มีรายการเป็นสัดที่รอผสม กรุณาบันทึกเป็นสัดก่อน');
         return;
       }
 
@@ -465,12 +463,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
     }
 
     if (bulls.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('ไม่มีพ่อพันธุ์ในระบบ กรุณาเพิ่มวัวผู้ก่อน'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      AppFeedback.showWarning(context, 'ไม่มีพ่อพันธุ์ในระบบ กรุณาเพิ่มวัวผู้ก่อน');
       return;
     }
 
@@ -717,12 +710,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
           .toList();
 
       if (pendingMatings.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('ไม่มีรายการที่รอตรวจท้อง'),
-            backgroundColor: Colors.orange,
-          ),
-        );
+        AppFeedback.showWarning(context, 'ไม่มีรายการที่รอตรวจท้อง');
         return;
       }
 
@@ -1081,12 +1069,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
           .toList();
 
       if (pregnantRecords.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('ไม่มีรายการที่รอคลอด'),
-            backgroundColor: Colors.orange,
-          ),
-        );
+        AppFeedback.showWarning(context, 'ไม่มีรายการที่รอคลอด');
         return;
       }
 
@@ -1895,12 +1878,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
       if (next.isSuccess && prev?.isSuccess == false) {
         ref.read(cowDetailProvider.notifier).clearFlags();
       } else if (next.error != null && prev?.error != next.error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error!),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppFeedback.showError(context, next.error!);
         ref.read(cowDetailProvider.notifier).clearFlags();
       }
     });
