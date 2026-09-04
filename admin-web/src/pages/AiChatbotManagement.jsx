@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Bot, Plus, Edit, Trash2, Search, Filter, CheckCircle2, 
+import {
+  Bot, Plus, Edit, Trash2, Search, Filter, CheckCircle2,
   AlertCircle, Sparkles, MessageSquare, BookOpen, Check, X,
   ArrowUpDown, RefreshCw, Send, Eye, ShieldCheck, AlertTriangle,
   Database, Smartphone, Stethoscope
@@ -209,16 +209,16 @@ const AiChatbotManagement = () => {
 
   // Filtered List
   const filteredKnowledges = knowledges.filter(item => {
-    const matchesSearch = 
+    const matchesSearch =
       (item.title && item.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (item.keywords && item.keywords.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (item.prompt && item.prompt.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (item.answer && item.answer.toLowerCase().includes(searchTerm.toLowerCase()));
-      
+
     const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
-    const matchesStatus = 
-      selectedStatus === 'all' || 
-      (selectedStatus === 'active' && item.is_active) || 
+    const matchesStatus =
+      selectedStatus === 'all' ||
+      (selectedStatus === 'active' && item.is_active) ||
       (selectedStatus === 'inactive' && !item.is_active);
 
     return matchesSearch && matchesCategory && matchesStatus;
@@ -275,7 +275,7 @@ const AiChatbotManagement = () => {
           <div>
             <h2 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Bot size={24} style={{ color: 'var(--primary-color)' }} />
-              จัดการฐานความรู้ AI ผู้ช่วยหมอ
+              จัดการคำถามด่วน AI ผู้ช่วยหมอ
             </h2>
             <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
               กำหนดคำถามด่วน คำค้นหา และแนวทางการรักษาจากสัตวแพทย์เพื่อให้ AI ตอบคำถามได้อย่างถูกต้อง

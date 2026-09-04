@@ -48,7 +48,13 @@ class CullingRecord {
     return {
       'culling_record_id': id,
       'cow_id': cowId,
-      'cull_date': cullDate.toIso8601String(),
+      // Format as MySQL-compatible datetime (not ISO 8601 with milliseconds)
+      'cull_date': '${cullDate.year.toString().padLeft(4, '0')}-'
+          '${cullDate.month.toString().padLeft(2, '0')}-'
+          '${cullDate.day.toString().padLeft(2, '0')} '
+          '${cullDate.hour.toString().padLeft(2, '0')}:'
+          '${cullDate.minute.toString().padLeft(2, '0')}:'
+          '${cullDate.second.toString().padLeft(2, '0')}',
       'status': status,
       'price': price,
       'note': note,

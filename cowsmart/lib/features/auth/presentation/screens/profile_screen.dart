@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cowsmart/features/auth/providers/auth_provider.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:cowsmart/core/widgets/cow_icon.dart';
 import 'package:cowsmart/features/settings/presentation/screens/settings_screen.dart';
 import 'package:cowsmart/features/settings/presentation/screens/report_issue_screen.dart';
 
@@ -23,6 +24,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final avatarUrl = user?['avatar_full_url'];
 
     return Scaffold(
+      backgroundColor: AppColors.bg(context),
       body: CustomScrollView(
         slivers: [
           // ── Gradient Header with Avatar ──
@@ -167,7 +169,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         iconBgColor: const Color(0xFFE3F2FD),
                         iconColor: AppColors.info,
                         title: 'ตั้งค่าแอปพลิเคชัน',
-                        subtitle: 'การแจ้งเตือน, ธีม, ภาษา',
+                        subtitle: 'การแจ้งเตือน, โหมดมืด',
                         onTap: () => _navigateToAppSettings(context),
                       ),
                       const _MenuDivider(),
@@ -207,7 +209,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.pets_rounded, size: 18, color: AppColors.textHint),
+                            CowIcon(size: 18, color: AppColors.textHint),
                             const SizedBox(width: 6),
                             Text(
                               'COWSMART',
@@ -339,10 +341,10 @@ class _SectionTitle extends StatelessWidget {
       padding: const EdgeInsets.only(left: 4),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w700,
-          color: AppColors.textSecondary,
+          color: AppColors.subText(context),
           letterSpacing: 0.3,
         ),
       ),
@@ -356,14 +358,15 @@ class _MenuCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppColors.isDark(context);
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -381,7 +384,7 @@ class _MenuDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 64),
-      child: Divider(height: 1, color: AppColors.divider.withValues(alpha: 0.5)),
+      child: Divider(height: 1, color: AppColors.div(context).withValues(alpha: 0.5)),
     );
   }
 }
@@ -430,21 +433,21 @@ class _MenuTile extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                        color: AppColors.text(context),
                       ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       subtitle,
-                      style: const TextStyle(fontSize: 13.5, color: AppColors.textHint),
+                      style: TextStyle(fontSize: 13.5, color: AppColors.subText(context)),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: AppColors.textHint, size: 24),
+              Icon(Icons.chevron_right_rounded, color: AppColors.hint(context), size: 24),
             ],
           ),
         ),

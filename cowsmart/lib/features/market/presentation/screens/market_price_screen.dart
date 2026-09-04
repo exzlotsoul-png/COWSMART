@@ -71,7 +71,7 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
     final formatter = NumberFormat('#,##0.00');
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg(context),
       appBar: AppBar(
         title: const Text('ราคาตลาดกลางวัว', style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold)),
         backgroundColor: AppColors.primary,
@@ -156,9 +156,9 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.cardBg(context),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.border.withValues(alpha: 0.8)),
+          border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.8)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.02),
@@ -167,17 +167,17 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
             ),
           ],
         ),
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.calculate_outlined, color: AppColors.accent, size: 22),
-            SizedBox(width: 10),
+            const Icon(Icons.calculate_outlined, color: AppColors.accent, size: 22),
+            const SizedBox(width: 10),
             Expanded(
               child: Text(
                 'เครื่องคิดเลขคำนวณมูลค่าวัวตามน้ำหนักตัว',
                 style: TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: AppColors.text(context),
                 ),
               ),
             ),
@@ -213,9 +213,9 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.8)),
+        border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.8)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -230,15 +230,15 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
           // 1. NABC National Index Header Row
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            decoration: const BoxDecoration(
-              color: Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-              border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
+            decoration: BoxDecoration(
+              color: AppColors.surfAlt(context),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+              border: Border(bottom: BorderSide(color: AppColors.div(context))),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -247,13 +247,13 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
                         style: TextStyle(
                           fontSize: 14.5,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                          color: AppColors.text(context),
                         ),
                       ),
-                      SizedBox(height: 3),
+                      const SizedBox(height: 3),
                       Text(
                         'โคพันธุ์ลูกผสม ขนาดกลาง (เฉลี่ยทั่วประเทศ)',
-                        style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
+                        style: TextStyle(fontSize: 11.5, color: AppColors.subText(context)),
                       ),
                     ],
                   ),
@@ -264,16 +264,16 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
                   children: [
                     Text(
                       '฿ $nabcPrice',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+                        color: AppColors.text(context),
                         letterSpacing: -0.3,
                       ),
                     ),
-                    const Text(
+                    Text(
                       'บาท / กก.',
-                      style: TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                      style: TextStyle(fontSize: 11, color: AppColors.subText(context), fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
@@ -286,13 +286,13 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
             child: Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
                     'ราคาโคมีชีวิตหน้าฟาร์ม (กรมปศุสัตว์)',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: AppColors.text(context),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -327,14 +327,14 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
           // 3. Table Header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-            color: const Color(0xFFF1F5F9),
-            child: const Row(
+            color: AppColors.surfAlt(context),
+            child: Row(
               children: [
                 Expanded(
                   flex: 5,
                   child: Text(
                     'สายพันธุ์ / พิกัดน้ำหนัก',
-                    style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF475569)),
+                    style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: AppColors.subText(context)),
                   ),
                 ),
                 Expanded(
@@ -342,7 +342,7 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
                   child: Text(
                     'ราคา (บาท/กก.)',
                     textAlign: TextAlign.right,
-                    style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF475569)),
+                    style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: AppColors.subText(context)),
                   ),
                 ),
               ],
@@ -372,7 +372,7 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
       decoration: BoxDecoration(
-        color: isAlt ? const Color(0xFFFAFBFD) : Colors.white,
+        color: isAlt ? AppColors.surfAlt(context) : AppColors.cardBg(context),
         borderRadius: isLast ? const BorderRadius.vertical(bottom: Radius.circular(18)) : null,
       ),
       child: Row(
@@ -383,24 +383,24 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
               children: [
                 Text(
                   breed,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: AppColors.text(context),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
+                    color: AppColors.surfAlt(context),
                     borderRadius: BorderRadius.circular(5),
                   ),
                   child: Text(
                     weight,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
-                      color: Color(0xFF475569),
+                      color: AppColors.subText(context),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -413,10 +413,10 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
             child: Text(
               '฿ $price',
               textAlign: TextAlign.right,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary, // ดำเข้มคมชัด
+                color: AppColors.text(context),
                 letterSpacing: -0.2,
               ),
             ),
@@ -461,9 +461,9 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.7)),
+        border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.7)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -480,13 +480,13 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
             children: [
               const Icon(Icons.show_chart_rounded, color: AppColors.primary, size: 22),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'แนวโน้มราคาย้อนหลัง',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
-                    color: AppColors.textPrimary,
+                    color: AppColors.text(context),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -540,20 +540,20 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+              color: AppColors.surfAlt(context),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: AppColors.brd(context)),
             ),
             child: Row(
               children: [
                 const Icon(Icons.calendar_month_outlined, color: AppColors.primary, size: 18),
                 const SizedBox(width: 8),
-                const Text(
+                Text(
                   'ช่วงเวลา:',
                   style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+                    color: AppColors.subText(context),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -562,9 +562,10 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: _selectedYear,
+                      dropdownColor: AppColors.cardBg(context),
                       isDense: true,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: AppColors.text(context),
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
@@ -592,9 +593,10 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: _selectedMonth,
+                      dropdownColor: AppColors.cardBg(context),
                       isDense: true,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: AppColors.text(context),
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
@@ -639,9 +641,9 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
+                  color: AppColors.surfAlt(context),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFCBD5E1)),
+                  border: Border.all(color: AppColors.brd(context)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -656,10 +658,10 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
                               const SizedBox(width: 6),
                               Text(
                                 _formatChartDate(selectedItem.effectiveDate),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary,
+                                  color: AppColors.text(context),
                                 ),
                               ),
                             ],
@@ -668,7 +670,7 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
                             const SizedBox(height: 3),
                             Text(
                               selectedItem.note!,
-                              style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                              style: TextStyle(fontSize: 11, color: AppColors.subText(context)),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -976,9 +978,9 @@ class _PriceCalculatorModalState extends State<_PriceCalculatorModal> {
         top: 16,
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: AppColors.cardBg(context),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -991,7 +993,7 @@ class _PriceCalculatorModalState extends State<_PriceCalculatorModal> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFCBD5E1),
+                  color: AppColors.brd(context),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -1010,7 +1012,7 @@ class _PriceCalculatorModalState extends State<_PriceCalculatorModal> {
                   child: const Icon(Icons.calculate_outlined, color: AppColors.accent, size: 24),
                 ),
                 const SizedBox(width: 10),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -1019,12 +1021,12 @@ class _PriceCalculatorModalState extends State<_PriceCalculatorModal> {
                         style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                          color: AppColors.text(context),
                         ),
                       ),
                       Text(
                         'ประเมินราคาขายโดยประมาณตามน้ำหนักตัว',
-                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                        style: TextStyle(fontSize: 12, color: AppColors.subText(context)),
                       ),
                     ],
                   ),
@@ -1038,21 +1040,22 @@ class _PriceCalculatorModalState extends State<_PriceCalculatorModal> {
             const Divider(height: 24),
 
             // Field 1: เลือกสายพันธุ์ / ราคากลางอ้างอิง
-            const Text(
+            Text(
               'สายพันธุ์และราคากลางอ้างอิง:',
-              style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: AppColors.text(context)),
             ),
             const SizedBox(height: 6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
+                color: AppColors.surfAlt(context),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: AppColors.brd(context)),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<Map<String, dynamic>>(
                   value: _selectedCat,
+                  dropdownColor: AppColors.cardBg(context),
                   isExpanded: true,
                   items: widget.categories.map((cat) {
                     return DropdownMenuItem<Map<String, dynamic>>(
@@ -1063,7 +1066,7 @@ class _PriceCalculatorModalState extends State<_PriceCalculatorModal> {
                           Expanded(
                             child: Text(
                               cat['name'] as String,
-                              style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                              style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: AppColors.text(context)),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -1085,9 +1088,9 @@ class _PriceCalculatorModalState extends State<_PriceCalculatorModal> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'น้ำหนักตัวโค (กิโลกรัม):',
-                  style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                  style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: AppColors.text(context)),
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -1113,21 +1116,24 @@ class _PriceCalculatorModalState extends State<_PriceCalculatorModal> {
             TextField(
               controller: _weightController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.text(context)),
               decoration: InputDecoration(
                 hintText: 'ระบุน้ำหนัก (${minWeight.toInt()} - ${maxWeight.toInt()} กก.)',
+                hintStyle: TextStyle(color: AppColors.hint(context)),
                 suffixText: 'กก.',
-                suffixStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textSecondary),
+                suffixStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.subText(context)),
                 filled: true,
-                fillColor: isOutOfBounds ? const Color(0xFFFFF1F2) : const Color(0xFFF8FAFC),
+                fillColor: isOutOfBounds
+                    ? (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF2C1616) : const Color(0xFFFFF1F2))
+                    : AppColors.surfAlt(context),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: isOutOfBounds ? const Color(0xFFF87171) : const Color(0xFFE2E8F0)),
+                  borderSide: BorderSide(color: isOutOfBounds ? const Color(0xFFF87171) : AppColors.brd(context)),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: isOutOfBounds ? const Color(0xFFF87171) : const Color(0xFFE2E8F0)),
+                  borderSide: BorderSide(color: isOutOfBounds ? const Color(0xFFF87171) : AppColors.brd(context)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -1162,9 +1168,10 @@ class _PriceCalculatorModalState extends State<_PriceCalculatorModal> {
                 final isSelected = _weight == w.toDouble();
                 return ActionChip(
                   label: Text('$w กก.', style: const TextStyle(fontSize: 12)),
-                  backgroundColor: isSelected ? AppColors.primary.withValues(alpha: 0.12) : const Color(0xFFF1F5F9),
+                  backgroundColor: isSelected ? AppColors.primary.withValues(alpha: 0.15) : AppColors.surfAlt(context),
+                  side: BorderSide(color: isSelected ? AppColors.primary : AppColors.brd(context)),
                   labelStyle: TextStyle(
-                    color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                    color: isSelected ? AppColors.primary : AppColors.text(context),
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                   ),
                   onPressed: () {
@@ -1179,46 +1186,59 @@ class _PriceCalculatorModalState extends State<_PriceCalculatorModal> {
             const SizedBox(height: 20),
 
             // Result Card
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isOutOfBounds ? const Color(0xFFFFFBEB) : const Color(0xFFF0FDF4),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isOutOfBounds ? const Color(0xFFFDE68A) : const Color(0xFFBBF7D0),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    isOutOfBounds ? 'มูลค่าคำนวณตามน้ำหนักที่ระบุ (นอกช่วงพิกัด)' : 'มูลค่าประเมินโดยประมาณ',
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      color: isOutOfBounds ? const Color(0xFF92400E) : const Color(0xFF166534),
-                      fontWeight: FontWeight.w600,
+            Builder(
+              builder: (context) {
+                final isDark = Theme.of(context).brightness == Brightness.dark;
+                return Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: isOutOfBounds
+                        ? (isDark ? const Color(0xFF332005) : const Color(0xFFFFFBEB))
+                        : (isDark ? const Color(0xFF062817) : const Color(0xFFF0FDF4)),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isOutOfBounds
+                          ? (isDark ? const Color(0xFFB45309) : const Color(0xFFFDE68A))
+                          : (isDark ? const Color(0xFF059669) : const Color(0xFFBBF7D0)),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '฿ ${formatter.format(totalPrice)}',
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                      color: isOutOfBounds ? const Color(0xFFD97706) : const Color(0xFF15803D),
-                      letterSpacing: -0.5,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        isOutOfBounds ? 'มูลค่าคำนวณตามน้ำหนักที่ระบุ (นอกช่วงพิกัด)' : 'มูลค่าประเมินโดยประมาณ',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: isOutOfBounds
+                              ? (isDark ? const Color(0xFFFBBF24) : const Color(0xFF92400E))
+                              : (isDark ? const Color(0xFF6EE7B7) : const Color(0xFF166534)),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '฿ ${formatter.format(totalPrice)}',
+                        style: TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.bold,
+                          color: isOutOfBounds ? const Color(0xFFF59E0B) : const Color(0xFF10B981),
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '($_weight กก. × ${pricePerKg.toStringAsFixed(2)} บาท/กก.)',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isOutOfBounds
+                              ? (isDark ? const Color(0xFFFBBF24) : const Color(0xFF92400E))
+                              : (isDark ? const Color(0xFF6EE7B7) : const Color(0xFF166534)),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '($_weight กก. × ${pricePerKg.toStringAsFixed(2)} บาท/กก.)',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isOutOfBounds ? const Color(0xFF92400E) : const Color(0xFF166534),
-                    ),
-                  ),
-                ],
-              ),
+                );
+              },
             ),
             const SizedBox(height: 16),
 

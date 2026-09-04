@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Users, Tractor, PawPrint, Baby, AlertCircle, Lightbulb, MessageSquare, RefreshCw } from 'lucide-react';
-import { 
+import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip
 } from 'recharts';
 import api from '../lib/axios';
@@ -11,15 +11,27 @@ const Dashboard = () => {
     'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
     'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
   ];
-  const years = ['2567', '2568', '2569', '2570'];
+
+  const now = new Date();
+  const currentMonthName = months[now.getMonth()];
+  const currentYearBE = String(now.getFullYear() + 543);
+
+  // Dynamic years list around current Buddhist Era year
+  const baseYear = now.getFullYear() + 543;
+  const years = [
+    String(baseYear - 2),
+    String(baseYear - 1),
+    String(baseYear),
+    String(baseYear + 1)
+  ];
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [diseaseLoading, setDiseaseLoading] = useState(false);
-  const [diseaseMonth, setDiseaseMonth] = useState('มกราคม');
-  const [diseaseYear, setDiseaseYear] = useState('2569');
-  const [healthMonth, setHealthMonth] = useState('มกราคม');
-  const [healthYear, setHealthYear] = useState('2569');
+  const [diseaseMonth, setDiseaseMonth] = useState(currentMonthName);
+  const [diseaseYear, setDiseaseYear] = useState(currentYearBE);
+  const [healthMonth, setHealthMonth] = useState(currentMonthName);
+  const [healthYear, setHealthYear] = useState(currentYearBE);
 
   const fetchDashboardData = useCallback(async (isInitial = false) => {
     if (isInitial) {
@@ -145,7 +157,7 @@ const Dashboard = () => {
     if (topic && topic.includes('บัญชี')) {
       return { icon: <Users size={12} />, label: 'บัญชี', color: '#7c3aed', bg: '#ede9fe' };
     }
-    return { icon: <MessageSquare size={12} />, label: 'ทั่วไป', color: '#6b7280', bg: '#f3f4f6' };
+    return { icon: <MessageSquare size={12} />, label: 'ทั่วไป', color: '#2563eb', bg: '#dbeafe' };
   };
 
   // Custom Label for center of Donut
@@ -240,17 +252,17 @@ const Dashboard = () => {
 
       {/* --- Main Content 2 Columns --- */}
       <div className="dashboard-main-grid">
-        
+
         {/* Left Column */}
         <div className="dashboard-left">
-          
+
           {/* Recent Reports */}
           <div className="db-card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h3 className="db-card-title" style={{ margin: 0 }}>รายงานปัญหาและการใช้งานล่าสุด</h3>
-              <a href="/reports" style={{ fontSize: '0.875rem', color: 'var(--primary-color)', textDecoration: 'none', fontWeight: '600' }}>ดูทั้งหมด</a>
+              <a href="/issue-reports" style={{ fontSize: '0.875rem', color: 'var(--primary-color)', textDecoration: 'none', fontWeight: '600' }}>ดูทั้งหมด</a>
             </div>
-            
+
             <div className="db-table-container">
               <table className="db-table">
                 <thead>
@@ -268,10 +280,10 @@ const Dashboard = () => {
                       return (
                         <tr key={report.id}>
                           <td style={{ color: '#000000', fontSize: '0.8rem', whiteSpace: 'nowrap', fontWeight: '500' }}>
-                            {new Date(report.created_at).toLocaleDateString('th-TH', { 
-                              day: 'numeric', 
-                              month: 'short', 
-                              year: '2-digit' 
+                            {new Date(report.created_at).toLocaleDateString('th-TH', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: '2-digit'
                             })}
                           </td>
                           <td>
@@ -327,7 +339,7 @@ const Dashboard = () => {
                 </select>
               </div>
             </div>
-            
+
             <div className="db-table-container">
               <table className="db-table no-border">
                 <thead>
@@ -342,7 +354,7 @@ const Dashboard = () => {
                   {diseasesToDisplay && diseasesToDisplay.length > 0 ? (
                     diseasesToDisplay.map((disease, idx) => {
                       const percent = Math.min(100, Math.max(15, Math.round((disease.count / maxDiseaseCount) * 100)));
-                      
+
                       let statusText = 'ควบคุมได้';
                       let statusColor = 'var(--primary-color)';
                       let barColor = 'var(--primary-color)';
@@ -363,10 +375,10 @@ const Dashboard = () => {
                           <td style={{ fontWeight: '600' }}>{disease.count}</td>
                           <td>
                             <div className="progress-bar-bg" style={{ height: '8px', borderRadius: '4px', backgroundColor: '#f1f5f9', overflow: 'hidden' }}>
-                              <div 
-                                className="progress-bar-fill" 
-                                style={{ 
-                                  width: `${percent}%`, 
+                              <div
+                                className="progress-bar-fill"
+                                style={{
+                                  width: `${percent}%`,
                                   backgroundColor: barColor,
                                   height: '100%',
                                   borderRadius: '4px',
@@ -397,7 +409,7 @@ const Dashboard = () => {
 
         {/* Right Column */}
         <div className="dashboard-right">
-          
+
           {/* Popular Breeds Chart */}
           <div className="db-card">
             <h3 className="db-card-title" style={{ textAlign: 'center' }}>สายพันธุ์ยอดนิยม</h3>
@@ -457,7 +469,7 @@ const Dashboard = () => {
               </select>
             </div>
             <h3 className="db-card-title" style={{ textAlign: 'left', marginBottom: '16px' }}>สัดส่วนสุขภาพวัว</h3>
-            
+
             <div style={{ height: '200px' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -476,7 +488,7 @@ const Dashboard = () => {
                       const x = cx + radius * Math.cos(-midAngle * RADIAN);
                       const y = cy + radius * Math.sin(-midAngle * RADIAN);
                       const percent = totalHealthCount > 0 ? Math.round((value / totalHealthCount) * 100) : 0;
-                      
+
                       return percent > 0 ? (
                         <text x={x} y={y} fill="#1f2937" textAnchor="middle" dominantBaseline="central" style={{ fontSize: '12px', fontWeight: 'bold' }}>
                           <tspan x={x} dy="-0.5em">{percent}%</tspan>

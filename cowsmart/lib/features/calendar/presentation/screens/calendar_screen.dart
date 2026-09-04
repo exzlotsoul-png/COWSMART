@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:cowsmart/core/widgets/cow_icon.dart';
 import 'package:cowsmart/core/utils/date_formatter.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
@@ -38,7 +39,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final selectedEvents = calState.eventsForDay(_selectedDay);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg(context),
       appBar: AppBar(
         title: const Text('ปฏิทินกิจกรรม'),
         backgroundColor: AppColors.primary,
@@ -58,6 +59,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'calendar_fab',
         onPressed: () => _showAddEventDialog(context),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
@@ -87,8 +89,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       {'key': 'breeding', 'label': 'กำหนดคลอด', 'icon': Icons.favorite_outline, 'color': Colors.purple},
     ];
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      color: AppColors.surface,
+      color: AppColors.cardBg(context),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
         children: [
@@ -107,21 +111,25 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       avatar: Icon(
                         cat['icon'] as IconData,
                         size: 16,
-                        color: isSelected ? Colors.white : color,
+                        color: isSelected ? Colors.white : (color ?? AppColors.primary),
                       ),
                       label: Text(
                         cat['label'] as String,
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                          color: isSelected ? Colors.white : AppColors.textPrimary,
+                          color: isSelected ? Colors.white : AppColors.text(context),
                         ),
                       ),
                       selected: isSelected,
                       selectedColor: color ?? AppColors.primary,
-                      backgroundColor: (color ?? AppColors.primary).withValues(alpha: 0.1),
+                      backgroundColor: isDark
+                          ? (color ?? AppColors.primary).withValues(alpha: 0.25)
+                          : (color ?? AppColors.primary).withValues(alpha: 0.1),
                       side: BorderSide(
-                        color: isSelected ? (color ?? AppColors.primary) : (color ?? AppColors.primary).withValues(alpha: 0.3),
+                        color: isSelected
+                            ? (color ?? AppColors.primary)
+                            : (color ?? AppColors.primary).withValues(alpha: isDark ? 0.5 : 0.3),
                       ),
                       onSelected: (_) {
                         ref.read(calendarProvider.notifier).setCategory(cat['key'] as String);
@@ -133,10 +141,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             ),
           ),
           const SizedBox(width: 4),
-          const Icon(
+          Icon(
             Icons.arrow_forward_ios_rounded,
             size: 14,
-            color: AppColors.textSecondary,
+            color: AppColors.subText(context),
           ),
         ],
       ),
@@ -145,7 +153,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   Widget _buildCalendar(CalendarState calState) {
     return Container(
-      color: AppColors.surface,
+      color: AppColors.surf(context),
       child: TableCalendar<CalendarEvent>(
         firstDay: DateTime(2020),
         lastDay: DateTime(2030),
@@ -203,10 +211,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             return Center(
               child: Text(
                 AppDateUtils.formatThaiMonthYear(day),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: AppColors.text(context),
                 ),
               ),
             );
@@ -319,6 +327,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: AppColors.cardBg(context),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Row(
             children: [
@@ -330,7 +339,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               const SizedBox(width: 8),
               Text(
                 existing == null ? 'เพิ่มกิจกรรมปฏิทิน' : 'แก้ไขกิจกรรมปฏิทิน',
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.text(context)),
               ),
             ],
           ),
@@ -340,21 +349,21 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               children: [
                 TextField(
                   controller: titleCtrl,
-                  style: const TextStyle(fontSize: 16),
-                  decoration: const InputDecoration(
+                  style: TextStyle(fontSize: 16, color: AppColors.text(context)),
+                  decoration: InputDecoration(
                     labelText: 'ชื่อกิจกรรม *',
-                    labelStyle: TextStyle(fontSize: 15),
-                    prefixIcon: Icon(Icons.event_note),
+                    labelStyle: TextStyle(fontSize: 15, color: AppColors.subText(context)),
+                    prefixIcon: const Icon(Icons.event_note),
                   ),
                 ),
                 const SizedBox(height: 12),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.calendar_today, color: AppColors.primary),
-                  title: const Text('วันที่', style: TextStyle(fontSize: 16)),
+                  title: Text('วันที่', style: TextStyle(fontSize: 16, color: AppColors.subText(context))),
                   subtitle: Text(
                     AppDateUtils.formatThaiDate(selectedDate, useFullMonth: true),
-                    style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 14, color: AppColors.text(context), fontWeight: FontWeight.bold),
                   ),
                   onTap: () async {
                     final picked = await showDatePicker(
@@ -372,10 +381,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.access_time, color: AppColors.primary),
-                  title: const Text('เวลา', style: TextStyle(fontSize: 16)),
+                  title: Text('เวลา', style: TextStyle(fontSize: 16, color: AppColors.subText(context))),
                   subtitle: Text(
                     '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')} น.',
-                    style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 14, color: AppColors.text(context), fontWeight: FontWeight.bold),
                   ),
                   onTap: () async {
                     final picked = await showTimePicker(
@@ -394,28 +403,29 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 TextField(
                   controller: descCtrl,
                   maxLines: 2,
-                  style: const TextStyle(fontSize: 16),
-                  decoration: const InputDecoration(
+                  style: TextStyle(fontSize: 16, color: AppColors.text(context)),
+                  decoration: InputDecoration(
                     labelText: 'รายละเอียด (ไม่บังคับ)',
-                    labelStyle: TextStyle(fontSize: 15),
-                    prefixIcon: Icon(Icons.notes),
+                    labelStyle: TextStyle(fontSize: 15, color: AppColors.subText(context)),
+                    prefixIcon: const Icon(Icons.notes),
                   ),
                 ),
                 const SizedBox(height: 12),
                 if (cows.isNotEmpty)
                   DropdownButtonFormField<String>(
                     value: selectedCowId,
-                    style: const TextStyle(fontSize: 16, color: AppColors.textPrimary),
-                    decoration: const InputDecoration(
+                    dropdownColor: AppColors.cardBg(context),
+                    style: TextStyle(fontSize: 16, color: AppColors.text(context)),
+                    decoration: InputDecoration(
                       labelText: 'เกี่ยวข้องกับวัว (ไม่บังคับ)',
-                      labelStyle: TextStyle(fontSize: 15),
-                      prefixIcon: Icon(Icons.pets),
+                      labelStyle: TextStyle(fontSize: 15, color: AppColors.subText(context)),
+                      prefixIcon: const CowIcon(size: 20, color: AppColors.primary),
                     ),
                     items: [
-                      const DropdownMenuItem(value: null, child: Text('ไม่ระบุ', style: TextStyle(fontSize: 15))),
+                      DropdownMenuItem(value: null, child: Text('ไม่ระบุ', style: TextStyle(fontSize: 15, color: AppColors.text(context)))),
                       ...cows.map((c) => DropdownMenuItem(
                             value: c.id,
-                            child: Text('${c.name} (${c.tagNumber})', style: const TextStyle(fontSize: 15)),
+                            child: Text('${c.name} (${c.tagNumber})', style: TextStyle(fontSize: 15, color: AppColors.text(context))),
                           )),
                     ],
                     onChanged: (v) => setDialogState(() => selectedCowId = v),
@@ -423,15 +433,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   value: selectedReminder,
-                  style: const TextStyle(fontSize: 16, color: AppColors.textPrimary),
-                  decoration: const InputDecoration(
+                  dropdownColor: AppColors.cardBg(context),
+                  style: TextStyle(fontSize: 16, color: AppColors.text(context)),
+                  decoration: InputDecoration(
                     labelText: 'การแจ้งเตือนล่วงหน้า',
-                    labelStyle: TextStyle(fontSize: 15),
-                    prefixIcon: Icon(Icons.notifications_active_outlined),
+                    labelStyle: TextStyle(fontSize: 15, color: AppColors.subText(context)),
+                    prefixIcon: const Icon(Icons.notifications_active_outlined),
                   ),
                   items: reminderOptions.map((r) => DropdownMenuItem(
                         value: r,
-                        child: Text(r, style: const TextStyle(fontSize: 15)),
+                        child: Text(r, style: TextStyle(fontSize: 15, color: AppColors.text(context))),
                       )).toList(),
                   onChanged: (v) => setDialogState(() => selectedReminder = v),
                 ),
@@ -584,9 +595,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         minChildSize: 0.3,
         maxChildSize: 0.85,
         builder: (_, scrollCtrl) => Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          decoration: BoxDecoration(
+            color: AppColors.cardBg(context),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(
             children: [
@@ -596,7 +607,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: AppColors.brd(context),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -637,7 +648,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                               const SizedBox(height: 6),
                               Text(
                                 event.title,
-                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.text(context)),
                               ),
                             ],
                           ),
@@ -761,25 +772,31 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     );
   }
 
-  Widget _buildDetailRow(IconData icon, String label, String value, Color accentColor) {
+  Widget _buildDetailRow(dynamic icon, String label, String value, Color accentColor) {
+    final Widget iconWidget = icon is Widget
+        ? icon
+        : (icon == Icons.pets || icon == Icons.pets_rounded || icon == Icons.pets_outlined)
+            ? CowIcon(size: 20, color: accentColor)
+            : Icon(icon as IconData, size: 20, color: accentColor);
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceAlt,
+        color: AppColors.surfAlt(context),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: accentColor),
+          iconWidget,
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textHint)),
+                Text(label, style: TextStyle(fontSize: 12, color: AppColors.hint(context))),
                 const SizedBox(height: 2),
-                Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                Text(value, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.text(context))),
               ],
             ),
           ),
@@ -824,11 +841,10 @@ class _EventCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(14),
         side: BorderSide(color: typeColor.withValues(alpha: 0.3)),
       ),
-      color: AppColors.surface,
-      child: InkWell(
+      color: AppColors.surf(context),
+      child: ListTile(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: ListTile(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         leading: Container(
           width: 52,
@@ -874,10 +890,10 @@ class _EventCard extends ConsumerWidget {
             Expanded(
               child: Text(
                 event.title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
-                  color: AppColors.textPrimary,
+                  color: AppColors.text(context),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -892,9 +908,9 @@ class _EventCard extends ConsumerWidget {
               const SizedBox(height: 4),
               Text(
                 event.description!,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
-                  color: AppColors.textSecondary,
+                  color: AppColors.subText(context),
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -911,7 +927,7 @@ class _EventCard extends ConsumerWidget {
                         : (matches.first.name.isNotEmpty ? matches.first.name : matches.first.tagNumber))
                     : event.cowId;
                 return Row(children: [
-                  const Icon(Icons.pets, size: 14, color: AppColors.textHint),
+                  const CowIcon(size: 14, color: AppColors.textHint),
                   const SizedBox(width: 4),
                   Text(
                     'วัว: $cowText',
@@ -949,7 +965,6 @@ class _EventCard extends ConsumerWidget {
                 ],
               )
             : null,
-      ),
       ),
     );
   }

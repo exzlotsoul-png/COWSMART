@@ -172,7 +172,7 @@ class _EditFarmScreenState extends ConsumerState<EditFarmScreen> {
         : widget.farm.ownerEmail;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg(context),
       body: CustomScrollView(
         slivers: [
           // ── Gradient Header ──
@@ -247,9 +247,9 @@ class _EditFarmScreenState extends ConsumerState<EditFarmScreen> {
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: AppColors.cardBg(context),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                      border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.04),
@@ -261,12 +261,12 @@ class _EditFarmScreenState extends ConsumerState<EditFarmScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Text(
+                        Text(
                           'รูปโปรไฟล์ฟาร์ม',
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
+                            color: AppColors.text(context),
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -291,74 +291,76 @@ class _EditFarmScreenState extends ConsumerState<EditFarmScreen> {
                         const SizedBox(height: 24),
 
                         // Farm Name Field
-                        const Text(
+                        Text(
                           'ชื่อฟาร์ม',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                            color: AppColors.text(context),
                           ),
                         ),
                         const SizedBox(height: 8),
                         TextField(
                           controller: _nameController,
+                          style: TextStyle(fontSize: 14, color: AppColors.text(context)),
                           decoration: InputDecoration(
                             hintText: 'เช่น ฟาร์มวัวขุนสุขใจ...',
-                            hintStyle: const TextStyle(fontSize: 14, color: AppColors.textHint),
+                            hintStyle: TextStyle(fontSize: 14, color: AppColors.hint(context)),
                             prefixIcon: const Icon(Icons.agriculture_rounded, color: AppColors.primary, size: 22),
                             filled: true,
-                            fillColor: Colors.white,
+                            fillColor: AppColors.surfAlt(context),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(14),
-                              borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.8)),
+                              borderSide: BorderSide(color: AppColors.brd(context).withValues(alpha: 0.8)),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(14),
-                              borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.8)),
+                              borderSide: BorderSide(color: AppColors.brd(context).withValues(alpha: 0.8)),
                             ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(14),
-                              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                            focusedBorder: const OutlineInputBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(14)),
+                              borderSide: BorderSide(color: AppColors.primary, width: 2),
                             ),
                           ),
                         ),
                         const SizedBox(height: 18),
 
                         // Address Field
-                        const Text(
+                        Text(
                           'ที่อยู่ฟาร์ม',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                            color: AppColors.text(context),
                           ),
                         ),
                         const SizedBox(height: 8),
                         TextField(
                           controller: _addressController,
+                          style: TextStyle(fontSize: 14, color: AppColors.text(context)),
                           maxLines: 3,
                           decoration: InputDecoration(
                             hintText: 'รายละเอียดที่อยู่...',
-                            hintStyle: const TextStyle(fontSize: 14, color: AppColors.textHint),
+                            hintStyle: TextStyle(fontSize: 14, color: AppColors.hint(context)),
                             prefixIcon: const Padding(
                               padding: EdgeInsets.only(bottom: 40),
                               child: Icon(Icons.location_on_rounded, color: AppColors.primary, size: 22),
                             ),
                             filled: true,
-                            fillColor: Colors.white,
+                            fillColor: AppColors.surfAlt(context),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(14),
-                              borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.8)),
+                              borderSide: BorderSide(color: AppColors.brd(context).withValues(alpha: 0.8)),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(14),
-                              borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.8)),
+                              borderSide: BorderSide(color: AppColors.brd(context).withValues(alpha: 0.8)),
                             ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(14),
-                              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                            focusedBorder: const OutlineInputBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(14)),
+                              borderSide: BorderSide(color: AppColors.primary, width: 2),
                             ),
                           ),
                         ),
@@ -368,18 +370,18 @@ class _EditFarmScreenState extends ConsumerState<EditFarmScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                           decoration: BoxDecoration(
-                            color: AppColors.surfaceAlt,
+                            color: AppColors.surfAlt(context),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                            border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.person_outline_rounded, size: 18, color: AppColors.textSecondary),
+                              Icon(Icons.person_outline_rounded, size: 18, color: AppColors.subText(context)),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   'เจ้าของฟาร์ม: ${ownerName.isNotEmpty ? ownerName : widget.farm.ownerEmail}',
-                                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                                  style: TextStyle(color: AppColors.subText(context), fontSize: 13),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),

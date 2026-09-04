@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:cowsmart/core/network/api_client.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:cowsmart/core/widgets/cow_icon.dart';
 import 'package:cowsmart/core/utils/date_formatter.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
@@ -410,7 +411,7 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
     });
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg(context),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: AppColors.primary,
@@ -448,7 +449,7 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                 // Step Indicator Bar
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                  color: Colors.white,
+                  color: AppColors.cardBg(context),
                   child: Row(
                     children: [
                       _buildStepBadge(1, 'เลือกวัว', _currentStep == 1, () {
@@ -457,7 +458,7 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                       Expanded(
                         child: Container(
                           height: 2,
-                          color: _currentStep == 2 ? AppColors.primary : Colors.grey[300],
+                          color: _currentStep == 2 ? AppColors.primary : AppColors.brd(context),
                         ),
                       ),
                       _buildStepBadge(2, 'ระบุข้อมูลการรักษา', _currentStep == 2, () {
@@ -468,7 +469,7 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                     ],
                   ),
                 ),
-                const Divider(height: 1),
+                Divider(height: 1, color: AppColors.div(context)),
 
                 Expanded(
                   child: _currentStep == 1
@@ -482,7 +483,7 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
           : Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.cardBg(context),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.06),
@@ -565,11 +566,11 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
         children: [
           CircleAvatar(
             radius: 13,
-            backgroundColor: isActive ? AppColors.primary : Colors.grey[300],
+            backgroundColor: isActive ? AppColors.primary : AppColors.surfAlt(context),
             child: Text(
               '$step',
               style: TextStyle(
-                color: isActive ? Colors.white : AppColors.textSecondary,
+                color: isActive ? Colors.white : AppColors.subText(context),
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
@@ -580,7 +581,7 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
             title,
             style: TextStyle(
               fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-              color: isActive ? AppColors.primaryDark : AppColors.textSecondary,
+              color: isActive ? AppColors.text(context) : AppColors.subText(context),
               fontSize: 13,
             ),
           ),
@@ -598,15 +599,15 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
         // Search & Filter Container
         Container(
           padding: const EdgeInsets.all(14),
-          color: Colors.white,
+          color: AppColors.cardBg(context),
           child: Column(
             children: [
               TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
                   hintText: 'ค้นหาด้วยชื่อ หรือรหัสหูวัว...',
-                  hintStyle: const TextStyle(fontSize: 13, color: AppColors.textHint),
-                  prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary, size: 20),
+                  hintStyle: TextStyle(fontSize: 14.5, color: AppColors.hint(context)),
+                  prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary, size: 22),
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
                           icon: const Icon(Icons.clear_rounded, size: 18),
@@ -617,13 +618,14 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                         )
                       : null,
                   filled: true,
-                  fillColor: AppColors.surfaceAlt,
-                  isDense: true,
+                  fillColor: AppColors.surfAlt(context),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
                 ),
+                style: TextStyle(fontSize: 15, color: AppColors.text(context)),
                 onChanged: (val) => setState(() => _searchQuery = val.trim()),
               ),
               const SizedBox(height: 10),
@@ -632,12 +634,14 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                 child: Row(
                   children: [
                     ChoiceChip(
-                      label: const Text('ทุกโซน', style: TextStyle(fontSize: 12.5)),
+                      label: const Text('ทุกโซน', style: TextStyle(fontSize: 14)),
                       selected: _selectedZoneId == null,
                       selectedColor: AppColors.primary,
+                      backgroundColor: AppColors.surfAlt(context),
+                      side: BorderSide(color: _selectedZoneId == null ? AppColors.primary : AppColors.brd(context)),
                       labelStyle: TextStyle(
-                        color: _selectedZoneId == null ? Colors.white : AppColors.textPrimary,
-                        fontWeight: _selectedZoneId == null ? FontWeight.bold : FontWeight.normal,
+                        color: _selectedZoneId == null ? Colors.white : AppColors.text(context),
+                        fontWeight: _selectedZoneId == null ? FontWeight.bold : FontWeight.w500,
                       ),
                       onSelected: (_) => setState(() => _selectedZoneId = null),
                     ),
@@ -647,12 +651,14 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                       return Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: ChoiceChip(
-                          label: Text(zone.name, style: const TextStyle(fontSize: 12.5)),
+                          label: Text(zone.name, style: const TextStyle(fontSize: 14)),
                           selected: isSelected,
                           selectedColor: AppColors.primary,
+                          backgroundColor: AppColors.surfAlt(context),
+                          side: BorderSide(color: isSelected ? AppColors.primary : AppColors.brd(context)),
                           labelStyle: TextStyle(
-                            color: isSelected ? Colors.white : AppColors.textPrimary,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            color: isSelected ? Colors.white : AppColors.text(context),
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                           ),
                           onSelected: (_) => setState(() => _selectedZoneId = zone.id),
                         ),
@@ -668,13 +674,13 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
         // Select All Row
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          color: AppColors.surfaceAlt,
+          color: AppColors.surfAlt(context),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 'พบวัวทั้งหมด ${availableCows.length} ตัว',
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.textSecondary),
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.subText(context)),
               ),
               TextButton.icon(
                 onPressed: () {
@@ -690,12 +696,12 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                 },
                 icon: Icon(
                   isAllSelected ? Icons.deselect_rounded : Icons.select_all_rounded,
-                  size: 18,
+                  size: 19,
                   color: AppColors.primary,
                 ),
                 label: Text(
                   isAllSelected ? 'ยกเลิกการเลือก' : 'เลือกทั้งหมด',
-                  style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13),
+                  style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 14),
                 ),
               ),
             ],
@@ -723,21 +729,23 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                     final genderDisplay = (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male') ? 'ผู้' : 'เมีย';
                     final breedDisplay = cow.breed.isNotEmpty ? cow.breed : '-';
 
+                    final isDark = Theme.of(context).brightness == Brightness.dark;
+
                     return Container(
                       margin: const EdgeInsets.only(bottom: 10),
                       decoration: BoxDecoration(
                         color: isChecked
-                            ? AppColors.primary.withValues(alpha: 0.05)
+                            ? AppColors.primary.withValues(alpha: 0.15)
                             : isCowSick
-                                ? const Color(0xFFFEF2F2)
-                                : Colors.white,
+                                ? (isDark ? const Color(0xFF2C1616) : const Color(0xFFFEF2F2))
+                                : AppColors.cardBg(context),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
                           color: isChecked
                               ? AppColors.primary
                               : isCowSick
-                                  ? const Color(0xFFFCA5A5)
-                                  : AppColors.border.withValues(alpha: 0.5),
+                                  ? (isDark ? const Color(0xFF991B1B) : const Color(0xFFFCA5A5))
+                                  : AppColors.brd(context),
                           width: isChecked ? 1.5 : (isCowSick ? 1.2 : 1),
                         ),
                       ),
@@ -762,19 +770,19 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                                 child: Container(
                                   width: 48,
                                   height: 48,
-                                  color: AppColors.surfaceAlt,
+                                  color: AppColors.surfAlt(context),
                                   child: (cow.imageFullUrl != null || cow.imageUrl != null)
                                       ? Image.network(
                                           cow.imageFullUrl ?? cow.imageUrl!,
                                           width: 48,
                                           height: 48,
                                           fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) => const Center(
-                                            child: Icon(Icons.pets_rounded, size: 24, color: AppColors.textHint),
+                                          errorBuilder: (_, __, ___) => Center(
+                                            child: CowIcon(size: 24, color: AppColors.hint(context)),
                                           ),
                                         )
-                                      : const Center(
-                                          child: Icon(Icons.pets_rounded, size: 24, color: AppColors.textHint),
+                                      : Center(
+                                          child: CowIcon(size: 24, color: AppColors.hint(context)),
                                         ),
                                 ),
                               ),
@@ -790,20 +798,20 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                                         Flexible(
                                           child: Text(
                                             cow.name.isNotEmpty ? cow.name : cow.tagNumber,
-                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.text(context)),
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
-                                        const SizedBox(width: 6),
+                                        const SizedBox(width: 8),
                                         Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
                                           decoration: BoxDecoration(
                                             color: AppColors.primary.withValues(alpha: 0.1),
                                             borderRadius: BorderRadius.circular(6),
                                           ),
                                           child: Text(
                                             cow.tagNumber,
-                                            style: const TextStyle(fontSize: 11, color: AppColors.primaryDark, fontWeight: FontWeight.bold),
+                                            style: TextStyle(fontSize: 12.5, color: AppColors.text(context), fontWeight: FontWeight.bold),
                                           ),
                                         ),
                                       ],
@@ -811,12 +819,12 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                                     const SizedBox(height: 4),
                                     Text(
                                       'สายพันธุ์: $breedDisplay • เพศ: $genderDisplay',
-                                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                      style: TextStyle(fontSize: 13.5, color: AppColors.subText(context)),
                                     ),
                                     if (isCowSick) ...[
-                                      const SizedBox(height: 5),
+                                      const SizedBox(height: 6),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                         decoration: BoxDecoration(
                                           color: AppColors.error.withValues(alpha: 0.12),
                                           borderRadius: BorderRadius.circular(6),
@@ -825,15 +833,15 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            const Icon(Icons.coronavirus_outlined, size: 13, color: AppColors.error),
-                                            const SizedBox(width: 4),
+                                            const Icon(Icons.coronavirus_outlined, size: 14, color: AppColors.error),
+                                            const SizedBox(width: 5),
                                             Flexible(
                                               child: Text(
                                                 (diseaseName != null && diseaseName.isNotEmpty)
                                                     ? 'ป่วย: $diseaseName'
                                                     : 'สถานะ: ป่วย',
                                                 style: const TextStyle(
-                                                  fontSize: 11,
+                                                  fontSize: 12,
                                                   color: AppColors.error,
                                                   fontWeight: FontWeight.bold,
                                                 ),
@@ -937,9 +945,9 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
               child: Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.cardBg(context),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: AppColors.brd(context)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -948,12 +956,12 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                       children: [
                         const Icon(Icons.calendar_today_rounded, size: 18, color: AppColors.primary),
                         const SizedBox(width: 10),
-                        const Text('วันที่บันทึก:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        Text('วันที่บันทึก:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.text(context))),
                       ],
                     ),
                     Text(
                       AppDateUtils.formatThaiDate(_selectedDate),
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.primaryDark),
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.primary),
                     ),
                   ],
                 ),
@@ -974,10 +982,10 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: _costAllocationMode == 'equal' ? AppColors.primary.withValues(alpha: 0.1) : Colors.white,
+                          color: _costAllocationMode == 'equal' ? AppColors.primary.withValues(alpha: 0.15) : AppColors.cardBg(context),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: _costAllocationMode == 'equal' ? AppColors.primary : AppColors.border,
+                            color: _costAllocationMode == 'equal' ? AppColors.primary : AppColors.brd(context),
                             width: _costAllocationMode == 'equal' ? 2 : 1,
                           ),
                         ),
@@ -985,7 +993,7 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                           children: [
                             Icon(
                               Icons.equalizer_rounded,
-                              color: _costAllocationMode == 'equal' ? AppColors.primary : AppColors.textSecondary,
+                              color: _costAllocationMode == 'equal' ? AppColors.primary : AppColors.subText(context),
                               size: 22,
                             ),
                             const SizedBox(height: 6),
@@ -994,14 +1002,14 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: _costAllocationMode == 'equal' ? FontWeight.bold : FontWeight.normal,
-                                color: _costAllocationMode == 'equal' ? AppColors.primaryDark : AppColors.textPrimary,
+                                color: _costAllocationMode == 'equal' ? AppColors.primary : AppColors.text(context),
                               ),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 2),
-                            const Text(
+                            Text(
                               'ปริมาณและราคาเท่ากันทุกตัว (ไม่หาร)',
-                              style: TextStyle(fontSize: 10.5, color: AppColors.textSecondary),
+                              style: TextStyle(fontSize: 10.5, color: AppColors.subText(context)),
                               textAlign: TextAlign.center,
                             ),
                           ],
@@ -1017,10 +1025,10 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: _costAllocationMode == 'custom' ? AppColors.secondaryDark.withValues(alpha: 0.1) : Colors.white,
+                          color: _costAllocationMode == 'custom' ? AppColors.secondaryDark.withValues(alpha: 0.15) : AppColors.cardBg(context),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: _costAllocationMode == 'custom' ? AppColors.secondaryDark : AppColors.border,
+                            color: _costAllocationMode == 'custom' ? AppColors.secondaryDark : AppColors.brd(context),
                             width: _costAllocationMode == 'custom' ? 2 : 1,
                           ),
                         ),
@@ -1028,7 +1036,7 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                           children: [
                             Icon(
                               Icons.tune_rounded,
-                              color: _costAllocationMode == 'custom' ? AppColors.secondaryDark : AppColors.textSecondary,
+                              color: _costAllocationMode == 'custom' ? AppColors.secondaryDark : AppColors.subText(context),
                               size: 22,
                             ),
                             const SizedBox(height: 6),
@@ -1037,14 +1045,14 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: _costAllocationMode == 'custom' ? FontWeight.bold : FontWeight.normal,
-                                color: _costAllocationMode == 'custom' ? AppColors.secondaryDark : AppColors.textPrimary,
+                                color: _costAllocationMode == 'custom' ? AppColors.secondaryDark : AppColors.text(context),
                               ),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 2),
-                            const Text(
+                            Text(
                               'ระบุ cc และราคาของแต่ละตัว',
-                              style: TextStyle(fontSize: 10.5, color: AppColors.textSecondary),
+                              style: TextStyle(fontSize: 10.5, color: AppColors.subText(context)),
                               textAlign: TextAlign.center,
                             ),
                           ],
@@ -1157,11 +1165,12 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                       child: TextFormField(
                         controller: _amountController,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        style: TextStyle(fontSize: 15, color: AppColors.text(context)),
                         decoration: InputDecoration(
                           labelText: 'ปริมาณยาที่ใช้ (ต่อตัว)',
                           hintText: 'เช่น 2',
                           filled: true,
-                          fillColor: Colors.white,
+                          fillColor: AppColors.surfAlt(context),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                       ),
@@ -1170,11 +1179,13 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         isExpanded: true,
+                        dropdownColor: AppColors.cardBg(context),
                         initialValue: _selectedUnitId,
+                        style: TextStyle(fontSize: 15, color: AppColors.text(context)),
                         decoration: InputDecoration(
                           labelText: 'หน่วย',
                           filled: true,
-                          fillColor: Colors.white,
+                          fillColor: AppColors.surfAlt(context),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                         items: masterData.units
@@ -1191,11 +1202,12 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
               TextFormField(
                 controller: _costController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                style: TextStyle(fontSize: 15, color: AppColors.text(context)),
                 decoration: InputDecoration(
                   labelText: _selectedType == 'CT01' ? 'ค่าตรวจสุขภาพต่อตัว (บาท)' : 'ค่าใช้จ่ายต่อตัว (บาท)',
                   hintText: 'บันทึกราคานี้ให้กับวัวทั้ง ${_selectedCowIds.length} ตัวเท่ากันหมด (ไม่หาร)',
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: AppColors.surfAlt(context),
                   prefixIcon: const Icon(Icons.attach_money_rounded, color: AppColors.primary),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
@@ -1208,7 +1220,7 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.cardBg(context),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: AppColors.secondaryDark.withValues(alpha: 0.5)),
                 ),
@@ -1226,7 +1238,7 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                               Expanded(
                                 child: Text(
                                   'กรอกปริมาณและราคาเฉพาะวัวแต่ละตัว (${selectedCowsList.length} ตัว)',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.secondaryDark),
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.text(context)),
                                 ),
                               ),
                             ],
@@ -1259,9 +1271,9 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                       return Container(
                         margin: const EdgeInsets.only(bottom: 10),
                         decoration: BoxDecoration(
-                          color: isExpanded ? AppColors.surfaceAlt : Colors.white,
+                          color: isExpanded ? AppColors.surfAlt(context) : AppColors.cardBg(context),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: isExpanded ? AppColors.secondaryDark : AppColors.border),
+                          border: Border.all(color: isExpanded ? AppColors.secondaryDark : AppColors.brd(context)),
                         ),
                         child: Column(
                           children: [
@@ -1289,7 +1301,7 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                                           child: Container(
                                             width: 32,
                                             height: 32,
-                                            color: AppColors.surfaceAlt,
+                                            color: AppColors.surfAlt(context),
                                             child: (cow.imageFullUrl != null || cow.imageUrl != null)
                                                 ? Image.network(
                                                     cow.imageFullUrl ?? cow.imageUrl!,
@@ -1297,21 +1309,21 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                                                     height: 32,
                                                     fit: BoxFit.cover,
                                                     errorBuilder: (_, __, ___) => const Center(
-                                                      child: Icon(Icons.pets_rounded, size: 16, color: AppColors.primaryDark),
+                                                      child: CowIcon(size: 16, color: AppColors.primaryDark),
                                                     ),
                                                   )
                                                 : const Center(
-                                                    child: Icon(Icons.pets_rounded, size: 16, color: AppColors.primaryDark),
+                                                    child: CowIcon(size: 16, color: AppColors.primaryDark),
                                                   ),
                                           ),
                                         ),
                                         const SizedBox(width: 8),
                                         Text(
                                           cow.name.isNotEmpty ? cow.name : 'วัว ${cow.tagNumber}',
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.text(context)),
                                         ),
                                         const SizedBox(width: 6),
-                                        Text('(${cow.tagNumber})', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                                        Text('(${cow.tagNumber})', style: TextStyle(fontSize: 12, color: AppColors.subText(context))),
                                       ],
                                     ),
                                     Row(
@@ -1330,7 +1342,7 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                                         const SizedBox(width: 4),
                                         Icon(
                                           isExpanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
-                                          color: AppColors.textSecondary,
+                                          color: AppColors.subText(context),
                                         ),
                                       ],
                                     ),
@@ -1371,9 +1383,9 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                                         margin: const EdgeInsets.only(top: 8),
                                         padding: const EdgeInsets.all(10),
                                         decoration: BoxDecoration(
-                                          color: Colors.white,
+                                          color: AppColors.cardBg(context),
                                           borderRadius: BorderRadius.circular(10),
-                                          border: Border.all(color: AppColors.border.withValues(alpha: 0.7)),
+                                          border: Border.all(color: AppColors.brd(context)),
                                         ),
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1396,12 +1408,12 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                                                     children: [
                                                       Text(
                                                         itemName,
-                                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.text(context)),
                                                       ),
                                                       if (itemCategory != null && itemCategory.isNotEmpty)
                                                         Text(
                                                           'หมวดหมู่: $itemCategory',
-                                                          style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                                          style: TextStyle(fontSize: 11, color: AppColors.subText(context)),
                                                         ),
                                                     ],
                                                   ),
@@ -1416,11 +1428,13 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                                                   child: TextFormField(
                                                     controller: _getCowItemAmountController(cow.id, itemId),
                                                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                                    style: TextStyle(color: AppColors.text(context), fontSize: 14),
                                                     decoration: InputDecoration(
                                                       labelText: 'ปริมาณยาที่ใช้',
                                                       hintText: 'เช่น 1.5',
+                                                      hintStyle: TextStyle(color: AppColors.hint(context)),
                                                       filled: true,
-                                                      fillColor: AppColors.surfaceAlt,
+                                                      fillColor: AppColors.surfAlt(context),
                                                       isDense: true,
                                                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                                                     ),
@@ -1431,11 +1445,13 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                                                   flex: 2,
                                                   child: DropdownButtonFormField<String>(
                                                     isExpanded: true,
+                                                    dropdownColor: AppColors.cardBg(context),
                                                     initialValue: _cowItemUnitIds['${cow.id}_$itemId'] ?? _selectedUnitId,
+                                                    style: TextStyle(color: AppColors.text(context), fontSize: 14),
                                                     decoration: InputDecoration(
                                                       labelText: 'หน่วย',
                                                       filled: true,
-                                                      fillColor: AppColors.surfaceAlt,
+                                                      fillColor: AppColors.surfAlt(context),
                                                       isDense: true,
                                                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                                                     ),
@@ -1453,12 +1469,14 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                                             TextFormField(
                                               controller: _getCowItemCostController(cow.id, itemId),
                                               keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                              style: TextStyle(color: AppColors.text(context), fontSize: 14),
                                               decoration: InputDecoration(
                                                 labelText: 'ราคาเฉพาะรายการนี้ (บาท)',
                                                 hintText: 'เช่น 150',
+                                                hintStyle: TextStyle(color: AppColors.hint(context)),
                                                 prefixIcon: const Icon(Icons.attach_money_rounded, size: 16, color: AppColors.secondaryDark),
                                                 filled: true,
-                                                fillColor: AppColors.surfaceAlt,
+                                                fillColor: AppColors.surfAlt(context),
                                                 isDense: true,
                                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                                               ),
@@ -1484,10 +1502,11 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
             TextFormField(
               controller: _noteController,
               maxLines: 2,
+              style: TextStyle(fontSize: 15, color: AppColors.text(context)),
               decoration: InputDecoration(
                 labelText: 'หมายเหตุเพิ่มเติม',
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: AppColors.surfAlt(context),
                 prefixIcon: const Icon(Icons.note_alt_outlined, color: AppColors.primary),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
@@ -1497,10 +1516,11 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
             // Shared Fields: Admin Name
             TextFormField(
               controller: _adminController,
+              style: TextStyle(fontSize: 15, color: AppColors.text(context)),
               decoration: InputDecoration(
                 labelText: 'ชื่อผู้ดำเนินการ / สัตวแพทย์',
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: AppColors.surfAlt(context),
                 prefixIcon: const Icon(Icons.person_outline_rounded, color: AppColors.primary),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
@@ -1540,6 +1560,7 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                     }).toList();
 
                     return AlertDialog(
+                      backgroundColor: AppColors.cardBg(context),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       title: Row(
                         children: [
@@ -1548,7 +1569,7 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                           Expanded(
                             child: Text(
                               title,
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.text(context)),
                             ),
                           ),
                         ],
@@ -1565,13 +1586,14 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                                   searchQuery = val.trim();
                                 });
                               },
+                              style: TextStyle(fontSize: 14, color: AppColors.text(context)),
                               decoration: InputDecoration(
                                 hintText: 'ค้นหา...',
-                                hintStyle: const TextStyle(fontSize: 13, color: AppColors.textHint),
+                                hintStyle: TextStyle(fontSize: 13, color: AppColors.hint(context)),
                                 prefixIcon: Icon(Icons.search, size: 20, color: color),
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                                 filled: true,
-                                fillColor: AppColors.surfaceAlt,
+                                fillColor: AppColors.surfAlt(context),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(10),
                                   borderSide: BorderSide.none,
@@ -1581,7 +1603,7 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                             const SizedBox(height: 10),
                             Expanded(
                               child: filteredOptions.isEmpty
-                                  ? const Center(child: Text('ไม่พบข้อมูล', style: TextStyle(color: AppColors.textHint, fontSize: 13)))
+                                  ? Center(child: Text('ไม่พบข้อมูล', style: TextStyle(color: AppColors.hint(context), fontSize: 13)))
                                   : ListView.builder(
                                       shrinkWrap: true,
                                       itemCount: filteredOptions.length,
@@ -1599,15 +1621,15 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                                             style: TextStyle(
                                               fontSize: 14.5,
                                               fontWeight: id == 'other' ? FontWeight.bold : FontWeight.w600,
-                                              color: id == 'other' ? color : AppColors.textPrimary,
+                                              color: id == 'other' ? color : AppColors.text(context),
                                             ),
                                           ),
                                           subtitle: (category != null && category.isNotEmpty)
                                               ? Text(
                                                   'หมวดหมู่: $category',
-                                                  style: const TextStyle(
+                                                  style: TextStyle(
                                                     fontSize: 12,
-                                                    color: AppColors.textSecondary,
+                                                    color: AppColors.subText(context),
                                                   ),
                                                 )
                                               : null,
@@ -1637,12 +1659,12 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                                 style: OutlinedButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(vertical: 12),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                  side: const BorderSide(color: AppColors.textSecondary),
+                                  side: BorderSide(color: AppColors.brd(context)),
                                 ),
                                 onPressed: () => Navigator.pop(ctx),
-                                child: const Text(
+                                child: Text(
                                   'ยกเลิก',
-                                  style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.bold, fontSize: 14),
+                                  style: TextStyle(color: AppColors.subText(context), fontWeight: FontWeight.bold, fontSize: 14),
                                 ),
                               ),
                             ),
@@ -1679,15 +1701,15 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
           child: InputDecorator(
             decoration: InputDecoration(
               labelText: title,
-              labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              labelStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.text(context)),
               filled: true,
-              fillColor: Colors.white,
+              fillColor: AppColors.surfAlt(context),
               prefixIcon: Icon(icon, color: color, size: 22),
-              suffixIcon: const Icon(Icons.arrow_drop_down_rounded, color: AppColors.textSecondary, size: 28),
+              suffixIcon: Icon(Icons.arrow_drop_down_rounded, color: AppColors.subText(context), size: 28),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             ),
             child: selectedIds.isEmpty
-                ? Text(hintText, style: const TextStyle(fontSize: 14, color: AppColors.textHint))
+                ? Text(hintText, style: TextStyle(fontSize: 14, color: AppColors.hint(context)))
                 : Wrap(
                     spacing: 6,
                     runSpacing: 4,
@@ -1717,11 +1739,12 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
           TextFormField(
             controller: customController,
             onChanged: (_) => setState(() {}),
+            style: TextStyle(fontSize: 15, color: AppColors.text(context)),
             decoration: InputDecoration(
               labelText: 'ระบุเพิ่มเติม (อื่นๆ) *',
               hintText: 'พิมพ์ข้อมูลเพิ่มเติมที่นี่...',
               filled: true,
-              fillColor: Colors.white,
+              fillColor: AppColors.surfAlt(context),
               isDense: true,
               prefixIcon: Icon(Icons.edit_note_rounded, color: color, size: 22),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
@@ -1741,23 +1764,23 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
           decoration: BoxDecoration(
-            color: isSelected ? color.withValues(alpha: 0.12) : Colors.white,
+            color: isSelected ? color.withValues(alpha: 0.15) : AppColors.cardBg(context),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isSelected ? color : AppColors.border,
+              color: isSelected ? color : AppColors.brd(context),
               width: isSelected ? 2 : 1,
             ),
           ),
           child: Column(
             children: [
-              Icon(icon, color: isSelected ? color : AppColors.textSecondary, size: 24),
+              Icon(icon, color: isSelected ? color : AppColors.subText(context), size: 24),
               const SizedBox(height: 6),
               Text(
                 label,
                 style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected ? color : AppColors.textPrimary,
+                  color: isSelected ? color : AppColors.text(context),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -1774,8 +1797,10 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
       label: Text(label),
       selected: isSelected,
       selectedColor: color,
+      backgroundColor: AppColors.surfAlt(context),
+      side: BorderSide(color: isSelected ? color : AppColors.brd(context)),
       labelStyle: TextStyle(
-        color: isSelected ? Colors.white : AppColors.textPrimary,
+        color: isSelected ? Colors.white : AppColors.text(context),
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       onSelected: (_) => setState(() => _selectedHealthStatus = status),

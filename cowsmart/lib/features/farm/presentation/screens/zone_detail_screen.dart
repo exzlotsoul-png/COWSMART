@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/cow_icon.dart';
 import 'package:cowsmart/features/farm/domain/zone.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
@@ -46,17 +47,24 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
   }
 
   Color _getStatusColor(Cow cow) {
-    switch (cow.status.colorType) {
-      case 'success':
+    switch (cow.status) {
+      case CowStatus.normal:
         return AppColors.success;
-      case 'error':
+      case CowStatus.sick:
+      case CowStatus.deceased:
         return AppColors.error;
-      case 'warning':
-        return AppColors.warning;
-      case 'info':
-        return AppColors.info;
-      default:
+      case CowStatus.injured:
+        return const Color(0xFFD97706);
+      case CowStatus.estrous:
+        return const Color(0xFFEC4899);
+      case CowStatus.pregnant:
+        return const Color(0xFF9333EA);
+      case CowStatus.recovering:
+        return const Color(0xFF2563EB);
+      case CowStatus.sold:
         return AppColors.textHint;
+      case CowStatus.removed:
+        return AppColors.warning;
     }
   }
 
@@ -213,9 +221,9 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
 
             return Container(
               height: MediaQuery.of(context).size.height * 0.82,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                color: AppColors.cardBg(context),
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(24),
                   topRight: Radius.circular(24),
                 ),
@@ -228,7 +236,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.border,
+                      color: AppColors.brd(context),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -245,20 +253,20 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                             children: [
                               Text(
                                 'เพิ่มวัวเข้า ${widget.zone.name}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
-                                  color: AppColors.primaryDark,
+                                  color: AppColors.text(context),
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 2),
-                              const Text(
+                              Text(
                                 'เลือกวัวที่ต้องการย้ายเข้าโซนนี้',
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: AppColors.textSecondary,
+                                  color: AppColors.subText(context),
                                 ),
                               ),
                             ],
@@ -266,8 +274,8 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                         ),
                         IconButton(
                           onPressed: () => Navigator.pop(modalContext),
-                          icon: const Icon(Icons.close_rounded,
-                              color: AppColors.textSecondary, size: 24),
+                          icon: Icon(Icons.close_rounded,
+                              color: AppColors.subText(context), size: 24),
                         ),
                       ],
                     ),
@@ -282,8 +290,9 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                           selected: !showOnlyUnassigned,
                           label: Text('ทั้งหมด (${allCowsInFarm.length})'),
                           selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                          backgroundColor: AppColors.surfAlt(context),
                           labelStyle: TextStyle(
-                            color: !showOnlyUnassigned ? AppColors.primary : AppColors.textSecondary,
+                            color: !showOnlyUnassigned ? AppColors.primary : AppColors.subText(context),
                             fontWeight: !showOnlyUnassigned ? FontWeight.bold : FontWeight.normal,
                           ),
                           onSelected: (selected) {
@@ -299,8 +308,9 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                           selected: showOnlyUnassigned,
                           label: Text('ยังไม่มีโซน ($unassignedCount)'),
                           selectedColor: Colors.orange.withValues(alpha: 0.2),
+                          backgroundColor: AppColors.surfAlt(context),
                           labelStyle: TextStyle(
-                            color: showOnlyUnassigned ? Colors.orange[800] : AppColors.textSecondary,
+                            color: showOnlyUnassigned ? Colors.orange[800] : AppColors.subText(context),
                             fontWeight: showOnlyUnassigned ? FontWeight.bold : FontWeight.normal,
                           ),
                           avatar: showOnlyUnassigned
@@ -371,7 +381,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                     ),
                   ),
 
-                  const Divider(height: 1, color: AppColors.border),
+                  Divider(height: 1, color: AppColors.div(context)),
 
                   // Cow List
                   Expanded(
@@ -380,11 +390,11 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.pets_rounded, size: 48, color: Colors.grey[400]),
+                                CowIcon(size: 48, color: Colors.grey[400]),
                                 const SizedBox(height: 8),
                                 Text(
                                   showOnlyUnassigned ? 'ไม่มีวัวที่ยังไม่มีโซน' : 'ไม่มีวัวในระบบ',
-                                  style: TextStyle(color: Colors.grey[600], fontSize: 15),
+                                  style: TextStyle(color: AppColors.subText(context), fontSize: 15),
                                 ),
                               ],
                             ),
@@ -395,7 +405,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                             separatorBuilder: (_, __) => Divider(
                               height: 1,
                               indent: 76,
-                              color: AppColors.border.withValues(alpha: 0.5),
+                              color: AppColors.div(context),
                             ),
                             itemBuilder: (context, index) {
                               final cow = filteredCows[index];
@@ -433,7 +443,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                                           border: Border.all(
                                             color: isSelected
                                                 ? AppColors.primary
-                                                : AppColors.border,
+                                                : AppColors.brd(context),
                                             width: 2,
                                           ),
                                         ),
@@ -465,8 +475,8 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                                                   fit: BoxFit.cover,
                                                 ),
                                               )
-                                            : const Icon(Icons.pets_rounded,
-                                                color: AppColors.primary, size: 22),
+                                            : const CowIcon(
+                                                 color: AppColors.primary, size: 22),
                                       ),
                                       const SizedBox(width: 14),
 
@@ -481,10 +491,10 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                                                 Flexible(
                                                   child: Text(
                                                     cow.name,
-                                                    style: const TextStyle(
+                                                    style: TextStyle(
                                                       fontWeight: FontWeight.bold,
                                                       fontSize: 17,
-                                                      color: AppColors.textPrimary,
+                                                      color: AppColors.text(context),
                                                     ),
                                                     maxLines: 1,
                                                     overflow: TextOverflow.ellipsis,
@@ -544,8 +554,8 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                                                 Expanded(
                                                   child: Text(
                                                     'แท็ก: ${cow.tagNumber} · ${cow.type.label}',
-                                                    style: const TextStyle(
-                                                      color: AppColors.textSecondary,
+                                                    style: TextStyle(
+                                                      color: AppColors.subText(context),
                                                       fontSize: 13,
                                                     ),
                                                     maxLines: 1,
@@ -569,7 +579,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                   Container(
                     padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.cardBg(context),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.06),
@@ -631,7 +641,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
     final cowState = ref.watch(cowProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg(context),
       body: CustomScrollView(
         slivers: [
           // ── Gradient Header ──
@@ -794,10 +804,10 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                   const SizedBox(width: 8),
                   Text(
                     'รายชื่อวัว (${cowsInZone.length})',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.primaryDark,
+                      color: AppColors.text(context),
                     ),
                   ),
                 ],
@@ -821,10 +831,10 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.cardBg(context),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                      color: AppColors.border.withValues(alpha: 0.5)),
+                      color: AppColors.brd(context).withValues(alpha: 0.5)),
                 ),
                 child: Column(
                   children: [
@@ -834,24 +844,24 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                         color: AppColors.primary.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.pets_rounded,
+                      child: const CowIcon(
                           size: 44, color: AppColors.primary),
                     ),
                     const SizedBox(height: 14),
-                    const Text(
+                    Text(
                       'ยังไม่มีวัวในโซนนี้',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+                        color: AppColors.text(context),
                       ),
                     ),
                     const SizedBox(height: 6),
-                    const Text(
+                    Text(
                       'แตะปุ่มด้านล่างเพื่อเพิ่มวัวเข้าโซนนี้',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                          color: AppColors.textSecondary, fontSize: 14),
+                          color: AppColors.subText(context), fontSize: 14),
                     ),
                     const SizedBox(height: 18),
                     SizedBox(
@@ -896,6 +906,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
 
       // FAB
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'zone_detail_fab',
         onPressed: _isLoading ? null : _showAddCowBottomSheet,
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
@@ -916,10 +927,10 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.cardBg(context),
           borderRadius: BorderRadius.circular(18),
           border:
-              Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+              Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.03),
@@ -949,7 +960,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                         fit: BoxFit.cover,
                       ),
                     )
-                  : const Icon(Icons.pets_rounded,
+                  : const CowIcon(
                       color: AppColors.primary, size: 28),
             ),
             const SizedBox(width: 14),
@@ -964,10 +975,10 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                       Flexible(
                         child: Text(
                           cow.name,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
-                            color: AppColors.textPrimary,
+                            color: AppColors.text(context),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -997,9 +1008,9 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                     spacing: 6,
                     runSpacing: 4,
                     children: [
-                      _buildInfoChip('แท็ก: ${cow.tagNumber}'),
-                      _buildInfoChip(cow.type.label),
-                      _buildInfoChip(cow.breed),
+                      _buildInfoChip(context, 'แท็ก: ${cow.tagNumber}'),
+                      _buildInfoChip(context, cow.type.label),
+                      _buildInfoChip(context, cow.breed),
                     ],
                   ),
                 ],
@@ -1028,19 +1039,19 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
     );
   }
 
-  Widget _buildInfoChip(String text) {
+  Widget _buildInfoChip(BuildContext context, String text) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.surfaceAlt,
+        color: AppColors.surfAlt(context),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
       ),
       child: Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 13,
-          color: AppColors.textSecondary,
+          color: AppColors.subText(context),
           fontWeight: FontWeight.w500,
         ),
       ),

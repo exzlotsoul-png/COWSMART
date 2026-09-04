@@ -86,7 +86,7 @@ class _NfcWriterDialogState extends State<NfcWriterDialog> with SingleTickerProv
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AppColors.cardBg(context),
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
@@ -100,20 +100,20 @@ class _NfcWriterDialogState extends State<NfcWriterDialog> with SingleTickerProv
           mainAxisSize: MainAxisSize.min,
           children: [
             // Title
-            const Text(
+            Text(
               'ฝังข้อมูลลงเหรียญ NFC',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: AppColors.text(context),
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'วัว: ${widget.cow.name} (${widget.cow.tagNumber})',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: AppColors.textSecondary,
+                color: AppColors.subText(context),
               ),
             ),
             const SizedBox(height: 32),
@@ -165,7 +165,7 @@ class _NfcWriterDialogState extends State<NfcWriterDialog> with SingleTickerProv
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: _isSuccess ? FontWeight.bold : FontWeight.normal,
-                color: _isSuccess ? AppColors.success : AppColors.textPrimary,
+                color: _isSuccess ? AppColors.success : AppColors.text(context),
                 height: 1.5,
               ),
             ),
@@ -191,9 +191,9 @@ class _NfcWriterDialogState extends State<NfcWriterDialog> with SingleTickerProv
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        side: const BorderSide(color: AppColors.border),
+                        side: BorderSide(color: AppColors.brd(context)),
                       ),
-                      child: const Text('ยกเลิก', style: TextStyle(fontSize: 16, color: AppColors.textSecondary)),
+                      child: Text('ยกเลิก', style: TextStyle(fontSize: 16, color: AppColors.subText(context))),
                     ),
             ),
           ],

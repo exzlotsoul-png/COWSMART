@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:cowsmart/core/widgets/cow_icon.dart';
 import 'package:cowsmart/core/utils/date_formatter.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
 import 'package:cowsmart/features/cow/domain/health_record.dart';
@@ -67,7 +68,7 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
     final masterData = ref.watch(masterDataProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg(context),
       appBar: AppBar(
         elevation: 0,
         toolbarHeight: 68.0,
@@ -157,10 +158,10 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.cardBg(context),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
+                color: Colors.black.withValues(alpha: AppColors.isDark(context) ? 0.25 : 0.03),
                 blurRadius: 8,
                 offset: const Offset(0, 3),
               ),
@@ -170,11 +171,11 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
             children: [
               TextField(
                 controller: _searchController,
-                style: const TextStyle(fontSize: 14),
+                style: TextStyle(fontSize: 14, color: AppColors.text(context)),
                 decoration: InputDecoration(
                   hintText: 'ค้นหาโรค, ยา, วัคซีน, หมายเหตุ...',
-                  hintStyle: const TextStyle(fontSize: 13, color: AppColors.textHint),
-                  prefixIcon: const Icon(Icons.search_rounded, size: 20, color: AppColors.primary),
+                  hintStyle: TextStyle(fontSize: 13, color: AppColors.hint(context)),
+                  prefixIcon: Icon(Icons.search_rounded, size: 20, color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary),
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
                           icon: const Icon(Icons.clear_rounded, size: 18),
@@ -185,7 +186,7 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                         )
                       : null,
                   filled: true,
-                  fillColor: AppColors.surfaceAlt,
+                  fillColor: AppColors.surfAlt(context),
                   contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
@@ -294,11 +295,11 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(alpha: AppColors.isDark(context) ? 0.25 : 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -336,10 +337,10 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                             Flexible(
                               child: Text(
                                 typeLabels[record.checkupTypeId] ?? 'ตรวจสุขภาพ',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary,
+                                  color: AppColors.text(context),
                                 ),
                               ),
                             ),
@@ -366,9 +367,9 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                         const SizedBox(height: 2),
                         Text(
                           AppDateUtils.formatThaiDate(record.recordDate),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
-                            color: AppColors.textPrimary,
+                            color: AppColors.text(context),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -379,14 +380,14 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
-                        color: AppColors.warning.withValues(alpha: 0.12),
+                        color: (AppColors.isDark(context) ? AppColors.warning : AppColors.secondaryDark).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         '${NumberFormat('#,##0').format(record.cost)} ฿',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: AppColors.secondaryDark,
+                          color: AppColors.isDark(context) ? const Color(0xFFFBBF24) : AppColors.secondaryDark,
                           fontSize: 14,
                         ),
                       ),
@@ -401,9 +402,9 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceAlt,
+                    color: AppColors.surfAlt(context),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
+                    border: Border.all(color: AppColors.brd(context)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -418,7 +419,7 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                               Expanded(
                                 child: Text(
                                   'วัคซีน: ${record.vaccineName!}$dosageStr',
-                                  style: const TextStyle(fontSize: 13.5, color: AppColors.textPrimary),
+                                  style: TextStyle(fontSize: 13.5, color: AppColors.text(context)),
                                 ),
                               ),
                             ],
@@ -434,7 +435,7 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                               Expanded(
                                 child: Text(
                                   'โรค: ${record.diseaseName!}',
-                                  style: const TextStyle(fontSize: 13.5, color: AppColors.textPrimary),
+                                  style: TextStyle(fontSize: 13.5, color: AppColors.text(context)),
                                 ),
                               ),
                             ],
@@ -448,7 +449,7 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                             Expanded(
                               child: Text(
                                 'ยา: ${record.medicineName!}$dosageStr',
-                                style: const TextStyle(fontSize: 13.5, color: AppColors.textPrimary),
+                                style: TextStyle(fontSize: 13.5, color: AppColors.text(context)),
                               ),
                             ),
                           ],
@@ -464,12 +465,12 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.note_alt_outlined, size: 15, color: AppColors.textSecondary),
+                    Icon(Icons.note_alt_outlined, size: 15, color: AppColors.subText(context)),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         'หมายเหตุ: ${record.note!}',
-                        style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                        style: TextStyle(fontSize: 13, color: AppColors.text(context)),
                       ),
                     ),
                   ],
@@ -481,11 +482,11 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    const Icon(Icons.person_outline_rounded, size: 15, color: AppColors.primaryDark),
+                    Icon(Icons.person_outline_rounded, size: 15, color: AppColors.subText(context)),
                     const SizedBox(width: 6),
                     Text(
                       'ผู้ดำเนินการ: ${record.adminName!}',
-                      style: const TextStyle(fontSize: 12.5, color: AppColors.textHint, fontWeight: FontWeight.w500),
+                      style: TextStyle(fontSize: 12.5, color: AppColors.subText(context), fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
@@ -503,14 +504,14 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          color: Colors.white,
+          color: AppColors.cardBg(context),
           child: Row(
             children: [
-              const Icon(Icons.monitor_weight_outlined, color: AppColors.primary, size: 20),
+              Icon(Icons.monitor_weight_outlined, color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary, size: 20),
               const SizedBox(width: 8),
               Text(
                 'บันทึกน้ำหนักทั้งหมด (${records.length} ครั้ง)',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.primaryDark),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.text(context)),
               ),
             ],
           ),
@@ -533,11 +534,11 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.cardBg(context),
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.03),
+                            color: Colors.black.withValues(alpha: AppColors.isDark(context) ? 0.25 : 0.03),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
@@ -548,33 +549,33 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                         leading: Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
+                            color: (AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary).withValues(alpha: 0.12),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.scale_rounded, color: AppColors.primary, size: 22),
+                          child: Icon(Icons.scale_rounded, color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary, size: 22),
                         ),
                         title: Text(
                           '${r.weight.toStringAsFixed(1)} กก.',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.textPrimary),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.text(context)),
                         ),
                         subtitle: Padding(
                           padding: const EdgeInsets.only(top: 4),
                           child: Text(
                             'วันที่ชั่ง: ${AppDateUtils.formatThaiDate(r.recordDate)}${r.girth != null ? " • รอบอก: ${r.girth!.toStringAsFixed(1)} ซม." : ""}',
-                            style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
+                            style: TextStyle(fontSize: 13, color: AppColors.subText(context), fontWeight: FontWeight.w500),
                           ),
                         ),
                         trailing: diff != null
                             ? Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: (diff >= 0 ? AppColors.success : AppColors.error).withValues(alpha: 0.1),
+                                  color: (diff >= 0 ? (AppColors.isDark(context) ? const Color(0xFF8FD475) : AppColors.success) : AppColors.error).withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
                                   '${diff >= 0 ? "+" : ""}${diff.toStringAsFixed(1)} กก.',
                                   style: TextStyle(
-                                    color: diff >= 0 ? AppColors.success : AppColors.error,
+                                    color: diff >= 0 ? (AppColors.isDark(context) ? const Color(0xFF8FD475) : AppColors.success) : AppColors.error,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 13,
                                   ),
@@ -603,7 +604,7 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
       children: [
         Container(
           padding: const EdgeInsets.all(12),
-          color: Colors.white,
+          color: AppColors.cardBg(context),
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -642,7 +643,7 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                     final allCows = ref.watch(cowProvider).allCows;
 
                     final stageColor = r.pregnancyResult == 'ตั้งท้อง'
-                        ? Colors.purple
+                        ? (AppColors.isDark(context) ? const Color(0xFFC084FC) : Colors.purple)
                         : r.pregnancyResult == 'ไม่ตั้งท้อง'
                             ? AppColors.error
                             : AppColors.warning;
@@ -650,12 +651,12 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                     return Container(
                       margin: const EdgeInsets.only(bottom: 14),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.cardBg(context),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: stageColor.withValues(alpha: 0.3)),
+                        border: Border.all(color: stageColor.withValues(alpha: AppColors.isDark(context) ? 0.4 : 0.3)),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.03),
+                            color: Colors.black.withValues(alpha: AppColors.isDark(context) ? 0.25 : 0.03),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
@@ -671,16 +672,16 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                               children: [
                                 Row(
                                   children: [
-                                    const Icon(Icons.favorite_rounded, color: AppColors.primary, size: 18),
+                                    Icon(Icons.favorite_rounded, color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary, size: 18),
                                     const SizedBox(width: 6),
                                     Text(
                                       r.heatDate != null
                                           ? 'เป็นสัด: ${AppDateUtils.formatThaiDate(r.heatDate!)}'
                                           : 'ผสมพันธุ์',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 15,
-                                        color: AppColors.textPrimary,
+                                        color: AppColors.text(context),
                                       ),
                                     ),
                                   ],
@@ -688,7 +689,7 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: stageColor.withValues(alpha: 0.12),
+                                    color: stageColor.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
@@ -708,12 +709,12 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                                 padding: const EdgeInsets.only(bottom: 4),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.event_available_outlined, size: 15, color: AppColors.textSecondary),
+                                    Icon(Icons.event_available_outlined, size: 15, color: AppColors.subText(context)),
                                     const SizedBox(width: 6),
                                     Expanded(
                                       child: Text(
                                         'วันที่ผสม: ${AppDateUtils.formatThaiDate(r.matingDate!, includeTime: true)}',
-                                        style: const TextStyle(fontSize: 13.5, color: AppColors.textPrimary),
+                                        style: TextStyle(fontSize: 13.5, color: AppColors.text(context)),
                                       ),
                                     ),
                                   ],
@@ -724,12 +725,12 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                                 padding: const EdgeInsets.only(bottom: 4),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.pets_outlined, size: 15, color: AppColors.textSecondary),
+                                    CowIcon(size: 15, color: AppColors.subText(context)),
                                     const SizedBox(width: 6),
                                     Expanded(
                                       child: Text(
                                         'พ่อพันธุ์: ${_formatCowDisplayById(r.sireId, allCows)}',
-                                        style: const TextStyle(fontSize: 13.5, color: AppColors.textPrimary),
+                                        style: TextStyle(fontSize: 13.5, color: AppColors.text(context)),
                                       ),
                                     ),
                                   ],
@@ -740,12 +741,12 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                                 padding: const EdgeInsets.only(bottom: 4),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.edit_calendar_outlined, size: 15, color: AppColors.textSecondary),
+                                    Icon(Icons.edit_calendar_outlined, size: 15, color: AppColors.subText(context)),
                                     const SizedBox(width: 6),
                                     Expanded(
                                       child: Text(
                                         'คาดว่าจะคลอด: ${AppDateUtils.formatThaiDate(r.expectedCalving!)}',
-                                        style: const TextStyle(fontSize: 13.5, color: AppColors.textPrimary),
+                                        style: TextStyle(fontSize: 13.5, color: AppColors.text(context)),
                                       ),
                                     ),
                                   ],
@@ -756,14 +757,14 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                               Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Icon(Icons.child_care_rounded, size: 16, color: Colors.teal),
+                                  Icon(Icons.child_care_rounded, size: 16, color: AppColors.isDark(context) ? const Color(0xFF2DD4BF) : Colors.teal),
                                   const SizedBox(width: 6),
                                   Expanded(
                                     child: Text(
                                       'คลอดจริง: ${AppDateUtils.formatThaiDate(r.calvingDate!)} (${r.calvingResult ?? "-"})',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.teal,
+                                        color: AppColors.isDark(context) ? const Color(0xFF2DD4BF) : Colors.teal,
                                         fontSize: 13.5,
                                       ),
                                     ),
@@ -788,17 +789,17 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
       label: Text(
         label,
         style: TextStyle(
-          color: isSelected ? Colors.white : AppColors.textPrimary,
+          color: isSelected ? Colors.white : AppColors.text(context),
           fontSize: 12.5,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
         ),
       ),
       selected: isSelected,
       selectedColor: AppColors.primary,
-      backgroundColor: AppColors.surfaceAlt,
+      backgroundColor: AppColors.surfAlt(context),
       elevation: isSelected ? 1 : 0,
       side: BorderSide(
-        color: isSelected ? AppColors.primary : AppColors.border.withValues(alpha: 0.5),
+        color: isSelected ? AppColors.primary : AppColors.brd(context).withValues(alpha: 0.5),
       ),
       onSelected: (_) => onSelect(value),
     );
@@ -812,15 +813,15 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: AppColors.surfAlt(context),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, size: 42, color: Colors.grey[400]),
+            child: Icon(icon, size: 42, color: AppColors.hint(context)),
           ),
           const SizedBox(height: 12),
           Text(
             message,
-            style: TextStyle(fontSize: 14, color: Colors.grey[600], fontWeight: FontWeight.w500),
+            style: TextStyle(fontSize: 14, color: AppColors.subText(context), fontWeight: FontWeight.w500),
           ),
         ],
       ),

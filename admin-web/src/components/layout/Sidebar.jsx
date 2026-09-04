@@ -40,20 +40,20 @@ const Sidebar = () => {
     {
       label: 'ข้อมูลพื้นฐาน',
       items: [
-        { path: '/market-prices', icon: <TrendingUp className="nav-icon" />, label: 'ราคาตลาดกลาง' },
         { path: '/breeds', icon: <Dna className="nav-icon" />, label: 'สายพันธุ์วัว' },
         { path: '/cow-types', icon: <Sprout className="nav-icon" />, label: 'ประเภทของวัว' },
         { path: '/diseases', icon: <Stethoscope className="nav-icon" />, label: 'โรคและอาการป่วย' },
         { path: '/medicines', icon: <Pill className="nav-icon" />, label: 'รายการยา' },
         { path: '/vaccines', icon: <Syringe className="nav-icon" />, label: 'รายการวัคซีน' },
+        { path: '/checkup-types', icon: <ActivitySquare className="nav-icon" />, label: 'ประเภทกิจกรรม' },
+        { path: '/appointment-types', icon: <CalendarCheck className="nav-icon" />, label: 'ประเภทนัดหมาย' },
+        { path: '/units', icon: <Scale className="nav-icon" />, label: 'หน่วยวัด' },
       ]
     },
     {
       label: 'ตั้งค่าระบบ',
       items: [
-        { path: '/checkup-types', icon: <ActivitySquare className="nav-icon" />, label: 'ประเภทกิจกรรม' },
-        { path: '/appointment-types', icon: <CalendarCheck className="nav-icon" />, label: 'ประเภทนัดหมาย' },
-        { path: '/units', icon: <Scale className="nav-icon" />, label: 'หน่วยวัด' },
+        { path: '/market-prices', icon: <TrendingUp className="nav-icon" />, label: 'ราคาตลาดกลาง' },
         { path: '/settings', icon: <CalendarDays className="nav-icon" />, label: 'คำนวณวันคลอด' },
       ]
     }

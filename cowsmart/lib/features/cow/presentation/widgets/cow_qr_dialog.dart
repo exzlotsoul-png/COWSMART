@@ -7,6 +7,7 @@ import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/cow_icon.dart';
 import '../../../../core/utils/app_toast.dart';
 import '../../domain/cow.dart';
 
@@ -76,7 +77,7 @@ class _CowQrDialogState extends State<CowQrDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.cardBg(context),
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -89,7 +90,7 @@ class _CowQrDialogState extends State<CowQrDialog> {
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.cardBg(context),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: AppColors.primary.withValues(alpha: 0.2),
@@ -109,19 +110,18 @@ class _CowQrDialogState extends State<CowQrDialog> {
                             color: AppColors.primary,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(
-                            Icons.pets_rounded,
+                          child: const CowIcon(
                             size: 18,
                             color: Colors.white,
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Text(
+                        Text(
                           'COWSMART QR CODE',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.primaryDark,
+                            color: AppColors.text(context),
                             letterSpacing: 0.8,
                           ),
                         ),
@@ -134,10 +134,10 @@ class _CowQrDialogState extends State<CowQrDialog> {
                       widget.cow.name.isNotEmpty
                           ? widget.cow.name
                           : widget.cow.tagNumber,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+                        color: AppColors.text(context),
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -148,15 +148,15 @@ class _CowQrDialogState extends State<CowQrDialog> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.surfaceAlt,
+                        color: AppColors.surfAlt(context),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         'แท็ก: ${widget.cow.tagNumber} · ${widget.cow.type.label}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
+                          color: AppColors.subText(context),
                         ),
                       ),
                     ),

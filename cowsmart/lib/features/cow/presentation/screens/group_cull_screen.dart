@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:cowsmart/core/widgets/cow_icon.dart';
 import 'package:cowsmart/core/utils/date_formatter.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
 import 'package:cowsmart/features/cow/domain/culling_record.dart';
@@ -147,15 +148,15 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
       hintStyle: const TextStyle(fontSize: 14, color: AppColors.textHint),
       prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
       filled: true,
-      fillColor: AppColors.surfaceAlt,
+      fillColor: AppColors.surfAlt(context),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
+        borderSide: BorderSide(color: AppColors.brd(context).withValues(alpha: 0.5)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
+        borderSide: BorderSide(color: AppColors.brd(context).withValues(alpha: 0.5)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
@@ -178,91 +179,42 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
-          // ── Gradient Header ──
-          SliverToBoxAdapter(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [AppColors.primaryDark, AppColors.primary],
-                ),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(24),
-                  bottomRight: Radius.circular(24),
-                ),
-              ),
-              child: SafeArea(
-                bottom: false,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 20),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          IconButton(
-                            onPressed: () => context.pop(),
-                            icon: const Icon(Icons.arrow_back_rounded,
-                                color: Colors.white, size: 26),
-                          ),
-                          const SizedBox(width: 4),
-                          const Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'จำหน่าย/คัดออก (กลุ่ม)',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                SizedBox(height: 2),
-                                Text(
-                                  'บันทึกขาย คัดออก หรือจำหน่ายวัวหลายตัว',
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: IconButton(
-                              icon: const Icon(Icons.history_rounded,
-                                  color: Colors.white, size: 24),
-                              tooltip: 'ประวัติการจำหน่ายและคัดออก',
-                              onPressed: () => context.push('/culling_history'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+      backgroundColor: AppColors.bg(context),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        title: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'จำหน่าย/คัดออก (กลุ่ม)',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
+            Text(
+              'บันทึกขาย คัดออก หรือจำหน่ายวัวหลายตัว',
+              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.normal, color: Colors.white70),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history_rounded, color: Colors.white, size: 24),
+            tooltip: 'ประวัติการจำหน่ายและคัดออก',
+            onPressed: () => context.push('/culling_history'),
           ),
-
-          // ── Form Content ──
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Cull Type Selection Header
+          const SizedBox(width: 4),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Cull Type Selection Header
                     Row(
                       children: [
                         Container(
@@ -274,12 +226,12 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Text(
+                        Text(
                           'รูปแบบการจำหน่าย/คัดออก',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.primaryDark,
+                            color: AppColors.text(context),
                           ),
                         ),
                       ],
@@ -301,11 +253,11 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                                 decoration: BoxDecoration(
                                   color: isSelected
                                       ? type.color.withValues(alpha: 0.12)
-                                      : Colors.white,
+                                      : AppColors.cardBg(context),
                                   border: Border.all(
                                     color: isSelected
                                         ? type.color
-                                        : AppColors.border.withValues(alpha: 0.5),
+                                        : AppColors.brd(context),
                                     width: isSelected ? 2 : 1,
                                   ),
                                   borderRadius: BorderRadius.circular(16),
@@ -332,14 +284,14 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                                       decoration: BoxDecoration(
                                         color: isSelected
                                             ? type.color.withValues(alpha: 0.15)
-                                            : AppColors.surfaceAlt,
+                                            : AppColors.surfAlt(context),
                                         shape: BoxShape.circle,
                                       ),
                                       child: Icon(
                                         type.icon,
                                         color: isSelected
                                             ? type.color
-                                            : AppColors.textSecondary,
+                                            : AppColors.subText(context),
                                         size: 24,
                                       ),
                                     ),
@@ -349,7 +301,7 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                                       style: TextStyle(
                                         color: isSelected
                                             ? type.color
-                                            : AppColors.textPrimary,
+                                            : AppColors.text(context),
                                         fontWeight: isSelected
                                             ? FontWeight.bold
                                             : FontWeight.w600,
@@ -377,10 +329,10 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                         ),
                         child: Text(
                           AppDateUtils.formatThaiDate(_selectedDate),
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary),
+                              color: AppColors.text(context)),
                         ),
                       ),
                     ),
@@ -396,116 +348,146 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                         hintText:
                             'เช่น ขายส่งโรงฆ่า, คัดออกตามอายุ, ย้ายฟาร์ม ฯลฯ',
                       ),
-                      style: const TextStyle(
-                          fontSize: 15, color: AppColors.textPrimary),
+                      style: TextStyle(
+                          fontSize: 15, color: AppColors.text(context)),
                     ),
                     const SizedBox(height: 24),
 
                     // Cow List Selection Header
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 4,
-                              height: 20,
-                              decoration: BoxDecoration(
-                                color: AppColors.primary,
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'เลือกวัวที่จะจำหน่าย (${_selectedCowIds.length} ตัว)',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primaryDark,
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (activeCows.isNotEmpty)
-                          TextButton(
-                            onPressed: () {
-                              setState(() {
-                                if (_selectedCowIds.length == activeCows.length) {
-                                  _selectedCowIds.clear();
-                                  _priceControllers.clear();
-                                } else {
-                                  _selectedCowIds.addAll(
-                                    activeCows.map((c) => c.id),
-                                  );
-                                  for (var c in activeCows) {
-                                    _priceControllers.putIfAbsent(
-                                        c.id, () => TextEditingController());
-                                  }
-                                }
-                              });
-                            },
-                            child: Text(
-                              _selectedCowIds.length == activeCows.length
-                                  ? 'ยกเลิกทั้งหมด'
-                                  : 'เลือกทั้งหมด',
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                  color: AppColors.primary),
-                            ),
+                        Container(
+                          width: 4,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(2),
                           ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'เลือกวัวที่จะจำหน่าย (${_selectedCowIds.length} ตัว)',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primaryDark,
+                          ),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 12),
 
-                    // Cow Type Filter Chips
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          _buildFilterChip('ทั้งหมด', _filterType == null, () {
-                            setState(() => _filterType = null);
-                          }),
-                          const SizedBox(width: 8),
-                          ...CowType.values.map((type) {
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: _buildFilterChip(
-                                  type.label, _filterType == type, () {
-                                setState(() {
-                                  _filterType =
-                                      _filterType == type ? null : type;
-                                });
-                              }),
-                            );
-                          }),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Search Bar
+                    // Search Bar (Matching group appointment style)
                     TextField(
                       controller: _searchController,
-                      decoration: _buildInputDecoration(
-                        'ค้นหาด้วยชื่อ หรือ แท็ก/NFC',
-                        Icons.search_rounded,
-                        hintText: 'พิมพ์ชื่อวัว หรือ หมายเลขแท็ก...',
-                      ).copyWith(
+                      decoration: InputDecoration(
+                        hintText: 'ค้นหาด้วยชื่อ หรือรหัสหูวัว...',
+                        hintStyle: TextStyle(fontSize: 14.5, color: AppColors.hint(context)),
+                        prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary, size: 22),
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
-                                icon: const Icon(Icons.clear_rounded, size: 20),
+                                icon: const Icon(Icons.clear_rounded, size: 18),
                                 onPressed: () {
                                   _searchController.clear();
                                   setState(() => _searchQuery = '');
                                 },
                               )
                             : null,
+                        filled: true,
+                        fillColor: AppColors.surfAlt(context),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
-                      style: const TextStyle(fontSize: 15),
-                      onChanged: (val) => setState(() => _searchQuery = val),
+                      style: TextStyle(fontSize: 15, color: AppColors.text(context)),
+                      onChanged: (val) => setState(() => _searchQuery = val.trim()),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 10),
+
+                    // Cow Type Filter Chips (ChoiceChips matching group appointment style)
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          ChoiceChip(
+                            label: const Text('ทั้งหมด', style: TextStyle(fontSize: 14)),
+                            selected: _filterType == null,
+                            selectedColor: AppColors.primary,
+                            backgroundColor: AppColors.surfAlt(context),
+                            side: BorderSide(color: _filterType == null ? AppColors.primary : AppColors.brd(context)),
+                            labelStyle: TextStyle(
+                              color: _filterType == null ? Colors.white : AppColors.text(context),
+                              fontWeight: _filterType == null ? FontWeight.bold : FontWeight.w500,
+                            ),
+                            onSelected: (_) => setState(() => _filterType = null),
+                          ),
+                          const SizedBox(width: 8),
+                          ...CowType.values.map((type) {
+                            final isSelected = _filterType == type;
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: ChoiceChip(
+                                label: Text(type.label, style: const TextStyle(fontSize: 14)),
+                                selected: isSelected,
+                                selectedColor: AppColors.primary,
+                                backgroundColor: AppColors.surfAlt(context),
+                                side: BorderSide(color: isSelected ? AppColors.primary : AppColors.brd(context)),
+                                labelStyle: TextStyle(
+                                  color: isSelected ? Colors.white : AppColors.text(context),
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                ),
+                                onSelected: (_) => setState(() => _filterType = isSelected ? null : type),
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Found Count & Select All Row (Matching group appointment style)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'พบวัวทั้งหมด ${activeCows.length} ตัว',
+                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.subText(context)),
+                        ),
+                        if (activeCows.isNotEmpty)
+                          Builder(
+                            builder: (context) {
+                              final isAllSelected = activeCows.isNotEmpty && activeCows.every((c) => _selectedCowIds.contains(c.id));
+                              return TextButton.icon(
+                                onPressed: () {
+                                  setState(() {
+                                    if (isAllSelected) {
+                                      _selectedCowIds.clear();
+                                      _priceControllers.clear();
+                                    } else {
+                                      _selectedCowIds.addAll(activeCows.map((c) => c.id));
+                                      for (var c in activeCows) {
+                                        _priceControllers.putIfAbsent(c.id, () => TextEditingController());
+                                      }
+                                    }
+                                  });
+                                },
+                                icon: Icon(
+                                  isAllSelected ? Icons.deselect_rounded : Icons.select_all_rounded,
+                                  size: 19,
+                                  color: AppColors.primary,
+                                ),
+                                label: Text(
+                                  isAllSelected ? 'ยกเลิกการเลือก' : 'เลือกทั้งหมด',
+                                  style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 14),
+                                ),
+                              );
+                            },
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
 
                     // Cows List
                     if (activeCows.isEmpty)
@@ -519,7 +501,7 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                         ),
                         child: Column(
                           children: [
-                            Icon(Icons.pets_rounded,
+                            CowIcon(
                                 size: 40,
                                 color: AppColors.primary.withValues(alpha: 0.4)),
                             const SizedBox(height: 12),
@@ -536,11 +518,10 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                         ),
                       )
                     else
-                      ListView.separated(
+                      ListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: activeCows.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 10),
                         itemBuilder: (context, index) {
                           final cow = activeCows[index];
                           final isSelected = _selectedCowIds.contains(cow.id);
@@ -550,131 +531,176 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                             _priceControllers[cow.id] = TextEditingController();
                           }
 
-                          return InkWell(
-                            onTap: () {
-                              setState(() {
-                                if (isSelected) {
-                                  _selectedCowIds.remove(cow.id);
-                                  _priceControllers[cow.id]?.dispose();
-                                  _priceControllers.remove(cow.id);
-                                } else {
-                                  _selectedCowIds.add(cow.id);
-                                  _priceControllers[cow.id] =
-                                      TextEditingController();
-                                }
-                              });
-                            },
-                            borderRadius: BorderRadius.circular(18),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(18),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? _selectedType.color
-                                      : AppColors.border.withValues(alpha: 0.5),
-                                  width: isSelected ? 2 : 1,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: isSelected
-                                        ? _selectedType.color
-                                            .withValues(alpha: 0.12)
-                                        : Colors.black.withValues(alpha: 0.03),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 3),
-                                  ),
-                                ],
+                          final genderDisplay = (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male') ? 'ผู้' : 'เมีย';
+                          final breedDisplay = cow.breed.isNotEmpty ? cow.breed : '-';
+
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? _selectedType.color.withValues(alpha: 0.05)
+                                  : AppColors.cardBg(context),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: isSelected
+                                    ? _selectedType.color
+                                    : AppColors.brd(context).withValues(alpha: 0.5),
+                                width: isSelected ? 1.5 : 1,
                               ),
+                            ),
+                            child: InkWell(
+                              onTap: () {
+                                setState(() {
+                                  if (isSelected) {
+                                    _selectedCowIds.remove(cow.id);
+                                    _priceControllers[cow.id]?.dispose();
+                                    _priceControllers.remove(cow.id);
+                                  } else {
+                                    _selectedCowIds.add(cow.id);
+                                    _priceControllers[cow.id] =
+                                        TextEditingController();
+                                  }
+                                });
+                              },
+                              borderRadius: BorderRadius.circular(14),
                               child: Column(
                                 children: [
                                   Padding(
-                                    padding: const EdgeInsets.all(14),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 10),
                                     child: Row(
                                       children: [
-                                        // Checkbox
-                                        Container(
-                                          width: 26,
-                                          height: 26,
-                                          decoration: BoxDecoration(
-                                            color: isSelected
-                                                ? _selectedType.color
-                                                : Colors.transparent,
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                            border: Border.all(
-                                              color: isSelected
-                                                  ? _selectedType.color
-                                                  : AppColors.border,
-                                              width: 2,
-                                            ),
-                                          ),
-                                          child: isSelected
-                                              ? const Icon(Icons.check_rounded,
-                                                  color: Colors.white, size: 18)
-                                              : null,
-                                        ),
-                                        const SizedBox(width: 14),
-
-                                        // Cow Avatar
-                                        Container(
-                                          width: 50,
-                                          height: 50,
-                                          decoration: BoxDecoration(
-                                            color: AppColors.primary
-                                                .withValues(alpha: 0.1),
-                                            borderRadius:
-                                                BorderRadius.circular(14),
-                                          ),
-                                          child: cow.imageFullUrl != null &&
-                                                  cow.imageFullUrl!.isNotEmpty
-                                              ? ClipRRect(
-                                                  borderRadius:
-                                                      BorderRadius.circular(14),
-                                                  child: Image.network(
+                                        // Cow Image Avatar on the LEFT
+                                        ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          child: Container(
+                                            width: 48,
+                                            height: 48,
+                                            color: AppColors.surfAlt(context),
+                                            child: (cow.imageFullUrl != null &&
+                                                    cow.imageFullUrl!.isNotEmpty)
+                                                ? Image.network(
                                                     cow.imageFullUrl!,
-                                                    width: 50,
-                                                    height: 50,
+                                                    width: 48,
+                                                    height: 48,
                                                     fit: BoxFit.cover,
-                                                  ),
-                                                )
-                                              : const Icon(Icons.pets_rounded,
-                                                  color: AppColors.primary,
-                                                  size: 24),
+                                                    errorBuilder: (_, __, ___) =>
+                                                        const Center(
+                                                      child: CowIcon(
+                                                          size: 24,
+                                                          color: AppColors.textHint),
+                                                    ),
+                                                  )
+                                                : (cow.imageUrl != null &&
+                                                        cow.imageUrl!.isNotEmpty)
+                                                    ? Image.network(
+                                                        cow.imageUrl!,
+                                                        width: 48,
+                                                        height: 48,
+                                                        fit: BoxFit.cover,
+                                                        errorBuilder: (_, __,
+                                                                ___) =>
+                                                            const Center(
+                                                          child: CowIcon(
+                                                              size: 24,
+                                                              color: AppColors
+                                                                  .textHint),
+                                                        ),
+                                                      )
+                                                    : const Center(
+                                                        child: CowIcon(
+                                                            size: 24,
+                                                            color: AppColors
+                                                                .textHint),
+                                                      ),
+                                          ),
                                         ),
-                                        const SizedBox(width: 14),
+                                        const SizedBox(width: 12),
 
-                                        // Cow Details
+                                        // Cow Details in the MIDDLE
                                         Expanded(
                                           child: Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
-                                              Text(
-                                                cow.name,
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 17,
-                                                  color: AppColors.textPrimary,
-                                                ),
-                                                maxLines: 1,
-                                                overflow:
-                                                    TextOverflow.ellipsis,
+                                              Row(
+                                                children: [
+                                                  Flexible(
+                                                    child: Text(
+                                                      cow.name.isNotEmpty
+                                                          ? cow.name
+                                                          : cow.tagNumber,
+                                                      style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 16,
+                                                          color: AppColors.text(context)),
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                  if (cow.tagNumber.isNotEmpty) ...[
+                                                    const SizedBox(width: 8),
+                                                    Container(
+                                                      padding:
+                                                          const EdgeInsets.symmetric(
+                                                              horizontal: 8,
+                                                              vertical: 2.5),
+                                                      decoration: BoxDecoration(
+                                                        color: AppColors.primary
+                                                            .withValues(
+                                                                alpha: 0.1),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                                6),
+                                                      ),
+                                                      child: Text(
+                                                        cow.tagNumber,
+                                                        style: const TextStyle(
+                                                            fontSize: 12.5,
+                                                            color: AppColors
+                                                                .primaryDark,
+                                                            fontWeight:
+                                                                FontWeight.bold),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ],
                                               ),
                                               const SizedBox(height: 4),
-                                              Wrap(
-                                                spacing: 6,
-                                                runSpacing: 4,
-                                                children: [
-                                                  _buildCowChip(
-                                                      'แท็ก: ${cow.tagNumber}'),
-                                                  _buildCowChip(
-                                                      '${cow.latestWeight.toStringAsFixed(0)} กก.'),
-                                                  _buildCowChip(cow.breed),
-                                                ],
+                                              Text(
+                                                'สายพันธุ์: $breedDisplay • เพศ: $genderDisplay${cow.latestWeight > 0 ? ' • ${cow.latestWeight.toStringAsFixed(0)} กก.' : ''}',
+                                                style: const TextStyle(
+                                                    fontSize: 13.5,
+                                                    color: AppColors
+                                                        .textSecondary),
+                                                overflow: TextOverflow.ellipsis,
                                               ),
                                             ],
                                           ),
+                                        ),
+
+                                        // Checkbox on the RIGHT
+                                        Checkbox(
+                                          value: isSelected,
+                                          activeColor: _selectedType.color,
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(4)),
+                                          onChanged: (val) {
+                                            setState(() {
+                                              if (val == true) {
+                                                _selectedCowIds.add(cow.id);
+                                                _priceControllers[cow.id] =
+                                                    TextEditingController();
+                                              } else {
+                                                _selectedCowIds.remove(cow.id);
+                                                _priceControllers[cow.id]?.dispose();
+                                                _priceControllers.remove(cow.id);
+                                              }
+                                            });
+                                          },
                                         ),
                                       ],
                                     ),
@@ -685,51 +711,84 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                                       _selectedType == CullType.sold)
                                     Padding(
                                       padding: const EdgeInsets.fromLTRB(
-                                          14, 0, 14, 14),
+                                          12, 0, 12, 12),
                                       child: Builder(
                                         builder: (context) {
-                                          final marketState = ref.watch(marketPriceProvider);
-                                          final breeds = ref.watch(breedProvider);
+                                          final marketState =
+                                              ref.watch(marketPriceProvider);
+                                          final breeds =
+                                              ref.watch(breedProvider);
                                           final breedName = breeds
                                               .firstWhere(
                                                 (b) => b.id == cow.breed,
-                                                orElse: () => Breed(id: cow.breed, name: cow.breed),
+                                                orElse: () => Breed(
+                                                    id: cow.breed,
+                                                    name: cow.breed),
                                               )
                                               .name;
                                           final weight = cow.latestWeight;
-                                          final pricePerKg = marketState.calculatePricePerKg(breedName: breedName, weight: weight);
+                                          final pricePerKg = marketState
+                                              .calculatePricePerKg(
+                                                  breedName: breedName,
+                                                  weight: weight);
                                           final estVal = weight * pricePerKg;
 
                                           return Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
+                                              const Divider(
+                                                  height: 1,
+                                                  thickness: 1,
+                                                  color: AppColors.border),
+                                              const SizedBox(height: 10),
                                               if (weight > 0) ...[
                                                 Row(
-                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
                                                   children: [
                                                     Text(
                                                       'ราคาประเมิน: ฿${NumberFormat('#,##0').format(estVal)} (${weight.toStringAsFixed(0)}กก. × ${pricePerKg.toStringAsFixed(2)}฿)',
-                                                      style: TextStyle(
+                                                      style: const TextStyle(
                                                         fontSize: 12,
-                                                        fontWeight: FontWeight.bold,
-                                                        color: AppColors.success,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color:
+                                                            AppColors.success,
                                                       ),
                                                     ),
                                                     InkWell(
                                                       onTap: () {
                                                         setState(() {
-                                                          _priceControllers[cow.id]?.text = estVal.toStringAsFixed(0);
+                                                          _priceControllers[cow.id]
+                                                                  ?.text =
+                                                              estVal
+                                                                  .toStringAsFixed(
+                                                                      0);
                                                         });
                                                       },
                                                       child: Container(
-                                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                                        decoration: BoxDecoration(
-                                                          color: AppColors.success,
-                                                          borderRadius: BorderRadius.circular(6),
+                                                        padding: const EdgeInsets
+                                                            .symmetric(
+                                                            horizontal: 8,
+                                                            vertical: 3),
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color:
+                                                              AppColors.success,
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(6),
                                                         ),
                                                         child: const Text(
                                                           'ใช้ราคานี้',
-                                                          style: TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold),
+                                                          style: TextStyle(
+                                                              fontSize: 11,
+                                                              color: Colors.white,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
                                                         ),
                                                       ),
                                                     ),
@@ -738,19 +797,25 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                                                 const SizedBox(height: 6),
                                               ],
                                               TextFormField(
-                                                controller: _priceControllers[cow.id],
-                                                keyboardType: TextInputType.number,
-                                                decoration: _buildInputDecoration(
+                                                controller:
+                                                    _priceControllers[cow.id],
+                                                keyboardType:
+                                                    TextInputType.number,
+                                                decoration:
+                                                    _buildInputDecoration(
                                                   'ราคาขายของวัวตัวนี้ (บาท)',
                                                   Icons.payments_rounded,
                                                   hintText: '0.00',
                                                 ),
                                                 style: const TextStyle(
                                                     fontSize: 16,
-                                                    fontWeight: FontWeight.bold),
+                                                    fontWeight:
+                                                        FontWeight.bold),
                                                 validator: (value) {
-                                                  if (_selectedType == CullType.sold &&
-                                                      (value == null || value.isEmpty)) {
+                                                  if (_selectedType ==
+                                                          CullType.sold &&
+                                                      (value == null ||
+                                                          value.isEmpty)) {
                                                     return 'กรุณากรอกราคาขายสำหรับวัวตัวนี้';
                                                   }
                                                   return null;
@@ -771,15 +836,12 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                 ),
               ),
             ),
-          ),
-        ],
-      ),
 
       // Sticky Bottom Action Bar
       bottomNavigationBar: Container(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.cardBg(context),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.06),
@@ -822,8 +884,8 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                     backgroundColor: _selectedType.color,
                     foregroundColor: Colors.white,
                     disabledBackgroundColor:
-                        AppColors.border.withValues(alpha: 0.5),
-                    disabledForegroundColor: AppColors.textHint,
+                        AppColors.surfAlt(context),
+                    disabledForegroundColor: AppColors.subText(context),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
@@ -832,49 +894,6 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
               );
             },
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterChip(String label, bool isSelected, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary
-              : AppColors.primary.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: isSelected ? Colors.white : AppColors.primary,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCowChip(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceAlt,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 12,
-          color: AppColors.textSecondary,
-          fontWeight: FontWeight.w500,
         ),
       ),
     );

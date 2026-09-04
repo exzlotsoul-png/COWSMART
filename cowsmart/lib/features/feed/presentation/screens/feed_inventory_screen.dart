@@ -37,7 +37,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
     final feedState = ref.watch(feedProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg(context),
       body: feedState.errorMessage != null
           ? Center(child: Text(feedState.errorMessage!))
           : CustomScrollView(
@@ -63,7 +63,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                         child: Column(
                           children: [
                             const Text(
-                              'คลังและการให้อาหาร',
+                              'การให้อาหาร',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 22,
@@ -95,6 +95,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
               ],
             ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'feed_inventory_fab',
         onPressed: () => _showAddFeedDialog(context),
         backgroundColor: AppColors.primary,
         elevation: 4,
@@ -145,6 +146,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
           children: [
             Expanded(
               child: _buildSummaryCard(
+                context,
                 title: 'รายการทั้งหมด',
                 value: '${allItems.length} รายการ',
                 icon: Icons.list_alt_rounded,
@@ -154,6 +156,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: _buildSummaryCard(
+                context,
                 title: 'ปริมาณรวม',
                 value: '${totalQuantity.toStringAsFixed(1)} กก.',
                 icon: Icons.scale_rounded,
@@ -169,6 +172,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
           children: [
             Expanded(
               child: _buildSummaryCard(
+                context,
                 title: 'มูลค่ารวม',
                 value: '${NumberFormat('#,##0').format(totalCost)} ฿',
                 icon: Icons.payments_rounded,
@@ -178,6 +182,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: _buildSummaryCard(
+                context,
                 title: 'ราคาเฉลี่ย/กก.',
                 value: totalQuantity > 0
                     ? '${(totalCost / totalQuantity).toStringAsFixed(1)} ฿'
@@ -205,18 +210,18 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Text(
+                Text(
                   'สัดส่วนตามหมวดหมู่',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 17,
-                    color: AppColors.textPrimary,
+                    color: AppColors.text(context),
                   ),
                 ),
               ],
             ),
           ),
-          _buildCategoryBreakdown(categoryMap, categoryCostMap, totalQuantity),
+          _buildCategoryBreakdown(context, categoryMap, categoryCostMap, totalQuantity),
           const SizedBox(height: 24),
         ],
 
@@ -232,12 +237,12 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            const Text(
+            Text(
               'ประวัติการให้อาหารล่าสุด',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 17,
-                color: AppColors.textPrimary,
+                color: AppColors.text(context),
               ),
             ),
             const Spacer(),
@@ -258,23 +263,23 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.cardBg(context),
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+              border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
             ),
             child: Column(
               children: [
                 Icon(Icons.inventory_2_outlined, size: 52, color: Colors.grey[400]),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'ยังไม่มีบันทึกประวัติการให้อาหาร',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 15, fontWeight: FontWeight.w500),
+                  style: TextStyle(color: AppColors.subText(context), fontSize: 15, fontWeight: FontWeight.w500),
                 ),
               ],
             ),
           )
         else ...[
-          ...allItems.take(5).map((item) => _buildFeedCard(item)),
+          ...allItems.take(5).map((item) => _buildFeedCard(context, item)),
           const SizedBox(height: 8),
           SizedBox(
             width: double.infinity,
@@ -313,17 +318,17 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
     return Colors.grey[700]!;
   }
 
-  Widget _buildCategoryBreakdown(Map<String, double> categoryMap, Map<String, double> categoryCostMap, double total) {
+  Widget _buildCategoryBreakdown(BuildContext context, Map<String, double> categoryMap, Map<String, double> categoryCostMap, double total) {
     final entries = categoryMap.entries.toList();
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(alpha: AppColors.isDark(context) ? 0.2 : 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -376,17 +381,17 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                     Expanded(
                       child: Text(
                         catName,
-                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.text(context)),
                       ),
                     ),
                     Text(
                       '${qty.toStringAsFixed(1)} กก. ($pct%)',
-                      style: TextStyle(fontSize: 14, color: Colors.grey[700], fontWeight: FontWeight.w500),
+                      style: TextStyle(fontSize: 14, color: AppColors.subText(context), fontWeight: FontWeight.w500),
                     ),
                     const SizedBox(width: 12),
                     Text(
                       '${NumberFormat('#,##0').format(cost)} ฿',
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.text(context)),
                     ),
                   ],
                 ),
@@ -398,7 +403,8 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
     );
   }
 
-  Widget _buildSummaryCard({
+  Widget _buildSummaryCard(
+    BuildContext context, {
     required String title,
     required String value,
     required IconData icon,
@@ -406,12 +412,12 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(alpha: AppColors.isDark(context) ? 0.2 : 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -436,10 +442,10 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                 Flexible(
                   child: Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
+                      color: AppColors.subText(context),
                     ),
                   ),
                 ),
@@ -448,10 +454,10 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
             const SizedBox(height: 12),
             Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 21,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: AppColors.text(context),
               ),
             ),
           ],
@@ -460,7 +466,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
     );
   }
 
-  Widget _buildFeedCard(FeedItem item) {
+  Widget _buildFeedCard(BuildContext context, FeedItem item) {
     final zones = ref.watch(zoneProvider).zones;
     final zoneObj = (item.zoneId != null && item.zoneId!.isNotEmpty)
         ? zones.cast<Zone?>().firstWhere((z) => z?.id == item.zoneId, orElse: () => null)
@@ -492,12 +498,12 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(alpha: AppColors.isDark(context) ? 0.2 : 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -525,10 +531,10 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                     children: [
                       Text(
                         item.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
-                          color: AppColors.textPrimary,
+                          color: AppColors.text(context),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -581,10 +587,10 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                   children: [
                     Text(
                       '${NumberFormat('#,##0').format(item.cost)} ฿',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
-                        color: AppColors.textPrimary,
+                        color: AppColors.text(context),
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -592,7 +598,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                       '${item.quantity.toStringAsFixed(1)} กก.',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[700],
+                        color: AppColors.subText(context),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -606,12 +612,12 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceAlt,
+                  color: AppColors.surfAlt(context),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
                   'หมายเหตุ: ${item.notes}',
-                  style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                  style: TextStyle(fontSize: 13, color: AppColors.subText(context)),
                 ),
               ),
             ],
@@ -622,7 +628,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                 const SizedBox(width: 4),
                 Text(
                   AppDateUtils.formatThaiDate(item.recordedAt, includeTime: true),
-                  style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 13, color: AppColors.text(context), fontWeight: FontWeight.w600),
                 ),
                 const Spacer(),
                 IconButton(
@@ -713,9 +719,9 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
       backgroundColor: Colors.transparent,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setBottomSheetState) => Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
+          decoration: BoxDecoration(
+            color: AppColors.cardBg(context),
+            borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(24),
               topRight: Radius.circular(24),
             ),
@@ -737,18 +743,18 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.grey[300],
+                      color: AppColors.brd(context),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'บันทึกการให้อาหาร',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: AppColors.text(context),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -756,10 +762,14 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                 // Name field
                 TextField(
                   controller: nameController,
+                  style: TextStyle(color: AppColors.text(context)),
                   decoration: InputDecoration(
                     labelText: 'ชื่ออาหาร / รายการ',
                     hintText: 'เช่น หญ้าเนเปียร์, อาหารข้น 16%...',
+                    hintStyle: TextStyle(color: AppColors.hint(context)),
                     prefixIcon: const Icon(Icons.inventory_2_outlined, color: AppColors.primary),
+                    filled: true,
+                    fillColor: AppColors.surfAlt(context),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                 ),
@@ -768,15 +778,19 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                 // Category Dropdown
                 DropdownButtonFormField<String>(
                   initialValue: selectedCategory,
+                  dropdownColor: AppColors.cardBg(context),
+                  style: TextStyle(color: AppColors.text(context), fontSize: 14),
                   decoration: InputDecoration(
                     labelText: 'หมวดหมู่อาหาร',
                     prefixIcon: const Icon(Icons.category_outlined, color: AppColors.primary),
+                    filled: true,
+                    fillColor: AppColors.surfAlt(context),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
                   ),
-                  items: const [
-                    DropdownMenuItem(value: 'grass', child: Text('หญ้า / อาหารหยาบ')),
-                    DropdownMenuItem(value: 'concentrate', child: Text('อาหารข้น')),
-                    DropdownMenuItem(value: 'supplement', child: Text('อาหารเสริม / แร่ธาตุ')),
+                  items: [
+                    DropdownMenuItem(value: 'grass', child: Text('หญ้า / อาหารหยาบ', style: TextStyle(color: AppColors.text(context)))),
+                    DropdownMenuItem(value: 'concentrate', child: Text('อาหารข้น', style: TextStyle(color: AppColors.text(context)))),
+                    DropdownMenuItem(value: 'supplement', child: Text('อาหารเสริม / แร่ธาตุ', style: TextStyle(color: AppColors.text(context)))),
                   ],
                   onChanged: (val) {
                     if (val != null) setBottomSheetState(() => selectedCategory = val);
@@ -787,20 +801,24 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                 // Zone Dropdown
                 DropdownButtonFormField<String?>(
                   initialValue: selectedZoneId,
+                  dropdownColor: AppColors.cardBg(context),
+                  style: TextStyle(color: AppColors.text(context), fontSize: 14),
                   decoration: InputDecoration(
                     labelText: 'ให้ในโซน (ระบุโซนที่ให้อาหาร)',
                     prefixIcon: const Icon(Icons.location_on_outlined, color: AppColors.primary),
+                    filled: true,
+                    fillColor: AppColors.surfAlt(context),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                   items: [
-                    const DropdownMenuItem<String?>(
+                    DropdownMenuItem<String?>(
                       value: null,
-                      child: Text('ทุกโซน / ไม่ระบุโซน'),
+                      child: Text('ทุกโซน / ไม่ระบุโซน', style: TextStyle(color: AppColors.text(context))),
                     ),
                     ...zones.map(
                       (z) => DropdownMenuItem<String?>(
                         value: z.id,
-                        child: Text(z.name),
+                        child: Text(z.name, style: TextStyle(color: AppColors.text(context))),
                       ),
                     ),
                   ],
@@ -815,9 +833,12 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                       child: TextField(
                         controller: quantityController,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        style: TextStyle(color: AppColors.text(context)),
                         decoration: InputDecoration(
                           labelText: 'ปริมาณ (กก.)',
                           prefixIcon: const Icon(Icons.scale_outlined, color: AppColors.primary),
+                          filled: true,
+                          fillColor: AppColors.surfAlt(context),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
                         ),
                       ),
@@ -827,9 +848,12 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                       child: TextField(
                         controller: costController,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        style: TextStyle(color: AppColors.text(context)),
                         decoration: InputDecoration(
                           labelText: 'มูลค่า (บาท)',
                           prefixIcon: const Icon(Icons.payments_outlined, color: AppColors.primary),
+                          filled: true,
+                          fillColor: AppColors.surfAlt(context),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
                         ),
                       ),
@@ -854,7 +878,8 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                     decoration: BoxDecoration(
-                      border: Border.all(color: AppColors.border),
+                      color: AppColors.cardBg(context),
+                      border: Border.all(color: AppColors.brd(context)),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Row(
@@ -863,7 +888,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                         const SizedBox(width: 10),
                         Text(
                           'วันที่บันทึก: ${AppDateUtils.formatThaiDate(selectedDate)}',
-                          style: const TextStyle(fontSize: 15, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 15, color: AppColors.text(context), fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
@@ -874,10 +899,14 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                 // Note field
                 TextField(
                   controller: noteController,
+                  style: TextStyle(color: AppColors.text(context)),
                   decoration: InputDecoration(
                     labelText: 'หมายเหตุ (ถ้ามี)',
                     hintText: 'รายละเอียดเพิ่มเติม...',
+                    hintStyle: TextStyle(color: AppColors.hint(context)),
                     prefixIcon: const Icon(Icons.notes_outlined, color: AppColors.primary),
+                    filled: true,
+                    fillColor: AppColors.surfAlt(context),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                 ),

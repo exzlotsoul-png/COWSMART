@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   CheckCircle, Trash2, Search, ArrowUpDown, Image as ImageIcon, 
   Tag, Plus, Edit, X, AlertCircle, CheckCircle2, Eye, Calendar,
-  User, MessageSquare, Clock, Check
+  User, MessageSquare, Clock, Check, Lightbulb, Users
 } from 'lucide-react';
 import api from '../lib/axios';
 import Pagination from '../components/layout/Pagination';
@@ -36,6 +36,20 @@ const IssueReports = () => {
 
   const showNotification = (text, type = 'success') => {
     showToast(text, type);
+  };
+
+  // Helper for issue report category/type tag
+  const getIssueTag = (topic) => {
+    if (topic && (topic.includes('ปัญหา') || topic.includes('error'))) {
+      return { icon: <AlertCircle size={12} />, label: 'ปัญหา', color: '#ef4444', bg: '#fee2e2' };
+    }
+    if (topic && topic.includes('เสนอแนะ')) {
+      return { icon: <Lightbulb size={12} />, label: 'ข้อเสนอแนะ', color: '#d97706', bg: '#fef3c7' };
+    }
+    if (topic && topic.includes('บัญชี')) {
+      return { icon: <Users size={12} />, label: 'บัญชี', color: '#7c3aed', bg: '#ede9fe' };
+    }
+    return { icon: <MessageSquare size={12} />, label: 'ทั่วไป', color: '#2563eb', bg: '#dbeafe' };
   };
 
   const fetchReports = async () => {
@@ -276,6 +290,7 @@ const IssueReports = () => {
                     <th style={{ width: '100px' }}>รหัสรายงาน</th>
                     <th style={{ width: '120px' }}>วันที่รายงาน</th>
                     <th style={{ minWidth: '160px' }}>ผู้ใช้งาน (อีเมล)</th>
+                    <th style={{ width: '120px', whiteSpace: 'nowrap' }}>ประเภท</th>
                     <th style={{ minWidth: '160px' }}>หัวข้อปัญหา</th>
                     <th style={{ maxWidth: '200px' }}>รายละเอียด</th>
                     <th style={{ width: '120px', whiteSpace: 'nowrap' }}>สถานะ</th>
@@ -289,6 +304,7 @@ const IssueReports = () => {
                       const email = report.email || report.user_id || '-';
                       const topic = report.topic || report.issue_type || '-';
                       const isResolved = report.status === 1 || report.status === '1' || report.status === 'resolved';
+                      const tag = getIssueTag(topic);
 
                       return (
                         <tr key={id}>
@@ -320,6 +336,22 @@ const IssueReports = () => {
                             ) : '-'}
                           </td>
                           <td style={{ wordBreak: 'break-all' }}>{email}</td>
+                          <td style={{ whiteSpace: 'nowrap' }}>
+                            <span style={{ 
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              padding: '4px 10px',
+                              borderRadius: '20px',
+                              fontSize: '0.75rem',
+                              fontWeight: '600',
+                              backgroundColor: tag.bg,
+                              color: tag.color,
+                              whiteSpace: 'nowrap'
+                            }}>
+                              {tag.icon} {tag.label}
+                            </span>
+                          </td>
                           <td style={{ fontWeight: '500' }}>{topic}</td>
                           <td style={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={report.description}>
                             {report.description || '-'}
@@ -366,7 +398,7 @@ const IssueReports = () => {
                     })
                   ) : (
                     <tr>
-                      <td colSpan="7" style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
+                      <td colSpan="8" style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
                         ไม่พบข้อมูลรายงานปัญหา
                       </td>
                     </tr>
@@ -443,8 +475,28 @@ const IssueReports = () => {
                   <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
                     <Tag size={13} /> หัวข้อปัญหา
                   </span>
-                  <div style={{ fontWeight: '600', color: 'var(--primary-color)', fontSize: '0.9rem' }}>
-                    {selectedReportDetail.topic || selectedReportDetail.issue_type || '-'}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span style={{ fontWeight: '600', color: 'var(--primary-color)', fontSize: '0.9rem' }}>
+                      {selectedReportDetail.topic || selectedReportDetail.issue_type || '-'}
+                    </span>
+                    {(() => {
+                      const mTag = getIssueTag(selectedReportDetail.topic || selectedReportDetail.issue_type);
+                      return (
+                        <span style={{ 
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: '2px 8px',
+                          borderRadius: '12px',
+                          fontSize: '0.75rem',
+                          fontWeight: '600',
+                          backgroundColor: mTag.bg,
+                          color: mTag.color
+                        }}>
+                          {mTag.icon} {mTag.label}
+                        </span>
+                      );
+                    })()}
                   </div>
                 </div>
 

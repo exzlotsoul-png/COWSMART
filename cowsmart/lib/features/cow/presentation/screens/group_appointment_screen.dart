@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cowsmart/core/network/api_client.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:cowsmart/core/widgets/cow_icon.dart';
 import 'package:cowsmart/core/utils/date_formatter.dart';
 import 'package:cowsmart/features/calendar/providers/calendar_provider.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
@@ -219,7 +220,7 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
     }).toList();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg(context),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: AppColors.primary,
@@ -257,7 +258,7 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
                 // Step Indicator Bar
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                  color: Colors.white,
+                  color: AppColors.cardBg(context),
                   child: Row(
                     children: [
                       _buildStepBadge(1, 'เลือกวัว / ทั้งฟาร์ม', _currentStep == 1, () {
@@ -266,7 +267,7 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
                       Expanded(
                         child: Container(
                           height: 2,
-                          color: _currentStep == 2 ? AppColors.primary : Colors.grey[300],
+                          color: _currentStep == 2 ? AppColors.primary : AppColors.brd(context),
                         ),
                       ),
                       _buildStepBadge(2, 'รายละเอียดนัดหมาย', _currentStep == 2, () {
@@ -277,7 +278,7 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
                     ],
                   ),
                 ),
-                const Divider(height: 1),
+                Divider(height: 1, color: AppColors.div(context)),
 
                 Expanded(
                   child: _currentStep == 1
@@ -291,7 +292,7 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
           : Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.cardBg(context),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.06),
@@ -370,11 +371,11 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
         children: [
           CircleAvatar(
             radius: 13,
-            backgroundColor: isActive ? AppColors.primary : Colors.grey[300],
+            backgroundColor: isActive ? AppColors.primary : AppColors.surfAlt(context),
             child: Text(
               '$step',
               style: TextStyle(
-                color: isActive ? Colors.white : AppColors.textSecondary,
+                color: isActive ? Colors.white : AppColors.subText(context),
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
@@ -385,7 +386,7 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
             title,
             style: TextStyle(
               fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-              color: isActive ? AppColors.primaryDark : AppColors.textSecondary,
+              color: isActive ? AppColors.text(context) : AppColors.subText(context),
               fontSize: 13,
             ),
           ),
@@ -403,15 +404,15 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
         // Whole Farm Option Switch
         Container(
           padding: const EdgeInsets.all(14),
-          color: Colors.white,
+          color: AppColors.cardBg(context),
           child: Column(
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color: _isWholeFarm ? AppColors.primary.withValues(alpha: 0.08) : AppColors.surfaceAlt,
+                  color: _isWholeFarm ? AppColors.primary.withValues(alpha: 0.08) : AppColors.surfAlt(context),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: _isWholeFarm ? AppColors.primary : AppColors.border,
+                    color: _isWholeFarm ? AppColors.primary : AppColors.brd(context),
                     width: _isWholeFarm ? 1.5 : 1,
                   ),
                 ),
@@ -427,17 +428,17 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
                       }
                     });
                   },
-                  title: const Text(
+                  title: Text(
                     'ทั้งฟาร์ม / ไม่เจาะจงวัว',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.text(context)),
                   ),
-                  subtitle: const Text(
+                  subtitle: Text(
                     'สร้างนัดหมายรวมสำหรับทั้งฟาร์ม ไม่ได้ระบุตัววัวเฉพาะเจาะจง',
-                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    style: TextStyle(fontSize: 12, color: AppColors.subText(context)),
                   ),
                   secondary: CircleAvatar(
                     backgroundColor: AppColors.primary.withValues(alpha: 0.15),
-                    child: const Icon(Icons.home_work_outlined, color: AppColors.primaryDark, size: 22),
+                    child: const Icon(Icons.home_work_outlined, color: AppColors.primary, size: 22),
                   ),
                 ),
               ),
@@ -448,8 +449,8 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
                   controller: _searchController,
                   decoration: InputDecoration(
                     hintText: 'ค้นหาด้วยชื่อ หรือรหัสหูวัว...',
-                    hintStyle: const TextStyle(fontSize: 13, color: AppColors.textHint),
-                    prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary, size: 20),
+                    hintStyle: TextStyle(fontSize: 14.5, color: AppColors.hint(context)),
+                    prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary, size: 22),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
                             icon: const Icon(Icons.clear_rounded, size: 18),
@@ -460,13 +461,14 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
                           )
                         : null,
                     filled: true,
-                    fillColor: AppColors.surfaceAlt,
-                    isDense: true,
+                    fillColor: AppColors.surfAlt(context),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
                     ),
                   ),
+                  style: TextStyle(fontSize: 15, color: AppColors.text(context)),
                   onChanged: (val) => setState(() => _searchQuery = val.trim()),
                 ),
                 const SizedBox(height: 10),
@@ -475,12 +477,14 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
                   child: Row(
                     children: [
                       ChoiceChip(
-                        label: const Text('ทุกโซน', style: TextStyle(fontSize: 12.5)),
+                        label: const Text('ทุกโซน', style: TextStyle(fontSize: 14)),
                         selected: _selectedZoneId == null,
                         selectedColor: AppColors.primary,
+                        backgroundColor: AppColors.surfAlt(context),
+                        side: BorderSide(color: _selectedZoneId == null ? AppColors.primary : AppColors.brd(context)),
                         labelStyle: TextStyle(
-                          color: _selectedZoneId == null ? Colors.white : AppColors.textPrimary,
-                          fontWeight: _selectedZoneId == null ? FontWeight.bold : FontWeight.normal,
+                          color: _selectedZoneId == null ? Colors.white : AppColors.text(context),
+                          fontWeight: _selectedZoneId == null ? FontWeight.bold : FontWeight.w500,
                         ),
                         onSelected: (_) => setState(() => _selectedZoneId = null),
                       ),
@@ -490,12 +494,14 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
                         return Padding(
                           padding: const EdgeInsets.only(right: 8),
                           child: ChoiceChip(
-                            label: Text(zone.name, style: const TextStyle(fontSize: 12.5)),
+                            label: Text(zone.name, style: const TextStyle(fontSize: 14)),
                             selected: isSelected,
                             selectedColor: AppColors.primary,
+                            backgroundColor: AppColors.surfAlt(context),
+                            side: BorderSide(color: isSelected ? AppColors.primary : AppColors.brd(context)),
                             labelStyle: TextStyle(
-                              color: isSelected ? Colors.white : AppColors.textPrimary,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              color: isSelected ? Colors.white : AppColors.text(context),
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                             ),
                             onSelected: (_) => setState(() => _selectedZoneId = zone.id),
                           ),
@@ -513,13 +519,13 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
           // Select All Row
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: AppColors.surfaceAlt,
+            color: AppColors.surfAlt(context),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'พบวัวทั้งหมด ${availableCows.length} ตัว',
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.textSecondary),
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.subText(context)),
                 ),
                 TextButton.icon(
                   onPressed: () {
@@ -535,12 +541,12 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
                   },
                   icon: Icon(
                     isAllSelected ? Icons.deselect_rounded : Icons.select_all_rounded,
-                    size: 18,
+                    size: 19,
                     color: AppColors.primary,
                   ),
                   label: Text(
                     isAllSelected ? 'ยกเลิกการเลือก' : 'เลือกทั้งหมด',
-                    style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13),
+                    style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 14),
                   ),
                 ),
               ],
@@ -566,10 +572,10 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
                       return Container(
                         margin: const EdgeInsets.only(bottom: 10),
                         decoration: BoxDecoration(
-                          color: isChecked ? AppColors.primary.withValues(alpha: 0.05) : Colors.white,
+                          color: isChecked ? AppColors.primary.withValues(alpha: 0.15) : AppColors.cardBg(context),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: isChecked ? AppColors.primary : AppColors.border.withValues(alpha: 0.5),
+                            color: isChecked ? AppColors.primary : AppColors.brd(context),
                             width: isChecked ? 1.5 : 1,
                           ),
                         ),
@@ -594,19 +600,19 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
                                   child: Container(
                                     width: 48,
                                     height: 48,
-                                    color: AppColors.surfaceAlt,
+                                    color: AppColors.surfAlt(context),
                                     child: (cow.imageFullUrl != null || cow.imageUrl != null)
                                         ? Image.network(
                                             cow.imageFullUrl ?? cow.imageUrl!,
                                             width: 48,
                                             height: 48,
                                             fit: BoxFit.cover,
-                                            errorBuilder: (_, __, ___) => const Center(
-                                              child: Icon(Icons.pets_rounded, size: 24, color: AppColors.textHint),
+                                            errorBuilder: (_, __, ___) => Center(
+                                              child: CowIcon(size: 24, color: AppColors.hint(context)),
                                             ),
                                           )
-                                        : const Center(
-                                            child: Icon(Icons.pets_rounded, size: 24, color: AppColors.textHint),
+                                        : Center(
+                                            child: CowIcon(size: 24, color: AppColors.hint(context)),
                                           ),
                                   ),
                                 ),
@@ -622,20 +628,20 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
                                           Flexible(
                                             child: Text(
                                               cow.name.isNotEmpty ? cow.name : cow.tagNumber,
-                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.text(context)),
                                               overflow: TextOverflow.ellipsis,
                                             ),
                                           ),
-                                          const SizedBox(width: 6),
+                                          const SizedBox(width: 8),
                                           Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
                                             decoration: BoxDecoration(
                                               color: AppColors.primary.withValues(alpha: 0.1),
                                               borderRadius: BorderRadius.circular(6),
                                             ),
                                             child: Text(
                                               cow.tagNumber,
-                                              style: const TextStyle(fontSize: 11, color: AppColors.primaryDark, fontWeight: FontWeight.bold),
+                                              style: TextStyle(fontSize: 12.5, color: AppColors.text(context), fontWeight: FontWeight.bold),
                                             ),
                                           ),
                                         ],
@@ -643,7 +649,7 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
                                       const SizedBox(height: 4),
                                       Text(
                                         'สายพันธุ์: $breedDisplay • เพศ: $genderDisplay',
-                                        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                        style: TextStyle(fontSize: 13.5, color: AppColors.subText(context)),
                                       ),
                                     ],
                                   ),
@@ -736,11 +742,13 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
             // Appointment Type Selection
             DropdownButtonFormField<String>(
               isExpanded: true,
+              dropdownColor: AppColors.cardBg(context),
               initialValue: currentSelectedType,
+              style: TextStyle(fontSize: 15, color: AppColors.text(context)),
               decoration: InputDecoration(
                 labelText: 'ประเภทนัดหมาย *',
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: AppColors.surfAlt(context),
                 prefixIcon: const Icon(Icons.category_outlined, color: AppColors.primary),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
@@ -761,11 +769,12 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
             // Appointment Title Input
             TextFormField(
               controller: _titleController,
+              style: TextStyle(fontSize: 15, color: AppColors.text(context)),
               decoration: InputDecoration(
                 labelText: 'หัวข้อการนัดหมาย *',
                 hintText: 'เช่น นัดหมายฉีดวัคซีนปากเท้าเปื่อย',
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: AppColors.surfAlt(context),
                 prefixIcon: const Icon(Icons.title_rounded, color: AppColors.primary),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
@@ -782,9 +791,9 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.cardBg(context),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.border),
+                        border: Border.all(color: AppColors.brd(context)),
                       ),
                       child: Row(
                         children: [
@@ -794,10 +803,10 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('วันนัดหมาย', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                                Text('วันนัดหมาย', style: TextStyle(fontSize: 11, color: AppColors.subText(context))),
                                 Text(
                                   AppDateUtils.formatThaiDate(_selectedDate),
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.text(context)),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ],
@@ -816,9 +825,9 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.cardBg(context),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.border),
+                        border: Border.all(color: AppColors.brd(context)),
                       ),
                       child: Row(
                         children: [
@@ -828,10 +837,10 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('เวลานัดหมาย', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                                Text('เวลานัดหมาย', style: TextStyle(fontSize: 11, color: AppColors.subText(context))),
                                 Text(
                                   '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')} น.',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.text(context)),
                                 ),
                               ],
                             ),
@@ -848,11 +857,13 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
             // Advance Reminder Selection
             DropdownButtonFormField<String>(
               isExpanded: true,
+              dropdownColor: AppColors.cardBg(context),
               initialValue: _selectedReminder,
+              style: TextStyle(fontSize: 15, color: AppColors.text(context)),
               decoration: InputDecoration(
                 labelText: 'แจ้งเตือนล่วงหน้า',
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: AppColors.surfAlt(context),
                 prefixIcon: const Icon(Icons.notifications_active_outlined, color: AppColors.primary),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
@@ -871,11 +882,13 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
             TextFormField(
               controller: _noteController,
               maxLines: 3,
+              style: TextStyle(fontSize: 15, color: AppColors.text(context)),
               decoration: InputDecoration(
                 labelText: 'รายละเอียด / หมายเหตุเพิ่มเติม',
                 hintText: 'พิมพ์รายละเอียดการนัดหมาย เช่น ชื่อยาที่ใช้, สัตวแพทย์ผู้นัด ฯลฯ',
+                hintStyle: TextStyle(color: AppColors.hint(context)),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: AppColors.surfAlt(context),
                 prefixIcon: const Icon(Icons.notes_rounded, color: AppColors.primary),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),

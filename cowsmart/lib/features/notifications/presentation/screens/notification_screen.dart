@@ -60,7 +60,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg(context),
       appBar: AppBar(
         title: const Text(
           'การแจ้งเตือน',
@@ -161,7 +161,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     ];
 
     return Container(
-      color: AppColors.surface,
+      color: AppColors.surf(context),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
@@ -184,7 +184,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                    color: isSelected ? Colors.white : AppColors.textPrimary,
+                    color: isSelected ? Colors.white : AppColors.text(context),
                   ),
                 ),
                 selected: isSelected,
@@ -558,7 +558,9 @@ class _NotificationCard extends StatelessWidget {
           ),
         ),
         child: Material(
-          color: isUnread ? AppColors.surface : Colors.white,
+          color: isUnread
+              ? (AppColors.isDark(context) ? AppColors.darkSurfaceAlt : AppColors.surface)
+              : AppColors.cardBg(context),
           borderRadius: BorderRadius.circular(16),
           elevation: isUnread ? 2 : 1,
           shadowColor: isUnread
@@ -580,7 +582,7 @@ class _NotificationCard extends StatelessWidget {
                   : BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: AppColors.border,
+                        color: AppColors.brd(context),
                         width: 1,
                       ),
                     ),
@@ -602,7 +604,7 @@ class _NotificationCard extends StatelessWidget {
                           style: TextStyle(
                             fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
                             fontSize: 18,
-                            color: AppColors.textPrimary,
+                            color: AppColors.text(context),
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -617,8 +619,8 @@ class _NotificationCard extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 16,
                             color: isUnread
-                                ? AppColors.textSecondary
-                                : AppColors.textHint,
+                                ? AppColors.subText(context)
+                                : AppColors.hint(context),
                             height: 1.4,
                           ),
                         ),

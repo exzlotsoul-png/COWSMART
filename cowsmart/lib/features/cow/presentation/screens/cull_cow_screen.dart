@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:cowsmart/core/widgets/cow_icon.dart';
 import 'package:cowsmart/core/utils/app_toast.dart';
 import 'package:cowsmart/core/utils/date_formatter.dart';
-import 'package:cowsmart/core/constants/app_constants.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
 import 'package:cowsmart/features/cow/domain/culling_record.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
@@ -112,38 +112,39 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
     }
   }
 
-  InputDecoration _buildInputDecoration(String label, IconData icon, {String? hintText}) {
+  InputDecoration _buildInputDecoration(BuildContext context, String label, IconData icon, {String? hintText}) {
+    final isDark = AppColors.isDark(context);
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(fontSize: 15, color: AppColors.textSecondary),
       hintText: hintText,
-      hintStyle: const TextStyle(fontSize: 14, color: AppColors.textHint),
-      prefixIcon: Icon(icon, color: AppColors.primary, size: 22),
+      labelStyle: TextStyle(fontSize: 15, color: AppColors.subText(context)),
+      hintStyle: TextStyle(fontSize: 14, color: isDark ? AppColors.darkTextSecondary.withValues(alpha: 0.6) : AppColors.hint(context)),
+      prefixIcon: Icon(icon, color: isDark ? AppColors.primaryLight : AppColors.primary, size: 22),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: AppColors.surfAlt(context),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: AppColors.border),
+        borderSide: BorderSide(color: AppColors.brd(context)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: AppColors.border),
+        borderSide: BorderSide(color: AppColors.brd(context)),
       ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: AppColors.primary, width: 2),
+      focusedBorder: const OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(14)),
+        borderSide: BorderSide(color: AppColors.primary, width: 2),
       ),
     );
   }
 
-  Widget _buildCardContainer({required List<Widget> children}) {
+  Widget _buildCardContainer(BuildContext context, {required List<Widget> children}) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
@@ -160,13 +161,13 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(BuildContext context, String title) {
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.bold,
-        color: AppColors.primaryDark,
+        color: AppColors.text(context),
       ),
     );
   }
@@ -177,7 +178,7 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
     final isLoading = cowState.isLoading;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg(context),
       appBar: AppBar(
         title: const Text('บันทึกการจำหน่ายและคัดออก', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         backgroundColor: AppColors.primaryDark,
@@ -194,6 +195,7 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
               children: [
                 // Card 1: Cow Info Header
                 _buildCardContainer(
+                  context,
                   children: [
                     Row(
                       children: [
@@ -203,7 +205,7 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
                             color: AppColors.primary.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Icon(Icons.pets_rounded, color: AppColors.primary, size: 24),
+                          child: const CowIcon(color: AppColors.primary, size: 24),
                         ),
                         const SizedBox(width: 14),
                         Expanded(
@@ -212,17 +214,17 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
                             children: [
                               Text(
                                 'วัวหมายเลข: ${widget.cow.tagNumber}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 17,
-                                  color: AppColors.textPrimary,
+                                  color: AppColors.text(context),
                                 ),
                               ),
                               const SizedBox(height: 2),
                               Text(
                                 'ชื่อ: ${widget.cow.name.isNotEmpty ? widget.cow.name : "-"}',
-                                style: const TextStyle(
-                                  color: AppColors.textSecondary,
+                                style: TextStyle(
+                                  color: AppColors.subText(context),
                                   fontSize: 14,
                                 ),
                               ),
@@ -236,8 +238,9 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
 
                 // Card 2: Cull Type Selection
                 _buildCardContainer(
+                  context,
                   children: [
-                    _buildSectionHeader('รูปแบบการจำหน่าย/คัดออก'),
+                    _buildSectionHeader(context, 'รูปแบบการจำหน่าย/คัดออก'),
                     const SizedBox(height: 14),
                     Row(
                       children: CullType.values.map((type) {
@@ -253,9 +256,9 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
                                 decoration: BoxDecoration(
                                   color: isSelected
                                       ? type.color.withValues(alpha: 0.12)
-                                      : Colors.white,
+                                      : AppColors.surfAlt(context),
                                   border: Border.all(
-                                    color: isSelected ? type.color : AppColors.border,
+                                    color: isSelected ? type.color : AppColors.brd(context),
                                     width: isSelected ? 2 : 1,
                                   ),
                                   borderRadius: BorderRadius.circular(14),
@@ -267,7 +270,7 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
                                       size: 26,
                                       color: isSelected
                                           ? type.color
-                                          : AppColors.textHint,
+                                          : AppColors.subText(context),
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
@@ -276,7 +279,7 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
                                         fontSize: 15,
                                         color: isSelected
                                             ? type.color
-                                            : AppColors.textSecondary,
+                                            : AppColors.subText(context),
                                         fontWeight: isSelected
                                             ? FontWeight.bold
                                             : FontWeight.w500,
@@ -295,17 +298,18 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
 
                 // Card 3: Date & Details
                 _buildCardContainer(
+                  context,
                   children: [
-                    _buildSectionHeader('ข้อมูลการดำเนินการ'),
+                    _buildSectionHeader(context, 'ข้อมูลการดำเนินการ'),
                     const SizedBox(height: 14),
                     InkWell(
                       onTap: () => _selectDate(context),
                       borderRadius: BorderRadius.circular(14),
                       child: InputDecorator(
-                        decoration: _buildInputDecoration('วันที่ดำเนินการ', Icons.calendar_today_rounded),
+                        decoration: _buildInputDecoration(context, 'วันที่ดำเนินการ', Icons.calendar_today_rounded),
                         child: Text(
                           AppDateUtils.formatThaiDate(_selectedDate),
-                          style: const TextStyle(fontSize: 15, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 15, color: AppColors.text(context), fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
@@ -331,67 +335,80 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               if (weight > 0) ...[
-                                Container(
-                                  padding: const EdgeInsets.all(14),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.success.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.calculate_outlined, color: AppColors.success, size: 24),
-                                      const SizedBox(width: 10),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'ราคาประเมินเบื้องต้น: ฿${NumberFormat('#,##0').format(estimatedVal)}',
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 15,
-                                                color: AppColors.success,
-                                              ),
+                                Builder(
+                                  builder: (ctx) {
+                                    final isDark = AppColors.isDark(ctx);
+                                    final estimateColor = isDark ? const Color(0xFF8FD475) : AppColors.success;
+                                    return Container(
+                                      padding: const EdgeInsets.all(14),
+                                      decoration: BoxDecoration(
+                                        color: estimateColor.withValues(alpha: isDark ? 0.16 : 0.1),
+                                        borderRadius: BorderRadius.circular(14),
+                                        border: Border.all(color: estimateColor.withValues(alpha: isDark ? 0.4 : 0.3)),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.calculate_outlined, color: estimateColor, size: 24),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'ราคาประเมินเบื้องต้น: ฿${NumberFormat('#,##0').format(estimatedVal)}',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 15,
+                                                    color: estimateColor,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  'คำนวณจากน้ำหนัก ${weight.toStringAsFixed(0)} กก. × ${pricePerKg.toStringAsFixed(2)} ฿/กก.',
+                                                  style: TextStyle(
+                                                    fontSize: 13,
+                                                    color: AppColors.subText(ctx),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              'คำนวณจากน้ำหนัก ${weight.toStringAsFixed(0)} กก. × ${pricePerKg.toStringAsFixed(2)} ฿/กก.',
+                                          ),
+                                          const SizedBox(width: 8),
+                                          ElevatedButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                _priceController.text = estimatedVal.toStringAsFixed(0);
+                                              });
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: estimateColor,
+                                              foregroundColor: isDark ? const Color(0xFF141712) : Colors.white,
+                                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                              minimumSize: Size.zero,
+                                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                            ),
+                                            child: Text(
+                                              'ใช้ราคานี้',
                                               style: TextStyle(
                                                 fontSize: 13,
-                                                color: Colors.grey[800],
+                                                fontWeight: FontWeight.bold,
+                                                color: isDark ? const Color(0xFF141712) : Colors.white,
                                               ),
                                             ),
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(width: 8),
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          setState(() {
-                                            _priceController.text = estimatedVal.toStringAsFixed(0);
-                                          });
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: AppColors.success,
-                                          foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                          minimumSize: Size.zero,
-                                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                        ),
-                                        child: const Text('ใช้ราคานี้', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                                      ),
-                                    ],
-                                  ),
+                                    );
+                                  },
                                 ),
                                 const SizedBox(height: 14),
                               ],
                               TextFormField(
                                 controller: _priceController,
                                 keyboardType: TextInputType.number,
-                                style: const TextStyle(fontSize: 15),
-                                decoration: _buildInputDecoration('ราคาที่ขายได้ (บาท)', Icons.payments_rounded, hintText: '0.00'),
+                                style: TextStyle(fontSize: 15, color: AppColors.text(context)),
+                                decoration: _buildInputDecoration(context, 'ราคาที่ขายได้ (บาท)', Icons.payments_rounded, hintText: '0.00'),
                                 validator: (value) {
                                   if (_selectedType == CullType.sold &&
                                       (value == null || value.isEmpty)) {
@@ -411,8 +428,8 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
                     TextFormField(
                       controller: _noteController,
                       maxLines: 3,
-                      style: const TextStyle(fontSize: 15),
-                      decoration: _buildInputDecoration('สาเหตุหรือหมายเหตุ', Icons.note_alt_rounded, hintText: 'เช่น สุขภาพไม่ดี, อายุมากแล้ว, ฯลฯ'),
+                      style: TextStyle(fontSize: 15, color: AppColors.text(context)),
+                      decoration: _buildInputDecoration(context, 'สาเหตุหรือหมายเหตุ', Icons.note_alt_rounded, hintText: 'เช่น สุขภาพไม่ดี, อายุมากแล้ว, ฯลฯ'),
                     ),
                   ],
                 ),
@@ -426,14 +443,14 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.cardBg(context),
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(20),
             topRight: Radius.circular(20),
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
+              color: Colors.black.withValues(alpha: AppColors.isDark(context) ? 0.35 : 0.08),
               blurRadius: 10,
               offset: const Offset(0, -2),
             ),

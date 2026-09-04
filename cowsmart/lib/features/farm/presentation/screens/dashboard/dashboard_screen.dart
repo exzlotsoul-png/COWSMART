@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/theme/app_colors.dart';
+import 'package:cowsmart/core/widgets/cow_icon.dart';
 import 'package:cowsmart/core/utils/date_formatter.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
@@ -81,9 +82,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final breeds = ref.watch(breedProvider);
 
     if (farmState.isLoading) {
-      return const Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(
+      return Scaffold(
+        backgroundColor: AppColors.bg(context),
+        body: const Center(
           child: CircularProgressIndicator(color: AppColors.primary),
         ),
       );
@@ -111,7 +112,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     });
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg(context),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _refreshData,
@@ -132,6 +133,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                 child: _buildUnifiedStatsCard(
+                  context,
                   totalCows,
                   zoneCount,
                   totalValue,
@@ -168,7 +170,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   // ────────────────────────────────────────────────────────
   Widget _buildEmptyFarmScreen(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg(context),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -288,10 +290,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     const SizedBox(height: 2),
                     Text(
                       userName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+                        color: AppColors.text(context),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -306,18 +308,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           Row(
             children: [
               _buildCircleAction(
+                context,
                 icon: Icons.picture_as_pdf_rounded,
                 onTap: _exportFarmPdfReport,
                 tooltip: 'ส่งออกรายงาน PDF',
               ),
               const SizedBox(width: 8),
               _buildCircleAction(
+                context,
                 icon: Icons.swap_horiz_rounded,
                 onTap: () => context.go('/select-farm'),
                 tooltip: 'สลับฟาร์ม',
               ),
               const SizedBox(width: 8),
               _buildCircleAction(
+                context,
                 icon: Icons.calendar_month_rounded,
                 onTap: () => context.push('/calendar'),
                 tooltip: 'ปฏิทิน',
@@ -331,16 +336,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildCircleAction({
+  Widget _buildCircleAction(
+    BuildContext context, {
     required IconData icon,
     required VoidCallback onTap,
     String? tooltip,
   }) {
     return Material(
-      color: Colors.white,
+      color: AppColors.cardBg(context),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: AppColors.border.withValues(alpha: 0.6)),
+        side: BorderSide(color: AppColors.brd(context).withValues(alpha: 0.6)),
       ),
       elevation: 0,
       child: InkWell(
@@ -348,7 +354,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         borderRadius: BorderRadius.circular(14),
         child: Padding(
           padding: const EdgeInsets.all(10),
-          child: Icon(icon, color: AppColors.textPrimary, size: 22),
+          child: Icon(icon, color: AppColors.text(context), size: 22),
         ),
       ),
     );
@@ -362,6 +368,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           clipBehavior: Clip.none,
           children: [
             _buildCircleAction(
+              context,
               icon: Icons.notifications_outlined,
               onTap: () => context.push('/notifications'),
               tooltip: 'แจ้งเตือน',
@@ -552,21 +559,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   //  3. UNIFIED STATS CARD — 3 Columns + Black Amount Valuation Row
   // ────────────────────────────────────────────────────────
   Widget _buildUnifiedStatsCard(
+    BuildContext context,
     int totalCows,
     int zoneCount,
     double totalValue,
     int culledThisMonth,
   ) {
     final formatter = NumberFormat('#,##0');
+    final isDark = AppColors.isDark(context);
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+        border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.6)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -580,6 +589,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               children: [
                 Expanded(
                   child: _buildStatColumn(
+                    context,
                     Icons.pets_rounded,
                     AppColors.primary,
                     '$totalCows',
@@ -588,10 +598,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
                 Container(
                   width: 1,
-                  color: AppColors.border.withValues(alpha: 0.5),
+                  color: AppColors.div(context).withValues(alpha: 0.5),
                 ),
                 Expanded(
                   child: _buildStatColumn(
+                    context,
                     Icons.grass_rounded,
                     AppColors.secondary,
                     '$zoneCount',
@@ -600,10 +611,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
                 Container(
                   width: 1,
-                  color: AppColors.border.withValues(alpha: 0.5),
+                  color: AppColors.div(context).withValues(alpha: 0.5),
                 ),
                 Expanded(
                   child: _buildStatColumn(
+                    context,
                     Icons.output_rounded,
                     const Color(0xFFF59E0B),
                     '$culledThisMonth',
@@ -620,7 +632,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: AppColors.accent.withValues(alpha: 0.08),
+              color: AppColors.accent.withValues(alpha: isDark ? 0.15 : 0.08),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: AppColors.accent.withValues(alpha: 0.22),
@@ -641,13 +653,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'มูลค่ารวมฟาร์ม',
                     style: TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: AppColors.text(context),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -656,10 +668,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 const SizedBox(width: 8),
                 Text(
                   '฿${formatter.format(totalValue)}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18.5,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary, // สีดำหลัก
+                    color: AppColors.text(context),
                     letterSpacing: -0.2,
                   ),
                   maxLines: 1,
@@ -674,12 +686,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Widget _buildStatColumn(
-    IconData icon,
+    BuildContext context,
+    dynamic icon,
     Color color,
     String value,
     String label, {
     VoidCallback? onTap,
   }) {
+    final Widget iconWidget = icon is Widget
+        ? icon
+        : (icon == Icons.pets || icon == Icons.pets_rounded || icon == Icons.pets_outlined)
+            ? CowIcon(color: color, size: 22)
+            : Icon(icon as IconData, color: color, size: 22);
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -692,15 +711,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: color, size: 22),
+            child: iconWidget,
           ),
           const SizedBox(height: 8),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary, // สีดำหลักคมชัด
+              color: AppColors.text(context),
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -708,9 +727,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           const SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: AppColors.textPrimary, // สีดำหลักคมชัด
+              color: AppColors.text(context),
               fontWeight: FontWeight.w600,
             ),
             maxLines: 1,
@@ -775,10 +794,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     Expanded(
                       child: Text(
                         'การเงินเดือน $currentMonthLabel',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
+                          color: AppColors.text(context),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -822,10 +841,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  const Icon(
+                  Icon(
                     Icons.arrow_forward_ios_rounded,
                     size: 14,
-                    color: AppColors.textSecondary,
+                    color: AppColors.subText(context),
                   ),
                 ],
               ),
@@ -866,11 +885,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Text(
+                        Text(
                           'รายรับ',
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppColors.textPrimary,
+                            color: AppColors.text(context),
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -925,11 +944,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Text(
+                        Text(
                           'รายจ่าย',
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppColors.textPrimary,
+                            color: AppColors.text(context),
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -983,12 +1002,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Text(
+                Text(
                   'โซนในฟาร์ม',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    color: AppColors.text(context),
                   ),
                 ),
               ],
@@ -1016,9 +1035,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           Container(
             height: 80,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.cardBg(context),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: AppColors.brd(context)),
             ),
             child: const Center(
               child: CircularProgressIndicator(color: AppColors.primary),
@@ -1029,9 +1048,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             padding: const EdgeInsets.all(24),
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.cardBg(context),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: AppColors.brd(context)),
             ),
             child: Column(
               children: [
@@ -1098,12 +1117,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.cardBg(context),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+          border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
+              color: Colors.black.withValues(alpha: AppColors.isDark(context) ? 0.2 : 0.03),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -1130,10 +1149,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 children: [
                   Text(
                     zone.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
-                      color: AppColors.textPrimary,
+                      color: AppColors.text(context),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -1194,12 +1213,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            const Text(
+            Text(
               'เมนูหลัก',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: AppColors.text(context),
               ),
             ),
           ],
@@ -1214,6 +1233,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           childAspectRatio: 1.65,
           children: [
             _buildActionTile(
+              context,
               icon: Icons.chat_bubble_outline_rounded,
               label: 'ผู้ช่วยหมอ',
               subtitle: 'ปรึกษาอาการวัว',
@@ -1221,6 +1241,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               onTap: () => context.push('/ai_chat'),
             ),
             _buildActionTile(
+              context,
               icon: Icons.health_and_safety_rounded,
               label: 'จัดการสุขภาพ',
               subtitle: 'บันทึกการรักษา',
@@ -1228,6 +1249,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               onTap: () => context.push('/group_health'),
             ),
             _buildActionTile(
+              context,
               icon: Icons.delete_sweep_outlined,
               label: 'จำหน่าย/คัดออก',
               subtitle: 'จัดการวัวออกฟาร์ม',
@@ -1235,6 +1257,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               onTap: () => context.push('/group_cull'),
             ),
             _buildActionTile(
+              context,
               icon: Icons.event_available_rounded,
               label: 'สร้างนัดหมาย',
               subtitle: 'นัดตรวจ/วัคซีน',
@@ -1242,6 +1265,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               onTap: () => context.push('/group_appointment'),
             ),
             _buildActionTile(
+              context,
               icon: Icons.calendar_month_rounded,
               label: 'ปฏิทินกิจกรรม',
               subtitle: 'ตารางนัดหมาย',
@@ -1249,6 +1273,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               onTap: () => context.push('/calendar'),
             ),
             _buildActionTile(
+              context,
               icon: Icons.show_chart_rounded,
               label: 'ราคาตลาด',
               subtitle: 'ติดตามราคาวัว',
@@ -1256,6 +1281,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               onTap: () => context.push('/market_price'),
             ),
             _buildActionTile(
+              context,
               icon: Icons.picture_as_pdf_rounded,
               label: 'รายงานฟาร์ม',
               subtitle: 'ส่งออกไฟล์ PDF',
@@ -1263,6 +1289,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               onTap: _exportFarmPdfReport,
             ),
             _buildActionTile(
+              context,
               icon: Icons.add_business_rounded,
               label: 'เพิ่มฟาร์ม',
               subtitle: 'สร้างฟาร์มใหม่',
@@ -1275,7 +1302,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildActionTile({
+  Widget _buildActionTile(
+    BuildContext context, {
     required IconData icon,
     required String label,
     required String subtitle,
@@ -1288,12 +1316,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.cardBg(context),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+          border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
+              color: Colors.black.withValues(alpha: AppColors.isDark(context) ? 0.2 : 0.03),
               blurRadius: 8,
               offset: const Offset(0, 3),
             ),
@@ -1317,10 +1345,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 children: [
                   Text(
                     label,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
-                      color: AppColors.textPrimary,
+                      color: AppColors.text(context),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -1328,9 +1356,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: AppColors.textSecondary,
+                      color: AppColors.subText(context),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -1641,11 +1669,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       }
                     },
                     child: InputDecorator(
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'ระบุกระบือ/วัว (เลือกได้หลายตัว)',
-                        labelStyle: TextStyle(fontSize: 15),
-                        prefixIcon: Icon(Icons.pets),
-                        suffixIcon: Icon(Icons.arrow_drop_down),
+                        labelStyle: const TextStyle(fontSize: 15),
+                        prefixIcon: CowIcon(size: 20, color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary),
+                        suffixIcon: const Icon(Icons.arrow_drop_down),
                       ),
                       child: Text(
                         selectedCowIds.isEmpty
@@ -1654,8 +1682,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         style: TextStyle(
                           fontSize: 14,
                           color: selectedCowIds.isEmpty
-                              ? AppColors.textHint
-                              : AppColors.textPrimary,
+                              ? AppColors.hint(context)
+                              : AppColors.text(context),
                           fontWeight: selectedCowIds.isEmpty
                               ? FontWeight.normal
                               : FontWeight.w600,
@@ -1669,9 +1697,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   DropdownButtonFormField<String>(
                     isExpanded: true,
                     initialValue: selectedType,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
-                      color: AppColors.textPrimary,
+                      color: AppColors.text(context),
                     ),
                     decoration: const InputDecoration(
                       labelText: 'ประเภทนัดหมาย *',
@@ -1684,7 +1712,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             value: t,
                             child: Text(
                               t,
-                              style: const TextStyle(fontSize: 15),
+                              style: TextStyle(fontSize: 15, color: AppColors.text(context)),
                             ),
                           ),
                         )
@@ -1701,7 +1729,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: titleCtrl,
-                    style: const TextStyle(fontSize: 15),
+                    style: TextStyle(fontSize: 15, color: AppColors.text(context)),
                     decoration: const InputDecoration(
                       labelText: 'หัวข้อการนัดหมาย *',
                       labelStyle: TextStyle(fontSize: 15),
@@ -1711,22 +1739,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   const SizedBox(height: 12),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: const Icon(
+                    leading: Icon(
                       Icons.calendar_today,
-                      color: AppColors.primary,
+                      color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary,
                     ),
-                    title: const Text(
+                    title: Text(
                       'วันนัดหมาย',
-                      style: TextStyle(fontSize: 15),
+                      style: TextStyle(fontSize: 15, color: AppColors.text(context)),
                     ),
                     subtitle: Text(
                       AppDateUtils.formatThaiDate(
                         selectedDate,
                         useFullMonth: true,
                       ),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
-                        color: AppColors.textPrimary,
+                        color: AppColors.text(context),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -1746,19 +1774,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: const Icon(
+                    leading: Icon(
                       Icons.access_time,
-                      color: AppColors.primary,
+                      color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary,
                     ),
-                    title: const Text(
+                    title: Text(
                       'เวลานัดหมาย',
-                      style: TextStyle(fontSize: 15),
+                      style: TextStyle(fontSize: 15, color: AppColors.text(context)),
                     ),
                     subtitle: Text(
                       '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')} น.',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
-                        color: AppColors.textPrimary,
+                        color: AppColors.text(context),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -1780,7 +1808,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   TextField(
                     controller: descCtrl,
                     maxLines: 2,
-                    style: const TextStyle(fontSize: 15),
+                    style: TextStyle(fontSize: 15, color: AppColors.text(context)),
                     decoration: const InputDecoration(
                       labelText: 'รายละเอียด/หมายเหตุ (ไม่บังคับ)',
                       labelStyle: TextStyle(fontSize: 15),
@@ -1791,9 +1819,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   DropdownButtonFormField<String>(
                     isExpanded: true,
                     initialValue: selectedReminder,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
-                      color: AppColors.textPrimary,
+                      color: AppColors.text(context),
                     ),
                     decoration: const InputDecoration(
                       labelText: 'แจ้งเตือนล่วงหน้า',
@@ -1806,7 +1834,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             value: r,
                             child: Text(
                               r,
-                              style: const TextStyle(fontSize: 15),
+                              style: TextStyle(fontSize: 15, color: AppColors.text(context)),
                             ),
                           ),
                         )

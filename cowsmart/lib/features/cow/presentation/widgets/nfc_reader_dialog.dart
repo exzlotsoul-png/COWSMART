@@ -10,9 +10,11 @@ class NfcReaderDialog extends StatefulWidget {
   State<NfcReaderDialog> createState() => _NfcReaderDialogState();
 }
 
-class _NfcReaderDialogState extends State<NfcReaderDialog> with SingleTickerProviderStateMixin {
+class _NfcReaderDialogState extends State<NfcReaderDialog>
+    with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
-  String _statusMessage = 'กำลังเปิดระบบ NFC...\nกรุณานำเหรียญมาแตะที่ด้านหลังโทรศัพท์';
+  String _statusMessage =
+      'กำลังเปิดระบบ NFC...\nกรุณานำเหรียญมาแตะที่ด้านหลังโทรศัพท์';
   bool _isSuccess = false;
 
   @override
@@ -81,7 +83,7 @@ class _NfcReaderDialogState extends State<NfcReaderDialog> with SingleTickerProv
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AppColors.cardBg(context),
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
@@ -111,7 +113,7 @@ class _NfcReaderDialogState extends State<NfcReaderDialog> with SingleTickerProv
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -120,21 +122,24 @@ class _NfcReaderDialogState extends State<NfcReaderDialog> with SingleTickerProv
                           style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
+                            color: AppColors.text(context),
                           ),
                         ),
                         Text(
                           'ค้นหาข้อมูลประวัติวัวอัตโนมัติ',
                           style: TextStyle(
                             fontSize: 12,
-                            color: AppColors.textSecondary,
+                            color: AppColors.subText(context),
                           ),
                         ),
                       ],
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close_rounded, color: AppColors.textHint),
+                    icon: Icon(
+                      Icons.close_rounded,
+                      color: AppColors.hint(context),
+                    ),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -183,7 +188,11 @@ class _NfcReaderDialogState extends State<NfcReaderDialog> with SingleTickerProv
                                 : Colors.orange.shade800,
                             boxShadow: [
                               BoxShadow(
-                                color: (_isSuccess ? AppColors.success : Colors.orange).withValues(alpha: 0.4),
+                                color:
+                                    (_isSuccess
+                                            ? AppColors.success
+                                            : Colors.orange)
+                                        .withValues(alpha: 0.4),
                                 blurRadius: 15,
                                 spreadRadius: 2,
                               ),
@@ -213,29 +222,36 @@ class _NfcReaderDialogState extends State<NfcReaderDialog> with SingleTickerProv
                   fontWeight: FontWeight.w600,
                   color: _isSuccess
                       ? AppColors.success
-                      : AppColors.textPrimary,
+                      : AppColors.text(context),
                   height: 1.4,
                 ),
               ),
               const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+                  color: AppColors.surfAlt(context),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Icon(Icons.lightbulb_outline_rounded, size: 16, color: AppColors.primary),
+                  children: [
+                    const Icon(
+                      Icons.lightbulb_outline_rounded,
+                      size: 16,
+                      color: AppColors.primary,
+                    ),
                     SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        'ตำแหน่ง NFC (Huawei Mate 20 Pro):\nอยู่บริเวณ "ขอบบนของกล้องหลัง"',
+                        'ตำแหน่ง NFC :\nอยู่บริเวณ "ขอบบนของกล้องหลัง"',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.textSecondary,
+                          color: AppColors.subText(context),
                           height: 1.3,
                         ),
                       ),

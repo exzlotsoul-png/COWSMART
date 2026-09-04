@@ -129,13 +129,13 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                 DropdownButtonFormField<String>(
                   isExpanded: true,
                   initialValue: selectedType,
-                  style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
+                  style: TextStyle(fontSize: 15, color: AppColors.text(context)),
                   decoration: const InputDecoration(
                     labelText: 'ประเภทนัดหมาย *',
                     labelStyle: TextStyle(fontSize: 15),
                     prefixIcon: Icon(Icons.category),
                   ),
-                  items: types.map((t) => DropdownMenuItem(value: t, child: Text(t, style: const TextStyle(fontSize: 15)))).toList(),
+                  items: types.map((t) => DropdownMenuItem(value: t, child: Text(t, style: TextStyle(fontSize: 15, color: AppColors.text(context))))).toList(),
                   onChanged: (v) {
                     if (v != null) {
                       setDialogState(() {
@@ -148,7 +148,7 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                 const SizedBox(height: 12),
                 TextField(
                   controller: titleCtrl,
-                  style: const TextStyle(fontSize: 15),
+                  style: TextStyle(fontSize: 15, color: AppColors.text(context)),
                   decoration: const InputDecoration(
                     labelText: 'หัวข้อการนัดหมาย *',
                     labelStyle: TextStyle(fontSize: 15),
@@ -158,11 +158,11 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                 const SizedBox(height: 12),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.calendar_today, color: AppColors.primary),
-                  title: const Text('วันนัดหมาย', style: TextStyle(fontSize: 15)),
+                  leading: Icon(Icons.calendar_today, color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary),
+                  title: Text('วันนัดหมาย', style: TextStyle(fontSize: 15, color: AppColors.text(context))),
                   subtitle: Text(
                     AppDateUtils.formatThaiDate(selectedDate, useFullMonth: true),
-                    style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 14, color: AppColors.text(context), fontWeight: FontWeight.bold),
                   ),
                   onTap: () async {
                     final picked = await showDatePicker(
@@ -179,11 +179,11 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                 ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.access_time, color: AppColors.primary),
-                  title: const Text('เวลานัดหมาย', style: TextStyle(fontSize: 15)),
+                  leading: Icon(Icons.access_time, color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary),
+                  title: Text('เวลานัดหมาย', style: TextStyle(fontSize: 15, color: AppColors.text(context))),
                   subtitle: Text(
                     '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')} น.',
-                    style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 14, color: AppColors.text(context), fontWeight: FontWeight.bold),
                   ),
                   onTap: () async {
                     final picked = await showTimePicker(
@@ -202,7 +202,7 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                 TextField(
                   controller: descCtrl,
                   maxLines: 2,
-                  style: const TextStyle(fontSize: 15),
+                  style: TextStyle(fontSize: 15, color: AppColors.text(context)),
                   decoration: const InputDecoration(
                     labelText: 'รายละเอียด/หมายเหตุ (ไม่บังคับ)',
                     labelStyle: TextStyle(fontSize: 15),
@@ -213,13 +213,13 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                 DropdownButtonFormField<String>(
                   isExpanded: true,
                   initialValue: selectedReminder,
-                  style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
+                  style: TextStyle(fontSize: 15, color: AppColors.text(context)),
                   decoration: const InputDecoration(
                     labelText: 'แจ้งเตือนล่วงหน้า',
                     labelStyle: TextStyle(fontSize: 15),
                     prefixIcon: Icon(Icons.notifications_active_outlined),
                   ),
-                  items: reminderOptions.map((r) => DropdownMenuItem(value: r, child: Text(r, style: const TextStyle(fontSize: 15)))).toList(),
+                  items: reminderOptions.map((r) => DropdownMenuItem(value: r, child: Text(r, style: TextStyle(fontSize: 15, color: AppColors.text(context))))).toList(),
                   onChanged: (v) {
                     if (v != null) {
                       setDialogState(() => selectedReminder = v);
@@ -342,12 +342,12 @@ class _HealthTabState extends ConsumerState<HealthTab> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: const Text(
+                  child: Text(
                     'ประวัติการรักษาและตรวจสุขภาพ',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: AppColors.text(context),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -709,10 +709,10 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                             Flexible(
                               child: Text(
                                 typeLabels[record.checkupTypeId] ?? 'ตรวจสุขภาพ',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 17,
                                   fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary,
+                                  color: AppColors.text(context),
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -747,14 +747,14 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                             Icon(
                               Icons.calendar_today,
                               size: 14,
-                              color: AppColors.primary,
+                              color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               AppDateUtils.formatThaiDate(record.recordDate),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 14,
-                                color: AppColors.textPrimary,
+                                color: AppColors.text(context),
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -770,20 +770,20 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                         vertical: 5,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.warning.withValues(alpha: 0.12),
+                        color: (AppColors.isDark(context) ? AppColors.warning : AppColors.secondaryDark).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         '${NumberFormat('#,##0').format(record.cost)} ฿',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: AppColors.secondaryDark,
+                          color: AppColors.isDark(context) ? const Color(0xFFFBBF24) : AppColors.secondaryDark,
                           fontSize: 15,
                         ),
                       ),
                     ),
                   PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert, size: 20, color: AppColors.textSecondary),
+                    icon: Icon(Icons.more_vert, size: 20, color: AppColors.subText(context)),
                     onSelected: (val) async {
                       if (val == 'edit') {
                         final masterData = ref.read(masterDataProvider);
@@ -877,8 +877,9 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.grey[50],
+                    color: AppColors.isDark(context) ? AppColors.darkSurfaceAlt : Colors.grey[50],
                     borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.isDark(context) ? AppColors.darkBorder : Colors.grey[200]!),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -906,6 +907,7 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                           }
 
                           return _buildDetailRow(
+                            context,
                             iconData,
                             labelText,
                             '${item.itemName}$amtStr$costStr',
@@ -914,18 +916,21 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                       ] else ...[
                         if (record.vaccineName != null)
                           _buildDetailRow(
+                            context,
                             Icons.vaccines,
                             'วัคซีน',
                             record.vaccineName!,
                           ),
                         if (record.diseaseName != null)
                           _buildDetailRow(
+                            context,
                             Icons.coronavirus,
                             'โรค',
                             record.diseaseName!,
                           ),
                         if (record.medicineName != null)
                           _buildDetailRow(
+                            context,
                             Icons.medication,
                             'ยา',
                             record.medicineName!,
@@ -977,7 +982,7 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                                         fit: BoxFit.contain,
                                         errorBuilder: (_, __, ___) => Container(
                                           padding: const EdgeInsets.all(20),
-                                          color: Colors.white,
+                                          color: AppColors.cardBg(context),
                                           child: const Column(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
@@ -1012,7 +1017,7 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                           height: 70,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.grey[300]!),
+                            border: Border.all(color: AppColors.brd(context)),
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(10),
@@ -1046,14 +1051,14 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.notes, size: 16, color: AppColors.textPrimary),
+                    Icon(Icons.notes, size: 16, color: AppColors.subText(context)),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         record.note!,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
-                          color: AppColors.textPrimary,
+                          color: AppColors.text(context),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -1066,17 +1071,17 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.person_outline,
                       size: 16,
-                      color: AppColors.textPrimary,
+                      color: AppColors.subText(context),
                     ),
                     const SizedBox(width: 6),
                     Text(
                       'ผู้ดำเนินการ: ${record.adminName}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
-                        color: AppColors.textPrimary,
+                        color: AppColors.text(context),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -1090,27 +1095,27 @@ class _HealthTabState extends ConsumerState<HealthTab> {
     );
   }
 
-  Widget _buildDetailRow(IconData icon, String label, String value) {
+  Widget _buildDetailRow(BuildContext context, IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: AppColors.primary),
+          Icon(icon, size: 18, color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary),
           const SizedBox(width: 8),
           Text(
             '$label: ',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
-              color: AppColors.textSecondary,
+              color: AppColors.subText(context),
               fontWeight: FontWeight.w500,
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
-                color: AppColors.textPrimary,
+                color: AppColors.text(context),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1320,7 +1325,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
           const SizedBox(height: 4),
           Text(
             currentStep == 1 ? 'ขั้นตอนที่ 1/2: ข้อมูลพื้นฐานและการรักษา' : 'ขั้นตอนที่ 2/2: จำนวน หน่วยวัด และค่าใช้จ่าย',
-            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+            style: TextStyle(fontSize: 12, color: AppColors.subText(context), fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -1332,13 +1337,14 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
             if (currentStep == 1) ...[
               ListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-                leading: const Icon(Icons.calendar_today, size: 22),
-                title: const Text('วันที่', style: TextStyle(fontSize: 16)),
+                leading: Icon(Icons.calendar_today, size: 22, color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary),
+                title: Text('วันที่', style: TextStyle(fontSize: 16, color: AppColors.text(context))),
                 subtitle: Text(
                   DateFormat('dd/MM/yyyy').format(selectedDate),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
+                    color: AppColors.text(context),
                   ),
                 ),
                 onTap: () async {
@@ -1357,9 +1363,9 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                     ? selectedType
                     : (checkupTypes.isNotEmpty ? checkupTypes.first['id'] : null),
                 isExpanded: true,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
-                  color: AppColors.textPrimary,
+                  color: AppColors.text(context),
                 ),
                 decoration: const InputDecoration(
                   labelText: 'ประเภทการตรวจ',
@@ -1371,7 +1377,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                     value: type['id'],
                     child: Text(
                       type['name']!,
-                      style: const TextStyle(fontSize: 15),
+                      style: TextStyle(fontSize: 15, color: AppColors.text(context)),
                       overflow: TextOverflow.ellipsis,
                     ),
                   );
@@ -1392,27 +1398,27 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                 DropdownButtonFormField<CowStatus>(
                   value: selectedHealthStatus,
                   isExpanded: true,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
-                    color: AppColors.textPrimary,
+                    color: AppColors.text(context),
                   ),
                   decoration: const InputDecoration(
                     labelText: 'สถานะสุขภาพวัว',
                     labelStyle: TextStyle(fontSize: 15),
                     prefixIcon: Icon(Icons.health_and_safety_outlined, size: 22),
                   ),
-                  items: const [
+                  items: [
                     DropdownMenuItem(
                       value: CowStatus.normal,
-                      child: Text('ปกติ', style: TextStyle(fontSize: 15)),
+                      child: Text('ปกติ', style: TextStyle(fontSize: 15, color: AppColors.text(context))),
                     ),
                     DropdownMenuItem(
                       value: CowStatus.sick,
-                      child: Text('ป่วย', style: TextStyle(fontSize: 15)),
+                      child: Text('ป่วย', style: TextStyle(fontSize: 15, color: AppColors.text(context))),
                     ),
                     DropdownMenuItem(
                       value: CowStatus.injured,
-                      child: Text('บาดเจ็บ', style: TextStyle(fontSize: 15)),
+                      child: Text('บาดเจ็บ', style: TextStyle(fontSize: 15, color: AppColors.text(context))),
                     ),
                   ],
                   onChanged: (val) {
@@ -1973,9 +1979,9 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
             ] else ...[
               // Step 2: Per-item details (Amount, Unit, Cost)
               if (selectedType == 'CT02' && selectedVaccineIds.isNotEmpty) ...[
-                const Text(
+                Text(
                   'กรอกรายละเอียดปริมาณและราคาของแต่ละวัคซีน:',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primaryDark),
                 ),
                 const SizedBox(height: 10),
                 ...selectedVaccineIds.map((vId) {
@@ -1990,9 +1996,9 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: AppColors.surfAlt(context),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: isOther ? Colors.orange[800]! : AppColors.border),
+                      border: Border.all(color: isOther ? Colors.orange[800]! : AppColors.brd(context)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2004,7 +2010,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                             Expanded(
                               child: Text(
                                 vName,
-                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: isOther ? Colors.orange[800] : AppColors.textPrimary),
+                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: isOther ? Colors.orange[800] : AppColors.text(context)),
                               ),
                             ),
                           ],
@@ -2013,7 +2019,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                           const SizedBox(height: 10),
                           TextField(
                             controller: customNameCtrl,
-                            style: const TextStyle(fontSize: 14),
+                            style: TextStyle(fontSize: 14, color: AppColors.text(context)),
                             decoration: const InputDecoration(
                               labelText: 'ระบุชื่อวัคซีน',
                               labelStyle: TextStyle(fontSize: 13),
@@ -2030,7 +2036,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                               child: TextField(
                                 controller: amtCtrl,
                                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                style: const TextStyle(fontSize: 14),
+                                style: TextStyle(fontSize: 14, color: AppColors.text(context)),
                                 decoration: const InputDecoration(
                                   labelText: 'จำนวนที่ใช้',
                                   labelStyle: TextStyle(fontSize: 13),
@@ -2044,16 +2050,16 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                               child: DropdownButtonFormField<int?>(
                                 value: unitVal,
                                 isExpanded: true,
-                                style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+                                style: TextStyle(fontSize: 14, color: AppColors.text(context)),
                                 decoration: const InputDecoration(
                                   labelText: 'หน่วยวัด',
                                   labelStyle: TextStyle(fontSize: 13),
                                   contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                                 ),
                                 items: [
-                                  const DropdownMenuItem<int?>(
+                                  DropdownMenuItem<int?>(
                                     value: null,
-                                    child: Text('เลือกหน่วย', style: TextStyle(fontSize: 13)),
+                                    child: Text('เลือกหน่วย', style: TextStyle(fontSize: 13, color: AppColors.subText(context))),
                                   ),
                                   ...masterData.units.map((unit) {
                                     final idInt = int.tryParse(unit.id);
@@ -2064,7 +2070,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                                       value: idInt,
                                       child: Text(
                                         '${unit.name}$abbr',
-                                        style: const TextStyle(fontSize: 13),
+                                        style: TextStyle(fontSize: 13, color: AppColors.text(context)),
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     );
@@ -2079,7 +2085,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                         TextField(
                           controller: costCtrl,
                           keyboardType: TextInputType.number,
-                          style: const TextStyle(fontSize: 14),
+                          style: TextStyle(fontSize: 14, color: AppColors.text(context)),
                           decoration: const InputDecoration(
                             labelText: 'ราคา/ค่าใช้จ่าย (บาท)',
                             labelStyle: TextStyle(fontSize: 13),
@@ -2092,9 +2098,9 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                   );
                 }),
               ] else if (selectedType == 'CT03' && selectedMedicineIds.isNotEmpty) ...[
-                const Text(
+                Text(
                   'กรอกรายละเอียดปริมาณและราคาของแต่ละยาที่ใช้:',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primaryDark),
                 ),
                 const SizedBox(height: 10),
                 ...selectedMedicineIds.map((mId) {
@@ -2109,9 +2115,9 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: AppColors.surfAlt(context),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: isOther ? Colors.orange[800]! : AppColors.border),
+                      border: Border.all(color: isOther ? Colors.orange[800]! : AppColors.brd(context)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2123,7 +2129,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                             Expanded(
                               child: Text(
                                 mName,
-                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: isOther ? Colors.orange[800] : AppColors.textPrimary),
+                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: isOther ? Colors.orange[800] : AppColors.text(context)),
                               ),
                             ),
                           ],
@@ -2132,7 +2138,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                           const SizedBox(height: 10),
                           TextField(
                             controller: customNameCtrl,
-                            style: const TextStyle(fontSize: 14),
+                            style: TextStyle(fontSize: 14, color: AppColors.text(context)),
                             decoration: const InputDecoration(
                               labelText: 'ระบุชื่อยา',
                               labelStyle: TextStyle(fontSize: 13),
@@ -2149,7 +2155,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                               child: TextField(
                                 controller: amtCtrl,
                                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                style: const TextStyle(fontSize: 14),
+                                style: TextStyle(fontSize: 14, color: AppColors.text(context)),
                                 decoration: const InputDecoration(
                                   labelText: 'จำนวนที่ใช้',
                                   labelStyle: TextStyle(fontSize: 13),
@@ -2163,16 +2169,16 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                               child: DropdownButtonFormField<int?>(
                                 value: unitVal,
                                 isExpanded: true,
-                                style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+                                style: TextStyle(fontSize: 14, color: AppColors.text(context)),
                                 decoration: const InputDecoration(
                                   labelText: 'หน่วยวัด',
                                   labelStyle: TextStyle(fontSize: 13),
                                   contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                                 ),
                                 items: [
-                                  const DropdownMenuItem<int?>(
+                                  DropdownMenuItem<int?>(
                                     value: null,
-                                    child: Text('เลือกหน่วย', style: TextStyle(fontSize: 13)),
+                                    child: Text('เลือกหน่วย', style: TextStyle(fontSize: 13, color: AppColors.subText(context))),
                                   ),
                                   ...masterData.units.map((unit) {
                                     final idInt = int.tryParse(unit.id);
@@ -2183,7 +2189,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                                       value: idInt,
                                       child: Text(
                                         '${unit.name}$abbr',
-                                        style: const TextStyle(fontSize: 13),
+                                        style: TextStyle(fontSize: 13, color: AppColors.text(context)),
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     );
@@ -2198,7 +2204,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                         TextField(
                           controller: costCtrl,
                           keyboardType: TextInputType.number,
-                          style: const TextStyle(fontSize: 14),
+                          style: TextStyle(fontSize: 14, color: AppColors.text(context)),
                           decoration: const InputDecoration(
                             labelText: 'ราคา/ค่าใช้จ่าย (บาท)',
                             labelStyle: TextStyle(fontSize: 13),
@@ -2215,7 +2221,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                 TextField(
                   controller: costController,
                   keyboardType: TextInputType.number,
-                  style: const TextStyle(fontSize: 15),
+                  style: TextStyle(fontSize: 15, color: AppColors.text(context)),
                   decoration: const InputDecoration(
                     labelText: 'ค่าใช้จ่ายรวม (บาท)',
                     labelStyle: TextStyle(fontSize: 15),
@@ -2229,13 +2235,13 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       'รูปภาพแผล/อาการป่วย (สูงสุด 3 รูป):',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.text(context)),
                     ),
                     Text(
                       '${existingImageUrls.length + selectedImageFiles.length}/3',
-                      style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                      style: TextStyle(fontSize: 13, color: AppColors.subText(context)),
                     ),
                   ],
                 ),
@@ -2608,7 +2614,8 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
 // Custom Painter for Visual Growth Trend Chart
 class _GrowthChartPainter extends CustomPainter {
   final List<GrowthRecord> records; // Chronological (oldest to newest)
-  _GrowthChartPainter({required this.records});
+  final bool isDark;
+  _GrowthChartPainter({required this.records, this.isDark = false});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -2635,13 +2642,13 @@ class _GrowthChartPainter extends CustomPainter {
     }
 
     final gridPaint = Paint()
-      ..color = Colors.grey.withValues(alpha: 0.15)
+      ..color = isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.15)
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 
     final labelStyle = TextStyle(
       fontSize: 11,
-      color: Colors.grey[600],
+      color: isDark ? AppColors.darkTextSecondary : Colors.grey[600],
       fontWeight: FontWeight.w500,
     );
 
@@ -2680,6 +2687,8 @@ class _GrowthChartPainter extends CustomPainter {
       points.add(Offset(xPos, yPos));
     }
 
+    final primaryThemeColor = isDark ? AppColors.primaryLight : AppColors.primary;
+
     // Draw filled gradient area below line
     final fillPath = Path();
     fillPath.moveTo(points.first.dx, size.height - bottomPadding);
@@ -2691,8 +2700,8 @@ class _GrowthChartPainter extends CustomPainter {
 
     final fillGradient = LinearGradient(
       colors: [
-        AppColors.primary.withValues(alpha: 0.22),
-        AppColors.primary.withValues(alpha: 0.02),
+        primaryThemeColor.withValues(alpha: 0.25),
+        primaryThemeColor.withValues(alpha: 0.02),
       ],
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
@@ -2713,7 +2722,7 @@ class _GrowthChartPainter extends CustomPainter {
     }
 
     final linePaint = Paint()
-      ..color = AppColors.primary
+      ..color = primaryThemeColor
       ..strokeWidth = 2.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
@@ -2722,8 +2731,8 @@ class _GrowthChartPainter extends CustomPainter {
     canvas.drawPath(linePath, linePaint);
 
     // Draw data points & X-axis date labels
-    final dotOuterPaint = Paint()..color = AppColors.primary;
-    final dotInnerPaint = Paint()..color = Colors.white;
+    final dotOuterPaint = Paint()..color = primaryThemeColor;
+    final dotInnerPaint = Paint()..color = isDark ? AppColors.darkSurface : Colors.white;
 
     for (int i = 0; i < points.length; i++) {
       final p = points[i];
@@ -2753,7 +2762,8 @@ class _GrowthChartPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _GrowthChartPainter oldDelegate) => oldDelegate.records != records;
+  bool shouldRepaint(covariant _GrowthChartPainter oldDelegate) =>
+      oldDelegate.records != records || oldDelegate.isDark != isDark;
 }
 
 class GrowthTab extends ConsumerStatefulWidget {
@@ -2822,10 +2832,10 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                       const SizedBox(width: 10),
                       Text(
                         initialRecord != null ? 'แก้ไขประวัติน้ำหนัก' : 'บันทึกน้ำหนักใหม่',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 20,
-                          color: AppColors.textPrimary,
+                          color: AppColors.text(context),
                         ),
                       ),
                     ],
@@ -3816,12 +3826,12 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                 height: 190,
                 padding: const EdgeInsets.fromLTRB(12, 14, 14, 10),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.cardBg(context),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: AppColors.brd(context)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
+                      color: Colors.black.withValues(alpha: AppColors.isDark(context) ? 0.2 : 0.03),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -3832,29 +3842,29 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.show_chart, color: AppColors.primary, size: 20),
+                        Icon(Icons.show_chart, color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary, size: 20),
                         const SizedBox(width: 8),
-                        const Text(
+                        Text(
                           'กราฟแนวโน้มน้ำหนัก',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
-                            color: AppColors.textPrimary,
+                            color: AppColors.text(context),
                           ),
                         ),
                         const Spacer(),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.08),
+                            color: (AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary).withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             '${chronologicalRecords.length} จุดชั่ง',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
+                              color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary,
                             ),
                           ),
                         ),
@@ -3864,7 +3874,10 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                     Expanded(
                       child: CustomPaint(
                         size: Size.infinite,
-                        painter: _GrowthChartPainter(records: chronologicalRecords),
+                        painter: _GrowthChartPainter(
+                          records: chronologicalRecords,
+                          isDark: AppColors.isDark(context),
+                        ),
                       ),
                     ),
                   ],
@@ -3875,19 +3888,19 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
             const SizedBox(height: 24),
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.history,
                   size: 22,
-                  color: AppColors.primaryDark,
+                  color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primaryDark,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: const Text(
+                  child: Text(
                     'ประวัติการชั่งน้ำหนัก',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
-                      color: AppColors.textPrimary,
+                      color: AppColors.text(context),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -3901,12 +3914,12 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                       extra: {'cow': widget.cow, 'initialTab': 'growth'},
                     );
                   },
-                  icon: const Icon(Icons.arrow_forward, size: 16, color: AppColors.primary),
+                  icon: Icon(Icons.arrow_forward, size: 16, color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary),
                   label: Text(
                     'ดูทั้งหมด (${records.length})',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
-                      color: AppColors.primary,
+                      color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -3975,18 +3988,19 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'น้ำหนักเริ่มต้น',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
+                                color: AppColors.text(context),
                               ),
                             ),
-                            const Text(
+                            Text(
                               'ที่กรอกไว้ตอนเพิ่มวัว',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: AppColors.textSecondary,
+                                color: AppColors.subText(context),
                               ),
                             ),
                           ],
@@ -3994,10 +4008,10 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                       ),
                       Text(
                         '${widget.cow.latestWeight.toStringAsFixed(1)} กก.',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
+                          color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary,
                         ),
                       ),
                     ],
@@ -4033,12 +4047,12 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                           width: 48,
                           height: 48,
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
+                            color: (AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary).withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(14),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.monitor_weight_outlined,
-                            color: AppColors.primary,
+                            color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary,
                             size: 24,
                           ),
                         ),
@@ -4049,18 +4063,18 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                             children: [
                               Text(
                                 AppDateUtils.formatThaiDate(r.recordDate),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
-                                  color: AppColors.textPrimary,
+                                  color: AppColors.text(context),
                                 ),
                               ),
                               if (r.girth != null)
                                 Text(
                                   'รอบอก: ${r.girth!.toStringAsFixed(1)} ซม.',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 14,
-                                    color: AppColors.textSecondary,
+                                    color: AppColors.subText(context),
                                   ),
                                 ),
                               if (periodAdg != null) ...[
@@ -4070,7 +4084,9 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
-                                    color: periodAdg >= 0 ? AppColors.primary : AppColors.error,
+                                    color: periodAdg >= 0
+                                        ? (AppColors.isDark(context) ? const Color(0xFF8FD475) : AppColors.primary)
+                                        : AppColors.error,
                                   ),
                                 ),
                               ],
@@ -4082,10 +4098,10 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                           children: [
                             Text(
                               '${r.weight.toStringAsFixed(1)} กก.',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.primary,
+                                color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary,
                               ),
                             ),
                             if (diff != null)
@@ -4097,7 +4113,7 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                                 ),
                                 decoration: BoxDecoration(
                                   color: (diff >= 0 ? AppColors.success : AppColors.error)
-                                      .withValues(alpha: 0.12),
+                                      .withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
@@ -4105,7 +4121,9 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.bold,
-                                    color: diff >= 0 ? AppColors.success : AppColors.error,
+                                    color: diff >= 0
+                                        ? (AppColors.isDark(context) ? const Color(0xFF8FD475) : AppColors.success)
+                                        : AppColors.error,
                                   ),
                                 ),
                               ),
@@ -4203,6 +4221,7 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
           bottom: 16,
           right: 16,
           child: FloatingActionButton.extended(
+            heroTag: 'add_weight_fab',
             onPressed: detailState.isSaving
                 ? null
                 : () => _showAddWeightSheet(context),
@@ -4590,9 +4609,9 @@ class _CostTabState extends ConsumerState<CostTab> {
             const SizedBox(height: 6),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12.5,
-                color: AppColors.textPrimary,
+                color: AppColors.subText(context),
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
@@ -4607,15 +4626,15 @@ class _CostTabState extends ConsumerState<CostTab> {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.teal.withValues(alpha: 0.1),
+                      color: Colors.teal.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: const Text(
+                    child: Text(
                       'เกิดในฟาร์ม',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 11,
-                        color: Colors.teal,
+                        color: AppColors.isDark(context) ? const Color(0xFF2DD4BF) : Colors.teal,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -4629,8 +4648,8 @@ class _CostTabState extends ConsumerState<CostTab> {
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                         color: amount > 0
-                            ? AppColors.textPrimary
-                            : Colors.grey[400],
+                            ? AppColors.text(context)
+                            : AppColors.hint(context),
                       ),
                       maxLines: 1,
                     ),
@@ -4644,10 +4663,10 @@ class _CostTabState extends ConsumerState<CostTab> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontWeight: FontWeight.bold,
         fontSize: 15,
-        color: AppColors.textPrimary,
+        color: AppColors.text(context),
       ),
     );
   }
@@ -4702,19 +4721,19 @@ class _CostTabState extends ConsumerState<CostTab> {
                     Expanded(
                       child: Text(
                         p.label,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                          color: AppColors.text(context),
                         ),
                       ),
                     ),
                     Text(
                       '${NumberFormat('#,##0').format(p.amount)} ฿ ($pct%)',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                        color: AppColors.text(context),
                       ),
                     ),
                   ],
@@ -4762,23 +4781,23 @@ class _CostTabState extends ConsumerState<CostTab> {
         ),
         title: Text(
           description,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            color: AppColors.text(context),
           ),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
         subtitle: Row(
           children: [
-            const Icon(Icons.calendar_today, size: 14, color: AppColors.primary),
+            Icon(Icons.calendar_today, size: 14, color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary),
             const SizedBox(width: 4),
             Text(
               date,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: AppColors.textPrimary,
+                color: AppColors.subText(context),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -4786,9 +4805,9 @@ class _CostTabState extends ConsumerState<CostTab> {
         ),
         trailing: Text(
           '${NumberFormat('#,##0').format(cost)} ฿',
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: AppColors.error,
+            color: AppColors.isDark(context) ? const Color(0xFFF87171) : AppColors.error,
             fontSize: 16,
           ),
         ),
@@ -4824,36 +4843,36 @@ class _CostTabState extends ConsumerState<CostTab> {
         ),
         title: Text(
           feedType,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            color: AppColors.text(context),
           ),
         ),
         subtitle: Row(
           children: [
-            const Icon(Icons.calendar_today, size: 14, color: AppColors.primary),
+            Icon(Icons.calendar_today, size: 14, color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary),
             const SizedBox(width: 4),
             Text(
               displayDate,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: AppColors.textPrimary,
+                color: AppColors.subText(context),
                 fontWeight: FontWeight.w500,
               ),
             ),
             const SizedBox(width: 8),
             Text(
               '(ทั้งโซน ${NumberFormat('#,##0').format(totalCost)} ฿)',
-              style: const TextStyle(fontSize: 11, color: AppColors.textPrimary),
+              style: TextStyle(fontSize: 11, color: AppColors.subText(context)),
             ),
           ],
         ),
         trailing: Text(
           '${NumberFormat('#,##0').format(costPerCow)} ฿',
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.green,
+            color: AppColors.isDark(context) ? const Color(0xFF4ADE80) : Colors.green,
             fontSize: 16,
           ),
         ),
@@ -4887,10 +4906,10 @@ class _CostTabState extends ConsumerState<CostTab> {
         ),
         title: Text(
           title.toString(),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            color: AppColors.text(context),
           ),
         ),
         subtitle: Column(
@@ -4898,13 +4917,13 @@ class _CostTabState extends ConsumerState<CostTab> {
           children: [
             Row(
               children: [
-                Icon(Icons.calendar_today, size: 14, color: Colors.grey[500]),
+                Icon(Icons.calendar_today, size: 14, color: AppColors.hint(context)),
                 const SizedBox(width: 4),
                 Text(
                   date,
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.grey[600],
+                    color: AppColors.subText(context),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -4913,7 +4932,7 @@ class _CostTabState extends ConsumerState<CostTab> {
             if (notes != null && notes.toString().isNotEmpty)
               Text(
                 notes.toString(),
-                style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                style: TextStyle(fontSize: 12, color: AppColors.hint(context)),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -4921,9 +4940,9 @@ class _CostTabState extends ConsumerState<CostTab> {
         ),
         trailing: Text(
           '${NumberFormat('#,##0').format(amount)} ฿',
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.blue,
+            color: AppColors.isDark(context) ? const Color(0xFF60A5FA) : Colors.blue,
             fontSize: 16,
           ),
         ),

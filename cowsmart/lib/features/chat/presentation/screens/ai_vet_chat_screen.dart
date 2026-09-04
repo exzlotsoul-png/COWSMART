@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/cow_icon.dart';
 import '../../../cow/domain/cow.dart';
 import '../../../cow/providers/cow_provider.dart';
 import '../../data/ai_chat_repository.dart';
@@ -208,13 +209,13 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F8F7),
+      backgroundColor: AppColors.bg(context),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.cardBg(context),
         elevation: 0.5,
         titleSpacing: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+          icon: Icon(Icons.arrow_back_rounded, color: AppColors.text(context)),
           onPressed: () => context.pop(),
         ),
         title: Row(
@@ -248,7 +249,7 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
               ],
             ),
             const SizedBox(width: 12),
-            const Column(
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -256,10 +257,10 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: AppColors.text(context),
                   ),
                 ),
-                Text(
+                const Text(
                   'AI ผู้ช่วยสัตวแพทย์ 24 ชม.',
                   style: TextStyle(
                     fontSize: 11.5,
@@ -316,42 +317,43 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+        color: AppColors.cardBg(context),
+        border: Border(bottom: BorderSide(color: AppColors.div(context))),
       ),
       child: Row(
         children: [
-          const Icon(Icons.pets_rounded, size: 18, color: AppColors.primary),
+          const CowIcon(size: 18, color: AppColors.primary),
           const SizedBox(width: 8),
-          const Text(
+          Text(
             'ปรึกษาสำหรับ:',
-            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: AppColors.textSecondary),
+            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: AppColors.subText(context)),
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10),
               decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
+                color: AppColors.surfAlt(context),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   isExpanded: true,
+                  dropdownColor: AppColors.cardBg(context),
                   value: _selectedCow?.id,
-                  hint: const Text('ถามทั่วไป / ไม่เจาะจงวัว', style: TextStyle(fontSize: 12.5, color: AppColors.textHint)),
-                  icon: const Icon(Icons.arrow_drop_down_rounded, color: AppColors.textSecondary),
+                  hint: Text('ถามทั่วไป / ไม่เจาะจงวัว', style: TextStyle(fontSize: 12.5, color: AppColors.hint(context))),
+                  icon: Icon(Icons.arrow_drop_down_rounded, color: AppColors.subText(context)),
                   items: [
-                    const DropdownMenuItem<String>(
+                    DropdownMenuItem<String>(
                       value: null,
-                      child: Text('ถามทั่วไป / ทั้งฟาร์ม', style: TextStyle(fontSize: 12.5, color: AppColors.textPrimary)),
+                      child: Text('ถามทั่วไป / ทั้งฟาร์ม', style: TextStyle(fontSize: 12.5, color: AppColors.text(context))),
                     ),
                     ...allCows.map(
                       (cow) => DropdownMenuItem<String>(
                         value: cow.id,
                         child: Text(
                           '${cow.tagNumber} - ${cow.name} (${cow.breed})',
-                          style: const TextStyle(fontSize: 12.5, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+                          style: TextStyle(fontSize: 12.5, color: AppColors.text(context), fontWeight: FontWeight.w600),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -468,14 +470,14 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.cardBg(context),
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(4),
                       topRight: Radius.circular(18),
                       bottomLeft: Radius.circular(18),
                       bottomRight: Radius.circular(18),
                     ),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: AppColors.brd(context)),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.03),
@@ -486,9 +488,9 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
                   ),
                   child: Text(
                     message.text,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
-                      color: AppColors.textPrimary,
+                      color: AppColors.text(context),
                       height: 1.5,
                     ),
                   ),
@@ -590,8 +592,8 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
       height: 46,
       padding: const EdgeInsets.symmetric(vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.shade200)),
+        color: AppColors.cardBg(context),
+        border: Border(top: BorderSide(color: AppColors.div(context))),
       ),
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -604,10 +606,10 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
           return ActionChip(
             label: Text(
               item.title,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.text(context)),
             ),
-            backgroundColor: const Color(0xFFF1F5F9),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide.none),
+            backgroundColor: AppColors.surfAlt(context),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: AppColors.brd(context))),
             onPressed: () => _sendMessage(item.prompt),
           );
         },
@@ -619,7 +621,7 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
     return Container(
       padding: EdgeInsets.fromLTRB(16, 8, 16, MediaQuery.of(context).padding.bottom + 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBg(context),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -634,18 +636,20 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
+                color: AppColors.surfAlt(context),
                 borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: AppColors.brd(context)),
               ),
               child: TextField(
                 controller: _textController,
+                style: TextStyle(color: AppColors.text(context)),
                 textInputAction: TextInputAction.send,
                 onSubmitted: _sendMessage,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: 'พิมพ์เล่าอาการ หรือถามคำถามที่นี่...',
-                  hintStyle: TextStyle(fontSize: 13.5, color: AppColors.textHint),
+                  hintStyle: TextStyle(fontSize: 13.5, color: AppColors.hint(context)),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
             ),

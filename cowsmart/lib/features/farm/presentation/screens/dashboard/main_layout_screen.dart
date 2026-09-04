@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'dashboard_screen.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/widgets/cow_icon.dart';
 import '../../../../cow/presentation/screens/cow_list_screen.dart';
 import '../../../../feed/presentation/screens/feed_inventory_screen.dart';
 import '../../../../auth/presentation/screens/profile_screen.dart';
@@ -28,6 +29,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     return Scaffold(
       body: _screens[_currentIndex],
       floatingActionButton: FloatingActionButton(
+        heroTag: 'main_layout_fab',
         onPressed: () {
           context.push('/qr_scanner');
         },
@@ -44,8 +46,8 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
             _currentIndex = index;
           });
         },
-        backgroundColor: AppColors.surface,
-        indicatorColor: AppColors.primaryLight.withOpacity(0.3),
+        backgroundColor: AppColors.surf(context),
+        indicatorColor: AppColors.primaryLight.withValues(alpha: 0.3),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
@@ -53,8 +55,8 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
             label: 'หน้าหลัก',
           ),
           NavigationDestination(
-            icon: Icon(Icons.pets_outlined),
-            selectedIcon: Icon(Icons.pets),
+            icon: CowIcon(),
+            selectedIcon: CowIcon(),
             label: 'รายชื่อวัว',
           ),
           NavigationDestination(

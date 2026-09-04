@@ -62,7 +62,7 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
     final totalCost = filteredItems.fold<double>(0, (sum, i) => sum + i.cost);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg(context),
       body: CustomScrollView(
         slivers: [
           // ── Gradient Header ──
@@ -136,9 +136,9 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.cardBg(context),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                  border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.04),
@@ -155,30 +155,14 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                       children: [
                         Expanded(
                           child: InkWell(
-                            onTap: () async {
-                              final picked = await showDateRangePicker(
-                                context: context,
-                                initialDateRange: _dateRange ?? DateTimeRange(
-                                  start: DateTime.now().subtract(const Duration(days: 7)),
-                                  end: DateTime.now(),
-                                ),
-                                firstDate: DateTime(2020),
-                                lastDate: DateTime.now().add(const Duration(days: 365)),
-                                helpText: 'เลือกช่วงวันที่',
-                                cancelText: 'ยกเลิก',
-                                confirmText: 'ตกลง',
-                                saveText: 'ตกลง',
-                              );
-                              if (picked != null) {
-                                setState(() => _dateRange = picked);
-                              }
-                            },
+                            onTap: () => _showCustomDateRangePicker(context),
+                            borderRadius: BorderRadius.circular(12),
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                               decoration: BoxDecoration(
-                                border: Border.all(color: _dateRange != null ? AppColors.primary : AppColors.border),
+                                border: Border.all(color: _dateRange != null ? AppColors.primary : AppColors.brd(context)),
                                 borderRadius: BorderRadius.circular(12),
-                                color: _dateRange != null ? AppColors.primary.withValues(alpha: 0.06) : Colors.white,
+                                color: _dateRange != null ? AppColors.primary.withValues(alpha: 0.06) : AppColors.surfAlt(context),
                               ),
                               child: Row(
                                 children: [
@@ -192,7 +176,7 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: _dateRange != null ? FontWeight.bold : FontWeight.normal,
-                                        color: AppColors.textPrimary,
+                                        color: AppColors.text(context),
                                       ),
                                     ),
                                   ),
@@ -211,64 +195,15 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 10),
-
-                    // Quick Date Range Presets
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          ActionChip(
-                            label: const Text('7 วันล่าสุด', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                            backgroundColor: AppColors.surfaceAlt,
-                            onPressed: () {
-                              final now = DateTime.now();
-                              setState(() {
-                                _dateRange = DateTimeRange(
-                                  start: now.subtract(const Duration(days: 7)),
-                                  end: now,
-                                );
-                              });
-                            },
-                          ),
-                          const SizedBox(width: 6),
-                          ActionChip(
-                            label: const Text('30 วันล่าสุด', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                            backgroundColor: AppColors.surfaceAlt,
-                            onPressed: () {
-                              final now = DateTime.now();
-                              setState(() {
-                                _dateRange = DateTimeRange(
-                                  start: now.subtract(const Duration(days: 30)),
-                                  end: now,
-                                );
-                              });
-                            },
-                          ),
-                          const SizedBox(width: 6),
-                          ActionChip(
-                            label: const Text('เดือนนี้', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                            backgroundColor: AppColors.surfaceAlt,
-                            onPressed: () {
-                              final now = DateTime.now();
-                              final start = DateTime(now.year, now.month, 1);
-                              final end = DateTime(now.year, now.month + 1, 0);
-                              setState(() {
-                                _dateRange = DateTimeRange(start: start, end: end);
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
                     const SizedBox(height: 12),
 
                     // Search Bar
                     TextField(
                       controller: _searchController,
+                      style: TextStyle(color: AppColors.text(context)),
                       decoration: InputDecoration(
                         hintText: 'ค้นหาด้วยชื่ออาหารหรือหมวดหมู่...',
-                        hintStyle: const TextStyle(fontSize: 14, color: AppColors.textHint),
+                        hintStyle: TextStyle(fontSize: 14, color: AppColors.hint(context)),
                         prefixIcon: const Icon(Icons.search_rounded, size: 20, color: AppColors.primary),
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
@@ -281,7 +216,7 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                             : null,
                         contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                         filled: true,
-                        fillColor: AppColors.surfaceAlt,
+                        fillColor: AppColors.surfAlt(context),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
                           borderSide: BorderSide.none,
@@ -299,7 +234,13 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                           ChoiceChip(
                             label: const Text('ทั้งหมด', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                             selected: _selectedCategory == null,
-                            selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                            selectedColor: AppColors.primary,
+                            backgroundColor: AppColors.surfAlt(context),
+                            side: BorderSide(color: _selectedCategory == null ? AppColors.primary : AppColors.brd(context)),
+                            labelStyle: TextStyle(
+                              color: _selectedCategory == null ? Colors.white : AppColors.text(context),
+                              fontWeight: FontWeight.bold,
+                            ),
                             onSelected: (selected) {
                               if (selected) setState(() => _selectedCategory = null);
                             },
@@ -308,7 +249,13 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                           ChoiceChip(
                             label: const Text('หญ้า', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                             selected: _selectedCategory == 'หญ้า',
-                            selectedColor: Colors.green.withValues(alpha: 0.15),
+                            selectedColor: Colors.green,
+                            backgroundColor: AppColors.surfAlt(context),
+                            side: BorderSide(color: _selectedCategory == 'หญ้า' ? Colors.green : AppColors.brd(context)),
+                            labelStyle: TextStyle(
+                              color: _selectedCategory == 'หญ้า' ? Colors.white : AppColors.text(context),
+                              fontWeight: FontWeight.bold,
+                            ),
                             onSelected: (selected) {
                               setState(() => _selectedCategory = selected ? 'หญ้า' : null);
                             },
@@ -317,7 +264,13 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                           ChoiceChip(
                             label: const Text('ข้น', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                             selected: _selectedCategory == 'ข้น',
-                            selectedColor: Colors.orange.withValues(alpha: 0.15),
+                            selectedColor: Colors.orange,
+                            backgroundColor: AppColors.surfAlt(context),
+                            side: BorderSide(color: _selectedCategory == 'ข้น' ? Colors.orange : AppColors.brd(context)),
+                            labelStyle: TextStyle(
+                              color: _selectedCategory == 'ข้น' ? Colors.white : AppColors.text(context),
+                              fontWeight: FontWeight.bold,
+                            ),
                             onSelected: (selected) {
                               setState(() => _selectedCategory = selected ? 'ข้น' : null);
                             },
@@ -326,7 +279,13 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                           ChoiceChip(
                             label: const Text('เสริม', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                             selected: _selectedCategory == 'เสริม',
-                            selectedColor: Colors.blue.withValues(alpha: 0.15),
+                            selectedColor: Colors.blue,
+                            backgroundColor: AppColors.surfAlt(context),
+                            side: BorderSide(color: _selectedCategory == 'เสริม' ? Colors.blue : AppColors.brd(context)),
+                            labelStyle: TextStyle(
+                              color: _selectedCategory == 'เสริม' ? Colors.white : AppColors.text(context),
+                              fontWeight: FontWeight.bold,
+                            ),
                             onSelected: (selected) {
                               setState(() => _selectedCategory = selected ? 'เสริม' : null);
                             },
@@ -349,7 +308,7 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                 children: [
                   Text(
                     'พบ ${filteredItems.length} รายการ',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.text(context)),
                   ),
                   Text(
                     'รวม ${totalQuantity.toStringAsFixed(1)} กก. (${NumberFormat('#,##0').format(totalCost)} ฿)',
@@ -430,9 +389,9 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -463,10 +422,10 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                     children: [
                       Text(
                         item.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 17,
-                          color: AppColors.textPrimary,
+                          color: AppColors.text(context),
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -519,10 +478,10 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                   children: [
                     Text(
                       '${NumberFormat('#,##0').format(item.cost)} ฿',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 17,
-                        color: AppColors.textPrimary,
+                        color: AppColors.text(context),
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -530,7 +489,7 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                       '${item.quantity.toStringAsFixed(1)} กก.',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[700],
+                        color: AppColors.subText(context),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -549,7 +508,7 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                 ),
                 child: Text(
                   'หมายเหตุ: ${item.notes}',
-                  style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  style: TextStyle(fontSize: 12, color: AppColors.subText(context)),
                 ),
               ),
             ],
@@ -560,13 +519,318 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                 const SizedBox(width: 4),
                 Text(
                   AppDateUtils.formatThaiDate(item.recordedAt, includeTime: true),
-                  style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 12, color: AppColors.text(context), fontWeight: FontWeight.w600),
                 ),
               ],
             ),
           ],
         ),
       ),
+    );
+  }
+
+  void _showCustomDateRangePicker(BuildContext context) {
+    final now = DateTime.now();
+    DateTime tempStart = _dateRange?.start ?? DateTime(now.year, now.month, 1);
+    DateTime tempEnd = _dateRange?.end ?? now;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (modalContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final daysCount = tempEnd.difference(tempStart).inDays + 1;
+
+            void applyPreset(DateTime start, DateTime end) {
+              setModalState(() {
+                tempStart = start;
+                tempEnd = end;
+              });
+            }
+
+            Widget buildPresetChip({required String label, required VoidCallback onTap}) {
+              return ActionChip(
+                label: Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.text(context))),
+                backgroundColor: AppColors.surfAlt(context),
+                side: BorderSide(color: AppColors.brd(context)),
+                onPressed: onTap,
+              );
+            }
+
+            return Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColors.cardBg(context),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Header
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.date_range_rounded, color: AppColors.primary, size: 22),
+                            const SizedBox(width: 8),
+                            Text(
+                              'เลือกช่วงเวลาดูประวัติ',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.text(context),
+                              ),
+                            ),
+                          ],
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(modalContext),
+                          icon: Icon(Icons.close_rounded, color: AppColors.subText(context)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Quick Presets Label
+                    Text(
+                      'ตัวเลือกด่วน',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.subText(context),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Preset Chips
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        buildPresetChip(
+                          label: '7 วันล่าสุด',
+                          onTap: () {
+                            final today = DateTime.now();
+                            applyPreset(today.subtract(const Duration(days: 6)), today);
+                          },
+                        ),
+                        buildPresetChip(
+                          label: '30 วันล่าสุด',
+                          onTap: () {
+                            final today = DateTime.now();
+                            applyPreset(today.subtract(const Duration(days: 29)), today);
+                          },
+                        ),
+                        buildPresetChip(
+                          label: 'เดือนนี้',
+                          onTap: () {
+                            final today = DateTime.now();
+                            applyPreset(DateTime(today.year, today.month, 1), today);
+                          },
+                        ),
+                        buildPresetChip(
+                          label: 'เดือนที่แล้ว',
+                          onTap: () {
+                            final today = DateTime.now();
+                            final firstOfLastMonth = DateTime(today.year, today.month - 1, 1);
+                            final lastOfLastMonth = DateTime(today.year, today.month, 0);
+                            applyPreset(firstOfLastMonth, lastOfLastMonth);
+                          },
+                        ),
+                        buildPresetChip(
+                          label: 'ปีนี้ (พ.ศ. ${now.year + 543})',
+                          onTap: () {
+                            final today = DateTime.now();
+                            applyPreset(DateTime(today.year, 1, 1), today);
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Custom Date Pickers Label
+                    Text(
+                      'ระบุช่วงวันที่เอง',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.subText(context),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    Row(
+                      children: [
+                        // Start Date
+                        Expanded(
+                          child: InkWell(
+                            onTap: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: tempStart,
+                                firstDate: DateTime(2020),
+                                lastDate: DateTime(2100),
+                                helpText: 'เลือกวันที่เริ่มต้น',
+                              );
+                              if (picked != null) {
+                                setModalState(() {
+                                  tempStart = picked;
+                                  if (tempEnd.isBefore(tempStart)) {
+                                    tempEnd = tempStart;
+                                  }
+                                });
+                              }
+                            },
+                            borderRadius: BorderRadius.circular(14),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfAlt(context),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.6)),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'ตั้งแต่วันที่',
+                                    style: TextStyle(fontSize: 11, color: AppColors.hint(context), fontWeight: FontWeight.w500),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.calendar_today_rounded, size: 16, color: AppColors.primary),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          AppDateUtils.formatThaiDate(tempStart),
+                                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.text(context)),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Icon(Icons.arrow_forward_rounded, color: AppColors.hint(context), size: 18),
+                        ),
+                        // End Date
+                        Expanded(
+                          child: InkWell(
+                            onTap: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: tempEnd,
+                                firstDate: tempStart,
+                                lastDate: DateTime(2100),
+                                helpText: 'เลือกวันที่สิ้นสุด',
+                              );
+                              if (picked != null) {
+                                setModalState(() {
+                                  tempEnd = picked;
+                                });
+                              }
+                            },
+                            borderRadius: BorderRadius.circular(14),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfAlt(context),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.6)),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'ถึงวันที่',
+                                    style: TextStyle(fontSize: 11, color: AppColors.hint(context), fontWeight: FontWeight.w500),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.event_rounded, size: 16, color: AppColors.primary),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          AppDateUtils.formatThaiDate(tempEnd),
+                                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.text(context)),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Days Count Badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.info_outline_rounded, size: 16, color: AppColors.text(context)),
+                          const SizedBox(width: 6),
+                          Text(
+                            'รวมระยะเวลาเลือกทั้งหมด $daysCount วัน',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.text(context),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Apply Button
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _dateRange = DateTimeRange(start: tempStart, end: tempEnd);
+                        });
+                        Navigator.pop(modalContext);
+                      },
+                      icon: const Icon(Icons.check_circle_rounded, size: 20),
+                      label: const Text('ตกลง / ดูรายงานช่วงเวลานี้', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

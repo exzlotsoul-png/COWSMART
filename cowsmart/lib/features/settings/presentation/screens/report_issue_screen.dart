@@ -140,15 +140,7 @@ class _ReportIssueScreenState extends ConsumerState<ReportIssueScreen> with Sing
       }
 
       final api = ref.read(apiClientProvider);
-      int totalCount = 0;
-      try {
-        final res = await api.get('/issue_reports');
-        if (res.data is List) totalCount = (res.data as List).length;
-      } catch (_) {}
-
-      final reportId = 'REP${(totalCount + 1).toString().padLeft(3, '0')}';
       final payload = {
-        'id': reportId,
         'email': email,
         'topic': _selectedTopic,
         'description': _descriptionController.text.trim(),
@@ -307,6 +299,7 @@ class _ReportIssueScreenState extends ConsumerState<ReportIssueScreen> with Sing
         : (availableTopics.isNotEmpty ? availableTopics.first : _selectedTopic);
 
     return Scaffold(
+      backgroundColor: AppColors.bg(context),
       appBar: AppBar(
         title: const Text(
           'รายงานการใช้งาน',
@@ -363,17 +356,17 @@ class _ReportIssueScreenState extends ConsumerState<ReportIssueScreen> with Sing
                                 user != null
                                     ? (user['name'] ?? '${user['first_name'] ?? ''} ${user['last_name'] ?? ''}'.trim())
                                     : 'ผู้ใช้งาน',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary,
+                                  color: AppColors.text(context),
                                 ),
                               ),
                               Text(
                                 user?['email']?.toString() ?? 'ไม่ระบุอีเมล',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13,
-                                  color: AppColors.textSecondary,
+                                  color: AppColors.subText(context),
                                 ),
                               ),
                             ],
@@ -386,19 +379,20 @@ class _ReportIssueScreenState extends ConsumerState<ReportIssueScreen> with Sing
                   const SizedBox(height: 24),
 
                   // Topic Dropdown
-                  const Text(
+                  Text(
                     'หัวข้อรายงาน / ปัญหา',
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: AppColors.text(context),
                     ),
                   ),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
                     initialValue: currentSelectedTopic,
                     isExpanded: true,
-                    style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
+                    dropdownColor: AppColors.cardBg(context),
+                    style: TextStyle(fontSize: 15, color: AppColors.text(context)),
                     decoration: InputDecoration(
                       prefixIcon: const Icon(Icons.report_problem_outlined, color: AppColors.primary, size: 22),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -418,22 +412,22 @@ class _ReportIssueScreenState extends ConsumerState<ReportIssueScreen> with Sing
                   const SizedBox(height: 20),
 
                   // Description Text Area
-                  const Text(
+                  Text(
                     'รายละเอียดปัญหา / ข้อเสนอแนะ',
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: AppColors.text(context),
                     ),
                   ),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _descriptionController,
                     maxLines: 5,
-                    style: const TextStyle(fontSize: 15),
+                    style: TextStyle(fontSize: 15, color: AppColors.text(context)),
                     decoration: InputDecoration(
                       hintText: 'อธิบายรายละเอียดปัญหา ข้อผิดพลาด หรือสิ่งที่ต้องการให้ทีมงานปรับปรุงพัฒนา...',
-                      hintStyle: const TextStyle(fontSize: 14, color: AppColors.textHint),
+                      hintStyle: TextStyle(fontSize: 14, color: AppColors.hint(context)),
                       alignLabelWithHint: true,
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       contentPadding: const EdgeInsets.all(14),
@@ -580,16 +574,16 @@ class _ReportIssueScreenState extends ConsumerState<ReportIssueScreen> with Sing
                     : _historyReports.isEmpty
                         ? ListView(
                             physics: const AlwaysScrollableScrollPhysics(),
-                            children: const [
-                              SizedBox(height: 100),
+                            children: [
+                              const SizedBox(height: 100),
                               Center(
                                 child: Column(
                                   children: [
-                                    Icon(Icons.assignment_outlined, size: 64, color: AppColors.textHint),
-                                    SizedBox(height: 12),
+                                    Icon(Icons.assignment_outlined, size: 64, color: AppColors.hint(context)),
+                                    const SizedBox(height: 12),
                                     Text(
                                       'ยังไม่มีประวัติการแจ้งรายงานการใช้งาน',
-                                      style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+                                      style: TextStyle(fontSize: 16, color: AppColors.subText(context)),
                                     ),
                                   ],
                                 ),
@@ -615,11 +609,11 @@ class _ReportIssueScreenState extends ConsumerState<ReportIssueScreen> with Sing
                                 margin: const EdgeInsets.only(bottom: 14),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
-                                  side: BorderSide(color: AppColors.border.withValues(alpha: 0.6)),
+                                  side: BorderSide(color: AppColors.brd(context).withValues(alpha: 0.6)),
                                 ),
                                 elevation: 1.5,
                                 shadowColor: Colors.black.withValues(alpha: 0.05),
-                                color: Colors.white,
+                                color: AppColors.cardBg(context),
                                 child: Padding(
                                   padding: const EdgeInsets.all(16),
                                   child: Column(
@@ -631,10 +625,10 @@ class _ReportIssueScreenState extends ConsumerState<ReportIssueScreen> with Sing
                                           Expanded(
                                             child: Text(
                                               topic,
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 16,
                                                 fontWeight: FontWeight.bold,
-                                                color: AppColors.textPrimary,
+                                                color: AppColors.text(context),
                                                 height: 1.2,
                                               ),
                                             ),
@@ -663,10 +657,10 @@ class _ReportIssueScreenState extends ConsumerState<ReportIssueScreen> with Sing
                                                 const SizedBox(width: 4),
                                                 Text(
                                                   isResolved ? 'แก้ไขแล้ว' : 'รอดำเนินการ',
-                                                  style: TextStyle(
+                                                  style: const TextStyle(
                                                     fontSize: 12,
                                                     fontWeight: FontWeight.bold,
-                                                    color: isResolved ? const Color(0xFF334A2E) : const Color(0xFFC2410C),
+                                                    color: Color(0xFF334A2E),
                                                   ),
                                                 ),
                                               ],
@@ -690,11 +684,11 @@ class _ReportIssueScreenState extends ConsumerState<ReportIssueScreen> with Sing
                                       const SizedBox(height: 8),
                                       Row(
                                         children: [
-                                          const Icon(Icons.access_time, size: 14, color: AppColors.textHint),
+                                          Icon(Icons.access_time, size: 14, color: AppColors.hint(context)),
                                           const SizedBox(width: 4),
                                           Text(
                                             dateStr,
-                                            style: const TextStyle(fontSize: 12, color: AppColors.textHint),
+                                            style: TextStyle(fontSize: 12, color: AppColors.hint(context)),
                                           ),
                                           const SizedBox(width: 10),
                                           Container(

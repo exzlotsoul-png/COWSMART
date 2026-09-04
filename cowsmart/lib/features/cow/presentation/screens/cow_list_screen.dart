@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:cowsmart/core/widgets/cow_icon.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
@@ -73,7 +74,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
     });
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg(context),
       body: CustomScrollView(
         slivers: [
           // ── Gradient Header ──
@@ -180,14 +181,14 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                   // Search Bar Input
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.cardBg(context),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: AppColors.border.withValues(alpha: 0.6),
+                        color: AppColors.brd(context).withValues(alpha: 0.6),
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
+                          color: Colors.black.withValues(alpha: AppColors.isDark(context) ? 0.2 : 0.04),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -195,9 +196,9 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                     ),
                     child: TextField(
                       controller: _searchController,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
-                        color: AppColors.textPrimary,
+                        color: AppColors.text(context),
                       ),
                       onChanged: (value) =>
                           ref.read(cowProvider.notifier).setSearchQuery(value),
@@ -340,9 +341,9 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                       const SizedBox(width: 8),
                       Text(
                         'พบวัวทั้งหมด ${displayedCows.length} ตัว',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
-                          color: AppColors.textPrimary,
+                          color: AppColors.text(context),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -370,8 +371,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            Icons.pets_rounded,
+                          CowIcon(
                             size: 56,
                             color: Colors.grey[350],
                           ),
@@ -403,6 +403,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'cow_list_fab',
         onPressed: () {
           context.push('/add_cow');
         },
@@ -433,9 +434,9 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
       backgroundColor: Colors.transparent,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSheetState) => Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          decoration: BoxDecoration(
+            color: AppColors.cardBg(ctx),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
           child: Column(
@@ -456,12 +457,12 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'กรองรายการวัว',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: AppColors.text(ctx),
                     ),
                   ),
                   TextButton(
@@ -483,15 +484,15 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                   ),
                 ],
               ),
-              const Divider(),
+              Divider(color: AppColors.div(ctx)),
               const SizedBox(height: 12),
 
               // Status filter
-              const Text(
+              Text(
                 'สถานะวัว',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: AppColors.text(ctx),
                   fontSize: 15,
                 ),
               ),
@@ -507,10 +508,12 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                     onSelected: (v) =>
                         setSheetState(() => tempStatus = v ? s : null),
                     selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                    backgroundColor: AppColors.surfAlt(ctx),
+                    side: BorderSide(color: selected ? AppColors.primary : AppColors.brd(ctx)),
                     labelStyle: TextStyle(
                       color: selected
                           ? AppColors.primary
-                          : AppColors.textSecondary,
+                          : AppColors.text(ctx),
                       fontSize: 14,
                       fontWeight: selected
                           ? FontWeight.bold
@@ -522,11 +525,11 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
               const SizedBox(height: 20),
 
               // Type filter
-              const Text(
+              Text(
                 'ประเภทวัว',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: AppColors.text(ctx),
                   fontSize: 15,
                 ),
               ),
@@ -542,10 +545,12 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                     onSelected: (v) =>
                         setSheetState(() => tempType = v ? t : null),
                     selectedColor: AppColors.secondary.withValues(alpha: 0.15),
+                    backgroundColor: AppColors.surfAlt(ctx),
+                    side: BorderSide(color: selected ? AppColors.secondary : AppColors.brd(ctx)),
                     labelStyle: TextStyle(
                       color: selected
                           ? AppColors.secondary
-                          : AppColors.textSecondary,
+                          : AppColors.text(ctx),
                       fontSize: 14,
                       fontWeight: selected
                           ? FontWeight.bold
@@ -557,11 +562,11 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
               const SizedBox(height: 20),
 
               // Gender filter
-              const Text(
+              Text(
                 'เพศวัว',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: AppColors.text(ctx),
                   fontSize: 15,
                 ),
               ),
@@ -575,10 +580,12 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                     onSelected: (v) =>
                         setSheetState(() => tempGender = v ? 'M' : null),
                     selectedColor: AppColors.info.withValues(alpha: 0.15),
+                    backgroundColor: AppColors.surfAlt(ctx),
+                    side: BorderSide(color: tempGender == 'M' ? AppColors.info : AppColors.brd(ctx)),
                     labelStyle: TextStyle(
                       color: tempGender == 'M'
                           ? AppColors.info
-                          : AppColors.textSecondary,
+                          : AppColors.text(ctx),
                       fontSize: 14,
                       fontWeight: tempGender == 'M'
                           ? FontWeight.bold
@@ -591,10 +598,12 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                     onSelected: (v) =>
                         setSheetState(() => tempGender = v ? 'F' : null),
                     selectedColor: AppColors.info.withValues(alpha: 0.15),
+                    backgroundColor: AppColors.surfAlt(ctx),
+                    side: BorderSide(color: tempGender == 'F' ? AppColors.info : AppColors.brd(ctx)),
                     labelStyle: TextStyle(
                       color: tempGender == 'F'
                           ? AppColors.info
-                          : AppColors.textSecondary,
+                          : AppColors.text(ctx),
                       fontSize: 14,
                       fontWeight: tempGender == 'F'
                           ? FontWeight.bold
@@ -662,14 +671,15 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
   }
 
   Widget _buildCowCard(BuildContext context, Cow cow) {
+    final isDark = AppColors.isDark(context);
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -694,26 +704,24 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                   child: Container(
                     width: 92,
                     height: 92,
-                    color: AppColors.surfaceAlt,
+                    color: AppColors.surfAlt(context),
                     child: (cow.imageFullUrl != null || cow.imageUrl != null)
                         ? Image.network(
                             cow.imageFullUrl ?? cow.imageUrl!,
                             width: 92,
                             height: 92,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const Center(
-                              child: Icon(
-                                Icons.pets_rounded,
+                            errorBuilder: (_, __, ___) => Center(
+                              child: CowIcon(
                                 size: 40,
-                                color: AppColors.textHint,
+                                color: AppColors.hint(context),
                               ),
                             ),
                           )
-                        : const Center(
-                            child: Icon(
-                              Icons.pets_rounded,
+                        : Center(
+                            child: CowIcon(
                               size: 40,
-                              color: AppColors.textHint,
+                              color: AppColors.hint(context),
                             ),
                           ),
                   ),
@@ -731,10 +739,10 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                           Expanded(
                             child: Text(
                               cow.name,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 19,
-                                color: AppColors.textPrimary,
+                                color: AppColors.text(context),
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -782,8 +790,8 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                           Expanded(
                             child: Text(
                               '${cow.breed} • ${cow.type.label}',
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
+                              style: TextStyle(
+                                color: AppColors.subText(context),
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -801,9 +809,10 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                         physics: const BouncingScrollPhysics(),
                         child: Row(
                           children: [
-                            _buildInfoChip(Icons.cake_outlined, cow.ageYearsOnly),
+                            _buildInfoChip(context, Icons.cake_outlined, cow.ageYearsOnly),
                             const SizedBox(width: 6),
                             _buildInfoChip(
+                              context,
                               Icons.scale_outlined,
                               cow.latestWeight > 0
                                   ? '${cow.latestWeight.toStringAsFixed(0)} กก.'
@@ -811,6 +820,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                             ),
                             const SizedBox(width: 6),
                             _buildInfoChip(
+                              context,
                               cow.gender == 'M'
                                   ? Icons.male_rounded
                                   : Icons.female_rounded,
@@ -824,9 +834,9 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                 ),
 
                 const SizedBox(width: 4),
-                const Icon(
+                Icon(
                   Icons.chevron_right_rounded,
-                  color: AppColors.textHint,
+                  color: AppColors.hint(context),
                   size: 24,
                 ),
               ],
@@ -837,24 +847,24 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
     );
   }
 
-  Widget _buildInfoChip(IconData icon, String label) {
+  Widget _buildInfoChip(BuildContext context, IconData icon, String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.surfaceAlt,
+        color: AppColors.surfAlt(context),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 15, color: AppColors.textSecondary),
+          Icon(icon, size: 15, color: AppColors.subText(context)),
           const SizedBox(width: 4),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
-              color: AppColors.textSecondary,
+              color: AppColors.subText(context),
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -887,7 +897,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
         textColor = Colors.white;
         break;
       case CowStatus.recovering:
-        bgColor = const Color(0xFF9333EA); // Violet / Purple for resting
+        bgColor = const Color(0xFF2563EB); // Royal Blue for resting / recovery
         textColor = Colors.white;
         break;
       case CowStatus.sold:

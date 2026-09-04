@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:cowsmart/core/services/image_upload_service.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
+import 'package:cowsmart/core/widgets/cow_icon.dart';
 
 /// Reusable image picker widget with preview-then-upload flow.
 ///
@@ -284,26 +285,31 @@ class _ImagePickerWidgetState extends ConsumerState<ImagePickerWidget> {
         fit: BoxFit.cover,
       );
     }
+    final bool isCowPlaceholder = widget.placeholderIcon == Icons.pets ||
+        widget.placeholderIcon == Icons.pets_rounded ||
+        widget.placeholderIcon == Icons.pets_outlined;
+
+    final Widget placeholderWidget = isCowPlaceholder
+        ? CowIcon(
+            size: widget.size * 0.4,
+            color: AppColors.primary.withValues(alpha: 0.5),
+          )
+        : Icon(
+            widget.placeholderIcon,
+            size: widget.size * 0.4,
+            color: AppColors.primary.withValues(alpha: 0.5),
+          );
+
     if (_displayUrl != null) {
       return Image.network(
         _displayUrl!,
         width: widget.size,
         height: widget.size,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Icon(
-          widget.placeholderIcon,
-          size: widget.size * 0.4,
-          color: AppColors.primary.withValues(alpha: 0.5),
-        ),
+        errorBuilder: (_, __, ___) => Center(child: placeholderWidget),
       );
     }
-    return Center(
-      child: Icon(
-        widget.placeholderIcon,
-        size: widget.size * 0.4,
-        color: AppColors.primary.withValues(alpha: 0.5),
-      ),
-    );
+    return Center(child: placeholderWidget);
   }
 
   @override

@@ -10,10 +10,10 @@ trait HasSequentialId
     {
         static::creating(function ($model) {
             $keyName = $model->getKeyName();
-            if (empty($model->{$keyName})) {
+            $table = $model->getTable();
+            if (empty($model->{$keyName}) || DB::table($table)->where($keyName, $model->{$keyName})->exists()) {
                 $prefix = $model->idPrefix ?? 'ID';
                 $padLength = $model->idPadLength ?? 3;
-                $table = $model->getTable();
 
                 $allIds = DB::table($table)->pluck($keyName);
                 $maxNum = 0;

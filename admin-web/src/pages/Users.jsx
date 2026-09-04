@@ -138,13 +138,13 @@ const Users = () => {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>อีเมล</th>
-                    <th>ชื่อ</th>
-                    <th>นามสกุล</th>
-                    <th>บทบาท</th>
-                    <th>วันที่สมัคร</th>
-                    <th>สถานะ</th>
-                    <th>จัดการ</th>
+                    <th style={{ width: '28%', minWidth: '220px' }}>อีเมล</th>
+                    <th style={{ width: '15%', minWidth: '120px' }}>ชื่อ</th>
+                    <th style={{ width: '15%', minWidth: '120px' }}>นามสกุล</th>
+                    <th style={{ width: '11%', minWidth: '90px', whiteSpace: 'nowrap' }}>บทบาท</th>
+                    <th style={{ width: '11%', minWidth: '110px', whiteSpace: 'nowrap' }}>วันที่สมัคร</th>
+                    <th style={{ width: '10%', minWidth: '110px', whiteSpace: 'nowrap' }}>สถานะ</th>
+                    <th style={{ width: '10%', minWidth: '90px', textAlign: 'right', paddingRight: '24px', whiteSpace: 'nowrap' }}>จัดการ</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -153,10 +153,10 @@ const Users = () => {
                       const isAdmin = user.role === 1 || user.role === '1' || user.role === 'admin';
                       return (
                         <tr key={user.email}>
-                          <td>{user.email}</td>
-                          <td>{user.first_name}</td>
-                          <td>{user.last_name}</td>
-                          <td>
+                          <td style={{ wordBreak: 'break-all' }}>{user.email}</td>
+                          <td>{user.first_name || '-'}</td>
+                          <td>{user.last_name || '-'}</td>
+                          <td style={{ whiteSpace: 'nowrap' }}>
                             <span style={{ 
                               display: 'inline-block',
                               whiteSpace: 'nowrap',
@@ -171,8 +171,10 @@ const Users = () => {
                               {isAdmin ? 'แอดมิน' : 'ผู้ใช้'}
                             </span>
                           </td>
-                          <td>{new Date(user.created_at).toLocaleDateString('th-TH')}</td>
-                          <td>
+                          <td style={{ whiteSpace: 'nowrap', color: '#4b5563' }}>
+                            {user.created_at ? new Date(user.created_at).toLocaleDateString('th-TH') : '-'}
+                          </td>
+                          <td style={{ whiteSpace: 'nowrap' }}>
                             <span style={{ 
                               display: 'inline-block',
                               whiteSpace: 'nowrap',
@@ -186,8 +188,8 @@ const Users = () => {
                               {user.is_active ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
                             </span>
                           </td>
-                          <td>
-                            <div className="action-links">
+                          <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                            <div className="action-links" style={{ justifyContent: 'flex-end', paddingRight: '4px' }}>
                               {currentUser?.email === user.email ? (
                                 <span style={{ color: '#9ca3af', fontSize: '0.85rem' }}>บัญชีของคุณ</span>
                               ) : (

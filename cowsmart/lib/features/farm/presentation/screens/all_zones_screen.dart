@@ -47,7 +47,7 @@ class _AllZonesScreenState extends ConsumerState<AllZonesScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg(context),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -115,21 +115,21 @@ class _AllZonesScreenState extends ConsumerState<AllZonesScreen> {
                 // Search Input
                 TextField(
                   controller: _searchCtrl,
-                  style: const TextStyle(fontSize: 14),
+                  style: TextStyle(fontSize: 14, color: AppColors.text(context)),
                   decoration: InputDecoration(
                     hintText: 'ค้นหาชื่อโซน...',
-                    hintStyle: const TextStyle(color: AppColors.textHint, fontSize: 14),
+                    hintStyle: TextStyle(color: AppColors.hint(context), fontSize: 14),
                     prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary, size: 22),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(Icons.clear_rounded, size: 18, color: AppColors.textHint),
+                            icon: Icon(Icons.clear_rounded, size: 18, color: AppColors.hint(context)),
                             onPressed: () {
                               _searchCtrl.clear();
                             },
                           )
                         : null,
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: AppColors.cardBg(context),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
@@ -223,9 +223,9 @@ class _AllZonesScreenState extends ConsumerState<AllZonesScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.cardBg(context),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+          border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.6)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.03),
@@ -252,18 +252,18 @@ class _AllZonesScreenState extends ConsumerState<AllZonesScreen> {
                 children: [
                   Text(
                     zone.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: AppColors.text(context),
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'จำนวนวัว ${zone.cowCount} ตัว',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: AppColors.textSecondary,
+                      color: AppColors.subText(context),
                     ),
                   ),
                 ],
@@ -272,15 +272,15 @@ class _AllZonesScreenState extends ConsumerState<AllZonesScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: AppColors.surfaceAlt,
+                color: AppColors.surfAlt(context),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 '${zone.cowCount}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.primaryDark,
+                  color: AppColors.text(context),
                 ),
               ),
             ),

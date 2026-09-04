@@ -16,6 +16,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
@@ -26,6 +27,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -35,12 +37,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final firstName = _firstNameController.text;
     final lastName = _lastNameController.text;
     final email = _emailController.text;
+    final phone = _phoneController.text;
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
 
     if (firstName.isEmpty ||
         lastName.isEmpty ||
         email.isEmpty ||
+        phone.isEmpty ||
         password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('กรุณากรอกข้อมูลให้ครบถ้วน')),
@@ -61,6 +65,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           firstName: firstName,
           lastName: lastName,
           email: email,
+          phone: phone,
           password: password,
         );
   }
@@ -136,6 +141,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   labelText: 'อีเมล',
                   hintText: 'example@email.com',
                   prefixIcon: Icon(Icons.email_outlined),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              TextField(
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'เบอร์โทรศัพท์',
+                  hintText: '0812345678',
+                  prefixIcon: Icon(Icons.phone_outlined),
                 ),
               ),
               const SizedBox(height: 16),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/cow_icon.dart';
 import '../../domain/cow.dart';
 import '../../providers/cow_detail_provider.dart';
 import '../../providers/cow_provider.dart';
@@ -147,7 +148,7 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen> {
                                 ),
                               ),
                               child: const Center(
-                                child: Icon(Icons.pets, size: 90, color: AppColors.textHint),
+                                child: CowIcon(size: 90, color: AppColors.textHint),
                               ),
                             ),
                       // Dark gradient at top
@@ -193,10 +194,10 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen> {
                   preferredSize: const Size.fromHeight(52),
                   child: Container(
                     width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: AppColors.background,
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                      boxShadow: [
+                    decoration: BoxDecoration(
+                      color: AppColors.cardBg(context),
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                      boxShadow: const [
                         BoxShadow(
                           color: Colors.black12,
                           blurRadius: 8,
@@ -220,15 +221,15 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen> {
                         ],
                       ),
                       labelColor: Colors.white,
-                      unselectedLabelColor: AppColors.textPrimary,
+                      unselectedLabelColor: AppColors.subText(context),
                       labelStyle: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14.5,
                       ),
-                      unselectedLabelStyle: const TextStyle(
+                      unselectedLabelStyle: TextStyle(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                        color: AppColors.subText(context),
                       ),
                       tabs: const [
                         Tab(
@@ -259,7 +260,7 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen> {
             ];
           },
           body: Container(
-            color: AppColors.background,
+            color: AppColors.bg(context),
             child: TabBarView(
               children: [
                 BasicInfoTab(cow: currentCow),

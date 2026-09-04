@@ -44,7 +44,7 @@ class _SelectFarmScreenState extends ConsumerState<SelectFarmScreen> {
     final isNewUser = authState.isNewUser;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg(context),
       body: CustomScrollView(
         slivers: [
           // ── Gradient Header ──
@@ -107,35 +107,46 @@ class _SelectFarmScreenState extends ConsumerState<SelectFarmScreen> {
                     Container(
                       padding: const EdgeInsets.all(32),
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                        color: AppColors.cardBg(context),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(18),
                             decoration: BoxDecoration(
                               color: AppColors.primary.withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(
-                              Icons.agriculture_rounded,
-                              size: 48,
-                              color: AppColors.primary,
+                            child: const Icon(Icons.holiday_village_outlined, size: 48, color: AppColors.primary),
+                          ),
+                          const SizedBox(height: 18),
+                          Text(
+                            'ยังไม่มีฟาร์มในระบบ',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.text(context),
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'ยังไม่มีฟาร์มในระบบ',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                          ),
-                          const SizedBox(height: 6),
-                          const Text(
-                            'เริ่มต้นด้วยการสร้างฟาร์มแรกของคุณเพื่อจัดการวัว',
+                          const SizedBox(height: 8),
+                          Text(
+                            'เริ่มต้นด้วยการสร้างฟาร์มแรกของคุณเพื่อเริ่มจัดการข้อมูลวัวและกิจกรรมทั้งหมด',
                             textAlign: TextAlign.center,
-                            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                            style: TextStyle(
+                              color: AppColors.subText(context),
+                              fontSize: 14,
+                              height: 1.4,
+                            ),
                           ),
                           const SizedBox(height: 24),
                           ElevatedButton.icon(
@@ -190,9 +201,9 @@ class _SelectFarmScreenState extends ConsumerState<SelectFarmScreen> {
                       return Container(
                         margin: const EdgeInsets.only(bottom: 14),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.cardBg(context),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                          border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withValues(alpha: 0.04),
@@ -255,10 +266,10 @@ class _SelectFarmScreenState extends ConsumerState<SelectFarmScreen> {
                                       children: [
                                         Text(
                                           farm.name,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 17,
-                                            color: AppColors.textPrimary,
+                                            color: AppColors.text(context),
                                           ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
@@ -266,13 +277,13 @@ class _SelectFarmScreenState extends ConsumerState<SelectFarmScreen> {
                                         const SizedBox(height: 4),
                                         Row(
                                           children: [
-                                            const Icon(Icons.person_outline_rounded, size: 14, color: AppColors.textHint),
+                                            Icon(Icons.person_outline_rounded, size: 14, color: AppColors.hint(context)),
                                             const SizedBox(width: 4),
                                             Expanded(
                                               child: Text(
                                                 'เจ้าของ: ${ownerName.isNotEmpty ? ownerName : farm.ownerEmail}',
-                                                style: const TextStyle(
-                                                  color: AppColors.textSecondary,
+                                                style: TextStyle(
+                                                  color: AppColors.subText(context),
                                                   fontSize: 13,
                                                 ),
                                                 maxLines: 1,
@@ -290,7 +301,7 @@ class _SelectFarmScreenState extends ConsumerState<SelectFarmScreen> {
                                   Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: AppColors.surfaceAlt,
+                                      color: AppColors.surfAlt(context),
                                       shape: BoxShape.circle,
                                     ),
                                     child: const Icon(

@@ -262,7 +262,7 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg(context),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -323,13 +323,13 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
                 Expanded(
                   child: TextField(
                     controller: _zoneNameController,
-                    style: const TextStyle(fontSize: 14),
+                    style: TextStyle(fontSize: 14, color: AppColors.text(context)),
                     decoration: InputDecoration(
                       hintText: 'พิมพ์ชื่อโซนใหม่ เช่น โซน ก., คอกอนุบาล...',
-                      hintStyle: const TextStyle(color: AppColors.textHint, fontSize: 13),
+                      hintStyle: TextStyle(color: AppColors.hint(context), fontSize: 13),
                       prefixIcon: const Icon(Icons.add_location_alt_rounded, color: AppColors.primary, size: 22),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: AppColors.cardBg(context),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
@@ -370,10 +370,10 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
               children: [
                 Text(
                   'รายการโซนในระบบ (${_zones.length} โซน)',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: AppColors.text(context),
                   ),
                 ),
                 if (_zonesToDelete.isNotEmpty)
@@ -425,12 +425,12 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                               decoration: BoxDecoration(
-                                color: isNew ? AppColors.primary.withValues(alpha: 0.05) : Colors.white,
+                                color: isNew ? AppColors.primary.withValues(alpha: 0.1) : AppColors.cardBg(context),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
                                   color: isNew
                                       ? AppColors.primary.withValues(alpha: 0.8)
-                                      : AppColors.border.withValues(alpha: 0.6),
+                                      : AppColors.brd(context).withValues(alpha: 0.6),
                                   width: isNew ? 1.5 : 1.0,
                                 ),
                                 boxShadow: [
@@ -464,10 +464,10 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
                                       children: [
                                         Text(
                                           zone.name,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
-                                            color: AppColors.textPrimary,
+                                            color: AppColors.text(context),
                                           ),
                                         ),
                                         const SizedBox(height: 4),
@@ -493,9 +493,9 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
                                               )
                                             : Text(
                                                 'วัวในโซน: ${zone.cowCount} ตัว',
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                   fontSize: 13,
-                                                  color: AppColors.textSecondary,
+                                                  color: AppColors.subText(context),
                                                 ),
                                               ),
                                       ],

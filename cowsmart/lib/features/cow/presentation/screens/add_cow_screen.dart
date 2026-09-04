@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
 import 'package:cowsmart/core/utils/app_toast.dart';
 import 'package:cowsmart/core/utils/date_formatter.dart';
@@ -14,6 +13,7 @@ import 'package:cowsmart/features/cow/domain/growth_record.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cowsmart/core/widgets/image_picker_widget.dart';
+import 'package:cowsmart/core/widgets/cow_icon.dart';
 import 'package:cowsmart/core/services/image_upload_service.dart';
 import 'package:cowsmart/core/network/api_client.dart';
 
@@ -41,8 +41,8 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
 
   DateTime _selectedDate = DateTime.now();
   DateTime _selectedEntryDate = DateTime.now();
-  String _selectedGender = 'F';
-  CowType _selectedType = CowType.breederFemale;
+  String? _selectedGender;
+  CowType? _selectedType;
   CowStatus _selectedStatus = CowStatus.normal;
 
   @override
@@ -67,6 +67,9 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
       }
       if (data['type'] != null) {
         _selectedType = data['type'] as CowType;
+      }
+      if (data['gender'] != null) {
+        _selectedGender = data['gender'] as String;
       }
     }
     Future.microtask(() {
@@ -138,6 +141,16 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
       return;
     }
 
+    if (_selectedGender == null) {
+      AppFeedback.showError(context, 'กรุณาเลือกเพศของวัว');
+      return;
+    }
+
+    if (_selectedType == null) {
+      AppFeedback.showError(context, 'กรุณาเลือกประเภทของวัว');
+      return;
+    }
+
     final currentFarm = ref.read(farmProvider).currentFarm;
     if (currentFarm == null) {
       AppFeedback.showError(context, 'กรุณาเลือกฟาร์มก่อนทำการบันทึกข้อมูล');
@@ -158,8 +171,8 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
         tagNumber: _tagController.text,
         birthDate: _selectedDate,
         entryDate: _selectedEntryDate,
-        gender: _selectedGender,
-        type: _selectedType,
+        gender: _selectedGender!,
+        type: _selectedType!,
         breed: _selectedBreedId ?? '',
         latestWeight: initialWeight,
         purchasePrice: purchasePrice,
@@ -213,15 +226,20 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
             }
           }
 
-          // Link calf_id back to breeding record if registered from breeding tab
+          // Link calf_id back to breeding record if registered from breeding tab.
+          // Appends new calf ID to existing ones (supports twins/triplets).
           if (widget.initialData?['breeding_record_id'] != null) {
             try {
               final api = ref.read(apiClientProvider);
               final breedingRecordId = widget.initialData!['breeding_record_id'];
+              final existingCalfId = widget.initialData?['existing_calf_id'] as String?;
+              final String newCalfId = (existingCalfId != null && existingCalfId.trim().isNotEmpty)
+                  ? '$existingCalfId,${createdCow.id}'
+                  : createdCow.id;
               await api.put('/breeding_records/$breedingRecordId', data: {
-                'calf_id': createdCow.id,
+                'calf_id': newCalfId,
               });
-              debugPrint('[SUCCESS] ผูกลูกวัว ID ${createdCow.id} กับประวัติผสมพันธุ์ $breedingRecordId สำเร็จ');
+              debugPrint('[SUCCESS] ผูกลูกวัว ID ${createdCow.id} กับประวัติผสมพันธุ์ $breedingRecordId (calf_id: $newCalfId) สำเร็จ');
             } catch (e) {
               debugPrint('[ERROR] อัปเดต calf_id ใน breeding_record ไม่สำเร็จ: $e');
             }
@@ -232,7 +250,7 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
           AppFeedback.showSuccess(context, 'เพิ่มและบันทึกข้อมูลวัวเข้าสู่ระบบเรียบร้อยแล้ว');
           ref.read(cowProvider.notifier).clearFlags();
           ref.read(zoneProvider.notifier).fetchZones(currentFarm.id);
-          context.pop();
+          context.pop(true);
         }
       } else if (mounted) {
         AppFeedback.showError(context, cowState.errorMessage!);
@@ -242,21 +260,33 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
     }
   }
 
-  InputDecoration _buildInputDecoration(String labelText, IconData icon, {String? hintText}) {
+  InputDecoration _buildInputDecoration(String labelText, dynamic icon, {String? hintText}) {
+    Widget prefixWidget;
+    if (icon is Widget) {
+      prefixWidget = icon;
+    } else if (icon == Icons.pets || icon == Icons.pets_rounded || icon == Icons.pets_outlined) {
+      prefixWidget = const CowIcon(size: 20, color: AppColors.primary);
+    } else if (icon is IconData) {
+      prefixWidget = Icon(icon, color: AppColors.primary, size: 20);
+    } else {
+      prefixWidget = const SizedBox.shrink();
+    }
+
     return InputDecoration(
       labelText: labelText,
       hintText: hintText,
-      prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
+      hintStyle: TextStyle(color: AppColors.hint(context)),
+      prefixIcon: prefixWidget,
       filled: true,
-      fillColor: AppColors.surfaceAlt,
+      fillColor: AppColors.surfAlt(context),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.6)),
+        borderSide: BorderSide(color: AppColors.brd(context)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.6)),
+        borderSide: BorderSide(color: AppColors.brd(context)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
@@ -279,10 +309,10 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
         const SizedBox(width: 8),
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: AppColors.primaryDark,
+            color: AppColors.text(context),
           ),
         ),
       ],
@@ -294,9 +324,9 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
       padding: const EdgeInsets.all(16),
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        border: Border.all(color: AppColors.brd(context)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -316,22 +346,13 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
   Widget build(BuildContext context) {
     final cowState = ref.watch(cowProvider);
 
-    // Listen for error
-    ref.listen<CowState>(cowProvider, (previous, next) {
-      if (next.errorMessage != null &&
-          previous?.errorMessage != next.errorMessage) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.errorMessage!),
-            backgroundColor: AppColors.error,
-          ),
-        );
-        ref.read(cowProvider.notifier).clearFlags();
-      }
-    });
+    // NOTE: Error handling for addCow is done inline in _submit() after awaiting
+    // addCow(). We do NOT listen to cowProvider errors globally here because
+    // other operations (e.g., cullCowsGroup) can set errorMessage on the same
+    // provider while this screen is open, causing unrelated errors to appear.
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg(context),
       body: CustomScrollView(
         slivers: [
           // ── Gradient Header ──
@@ -500,7 +521,9 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
 
                                   return DropdownButtonFormField<String?>(
                                     value: safeValue,
+                                    dropdownColor: AppColors.cardBg(context),
                                     isExpanded: true,
+                                    style: TextStyle(color: AppColors.text(context), fontSize: 14),
                                     decoration: _buildInputDecoration('สายพันธุ์', Icons.category_rounded),
                                     items: uniqueBreeds.map((breed) {
                                       return DropdownMenuItem<String?>(
@@ -541,7 +564,7 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                                   decoration: _buildInputDecoration('วันเกิด', Icons.cake_rounded),
                                   child: Text(
                                     AppDateUtils.formatThaiDate(_selectedDate),
-                                    style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                                    style: TextStyle(fontSize: 14, color: AppColors.text(context), fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ),
@@ -555,7 +578,7 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                                   decoration: _buildInputDecoration('วันเข้าฟาร์ม', Icons.login_rounded),
                                   child: Text(
                                     AppDateUtils.formatThaiDate(_selectedEntryDate),
-                                    style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                                    style: TextStyle(fontSize: 14, color: AppColors.text(context), fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ),
@@ -576,64 +599,104 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                       children: [
                         _buildSectionHeader('ประเภทและเพศ'),
                         const SizedBox(height: 14),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: SegmentedButton<String>(
-                                segments: const [
-                                  ButtonSegment(
-                                    value: 'M',
-                                    label: Text('ตัวผู้', style: TextStyle(fontWeight: FontWeight.bold)),
-                                    icon: Icon(Icons.male_rounded, size: 18),
-                                  ),
-                                  ButtonSegment(
-                                    value: 'F',
-                                    label: Text('ตัวเมีย', style: TextStyle(fontWeight: FontWeight.bold)),
-                                    icon: Icon(Icons.female_rounded, size: 18),
+                        FormField<String>(
+                          key: ValueKey(_selectedGender),
+                          validator: (_) => _selectedGender == null ? 'กรุณาเลือกเพศ' : null,
+                          builder: (FormFieldState<String> state) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: SegmentedButton<String>(
+                                        segments: const [
+                                          ButtonSegment(
+                                            value: 'M',
+                                            label: Text('ตัวผู้', style: TextStyle(fontWeight: FontWeight.bold)),
+                                            icon: Icon(Icons.male_rounded, size: 18),
+                                          ),
+                                          ButtonSegment(
+                                            value: 'F',
+                                            label: Text('ตัวเมีย', style: TextStyle(fontWeight: FontWeight.bold)),
+                                            icon: Icon(Icons.female_rounded, size: 18),
+                                          ),
+                                        ],
+                                        emptySelectionAllowed: true,
+                                        selected: _selectedGender != null ? <String>{_selectedGender!} : <String>{},
+                                        style: SegmentedButton.styleFrom(
+                                          visualDensity: VisualDensity.compact,
+                                          backgroundColor: AppColors.surfAlt(context),
+                                          selectedBackgroundColor: AppColors.primary.withValues(alpha: 0.15),
+                                          selectedForegroundColor: AppColors.primary,
+                                          foregroundColor: AppColors.text(context),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                          side: BorderSide(
+                                            color: state.hasError ? Theme.of(context).colorScheme.error : AppColors.brd(context),
+                                          ),
+                                        ),
+                                        onSelectionChanged: (Set<String> newSelection) {
+                                          setState(() {
+                                            _selectedGender = newSelection.isEmpty ? null : newSelection.first;
+                                            if (_selectedGender == 'M' &&
+                                                _selectedType == CowType.breederFemale) {
+                                              _selectedType = CowType.breederMale;
+                                            } else if (_selectedGender == 'F' &&
+                                                _selectedType == CowType.breederMale) {
+                                              _selectedType = CowType.breederFemale;
+                                            }
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (state.hasError) ...[
+                                  const SizedBox(height: 6),
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 12),
+                                    child: Text(
+                                      state.errorText ?? '',
+                                      style: TextStyle(
+                                        color: Theme.of(context).colorScheme.error,
+                                        fontSize: 12,
+                                      ),
+                                    ),
                                   ),
                                 ],
-                                selected: <String>{_selectedGender},
-                                style: ButtonStyle(
-                                  visualDensity: VisualDensity.compact,
-                                  shape: WidgetStateProperty.all(
-                                    RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  ),
-                                ),
-                                onSelectionChanged: (Set<String> newSelection) {
-                                  setState(() {
-                                    _selectedGender = newSelection.first;
-                                    if (_selectedGender == 'M' &&
-                                        _selectedType == CowType.breederFemale) {
-                                      _selectedType = CowType.breederMale;
-                                    } else if (_selectedGender == 'F' &&
-                                        _selectedType == CowType.breederMale) {
-                                      _selectedType = CowType.breederFemale;
-                                    }
-                                  });
-                                },
-                              ),
-                            ),
-                          ],
+                              ],
+                            );
+                          },
                         ),
                         const SizedBox(height: 14),
                         DropdownButtonFormField<CowType>(
+                          key: ValueKey(_selectedType),
                           initialValue: _selectedType,
+                          dropdownColor: AppColors.cardBg(context),
                           isExpanded: true,
-                          decoration: _buildInputDecoration('ประเภทวัว', Icons.merge_type_rounded),
+                          style: TextStyle(color: AppColors.text(context), fontSize: 14),
+                          decoration: _buildInputDecoration('ประเภทวัว', Icons.merge_type_rounded, hintText: 'กรุณาเลือกประเภทวัว'),
                           items: CowType.values.map((type) {
                             return DropdownMenuItem(
                               value: type,
                               child: Text(
                                 type.label,
                                 overflow: TextOverflow.ellipsis,
+                                style: TextStyle(color: AppColors.text(context)),
                               ),
                             );
                           }).toList(),
                           onChanged: (CowType? newValue) {
                             setState(() {
-                              if (newValue != null) _selectedType = newValue;
+                              _selectedType = newValue;
+                              if (newValue == CowType.breederMale) {
+                                _selectedGender = 'M';
+                              } else if (newValue == CowType.breederFemale) {
+                                _selectedGender = 'F';
+                              }
                             });
                           },
+                          validator: (val) => val == null ? 'กรุณาเลือกประเภทวัว' : null,
                         ),
                       ],
                     ),
@@ -653,17 +716,19 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
 
                             return DropdownButtonFormField<String?>(
                               value: validZoneId,
+                              dropdownColor: AppColors.cardBg(context),
                               isExpanded: true,
+                              style: TextStyle(color: AppColors.text(context), fontSize: 14),
                               decoration: _buildInputDecoration('เลือกโซน', Icons.fence_rounded, hintText: 'กรุณาเลือกโซน (ถ้ามี)'),
                               items: [
-                                const DropdownMenuItem<String?>(
+                                DropdownMenuItem<String?>(
                                   value: null,
-                                  child: Text('ไม่ระบุโซน', overflow: TextOverflow.ellipsis),
+                                  child: Text('ไม่ระบุโซน', overflow: TextOverflow.ellipsis, style: TextStyle(color: AppColors.text(context))),
                                 ),
                                 ...zones.map((zone) {
                                   return DropdownMenuItem<String?>(
                                     value: zone.id,
-                                    child: Text(zone.name, overflow: TextOverflow.ellipsis),
+                                    child: Text(zone.name, overflow: TextOverflow.ellipsis, style: TextStyle(color: AppColors.text(context))),
                                   );
                                 }),
                               ],
@@ -690,7 +755,9 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
 
                                   return DropdownButtonFormField<String?>(
                                     value: safeFatherValue,
+                                    dropdownColor: AppColors.cardBg(context),
                                     isExpanded: true,
+                                    style: TextStyle(color: AppColors.text(context), fontSize: 14),
                                     decoration: _buildInputDecoration('พ่อพันธุ์ (Sire)', Icons.male_rounded),
                                     items: [
                                       const DropdownMenuItem<String?>(
@@ -729,7 +796,9 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
 
                                   return DropdownButtonFormField<String?>(
                                     value: safeMotherValue,
+                                    dropdownColor: AppColors.cardBg(context),
                                     isExpanded: true,
+                                    style: TextStyle(color: AppColors.text(context), fontSize: 14),
                                     decoration: _buildInputDecoration('แม่พันธุ์ (Dam)', Icons.female_rounded),
                                     items: [
                                       const DropdownMenuItem<String?>(
@@ -770,7 +839,9 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                         const SizedBox(height: 14),
                         DropdownButtonFormField<CowStatus>(
                           initialValue: _selectedStatus,
+                          dropdownColor: AppColors.cardBg(context),
                           isExpanded: true,
+                          style: TextStyle(color: AppColors.text(context), fontSize: 14),
                           decoration: _buildInputDecoration('สถานะสุขภาพ/การเลี้ยง', Icons.health_and_safety_rounded),
                           items: [
                             CowStatus.normal,
@@ -779,7 +850,7 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                           ].map((status) {
                             return DropdownMenuItem(
                               value: status,
-                              child: Text(status.label, overflow: TextOverflow.ellipsis),
+                              child: Text(status.label, overflow: TextOverflow.ellipsis, style: TextStyle(color: AppColors.text(context))),
                             );
                           }).toList(),
                           onChanged: (CowStatus? newValue) {
@@ -802,7 +873,7 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.cardBg(context),
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(20),
             topRight: Radius.circular(20),

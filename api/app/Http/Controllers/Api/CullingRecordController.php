@@ -40,13 +40,22 @@ class CullingRecordController extends Controller
                     if (empty($rData['cow_id']) || !isset($rData['status']) || empty($rData['cull_date'])) {
                         continue;
                     }
-                    
+
+                    // Validate cow_id exists to prevent FK constraint violation
+                    $cow = Cow::find($rData['cow_id']);
+                    if (!$cow) {
+                        \Log::warning('[CullingRecord] Skipped: cow_id not found: ' . $rData['cow_id']);
+                        continue;
+                    }
+
+                    // Normalize cull_date: parse ISO 8601 / any format → MySQL datetime
+                    $rData['cull_date'] = Carbon::parse($rData['cull_date'])->format('Y-m-d H:i:s');
+
                     // Create culling record
                     $record = CullingRecord::create($rData);
                     $createdRecords[] = $record;
 
                     // Update cow status
-                    $cow = Cow::findOrFail($rData['cow_id']);
                     $statusStr = 'normal';
                     switch ((int)$rData['status']) {
                         case 0:

@@ -54,8 +54,8 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                 left: 20,
                 right: 20,
               ),
-              decoration: const BoxDecoration(
-                color: Colors.white,
+              decoration: BoxDecoration(
+                color: AppColors.cardBg(modalContext),
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(24),
                   topRight: Radius.circular(24),
@@ -72,17 +72,17 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
+                          Text(
                             'บันทึกรายรับ-รายจ่าย',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.primaryDark,
+                              color: AppColors.text(modalContext),
                             ),
                           ),
                           IconButton(
                             onPressed: () => Navigator.pop(modalContext),
-                            icon: const Icon(Icons.close_rounded, color: AppColors.textSecondary),
+                            icon: Icon(Icons.close_rounded, color: AppColors.subText(modalContext)),
                           ),
                         ],
                       ),
@@ -174,7 +174,7 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                           decoration: _buildModalInputDecoration('วันที่รายการ', Icons.calendar_today_rounded),
                           child: Text(
                             DateFormat('dd/MM/yyyy').format(selectedDate),
-                            style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+                            style: TextStyle(fontSize: 14, color: AppColors.text(modalContext)),
                           ),
                         ),
                       ),
@@ -262,9 +262,9 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
 
             return Container(
               padding: const EdgeInsets.all(20),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                color: AppColors.cardBg(context),
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(24),
                   topRight: Radius.circular(24),
                 ),
@@ -278,35 +278,35 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Row(
+                        Row(
                           children: [
-                            Icon(Icons.date_range_rounded, color: AppColors.primary, size: 22),
-                            SizedBox(width: 8),
+                            const Icon(Icons.date_range_rounded, color: AppColors.primary, size: 22),
+                            const SizedBox(width: 8),
                             Text(
                               'เลือกช่วงเวลาดูบัญชี',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.primaryDark,
+                                color: AppColors.text(context),
                               ),
                             ),
                           ],
                         ),
                         IconButton(
                           onPressed: () => Navigator.pop(modalContext),
-                          icon: const Icon(Icons.close_rounded, color: AppColors.textSecondary),
+                          icon: Icon(Icons.close_rounded, color: AppColors.subText(context)),
                         ),
                       ],
                     ),
                     const SizedBox(height: 12),
 
                     // Quick Presets Label
-                    const Text(
+                    Text(
                       'ตัวเลือกด่วน',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textSecondary,
+                        color: AppColors.subText(context),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -358,12 +358,12 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                     const SizedBox(height: 20),
 
                     // Custom Date Pickers Label
-                    const Text(
+                    Text(
                       'ระบุช่วงวันที่เอง',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textSecondary,
+                        color: AppColors.subText(context),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -394,16 +394,16 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                               decoration: BoxDecoration(
-                                color: AppColors.surfaceAlt,
+                                color: AppColors.surfAlt(context),
                                 borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+                                border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.6)),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
+                                  Text(
                                     'ตั้งแต่วันที่',
-                                    style: TextStyle(fontSize: 11, color: AppColors.textHint, fontWeight: FontWeight.w500),
+                                    style: TextStyle(fontSize: 11, color: AppColors.hint(context), fontWeight: FontWeight.w500),
                                   ),
                                   const SizedBox(height: 4),
                                   Row(
@@ -413,7 +413,7 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                                       Expanded(
                                         child: Text(
                                           AppDateUtils.formatThaiDate(tempStart),
-                                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.text(context)),
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
@@ -424,9 +424,9 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                             ),
                           ),
                         ),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8),
-                          child: Icon(Icons.arrow_forward_rounded, color: AppColors.textHint, size: 18),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Icon(Icons.arrow_forward_rounded, color: AppColors.hint(context), size: 18),
                         ),
                         // End Date
                         Expanded(
@@ -449,16 +449,16 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                               decoration: BoxDecoration(
-                                color: AppColors.surfaceAlt,
+                                color: AppColors.surfAlt(context),
                                 borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+                                border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.6)),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
+                                  Text(
                                     'ถึงวันที่',
-                                    style: TextStyle(fontSize: 11, color: AppColors.textHint, fontWeight: FontWeight.w500),
+                                    style: TextStyle(fontSize: 11, color: AppColors.hint(context), fontWeight: FontWeight.w500),
                                   ),
                                   const SizedBox(height: 4),
                                   Row(
@@ -468,7 +468,7 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                                       Expanded(
                                         child: Text(
                                           AppDateUtils.formatThaiDate(tempEnd),
-                                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.text(context)),
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
@@ -493,14 +493,14 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.info_outline_rounded, size: 16, color: AppColors.primaryDark),
+                          Icon(Icons.info_outline_rounded, size: 16, color: AppColors.text(context)),
                           const SizedBox(width: 6),
                           Text(
                             'รวมระยะเวลาเลือกทั้งหมด $daysCount วัน',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.primaryDark,
+                              color: AppColors.text(context),
                             ),
                           ),
                         ],
@@ -538,9 +538,9 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
 
   Widget _buildPresetChip({required String label, required VoidCallback onTap}) {
     return ActionChip(
-      label: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.primaryDark)),
-      backgroundColor: AppColors.surfaceAlt,
-      side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
+      label: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.text(context))),
+      backgroundColor: AppColors.surfAlt(context),
+      side: BorderSide(color: AppColors.brd(context)),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       onPressed: onTap,
     );
@@ -748,7 +748,7 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
     final balance = income - expense;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg(context),
       body: CustomScrollView(
         slivers: [
           // ── Gradient Header ──
@@ -989,12 +989,12 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.cardBg(context),
                   borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                  border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
+                      color: Colors.black.withValues(alpha: AppColors.isDark(context) ? 0.2 : 0.04),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -1202,9 +1202,9 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
                 padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.cardBg(context),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                  border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -1222,19 +1222,19 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                       ),
                     ),
                     const SizedBox(height: 14),
-                    const Text(
+                    Text(
                       'ไม่มีรายการในเดือนนี้',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+                        color: AppColors.text(context),
                       ),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
+                    Text(
                       'แตะปุ่มด้านล่างเพื่อเริ่มบันทึกรายรับหรือรายจ่ายใหม่',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                      style: TextStyle(color: AppColors.subText(context), fontSize: 13),
                     ),
                   ],
                 ),
@@ -1258,6 +1258,7 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
 
       // ── Floating Action Button to Add Transaction ──
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'finance_overview_fab',
         onPressed: () => _showAddTransactionModal(context),
         icon: const Icon(Icons.add_rounded, size: 22),
         label: const Text('บันทึกรายการ', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -1301,12 +1302,12 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withValues(alpha: AppColors.isDark(context) ? 0.2 : 0.03),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -1334,10 +1335,10 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                 children: [
                   Text(
                     tx.title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
-                      color: AppColors.textPrimary,
+                      color: AppColors.text(context),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

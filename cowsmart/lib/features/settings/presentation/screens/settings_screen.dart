@@ -16,6 +16,7 @@ import 'package:cowsmart/features/farm/services/farm_pdf_export_service.dart';
 import 'package:cowsmart/core/utils/app_toast.dart';
 import 'package:cowsmart/core/widgets/image_picker_widget.dart';
 import 'package:cowsmart/core/services/image_upload_service.dart';
+import 'package:cowsmart/features/settings/providers/app_settings_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -23,11 +24,11 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.bg(context),
       appBar: AppBar(
         title: const Text('ตั้งค่า'),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.textPrimary,
+        backgroundColor: AppColors.cardBg(context),
+        foregroundColor: AppColors.text(context),
         elevation: 0,
       ),
       body: ListView(
@@ -111,14 +112,22 @@ class SettingsScreen extends ConsumerWidget {
   }) {
     return Card(
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: AppColors.cardBg(context),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: AppColors.brd(context).withValues(alpha: 0.5)),
+      ),
       child: ListTile(
         leading: Icon(icon, color: AppColors.primary),
         title: Text(
           title,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: AppColors.text(context),
+          ),
         ),
-        trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+        trailing: Icon(Icons.chevron_right, color: AppColors.hint(context)),
         onTap: onTap,
       ),
     );
@@ -382,22 +391,22 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }) {
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+      labelStyle: TextStyle(color: AppColors.subText(context), fontSize: 14),
       prefixIcon: Container(
         margin: const EdgeInsets.only(left: 12, right: 8),
         child: Icon(icon, color: iconColor ?? AppColors.primary, size: 22),
       ),
       prefixIconConstraints: const BoxConstraints(minWidth: 44, minHeight: 0),
       filled: true,
-      fillColor: AppColors.surface,
+      fillColor: AppColors.surfAlt(context),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
+        borderSide: BorderSide(color: AppColors.brd(context)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
+        borderSide: BorderSide(color: AppColors.brd(context)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
@@ -419,7 +428,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final user = ref.watch(authProvider).user;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg(context),
       body: CustomScrollView(
         slivers: [
           // ── Gradient Header with Avatar ──
@@ -533,12 +542,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Text(
+                          Text(
                             'ข้อมูลส่วนตัว',
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
-                              color: AppColors.textSecondary,
+                              color: AppColors.text(context),
                             ),
                           ),
                         ],
@@ -549,9 +558,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.cardBg(context),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
+                        border: Border.all(color: AppColors.brd(context)),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.04),
@@ -564,18 +573,21 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         children: [
                           TextFormField(
                             controller: _firstNameController,
+                            style: TextStyle(color: AppColors.text(context)),
                             decoration: _inputDecoration(label: 'ชื่อ', icon: Icons.person_outline_rounded),
                             validator: (v) => v?.isEmpty ?? true ? 'กรุณากรอกชื่อ' : null,
                           ),
                           const SizedBox(height: 16),
                           TextFormField(
                             controller: _lastNameController,
+                            style: TextStyle(color: AppColors.text(context)),
                             decoration: _inputDecoration(label: 'นามสกุล', icon: Icons.badge_outlined),
                             validator: (v) => v?.isEmpty ?? true ? 'กรุณากรอกนามสกุล' : null,
                           ),
                           const SizedBox(height: 16),
                           TextFormField(
                             controller: _phoneController,
+                            style: TextStyle(color: AppColors.text(context)),
                             decoration: _inputDecoration(
                               label: 'เบอร์โทรศัพท์',
                               icon: Icons.phone_outlined,
@@ -768,15 +780,15 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
         onPressed: onToggle,
       ),
       filled: true,
-      fillColor: AppColors.surface,
+      fillColor: AppColors.surfAlt(context),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
+        borderSide: BorderSide(color: AppColors.brd(context)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
+        borderSide: BorderSide(color: AppColors.brd(context)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
@@ -796,7 +808,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg(context),
       body: CustomScrollView(
         slivers: [
           // ── Gradient Header ──
@@ -891,12 +903,12 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Text(
+                          Text(
                             'รหัสผ่านปัจจุบัน',
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
-                              color: AppColors.textSecondary,
+                              color: AppColors.text(context),
                             ),
                           ),
                         ],
@@ -907,9 +919,9 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.cardBg(context),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
+                        border: Border.all(color: AppColors.brd(context)),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.04),
@@ -921,6 +933,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                       child: TextFormField(
                         controller: _currentPasswordController,
                         obscureText: _obscureCurrent,
+                        style: TextStyle(color: AppColors.text(context)),
                         decoration: _pwInputDecoration(
                           label: 'กรอกรหัสผ่านปัจจุบัน',
                           obscure: _obscureCurrent,
@@ -946,12 +959,12 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Text(
+                          Text(
                             'ตั้งรหัสผ่านใหม่',
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
-                              color: AppColors.textSecondary,
+                              color: AppColors.text(context),
                             ),
                           ),
                         ],
@@ -962,9 +975,9 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.cardBg(context),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
+                        border: Border.all(color: AppColors.brd(context)),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.04),
@@ -978,6 +991,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                           TextFormField(
                             controller: _newPasswordController,
                             obscureText: _obscureNew,
+                            style: TextStyle(color: AppColors.text(context)),
                             decoration: _pwInputDecoration(
                               label: 'รหัสผ่านใหม่',
                               obscure: _obscureNew,
@@ -991,6 +1005,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                           TextFormField(
                             controller: _confirmPasswordController,
                             obscureText: _obscureConfirm,
+                            style: TextStyle(color: AppColors.text(context)),
                             decoration: _pwInputDecoration(
                               label: 'ยืนยันรหัสผ่านใหม่',
                               obscure: _obscureConfirm,
@@ -1009,11 +1024,11 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: Row(
                         children: [
-                          Icon(Icons.info_outline_rounded, size: 14, color: AppColors.textHint),
+                          Icon(Icons.info_outline_rounded, size: 14, color: AppColors.hint(context)),
                           const SizedBox(width: 6),
                           Text(
                             'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร',
-                            style: TextStyle(fontSize: 12, color: AppColors.textHint),
+                            style: TextStyle(fontSize: 12, color: AppColors.subText(context)),
                           ),
                         ],
                       ),
@@ -1060,22 +1075,18 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   }
 }
 
-class AppSettingsScreen extends StatefulWidget {
+class AppSettingsScreen extends ConsumerWidget {
   const AppSettingsScreen({super.key});
 
   @override
-  State<AppSettingsScreen> createState() => _AppSettingsScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(appSettingsProvider);
+    final isDark = settings.isDarkMode;
+    final textColor = isDark ? const Color(0xFFECE6DA) : AppColors.textPrimary;
+    final subTextColor = isDark ? const Color(0xFFB8AE9D) : AppColors.textHint;
 
-class _AppSettingsScreenState extends State<AppSettingsScreen> {
-  bool _notifications = true;
-  bool _darkMode = false;
-  String _language = 'ไทย';
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: isDark ? const Color(0xFF141712) : AppColors.background,
       body: CustomScrollView(
         slivers: [
           // ── Gradient Header ──
@@ -1163,17 +1174,25 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                   _SettingsCard(
                     child: SwitchListTile(
                       activeThumbColor: AppColors.primary,
-                      title: const Text(
+                      title: Text(
                         'การแจ้งเตือนในแอป',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: textColor),
                       ),
-                      subtitle: const Text(
+                      subtitle: Text(
                         'รับการแจ้งเตือนกำหนดการคาวและสุขภาพ',
-                        style: TextStyle(fontSize: 12, color: AppColors.textHint),
+                        style: TextStyle(fontSize: 12, color: subTextColor),
                       ),
                       secondary: _buildTileIcon(Icons.notifications_active_rounded, const Color(0xFFE8F0E4), AppColors.primary),
-                      value: _notifications,
-                      onChanged: (v) => setState(() => _notifications = v),
+                      value: settings.notificationsEnabled,
+                      onChanged: (v) async {
+                        await ref.read(appSettingsProvider.notifier).toggleNotifications(v);
+                        if (context.mounted) {
+                          AppFeedback.showSuccess(
+                            context,
+                            v ? 'เปิดการแจ้งเตือนในแอปเรียบร้อยแล้ว' : 'ปิดการแจ้งเตือนในแอปเรียบร้อยแล้ว',
+                          );
+                        }
+                      },
                     ),
                   ),
 
@@ -1188,64 +1207,31 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                   _SettingsCard(
                     child: SwitchListTile(
                       activeThumbColor: AppColors.primary,
-                      title: const Text(
+                      title: Text(
                         'โหมดมืด (Dark Mode)',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
-                      ),
-                      subtitle: const Text(
-                        'เปลี่ยนโทนสีแอปเป็นสีมืดเพื่อถนอมสายตา',
-                        style: TextStyle(fontSize: 12, color: AppColors.textHint),
-                      ),
-                      secondary: _buildTileIcon(Icons.dark_mode_rounded, const Color(0xFFE3F2FD), AppColors.info),
-                      value: _darkMode,
-                      onChanged: (v) => setState(() => _darkMode = v),
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // ── Section 3: Language ──
-                  const _SettingsSectionHeader(
-                    title: 'ภาษา / Language',
-                    barColor: AppColors.warning,
-                  ),
-                  const SizedBox(height: 10),
-                  _SettingsCard(
-                    child: ListTile(
-                      onTap: () => _showLanguageDialog(context),
-                      leading: _buildTileIcon(Icons.language_rounded, const Color(0xFFFFF3E0), AppColors.warning),
-                      title: const Text(
-                        'ภาษาของแอปพลิเคชัน',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: textColor),
                       ),
                       subtitle: Text(
-                        _language,
-                        style: const TextStyle(fontSize: 12, color: AppColors.textHint),
+                        'เปลี่ยนโทนสีแอปเป็นสีมืดเพื่อถนอมสายตา',
+                        style: TextStyle(fontSize: 12, color: subTextColor),
                       ),
-                      trailing: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceAlt,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              _language,
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primary),
-                            ),
-                            const SizedBox(width: 4),
-                            const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.primary),
-                          ],
-                        ),
-                      ),
+                      secondary: _buildTileIcon(Icons.dark_mode_rounded, const Color(0xFFE3F2FD), AppColors.info),
+                      value: settings.isDarkMode,
+                      onChanged: (v) async {
+                        await ref.read(appSettingsProvider.notifier).toggleDarkMode(v);
+                        if (context.mounted) {
+                          AppFeedback.showSuccess(
+                            context,
+                            v ? 'เปิดใช้งานโหมดมืด (Dark Mode) เรียบร้อยแล้ว' : 'เปลี่ยนเป็นโหมดสว่าง (Light Mode) เรียบร้อยแล้ว',
+                          );
+                        }
+                      },
                     ),
                   ),
 
                   const SizedBox(height: 24),
 
-                  // ── Section 4: System ──
+                  // ── Section 3: System ──
                   const _SettingsSectionHeader(
                     title: 'ระบบ & ข้อมูล',
                     barColor: AppColors.secondary,
@@ -1255,10 +1241,11 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                     child: Column(
                       children: [
                         ListTile(
+                          onTap: () => _showVersionDialog(context),
                           leading: _buildTileIcon(Icons.info_outline_rounded, const Color(0xFFF5F1E8), AppColors.secondary),
-                          title: const Text(
+                          title: Text(
                             'เวอร์ชันแอปพลิเคชัน',
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: textColor),
                           ),
                           trailing: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -1274,36 +1261,25 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 60),
-                          child: Divider(height: 1, color: AppColors.divider.withValues(alpha: 0.5)),
+                          child: Divider(
+                            height: 1,
+                            color: isDark
+                                ? const Color(0xFF353E30)
+                                : AppColors.divider.withValues(alpha: 0.5),
+                          ),
                         ),
                         ListTile(
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: const Row(
-                                  children: [
-                                    Icon(Icons.cleaning_services_rounded, color: Colors.white, size: 20),
-                                    SizedBox(width: 10),
-                                    Text('ล้างข้อมูลแคชสำเร็จเรียบร้อยแล้ว'),
-                                  ],
-                                ),
-                                backgroundColor: AppColors.success,
-                                behavior: SnackBarBehavior.floating,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                margin: const EdgeInsets.all(16),
-                              ),
-                            );
-                          },
+                          onTap: () => _confirmAndClearCache(context, ref),
                           leading: _buildTileIcon(Icons.cleaning_services_rounded, const Color(0xFFFFEBEE), AppColors.error),
-                          title: const Text(
+                          title: Text(
                             'ล้างข้อมูลแคช',
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: textColor),
                           ),
-                          subtitle: const Text(
+                          subtitle: Text(
                             'คืนพื้นที่หน่วยความจำชั่วคราว',
-                            style: TextStyle(fontSize: 12, color: AppColors.textHint),
+                            style: TextStyle(fontSize: 12, color: subTextColor),
                           ),
-                          trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textHint, size: 22),
+                          trailing: Icon(Icons.chevron_right_rounded, color: subTextColor, size: 22),
                         ),
                       ],
                     ),
@@ -1329,68 +1305,93 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
     );
   }
 
-  void _showLanguageDialog(BuildContext context) {
+  void _showVersionDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cardBg(context),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.language_rounded, color: AppColors.primary),
-            SizedBox(width: 10),
-            Text('เลือกภาษา / Select Language', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+            const Icon(Icons.verified_rounded, color: AppColors.primary, size: 28),
+            const SizedBox(width: 10),
+            Text('เวอร์ชันแอปพลิเคชัน', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.text(context))),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildLangTile('ไทย', 'ภาษาไทย', ctx),
+            Text('CowSmart - ระบบบริหารจัดการฟาร์มโคเนื้ออัจฉริยะ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.text(context))),
             const SizedBox(height: 8),
-            _buildLangTile('English', 'English (US)', ctx),
+            Text('เวอร์ชันปัจจุบัน: 1.0.0 (Build 1)', style: TextStyle(fontSize: 13, color: AppColors.subText(context))),
+            const SizedBox(height: 6),
+            const Row(
+              children: [
+                Icon(Icons.check_circle, color: AppColors.success, size: 16),
+                SizedBox(width: 6),
+                Text('สถานะ: เป็นเวอร์ชันล่าสุดแล้ว', style: TextStyle(fontSize: 13, color: AppColors.success, fontWeight: FontWeight.w600)),
+              ],
+            ),
           ],
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('ปิด', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildLangTile(String code, String label, BuildContext ctx) {
-    final isSelected = _language == code;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          setState(() => _language = code);
-          Navigator.pop(ctx);
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary.withValues(alpha: 0.08) : AppColors.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isSelected ? AppColors.primary : AppColors.border.withValues(alpha: 0.5),
-              width: isSelected ? 1.5 : 1,
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                  color: isSelected ? AppColors.primary : AppColors.textPrimary,
-                ),
-              ),
-              if (isSelected)
-                const Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 20),
-            ],
-          ),
+  Future<void> _confirmAndClearCache(BuildContext context, WidgetRef ref) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cardBg(context),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.cleaning_services_rounded, color: AppColors.error, size: 24),
+            const SizedBox(width: 10),
+            Text('ล้างข้อมูลแคช', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.text(context))),
+          ],
         ),
+        content: Text(
+          'คุณต้องการล้างข้อมูลชั่วคราวและแคชรูปภาพในแอป เพื่อคืนพื้นที่หน่วยความจำใช่หรือไม่?\n\n(ไม่มีผลต่อข้อมูลฟาร์มและวัวในระบบ)',
+          style: TextStyle(fontSize: 14, color: AppColors.text(context)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('ยกเลิก', style: TextStyle(color: AppColors.subText(context))),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              elevation: 0,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('ยืนยันการล้างแคช'),
+          ),
+        ],
       ),
     );
+
+    if (confirm == true && context.mounted) {
+      final freedMb = await ref.read(appSettingsProvider.notifier).clearCache();
+      if (context.mounted) {
+        AppFeedback.showSuccess(
+          context,
+          freedMb > 0.05
+              ? 'ล้างข้อมูลแคชสำเร็จ คืนพื้นที่ได้ ${freedMb.toStringAsFixed(1)} MB'
+              : 'ล้างข้อมูลแคชสำเร็จ หน่วยความจำสะอาดเรียบร้อยแล้ว',
+        );
+      }
+    }
   }
 }
 
@@ -1418,8 +1419,10 @@ class HelpScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg(context),
       body: CustomScrollView(
         slivers: [
           // ── Gradient Header ──
@@ -1508,12 +1511,12 @@ class HelpScreen extends StatelessWidget {
                     (faq) => Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.cardBg(context),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                        border: Border.all(color: AppColors.brd(context)),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.03),
+                            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
@@ -1522,20 +1525,22 @@ class HelpScreen extends StatelessWidget {
                       child: Theme(
                         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
                         child: ExpansionTile(
+                          iconColor: AppColors.primary,
+                          collapsedIconColor: AppColors.hint(context),
                           leading: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.1),
+                              color: AppColors.primary.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: const Icon(Icons.quiz_rounded, color: AppColors.primary, size: 20),
                           ),
                           title: Text(
                             faq['question']!,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
+                              color: AppColors.text(context),
                             ),
                           ),
                           children: [
@@ -1543,9 +1548,9 @@ class HelpScreen extends StatelessWidget {
                               padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
                               child: Text(
                                 faq['answer']!,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13,
-                                  color: AppColors.textSecondary,
+                                  color: AppColors.subText(context),
                                   height: 1.5,
                                 ),
                               ),
@@ -1572,17 +1577,17 @@ class HelpScreen extends StatelessWidget {
                             width: 42,
                             height: 42,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFE8F0E4),
+                              color: isDark ? AppColors.primary.withValues(alpha: 0.2) : const Color(0xFFE8F0E4),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(Icons.email_rounded, color: AppColors.primary, size: 22),
                           ),
-                          title: const Text(
+                          title: Text(
                             'อีเมลฝ่ายสนับสนุน',
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text(context)),
                           ),
-                          subtitle: const Text('support@cowsmart.com', style: TextStyle(fontSize: 12, color: AppColors.textHint)),
-                          trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.textHint),
+                          subtitle: Text('support@cowsmart.com', style: TextStyle(fontSize: 12, color: AppColors.subText(context))),
+                          trailing: Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.hint(context)),
                           onTap: () {},
                         ),
                       ],
@@ -1626,10 +1631,12 @@ class _SettingsSectionHeader extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: AppColors.textSecondary,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xFFECE6DA)
+                  : AppColors.textSecondary,
             ),
           ),
         ],
@@ -1645,14 +1652,19 @@ class _SettingsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1F241C) : Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFF353E30)
+              : AppColors.border.withValues(alpha: 0.4),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),

@@ -74,7 +74,7 @@ class _MarketPriceHistoryScreenState extends ConsumerState<MarketPriceHistoryScr
     }).toList();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg(context),
       appBar: AppBar(
         title: const Text('ประวัติราคากลางทั้งหมด'),
         backgroundColor: AppColors.primary,
@@ -87,7 +87,7 @@ class _MarketPriceHistoryScreenState extends ConsumerState<MarketPriceHistoryScr
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.cardBg(context),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.04),
@@ -101,11 +101,13 @@ class _MarketPriceHistoryScreenState extends ConsumerState<MarketPriceHistoryScr
                 // Search field
                 TextField(
                   onChanged: (val) => setState(() => _searchQuery = val.trim()),
+                  style: TextStyle(color: AppColors.text(context)),
                   decoration: InputDecoration(
                     hintText: 'ค้นหาหมวดหมู่, สัปดาห์, แหล่งที่มา...',
-                    prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.textSecondary),
+                    hintStyle: TextStyle(color: AppColors.hint(context)),
+                    prefixIcon: Icon(Icons.search, size: 20, color: AppColors.subText(context)),
                     filled: true,
-                    fillColor: AppColors.background,
+                    fillColor: AppColors.surfAlt(context),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -123,16 +125,17 @@ class _MarketPriceHistoryScreenState extends ConsumerState<MarketPriceHistoryScr
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
                         decoration: BoxDecoration(
-                          color: AppColors.background,
+                          color: AppColors.surfAlt(context),
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppColors.border),
+                          border: Border.all(color: AppColors.brd(context)),
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
                             value: _selectedYear,
                             isDense: true,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
+                            dropdownColor: AppColors.cardBg(context),
+                            style: TextStyle(
+                              color: AppColors.text(context),
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                             ),
@@ -159,16 +162,17 @@ class _MarketPriceHistoryScreenState extends ConsumerState<MarketPriceHistoryScr
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
                         decoration: BoxDecoration(
-                          color: AppColors.background,
+                          color: AppColors.surfAlt(context),
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppColors.border),
+                          border: Border.all(color: AppColors.brd(context)),
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
                             value: _selectedMonth,
                             isDense: true,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
+                            dropdownColor: AppColors.cardBg(context),
+                            style: TextStyle(
+                              color: AppColors.text(context),
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                             ),
@@ -256,9 +260,9 @@ class _MarketPriceHistoryScreenState extends ConsumerState<MarketPriceHistoryScr
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.7)),
+        border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.7)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -269,10 +273,10 @@ class _MarketPriceHistoryScreenState extends ConsumerState<MarketPriceHistoryScr
               Expanded(
                 child: Text(
                   price.category ?? 'โคเนื้อทั่วไป',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
-                    color: AppColors.textPrimary,
+                    color: AppColors.text(context),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -298,19 +302,19 @@ class _MarketPriceHistoryScreenState extends ConsumerState<MarketPriceHistoryScr
           const SizedBox(height: 6),
           Row(
             children: [
-              const Icon(Icons.calendar_today_outlined, size: 13, color: AppColors.textSecondary),
+              Icon(Icons.calendar_today_outlined, size: 13, color: AppColors.subText(context)),
               const SizedBox(width: 4),
               Text(
                 AppDateUtils.formatThaiDate(price.effectiveDate),
-                style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                style: TextStyle(fontSize: 11, color: AppColors.subText(context)),
               ),
               const SizedBox(width: 12),
-              const Icon(Icons.source_outlined, size: 13, color: AppColors.textSecondary),
+              Icon(Icons.source_outlined, size: 13, color: AppColors.subText(context)),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
                   price.source ?? 'NABC AGRI API',
-                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                  style: TextStyle(fontSize: 11, color: AppColors.subText(context)),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

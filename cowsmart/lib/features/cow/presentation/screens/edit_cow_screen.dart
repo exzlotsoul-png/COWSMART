@@ -11,6 +11,7 @@ import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import 'package:cowsmart/features/cow/providers/breed_provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cowsmart/core/widgets/image_picker_widget.dart';
+import 'package:cowsmart/core/widgets/cow_icon.dart';
 import 'package:cowsmart/core/services/image_upload_service.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
@@ -276,7 +277,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                         controller: _nameController,
                         decoration: const InputDecoration(
                           labelText: 'ชื่อ (ถ้ามี)',
-                          prefixIcon: Icon(Icons.pets),
+                          prefixIcon: CowIcon(size: 20, color: AppColors.primary),
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -350,7 +351,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                           ),
                           child: Text(
                             AppDateUtils.formatThaiDate(_selectedDate),
-                            style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+                            style: TextStyle(color: AppColors.text(context), fontWeight: FontWeight.w600),
                           ),
                         ),
                       ),
@@ -366,7 +367,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                           ),
                           child: Text(
                             AppDateUtils.formatThaiDate(_selectedEntryDate),
-                            style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+                            style: TextStyle(color: AppColors.text(context), fontWeight: FontWeight.w600),
                           ),
                         ),
                       ),
