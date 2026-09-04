@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cowsmart/core/network/api_client.dart';
+import 'package:cowsmart/core/services/local_notification_service.dart';
 import '../../notifications/providers/notification_provider.dart';
 import '../domain/calendar_event.dart';
 
@@ -83,6 +84,7 @@ class CalendarNotifier extends Notifier<CalendarState> {
           .toList();
       list.sort((a, b) => a.eventDatetime.compareTo(b.eventDatetime));
       state = state.copyWith(events: list, isLoading: false);
+      ref.read(localNotificationProvider).syncEventNotifications(list);
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
@@ -100,6 +102,7 @@ class CalendarNotifier extends Notifier<CalendarState> {
         events: [...state.events, created],
         isSaving: false,
       );
+      ref.read(localNotificationProvider).syncEventNotifications(state.events);
       // Trigger notification refresh
       ref.read(notificationProvider.notifier).fetchNotifications();
       return true;
@@ -117,12 +120,14 @@ class CalendarNotifier extends Notifier<CalendarState> {
         data: event.toJson(),
       );
       final updated = CalendarEvent.fromJson(response.data);
+      final newList = state.events
+          .map((e) => e.id == updated.id ? updated : e)
+          .toList();
       state = state.copyWith(
-        events: state.events
-            .map((e) => e.id == updated.id ? updated : e)
-            .toList(),
+        events: newList,
         isSaving: false,
       );
+      ref.read(localNotificationProvider).syncEventNotifications(newList);
       // Trigger notification refresh
       ref.read(notificationProvider.notifier).fetchNotifications();
       return true;
@@ -137,7 +142,9 @@ class CalendarNotifier extends Notifier<CalendarState> {
       await _api.delete('/calendar_events/$id');
       state = state.copyWith(
         events: state.events.where((e) => e.id != id).toList(),
+        isSaving: false,
       );
+      ref.read(localNotificationProvider).syncEventNotifications(state.events);
       // Trigger notification refresh
       ref.read(notificationProvider.notifier).fetchNotifications();
       return true;
