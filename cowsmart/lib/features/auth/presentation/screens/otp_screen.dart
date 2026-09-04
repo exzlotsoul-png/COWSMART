@@ -79,11 +79,10 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
           });
         }
       } else {
-        // Registration flow
-        // Standard mockup verify OTP
-        await Future.delayed(const Duration(seconds: 1));
         if (mounted) {
-          context.go('/create_farm');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('หน้านี้สงวนไว้สำหรับลืมรหัสผ่านเท่านั้น')),
+          );
         }
       }
     } catch (e) {

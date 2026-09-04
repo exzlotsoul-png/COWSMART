@@ -39,10 +39,15 @@ final routerProvider = Provider<GoRouter>((ref) {
   final authNotifier = RouterNotifier(ref);
 
   return GoRouter(
-    initialLocation: '/login',
+    initialLocation: '/splash',
     refreshListenable: authNotifier,
     redirect: (context, state) {
       final authState = ref.read(authProvider);
+      
+      if (authState.isInitializing) {
+        return state.matchedLocation == '/splash' ? null : '/splash';
+      }
+
       final isLoggingIn =
           state.matchedLocation == '/login' ||
           state.matchedLocation == '/register' ||
@@ -61,6 +66,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      GoRoute(
+        path: '/splash',
+        builder: (context, state) => const Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/register',

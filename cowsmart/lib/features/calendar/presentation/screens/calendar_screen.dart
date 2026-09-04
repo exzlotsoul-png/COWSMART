@@ -312,6 +312,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         : const TimeOfDay(hour: 8, minute: 0);
     String? selectedCowId = existing?.cowId;
     String? selectedReminder = existing?.reminderSetting ?? 'ก่อน 1 วัน';
+    String? titleError;
 
     final reminderOptions = [
       'ตรงเวลาที่บันทึก',
@@ -352,9 +353,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   style: TextStyle(fontSize: 16, color: AppColors.text(context)),
                   decoration: InputDecoration(
                     labelText: 'ชื่อกิจกรรม *',
+                    errorText: titleError,
                     labelStyle: TextStyle(fontSize: 15, color: AppColors.subText(context)),
                     prefixIcon: const Icon(Icons.event_note),
                   ),
+                  onChanged: (val) {
+                    if (titleError != null) setDialogState(() => titleError = null);
+                  },
                 ),
                 const SizedBox(height: 12),
                 ListTile(
@@ -464,7 +469,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
                   onPressed: () async {
                     final title = titleCtrl.text.trim();
-                    if (title.isEmpty) return;
+                    if (title.isEmpty) {
+                      setDialogState(() => titleError = 'กรุณากรอกชื่อกิจกรรม');
+                      return;
+                    }
 
                     final dt = DateTime(
                       selectedDate.year,

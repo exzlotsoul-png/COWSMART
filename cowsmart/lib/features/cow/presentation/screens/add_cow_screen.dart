@@ -136,18 +136,8 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
   }
 
   Future<void> _saveCow() async {
+    // If the form is not valid (fields are missing), the inline errors will show automatically.
     if (!_formKey.currentState!.validate()) {
-      AppFeedback.showError(context, 'กรุณากรอกข้อมูลวัวในช่องที่จำเป็นให้ถูกต้องครบถ้วน');
-      return;
-    }
-
-    if (_selectedGender == null) {
-      AppFeedback.showError(context, 'กรุณาเลือกเพศของวัว');
-      return;
-    }
-
-    if (_selectedType == null) {
-      AppFeedback.showError(context, 'กรุณาเลือกประเภทของวัว');
       return;
     }
 

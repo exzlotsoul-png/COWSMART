@@ -193,7 +193,6 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                         child: ElevatedButton.icon(
                           onPressed: () async {
                             if (!formKey.currentState!.validate()) {
-                              AppFeedback.showError(context, 'กรุณากรอกหัวข้อรายการและจำนวนเงินให้ถูกต้อง');
                               return;
                             }
                             final currentFarm = ref.read(farmProvider).currentFarm;

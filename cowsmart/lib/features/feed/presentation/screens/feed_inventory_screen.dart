@@ -709,6 +709,8 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
 
     String selectedCategory = 'grass';
     String? selectedZoneId;
+    String? nameError;
+    String? qtyError;
     DateTime selectedDate = DateTime.now();
 
     final zones = ref.read(zoneProvider).zones;
@@ -771,6 +773,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                     filled: true,
                     fillColor: AppColors.surfAlt(context),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                    errorText: nameError,
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -840,6 +843,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                           filled: true,
                           fillColor: AppColors.surfAlt(context),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                          errorText: qtyError,
                         ),
                       ),
                     ),
@@ -922,8 +926,12 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                       final qty = double.tryParse(quantityController.text) ?? 0;
                       final cost = double.tryParse(costController.text) ?? 0;
 
-                      if (name.isEmpty || qty <= 0) {
-                        AppFeedback.showError(context, 'กรุณากรอกชื่อและปริมาณอาหารให้ถูกต้องและมากกว่า 0');
+                      setBottomSheetState(() {
+                        nameError = name.isEmpty ? 'กรุณากรอกชื่อ' : null;
+                        qtyError = qty <= 0 ? 'ระบุปริมาณ' : null;
+                      });
+
+                      if (nameError != null || qtyError != null) {
                         return;
                       }
 

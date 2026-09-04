@@ -14,6 +14,7 @@ class AuthState {
   final String? token;
   final Map<String, dynamic>? user;
   final bool isNewUser;
+  final bool isInitializing;
 
   AuthState({
     this.isLoading = false,
@@ -22,6 +23,7 @@ class AuthState {
     this.token,
     this.user,
     this.isNewUser = false,
+    this.isInitializing = true,
   });
 
   AuthState copyWith({
@@ -31,6 +33,7 @@ class AuthState {
     String? token,
     Map<String, dynamic>? user,
     bool? isNewUser,
+    bool? isInitializing,
   }) {
     return AuthState(
       isLoading: isLoading ?? this.isLoading,
@@ -39,6 +42,7 @@ class AuthState {
       token: token ?? this.token,
       user: user ?? this.user,
       isNewUser: isNewUser ?? this.isNewUser,
+      isInitializing: isInitializing ?? this.isInitializing,
     );
   }
 }
@@ -70,7 +74,10 @@ class AuthNotifier extends Notifier<AuthState> {
         token: token,
         user: userData,
         isNewUser: false,
+        isInitializing: false,
       );
+    } else {
+      state = state.copyWith(isInitializing: false);
     }
   }
 

@@ -17,6 +17,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  String? _emailError;
+  String? _passwordError;
 
   @override
   void dispose() {
@@ -26,13 +28,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _login() async {
-    final email = _emailController.text;
-    final password = _passwordController.text;
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
 
-    if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณากรอกอีเมลและรหัสผ่าน')),
-      );
+    setState(() {
+      _emailError = email.isEmpty ? 'กรุณากรอกอีเมล' : null;
+      _passwordError = password.isEmpty ? 'กรุณากรอกรหัสผ่าน' : null;
+    });
+
+    if (_emailError != null || _passwordError != null) {
       return;
     }
 
@@ -91,10 +95,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'อีเมล',
                   hintText: 'example@email.com',
-                  prefixIcon: Icon(Icons.email_outlined),
+                  prefixIcon: const Icon(Icons.email_outlined),
+                  errorText: _emailError,
                 ),
               ),
               const SizedBox(height: 16),
@@ -107,6 +112,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   labelText: 'รหัสผ่าน',
                   hintText: 'กรอกรหัสผ่านของคุณ',
                   prefixIcon: const Icon(Icons.lock_outline),
+                  errorText: _passwordError,
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword ? Icons.visibility_off : Icons.visibility,

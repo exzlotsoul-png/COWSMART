@@ -21,6 +21,7 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
   final Set<Zone> _zonesToDelete = {}; // Existing zones marked for deletion
   final Map<String, String> _zonesToEdit = {}; // zoneId -> new name
   final _zoneNameController = TextEditingController();
+  String? _zoneNameError;
   bool _isLoading = false;
 
   @override
@@ -70,16 +71,24 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
   void _addLocalZone() {
     final name = _zoneNameController.text.trim();
     final currentFarm = ref.read(farmProvider).currentFarm;
-    if (name.isNotEmpty && currentFarm != null) {
+    
+    setState(() {
+      _zoneNameError = name.isEmpty ? 'กรุณากรอกชื่อโซน' : null;
+    });
+
+    if (_zoneNameError != null) return;
+
+    if (currentFarm != null) {
       if (_zones.any((z) => z.name == name)) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('ชื่อโซนนี้มีอยู่แล้ว')));
+        setState(() {
+          _zoneNameError = 'ชื่อโซนนี้มีอยู่แล้ว';
+        });
         return;
       }
       setState(() {
         _zones.add(Zone(id: 'NEW', name: name, farmId: currentFarm.id));
         _zoneNameController.clear();
+        _zoneNameError = null;
       });
     }
   }
@@ -149,6 +158,8 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
   }
 
   Future<void> _saveAllChanges() async {
+    if (_isLoading) return;
+    
     final currentFarm = ref.read(farmProvider).currentFarm;
     if (currentFarm == null) return;
 
@@ -331,6 +342,11 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
                       filled: true,
                       fillColor: AppColors.cardBg(context),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      focusedBorder: const OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(14)),
+                        borderSide: BorderSide(color: AppColors.primary, width: 2),
+                      ),
+                      errorText: _zoneNameError,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
                         borderSide: BorderSide.none,

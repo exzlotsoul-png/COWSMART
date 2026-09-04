@@ -19,6 +19,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  
+  String? _firstNameError;
+  String? _lastNameError;
+  String? _emailError;
+  String? _phoneError;
+  String? _passwordError;
+  String? _confirmPasswordError;
+
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
@@ -34,28 +42,49 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   void _register() async {
-    final firstName = _firstNameController.text;
-    final lastName = _lastNameController.text;
-    final email = _emailController.text;
-    final phone = _phoneController.text;
-    final password = _passwordController.text;
-    final confirmPassword = _confirmPasswordController.text;
+    final firstName = _firstNameController.text.trim();
+    final lastName = _lastNameController.text.trim();
+    final email = _emailController.text.trim();
+    final phone = _phoneController.text.trim();
+    final password = _passwordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
 
-    if (firstName.isEmpty ||
-        lastName.isEmpty ||
-        email.isEmpty ||
-        phone.isEmpty ||
-        password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณากรอกข้อมูลให้ครบถ้วน')),
-      );
+    setState(() {
+      _firstNameError = firstName.isEmpty ? 'กรุณากรอกชื่อ' : null;
+      _lastNameError = lastName.isEmpty ? 'กรุณากรอกนามสกุล' : null;
+      _emailError = email.isEmpty ? 'กรุณากรอกอีเมล' : null;
+      _phoneError = phone.isEmpty ? 'กรุณากรอกเบอร์โทรศัพท์' : null;
+      _passwordError = password.isEmpty ? 'กรุณากรอกรหัสผ่าน' : null;
+      _confirmPasswordError = confirmPassword.isEmpty ? 'กรุณายืนยันรหัสผ่าน' : null;
+    });
+
+    if (_firstNameError != null ||
+        _lastNameError != null ||
+        _emailError != null ||
+        _phoneError != null ||
+        _passwordError != null ||
+        _confirmPasswordError != null) {
+      return;
+    }
+
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(email)) {
+      setState(() => _emailError = 'รูปแบบอีเมลไม่ถูกต้อง');
+      return;
+    }
+
+    if (phone.length < 9 || phone.length > 10 || !RegExp(r'^[0-9]+$').hasMatch(phone)) {
+      setState(() => _phoneError = 'เบอร์โทรศัพท์ต้องเป็นตัวเลข 9-10 หลัก');
+      return;
+    }
+
+    if (password.length < 8) {
+      setState(() => _passwordError = 'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร');
       return;
     }
 
     if (password != confirmPassword) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('รหัสผ่านไม่ตรงกัน')));
+      setState(() => _confirmPasswordError = 'รหัสผ่านไม่ตรงกัน');
       return;
     }
 
@@ -117,9 +146,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   Expanded(
                     child: TextField(
                       controller: _firstNameController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'ชื่อ',
-                        prefixIcon: Icon(Icons.person_outline),
+                        prefixIcon: const Icon(Icons.person_outline),
+                        errorText: _firstNameError,
                       ),
                     ),
                   ),
@@ -127,7 +157,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   Expanded(
                     child: TextField(
                       controller: _lastNameController,
-                      decoration: const InputDecoration(labelText: 'นามสกุล'),
+                      decoration: InputDecoration(
+                        labelText: 'นามสกุล',
+                        errorText: _lastNameError,
+                      ),
                     ),
                   ),
                 ],
@@ -137,10 +170,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'อีเมล',
                   hintText: 'example@email.com',
-                  prefixIcon: Icon(Icons.email_outlined),
+                  prefixIcon: const Icon(Icons.email_outlined),
+                  errorText: _emailError,
                 ),
               ),
               const SizedBox(height: 16),
@@ -148,10 +182,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               TextField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'เบอร์โทรศัพท์',
                   hintText: '0812345678',
-                  prefixIcon: Icon(Icons.phone_outlined),
+                  prefixIcon: const Icon(Icons.phone_outlined),
+                  errorText: _phoneError,
                 ),
               ),
               const SizedBox(height: 16),
@@ -162,6 +197,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 decoration: InputDecoration(
                   labelText: 'รหัสผ่าน',
                   prefixIcon: const Icon(Icons.lock_outline),
+                  errorText: _passwordError,
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword ? Icons.visibility_off : Icons.visibility,
@@ -183,6 +219,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 decoration: InputDecoration(
                   labelText: 'ยืนยันรหัสผ่าน',
                   prefixIcon: const Icon(Icons.lock_outline),
+                  errorText: _confirmPasswordError,
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,

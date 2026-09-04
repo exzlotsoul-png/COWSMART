@@ -33,6 +33,10 @@ class ZoneController extends Controller
         if (!$ownsFarm) {
             return response()->json(['message' => 'Unauthorized or farm not found'], 403);
         }
+        $request->validate([
+            'farm_id' => 'required|string',
+            'name' => 'required|string|max:255',
+        ]);
 
         $data = $request->all();
         $zone = Zone::create($data);
@@ -59,6 +63,9 @@ class ZoneController extends Controller
         $zone = Zone::where('zone_id', $id)
                     ->whereIn('farm_id', $userFarmIds)
                     ->firstOrFail();
+        $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+        ]);
 
         $zone->update($request->all());
         return response()->json($zone);

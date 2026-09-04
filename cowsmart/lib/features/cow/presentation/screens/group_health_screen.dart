@@ -68,6 +68,8 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
   final Set<String> _selectedMedicineIds = {};
 
   String? _selectedUnitId;
+  String? _vaccineSelectionError;
+  String? _medicineSelectionError;
 
   bool _isSubmitting = false;
 
@@ -128,22 +130,12 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
     }
 
     if (_selectedType == 'CT02' && _selectedVaccineIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('กรุณาเลือกวัคซีนอย่างน้อย 1 รายการ', style: TextStyle(fontSize: 15)),
-          backgroundColor: AppColors.warning,
-        ),
-      );
+      setState(() => _vaccineSelectionError = 'กรุณาเลือกวัคซีนอย่างน้อย 1 รายการ');
       return;
     }
 
     if (_selectedType == 'CT03' && _selectedMedicineIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('กรุณาเลือกยารักษาอย่างน้อย 1 รายการ', style: TextStyle(fontSize: 15)),
-          backgroundColor: AppColors.warning,
-        ),
-      );
+      setState(() => _medicineSelectionError = 'กรุณาเลือกยารักษาอย่างน้อย 1 รายการ');
       return;
     }
 
@@ -1110,7 +1102,9 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                 ],
                 customController: _customVaccineController,
                 hintText: 'แตะเพื่อเลือกวัคซีน...',
+                errorText: _vaccineSelectionError,
                 onChanged: (newSet) => setState(() {
+                  _vaccineSelectionError = null;
                   _selectedVaccineIds.clear();
                   _selectedVaccineIds.addAll(newSet);
                 }),
@@ -1147,7 +1141,9 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                 ],
                 customController: _customMedicineController,
                 hintText: 'แตะเพื่อเลือกยารักษา...',
+                errorText: _medicineSelectionError,
                 onChanged: (newSet) => setState(() {
+                  _medicineSelectionError = null;
                   _selectedMedicineIds.clear();
                   _selectedMedicineIds.addAll(newSet);
                 }),
@@ -1541,6 +1537,7 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
     required TextEditingController customController,
     required String hintText,
     required ValueChanged<Set<String>> onChanged,
+    String? errorText,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1701,6 +1698,7 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
           child: InputDecorator(
             decoration: InputDecoration(
               labelText: title,
+              errorText: errorText,
               labelStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.text(context)),
               filled: true,
               fillColor: AppColors.surfAlt(context),

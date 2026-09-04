@@ -96,9 +96,19 @@ class ApiClient {
     if (e.type == DioExceptionType.receiveTimeout)
       return 'เซิร์ฟเวอร์ตอบสนองช้า (Receive Timeout)';
     if (e.response != null) {
-      final message =
-          e.response?.data['message'] ??
-          'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์ (${e.response?.statusCode})';
+      String message = e.response?.data['message'] ?? 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์ (${e.response?.statusCode})';
+      
+      // Handle Laravel Validation Errors (422)
+      if (e.response?.statusCode == 422 && e.response?.data['errors'] != null) {
+        final errors = e.response?.data['errors'] as Map<String, dynamic>;
+        if (errors.isNotEmpty) {
+          final firstError = errors.values.first;
+          if (firstError is List && firstError.isNotEmpty) {
+            message = firstError.first.toString();
+          }
+        }
+      }
+
       print('❌ API Error: $message');
       return message;
     }

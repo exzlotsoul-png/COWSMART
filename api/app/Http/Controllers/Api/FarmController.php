@@ -24,6 +24,11 @@ class FarmController extends Controller
         if (!$user) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'address' => 'required|string',
+            'image_url' => 'nullable|string',
+        ]);
         
         $data = $request->all();
         $data['email'] = $user->email;
@@ -48,6 +53,11 @@ class FarmController extends Controller
         $farm = Farm::where('farm_id', $id)
                     ->where('email', $user->email)
                     ->firstOrFail();
+        $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'address' => 'sometimes|required|string',
+            'image_url' => 'nullable|string',
+        ]);
                     
         $data = $request->all();
         if (array_key_exists('image_url', $data) && $farm->image_url !== $data['image_url'] && $farm->image_url) {

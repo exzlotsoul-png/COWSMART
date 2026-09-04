@@ -22,6 +22,13 @@ class FeedInventoryController extends Controller
 
     public function store(Request $request)
     {
+        $request->validate([
+            'farm_id' => 'required|string',
+            'name' => 'required|string|max:255',
+            'category' => 'required|string',
+            'stock_quantity' => 'required|numeric',
+        ]);
+
         $data = $request->all();
         $feedInventory = new FeedInventory($data);
         if ($request->has('created_at')) {
@@ -39,6 +46,12 @@ class FeedInventoryController extends Controller
 
     public function update(Request $request, $id)
     {
+        $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'category' => 'sometimes|required|string',
+            'stock_quantity' => 'sometimes|required|numeric',
+        ]);
+
         $feedInventory = FeedInventory::findOrFail($id);
         $feedInventory->fill($request->all());
         if ($request->has('created_at')) {

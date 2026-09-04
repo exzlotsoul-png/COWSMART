@@ -63,6 +63,16 @@ class CowController extends Controller
             return response()->json(['message' => 'Unauthorized or farm not found'], 403);
         }
 
+        $request->validate([
+            'farm_id' => 'required|string',
+            'name' => 'nullable|string|max:255',
+            'tag_number' => 'nullable|string|max:255',
+            'birth_date' => 'nullable|date',
+            'entry_date' => 'nullable|date',
+            'gender' => 'required|string|in:M,F',
+            'type' => 'required|string',
+        ]);
+
         $data = $request->all();
 
         // Sanitize foreign keys

@@ -20,6 +20,8 @@ class _CreateFarmScreenState extends ConsumerState<CreateFarmScreen> {
   
   XFile? _pendingImageFile;
   bool _isSaving = false;
+  String? _nameError;
+  String? _addressError;
 
   @override
   void dispose() {
@@ -32,10 +34,12 @@ class _CreateFarmScreenState extends ConsumerState<CreateFarmScreen> {
     final name = _farmNameController.text.trim();
     final address = _addressController.text.trim();
 
-    if (name.isEmpty || address.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณากรอกข้อมูลให้ครบถ้วน')),
-      );
+    setState(() {
+      _nameError = name.isEmpty ? 'กรุณากรอกชื่อฟาร์ม' : null;
+      _addressError = address.isEmpty ? 'กรุณากรอกที่อยู่ฟาร์ม' : null;
+    });
+
+    if (_nameError != null || _addressError != null) {
       return;
     }
 
@@ -238,6 +242,7 @@ class _CreateFarmScreenState extends ConsumerState<CreateFarmScreen> {
                               borderRadius: BorderRadius.all(Radius.circular(14)),
                               borderSide: BorderSide(color: AppColors.primary, width: 2),
                             ),
+                            errorText: _nameError,
                           ),
                         ),
                         const SizedBox(height: 18),
@@ -278,6 +283,7 @@ class _CreateFarmScreenState extends ConsumerState<CreateFarmScreen> {
                               borderRadius: BorderRadius.all(Radius.circular(14)),
                               borderSide: BorderSide(color: AppColors.primary, width: 2),
                             ),
+                            errorText: _addressError,
                           ),
                         ),
                       ],

@@ -15,6 +15,8 @@ class SelectFarmScreen extends ConsumerStatefulWidget {
 }
 
 class _SelectFarmScreenState extends ConsumerState<SelectFarmScreen> {
+  bool _isSelecting = false;
+
   @override
   void initState() {
     super.initState();
@@ -24,16 +26,31 @@ class _SelectFarmScreenState extends ConsumerState<SelectFarmScreen> {
   }
 
   Future<void> _onSelectFarm(dynamic farm) async {
-    ref.read(farmProvider.notifier).selectFarm(farm);
+    if (_isSelecting) return;
+    setState(() => _isSelecting = true);
 
-    // Initial fetch for the selected farm's data
-    await Future.wait([
-      ref.read(cowProvider.notifier).fetchCows(farm.id),
-      ref.read(zoneProvider.notifier).fetchZones(farm.id),
-    ]);
+    try {
+      ref.read(farmProvider.notifier).selectFarm(farm);
 
-    if (mounted) {
-      context.go('/dashboard');
+      // Initial fetch for the selected farm's data
+      await Future.wait([
+        ref.read(cowProvider.notifier).fetchCows(farm.id),
+        ref.read(zoneProvider.notifier).fetchZones(farm.id),
+      ]);
+
+      if (mounted) {
+        context.go('/dashboard');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('เกิดข้อผิดพลาดในการดึงข้อมูลฟาร์ม: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSelecting = false);
+      }
     }
   }
 
@@ -45,7 +62,9 @@ class _SelectFarmScreenState extends ConsumerState<SelectFarmScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.bg(context),
-      body: CustomScrollView(
+      body: Stack(
+        children: [
+          CustomScrollView(
         slivers: [
           // ── Gradient Header ──
           SliverToBoxAdapter(
@@ -342,6 +361,15 @@ class _SelectFarmScreenState extends ConsumerState<SelectFarmScreen> {
                   ],
                 ],
               ),
+            ),
+          ),
+        ],
+      ),
+        if (_isSelecting)
+          Container(
+            color: Colors.black.withValues(alpha: 0.3),
+            child: const Center(
+              child: CircularProgressIndicator(),
             ),
           ),
         ],
