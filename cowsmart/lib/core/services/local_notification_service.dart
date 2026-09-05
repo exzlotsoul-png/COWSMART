@@ -2,7 +2,6 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
-import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 
@@ -16,12 +15,7 @@ class LocalNotificationService {
 
   Future<void> init() async {
     tz.initializeTimeZones();
-    try {
-      final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
-      tz.setLocalLocation(tz.getLocation(currentTimeZone));
-    } catch (e) {
-      tz.setLocalLocation(tz.getLocation('Asia/Bangkok'));
-    }
+    tz.setLocalLocation(tz.getLocation('Asia/Bangkok'));
 
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -38,7 +32,7 @@ class LocalNotificationService {
     );
 
     await _flutterLocalNotificationsPlugin.initialize(
-      initializationSettings,
+      settings: initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) async {
         // Handle notification tap
       },
@@ -106,14 +100,12 @@ class LocalNotificationService {
         NotificationDetails(android: androidPlatformChannelSpecifics);
 
     await _flutterLocalNotificationsPlugin.zonedSchedule(
-      id,
-      'ถึงเวลากิจกรรม: ${event.title}',
-      event.description ?? 'กิจกรรมปฏิทินที่กำหนดไว้ใกล้มาถึงแล้ว',
-      tzTime,
-      platformChannelSpecifics,
+      id: id,
+      title: 'ถึงเวลากิจกรรม: ${event.title}',
+      body: event.description ?? 'กิจกรรมปฏิทินที่กำหนดไว้ใกล้มาถึงแล้ว',
+      scheduledDate: tzTime,
+      notificationDetails: platformChannelSpecifics,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
       payload: event.id,
     );
   }

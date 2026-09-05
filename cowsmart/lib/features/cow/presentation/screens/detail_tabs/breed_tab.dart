@@ -8,9 +8,7 @@ import '../../../providers/cow_provider.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
 import 'package:cowsmart/core/widgets/cow_icon.dart';
 import 'package:cowsmart/core/utils/date_formatter.dart';
-import 'package:cowsmart/core/widgets/image_picker_widget.dart';
 import 'package:cowsmart/core/utils/app_toast.dart';
-import 'package:cowsmart/features/calendar/providers/appointment_type_provider.dart';
 import 'package:go_router/go_router.dart';
 
 // Provider to get male cows (bulls) for breeding
@@ -116,6 +114,12 @@ class _BreedTabState extends ConsumerState<BreedTab> {
       }
     }
 
+    final cows = ref.read(cowProvider).allCows;
+    final currentCow = cows.firstWhere(
+      (c) => c.id == widget.cow.id,
+      orElse: () => widget.cow,
+    );
+
     final calvedRecords = records.where((r) => r.calvingDate != null).toList();
     int daysPassed = 999;
     if (calvedRecords.isNotEmpty) {
@@ -126,7 +130,8 @@ class _BreedTabState extends ConsumerState<BreedTab> {
     }
 
     final isRecovering =
-        (daysPassed < 45) || (widget.cow.status == CowStatus.recovering);
+        (calvedRecords.isNotEmpty && daysPassed < 45) &&
+        (currentCow.status == CowStatus.recovering);
     if (isRecovering) {
       canRecordHeat = false;
       canRecordMating = false;
@@ -200,11 +205,18 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton.icon(
-                        onPressed: () {
-                          ref
+                        onPressed: () async {
+                          Navigator.pop(ctx);
+                          await ref
                               .read(cowProvider.notifier)
                               .updateCowStatus(widget.cow.id, CowStatus.normal);
-                          Navigator.pop(context);
+                          await ref
+                              .read(cowDetailProvider.notifier)
+                              .fetchAllData(widget.cow.id);
+                          await ref.read(cowProvider.notifier).fetchCows(widget.cow.farmId);
+                          if (mounted) {
+                            setState(() {});
+                          }
                         },
                         icon: const Icon(
                           Icons.check_circle_outline,
@@ -2282,10 +2294,17 @@ class _BreedTabState extends ConsumerState<BreedTab> {
           Align(
             alignment: Alignment.centerRight,
             child: ElevatedButton.icon(
-              onPressed: () {
-                ref
+              onPressed: () async {
+                await ref
                     .read(cowProvider.notifier)
                     .updateCowStatus(widget.cow.id, CowStatus.normal);
+                await ref
+                    .read(cowDetailProvider.notifier)
+                    .fetchAllData(widget.cow.id);
+                await ref.read(cowProvider.notifier).fetchCows(widget.cow.farmId);
+                if (mounted) {
+                  setState(() {});
+                }
               },
               icon: const Icon(Icons.check_circle_outline, size: 18),
               label: const Text(
@@ -2333,6 +2352,28 @@ class _BreedTabState extends ConsumerState<BreedTab> {
         .toList();
 
     if (activeRecords.isEmpty) {
+      String subtitleText = 'ไม่มีรายการเป็นสัดหรือผสมพันธุ์ค้างอยู่';
+      if (records.isNotEmpty) {
+        final sortedRecords = List<BreedingRecord>.from(records)
+          ..sort((a, b) => (b.heatDate ?? DateTime(1970)).compareTo(a.heatDate ?? DateTime(1970)));
+        final latest = sortedRecords.first;
+        if (latest.heatDate != null) {
+          DateTime expectedDate;
+          if (latest.calvingDate != null) {
+            expectedDate = latest.calvingDate!.add(const Duration(days: 60));
+          } else {
+            expectedDate = latest.heatDate!.add(const Duration(days: 21));
+          }
+          final formattedDate = AppDateUtils.formatThaiDate(expectedDate);
+          
+          if (expectedDate.isBefore(DateTime.now())) {
+            subtitleText = 'ถึงกำหนดคาดการณ์เป็นสัดแล้ว ($formattedDate)';
+          } else {
+            subtitleText = 'คาดการณ์เป็นสัดครั้งถัดไป: $formattedDate';
+          }
+        }
+      }
+
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -2373,7 +2414,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'ไม่มีรายการเป็นสัดหรือผสมพันธุ์ค้างอยู่',
+                    subtitleText,
                     style: TextStyle(
                       fontSize: 14,
                       color: AppColors.subText(context),
@@ -2695,11 +2736,12 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                     ),
                     elevation: 0,
                   ),
-                  onPressed: () {
-                    ref
+                  onPressed: () async {
+                    Navigator.pop(ctx);
+                    await ref
                         .read(cowDetailProvider.notifier)
                         .deleteBreedingRecord(record.id);
-                    Navigator.pop(ctx);
+                    ref.read(cowDetailProvider.notifier).fetchAllData(widget.cow.id);
                   },
                   child: const Text('ลบ'),
                 ),
