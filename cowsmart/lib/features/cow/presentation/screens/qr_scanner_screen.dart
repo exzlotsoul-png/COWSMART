@@ -357,20 +357,23 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
                       onTap: _openNfcReaderDialog,
                       borderRadius: BorderRadius.circular(20),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                         decoration: BoxDecoration(
                           color: Colors.orange.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(color: Colors.orange.withValues(alpha: 0.8)),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
-                          children: [
+                          children: const [
                             Icon(Icons.nfc_rounded, color: Colors.orangeAccent, size: 18),
                             SizedBox(width: 6),
-                            Text(
-                              'ระบบ NFC พร้อมทำงาน (แตะที่นี่เพื่อเปิดโหมดแตะเหรียญ)',
-                              style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                            Flexible(
+                              child: Text(
+                                'ระบบ NFC พร้อมทำงาน (แตะเพื่อเปิดโหมดแตะ)',
+                                style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ],
                         ),

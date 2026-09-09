@@ -6,10 +6,9 @@ class ApiClient {
   final Dio _dio;
   String? _token;
 
-  // Base URL: Use 127.0.0.1 on Web/Desktop, or current machine IPv4 (192.168.1.31) on Mobile devices
-  static String get baseUrl => kIsWeb 
-      ? 'http://127.0.0.1:8000/api' 
-      : 'http://192.168.1.31:8000/api';
+  // เมื่อเสียบสาย USB (ใช้ adb reverse tcp:8000 tcp:8000) สามารถใช้ 127.0.0.1 ได้โดยตรงทั้งบน Web และ มือถือ
+  // หากทดสอบผ่าน Wi-Fi โดยไม่เสียบสาย USB ให้เปลี่ยนเป็น IP คอมพิวเตอร์ เช่น 'http://192.168.1.43:8000/api'
+  static String get baseUrl => 'http://127.0.0.1:8000/api';
 
   ApiClient()
     : _dio = Dio(

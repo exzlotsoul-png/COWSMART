@@ -277,23 +277,27 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   children: [
                     Row(
                       children: [
-                        Text(
-                          greetingText,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w500,
+                        Flexible(
+                          child: Text(
+                            greetingText,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         const SizedBox(width: 4),
-                        Icon(greetingIcon, size: 16, color: iconColor),
+                        Icon(greetingIcon, size: 15, color: iconColor),
                       ],
                     ),
                     const SizedBox(height: 2),
                     Text(
                       userName,
                       style: TextStyle(
-                        fontSize: 22,
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: AppColors.text(context),
                       ),
@@ -305,9 +309,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               },
             ),
           ),
+          const SizedBox(width: 8),
 
           // Action Buttons
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               _buildCircleAction(
                 context,
@@ -315,21 +321,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 onTap: _exportFarmPdfReport,
                 tooltip: 'ส่งออกรายงาน PDF',
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 4),
               _buildCircleAction(
                 context,
                 icon: Icons.swap_horiz_rounded,
                 onTap: () => context.go('/select-farm'),
                 tooltip: 'สลับฟาร์ม',
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 4),
               _buildCircleAction(
                 context,
                 icon: Icons.calendar_month_rounded,
                 onTap: () => context.push('/calendar'),
                 tooltip: 'ปฏิทิน',
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 4),
               _buildNotificationCircle(context),
             ],
           ),
@@ -347,16 +353,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return Material(
       color: AppColors.cardBg(context),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
         side: BorderSide(color: AppColors.brd(context).withValues(alpha: 0.6)),
       ),
       elevation: 0,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Icon(icon, color: AppColors.text(context), size: 22),
+          padding: const EdgeInsets.all(8),
+          child: Icon(icon, color: AppColors.text(context), size: 20),
         ),
       ),
     );

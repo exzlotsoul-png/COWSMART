@@ -14,10 +14,15 @@ class NotificationController extends Controller
     public function index()
     {
         $user = Auth::user();
+        $now = Carbon::now();
         return response()->json(
             Notification::where('email', $user->email)
-                ->orderByDesc('created_at')
+                ->where(function ($q) use ($now) {
+                    $q->whereNull('notify_datetime')
+                      ->orWhere('notify_datetime', '<=', $now);
+                })
                 ->orderByDesc('notify_datetime')
+                ->orderByDesc('created_at')
                 ->get()
         );
     }

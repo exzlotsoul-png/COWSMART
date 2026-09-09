@@ -1983,15 +1983,19 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                           size: 20,
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          'รอบการผสมที่กำลังดำเนินการ',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primary,
-                              ),
+                        Expanded(
+                          child: Text(
+                            'รอบการผสมที่กำลังดำเนินการ',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        const Spacer(),
+                        const SizedBox(width: 8),
                         Text(
                           '${ongoingRecords.length} รายการ',
                           style: const TextStyle(
@@ -2924,26 +2928,32 @@ class _BreedTabState extends ConsumerState<BreedTab> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Icon(Icons.favorite_rounded, size: 18, color: stageColor),
-                  const SizedBox(width: 8),
-                  Text(
-                    record.heatDate != null
-                        ? 'เป็นสัด: ${AppDateUtils.formatThaiDate(record.heatDate!)}'
-                        : (record.matingDate != null
-                              ? 'วันที่ผสม: ${AppDateUtils.formatThaiDate(record.matingDate!)}'
-                              : 'บันทึกผสมพันธุ์'),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                      color: AppColors.text(context),
+              Expanded(
+                child: Row(
+                  children: [
+                    Icon(Icons.favorite_rounded, size: 18, color: stageColor),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        record.heatDate != null
+                            ? 'เป็นสัด: ${AppDateUtils.formatThaiDate(record.heatDate!)}'
+                            : (record.matingDate != null
+                                  ? 'วันที่ผสม: ${AppDateUtils.formatThaiDate(record.matingDate!)}'
+                                  : 'บันทึกผสมพันธุ์'),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: AppColors.text(context),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              const SizedBox(width: 6),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

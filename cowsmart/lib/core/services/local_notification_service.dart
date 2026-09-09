@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -14,6 +15,8 @@ class LocalNotificationService {
       FlutterLocalNotificationsPlugin();
 
   Future<void> init() async {
+    if (kIsWeb) return;
+
     tz.initializeTimeZones();
     tz.setLocalLocation(tz.getLocation('Asia/Bangkok'));
 
@@ -32,7 +35,7 @@ class LocalNotificationService {
     );
 
     await _flutterLocalNotificationsPlugin.initialize(
-      settings: initializationSettings,
+      initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) async {
         // Handle notification tap
       },
@@ -40,6 +43,8 @@ class LocalNotificationService {
   }
 
   Future<void> requestPermission() async {
+    if (kIsWeb) return;
+
     if (Platform.isAndroid) {
       await Permission.notification.request();
       if (await Permission.scheduleExactAlarm.isDenied) {
@@ -58,10 +63,12 @@ class LocalNotificationService {
   }
 
   Future<void> cancelAll() async {
+    if (kIsWeb) return;
     await _flutterLocalNotificationsPlugin.cancelAll();
   }
 
   Future<void> syncEventNotifications(List<CalendarEvent> events) async {
+    if (kIsWeb) return;
     await cancelAll();
 
     for (final event in events) {
@@ -83,6 +90,8 @@ class LocalNotificationService {
   }
 
   Future<void> _schedule(CalendarEvent event, DateTime scheduledTime) async {
+    if (kIsWeb) return;
+
     final int id = event.id.hashCode;
     final tz.TZDateTime tzTime = tz.TZDateTime.from(scheduledTime, tz.local);
 
@@ -100,12 +109,14 @@ class LocalNotificationService {
         NotificationDetails(android: androidPlatformChannelSpecifics);
 
     await _flutterLocalNotificationsPlugin.zonedSchedule(
-      id: id,
-      title: 'ถึงเวลากิจกรรม: ${event.title}',
-      body: event.description ?? 'กิจกรรมปฏิทินที่กำหนดไว้ใกล้มาถึงแล้ว',
-      scheduledDate: tzTime,
-      notificationDetails: platformChannelSpecifics,
+      id,
+      'ถึงเวลากิจกรรม: ${event.title}',
+      event.description ?? 'กิจกรรมปฏิทินที่กำหนดไว้ใกล้มาถึงแล้ว',
+      tzTime,
+      platformChannelSpecifics,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
       payload: event.id,
     );
   }

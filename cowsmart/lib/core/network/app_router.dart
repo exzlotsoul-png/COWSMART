@@ -59,7 +59,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         return isLoggingIn ? null : '/login';
       }
 
-      if (isLoggingIn) {
+      if (state.matchedLocation == '/splash' || isLoggingIn) {
         return '/select-farm';
       }
 

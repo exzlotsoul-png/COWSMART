@@ -295,6 +295,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
+        scrollable: true,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
         contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
@@ -332,12 +333,12 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
             const SizedBox(height: 8),
             Text(
               notif.message.replaceAll(RegExp(r'\[ref:.*?\]'), '').trim(),
-              style: const TextStyle(fontSize: 17, height: 1.5, color: AppColors.textPrimary),
+              style: const TextStyle(fontSize: 16, height: 1.5, color: AppColors.textPrimary),
             ),
             if (notif.notifyDatetime != null) ...[
               const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceAlt,
                   borderRadius: BorderRadius.circular(10),
@@ -345,14 +346,17 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.access_time_rounded, size: 18, color: AppColors.primary),
+                    const Icon(Icons.access_time_rounded, size: 16, color: AppColors.primary),
                     const SizedBox(width: 6),
-                    Text(
-                      AppDateUtils.formatThaiDate(notif.notifyDatetime!, includeTime: true),
-                      style: const TextStyle(
-                        fontSize: 15,
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
+                    Flexible(
+                      child: Text(
+                        AppDateUtils.formatThaiDate(notif.notifyDatetime!, includeTime: true),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],

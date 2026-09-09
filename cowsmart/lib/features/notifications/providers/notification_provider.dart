@@ -41,8 +41,10 @@ class NotificationNotifier extends Notifier<NotificationState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
       final response = await _api.get('/notifications');
+      final now = DateTime.now();
       final list = (response.data as List<dynamic>)
           .map((j) => AppNotification.fromJson(j))
+          .where((n) => n.notifyDatetime == null || !n.notifyDatetime!.isAfter(now))
           .toList();
       list.sort((a, b) {
         final tA = a.createdAt ?? a.notifyDatetime ?? DateTime(0);

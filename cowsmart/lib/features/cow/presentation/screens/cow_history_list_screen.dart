@@ -95,6 +95,8 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                 color: Colors.white.withValues(alpha: 0.85),
                 fontWeight: FontWeight.normal,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

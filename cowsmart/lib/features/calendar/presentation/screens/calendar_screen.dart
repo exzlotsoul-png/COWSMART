@@ -42,6 +42,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.bg(context),
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('ปฏิทินกิจกรรม'),
         backgroundColor: AppColors.primary,
@@ -307,7 +308,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     DateTime selectedDate = existing?.eventDatetime ?? _selectedDay;
     TimeOfDay selectedTime = existing != null
         ? TimeOfDay.fromDateTime(existing.eventDatetime)
-        : const TimeOfDay(hour: 8, minute: 0);
+        : TimeOfDay.now();
     String? selectedCowId = existing?.cowId;
     String? selectedReminder = existing?.reminderSetting ?? 'ก่อน 1 วัน';
     String? titleError;
@@ -322,208 +323,284 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       'ไม่แจ้งเตือน'
     ];
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: AppColors.cardBg(context),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Row(
-            children: [
-              Icon(
-                existing == null ? Icons.add_task : Icons.edit_calendar,
-                color: AppColors.primary,
-                size: 24,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                existing == null ? 'เพิ่มกิจกรรมปฏิทิน' : 'แก้ไขกิจกรรมปฏิทิน',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.text(context)),
-              ),
-            ],
+        builder: (ctx, setDialogState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
           ),
-          content: SingleChildScrollView(
+          child: Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(ctx).size.height * 0.85,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.cardBg(context),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(
-                  controller: titleCtrl,
-                  style: TextStyle(fontSize: 16, color: AppColors.text(context)),
-                  decoration: InputDecoration(
-                    labelText: 'ชื่อกิจกรรม *',
-                    errorText: titleError,
-                    labelStyle: TextStyle(fontSize: 15, color: AppColors.subText(context)),
-                    prefixIcon: const Icon(Icons.event_note),
-                  ),
-                  onChanged: (val) {
-                    if (titleError != null) setDialogState(() => titleError = null);
-                  },
-                ),
-                const SizedBox(height: 12),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.calendar_today, color: AppColors.primary),
-                  title: Text('วันที่', style: TextStyle(fontSize: 16, color: AppColors.subText(context))),
-                  subtitle: Text(
-                    AppDateUtils.formatThaiDate(selectedDate, useFullMonth: true),
-                    style: TextStyle(fontSize: 14, color: AppColors.text(context), fontWeight: FontWeight.bold),
-                  ),
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: ctx,
-                      initialDate: selectedDate,
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2030),
-                      helpText: 'เลือกวันที่',
-                      cancelText: 'ยกเลิก',
-                      confirmText: 'ตกลง',
-                    );
-                    if (picked != null) setDialogState(() => selectedDate = picked);
-                  },
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.access_time, color: AppColors.primary),
-                  title: Text('เวลา', style: TextStyle(fontSize: 16, color: AppColors.subText(context))),
-                  subtitle: Text(
-                    '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')} น.',
-                    style: TextStyle(fontSize: 14, color: AppColors.text(context), fontWeight: FontWeight.bold),
-                  ),
-                  onTap: () async {
-                    final picked = await showTimePicker(
-                      context: ctx,
-                      initialTime: selectedTime,
-                      helpText: 'ระบุเวลา',
-                      cancelText: 'ยกเลิก',
-                      confirmText: 'ตกลง',
-                      hourLabelText: 'ชั่วโมง',
-                      minuteLabelText: 'นาที',
-                    );
-                    if (picked != null) setDialogState(() => selectedTime = picked);
-                  },
-                ),
-                const SizedBox(height: 4),
-                TextField(
-                  controller: descCtrl,
-                  maxLines: 2,
-                  style: TextStyle(fontSize: 16, color: AppColors.text(context)),
-                  decoration: InputDecoration(
-                    labelText: 'รายละเอียด (ไม่บังคับ)',
-                    labelStyle: TextStyle(fontSize: 15, color: AppColors.subText(context)),
-                    prefixIcon: const Icon(Icons.notes),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                if (cows.isNotEmpty)
-                  DropdownButtonFormField<String>(
-                    value: selectedCowId,
-                    dropdownColor: AppColors.cardBg(context),
-                    style: TextStyle(fontSize: 16, color: AppColors.text(context)),
-                    decoration: InputDecoration(
-                      labelText: 'เกี่ยวข้องกับวัว (ไม่บังคับ)',
-                      labelStyle: TextStyle(fontSize: 15, color: AppColors.subText(context)),
-                      prefixIcon: const CowIcon(size: 20, color: AppColors.primary),
+                // Drag handle
+                Center(
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 12, bottom: 8),
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.border,
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    items: [
-                      DropdownMenuItem(value: null, child: Text('ไม่ระบุ', style: TextStyle(fontSize: 15, color: AppColors.text(context)))),
-                      ...cows.map((c) => DropdownMenuItem(
-                            value: c.id,
-                            child: Text('${c.name} (${c.tagNumber})', style: TextStyle(fontSize: 15, color: AppColors.text(context))),
-                          )),
+                  ),
+                ),
+                // Header
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          existing == null ? Icons.add_task : Icons.edit_calendar,
+                          color: AppColors.primary,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        existing == null ? 'เพิ่มกิจกรรมปฏิทิน' : 'แก้ไขกิจกรรมปฏิทิน',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.text(context),
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 20),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
                     ],
-                    onChanged: (v) => setDialogState(() => selectedCowId = v),
                   ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  value: selectedReminder,
-                  dropdownColor: AppColors.cardBg(context),
-                  style: TextStyle(fontSize: 16, color: AppColors.text(context)),
-                  decoration: InputDecoration(
-                    labelText: 'การแจ้งเตือนล่วงหน้า',
-                    labelStyle: TextStyle(fontSize: 15, color: AppColors.subText(context)),
-                    prefixIcon: const Icon(Icons.notifications_active_outlined),
+                ),
+                Divider(height: 1, color: AppColors.div(context)),
+                // Form fields
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextField(
+                          controller: titleCtrl,
+                          style: TextStyle(fontSize: 16, color: AppColors.text(context)),
+                          decoration: InputDecoration(
+                            labelText: 'ชื่อกิจกรรม *',
+                            errorText: titleError,
+                            labelStyle: TextStyle(fontSize: 15, color: AppColors.subText(context)),
+                            prefixIcon: const Icon(Icons.event_note),
+                          ),
+                          onChanged: (val) {
+                            if (titleError != null) setDialogState(() => titleError = null);
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.calendar_today, color: AppColors.primary),
+                          title: Text('วันที่', style: TextStyle(fontSize: 14, color: AppColors.subText(context))),
+                          subtitle: Text(
+                            AppDateUtils.formatThaiDate(selectedDate, useFullMonth: true),
+                            style: TextStyle(fontSize: 15, color: AppColors.text(context), fontWeight: FontWeight.bold),
+                          ),
+                          onTap: () async {
+                            final picked = await showDatePicker(
+                              context: ctx,
+                              initialDate: selectedDate,
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime(2030),
+                              helpText: 'เลือกวันที่',
+                              cancelText: 'ยกเลิก',
+                              confirmText: 'ตกลง',
+                            );
+                            if (picked != null) setDialogState(() => selectedDate = picked);
+                          },
+                        ),
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.access_time, color: AppColors.primary),
+                          title: Text('เวลา', style: TextStyle(fontSize: 14, color: AppColors.subText(context))),
+                          subtitle: Text(
+                            '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')} น.',
+                            style: TextStyle(fontSize: 15, color: AppColors.text(context), fontWeight: FontWeight.bold),
+                          ),
+                          onTap: () async {
+                            final picked = await showTimePicker(
+                              context: ctx,
+                              initialTime: selectedTime,
+                              helpText: 'ระบุเวลา (24 ชั่วโมง)',
+                              cancelText: 'ยกเลิก',
+                              confirmText: 'ตกลง',
+                              hourLabelText: 'ชั่วโมง',
+                              minuteLabelText: 'นาที',
+                              builder: (context, child) {
+                                return MediaQuery(
+                                  data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+                                  child: child!,
+                                );
+                              },
+                            );
+                            if (picked != null) setDialogState(() => selectedTime = picked);
+                          },
+                        ),
+                        const SizedBox(height: 4),
+                        TextField(
+                          controller: descCtrl,
+                          maxLines: 2,
+                          style: TextStyle(fontSize: 16, color: AppColors.text(context)),
+                          decoration: InputDecoration(
+                            labelText: 'รายละเอียด (ไม่บังคับ)',
+                            labelStyle: TextStyle(fontSize: 15, color: AppColors.subText(context)),
+                            prefixIcon: const Icon(Icons.notes),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        if (cows.isNotEmpty)
+                          DropdownButtonFormField<String>(
+                            value: selectedCowId,
+                            isExpanded: true,
+                            dropdownColor: AppColors.cardBg(context),
+                            style: TextStyle(fontSize: 15, color: AppColors.text(context)),
+                            decoration: InputDecoration(
+                              labelText: 'เกี่ยวข้องกับวัว (ไม่บังคับ)',
+                              labelStyle: TextStyle(fontSize: 14, color: AppColors.subText(context)),
+                              prefixIcon: const CowIcon(size: 20, color: AppColors.primary),
+                            ),
+                            items: [
+                              DropdownMenuItem(value: null, child: Text('ไม่ระบุ', style: TextStyle(fontSize: 14, color: AppColors.text(context)))),
+                              ...cows.map((c) => DropdownMenuItem(
+                                    value: c.id,
+                                    child: Text(
+                                      '${c.name} (${c.tagNumber})',
+                                      style: TextStyle(fontSize: 14, color: AppColors.text(context)),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  )),
+                            ],
+                            onChanged: (v) => setDialogState(() => selectedCowId = v),
+                          ),
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<String>(
+                          value: selectedReminder,
+                          isExpanded: true,
+                          dropdownColor: AppColors.cardBg(context),
+                          style: TextStyle(fontSize: 15, color: AppColors.text(context)),
+                          decoration: InputDecoration(
+                            labelText: 'การแจ้งเตือนล่วงหน้า',
+                            labelStyle: TextStyle(fontSize: 14, color: AppColors.subText(context)),
+                            prefixIcon: const Icon(Icons.notifications_active_outlined),
+                          ),
+                          items: reminderOptions.map((r) => DropdownMenuItem(
+                                value: r,
+                                child: Text(r, style: TextStyle(fontSize: 14, color: AppColors.text(context))),
+                              )).toList(),
+                          onChanged: (v) => setDialogState(() => selectedReminder = v),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () => Navigator.pop(ctx),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                ),
+                                child: const Text('ยกเลิก', style: TextStyle(fontSize: 16)),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                ),
+                                onPressed: () async {
+                                  final title = titleCtrl.text.trim();
+                                  if (title.isEmpty) {
+                                    setDialogState(() => titleError = 'กรุณากรอกชื่อกิจกรรม');
+                                    return;
+                                  }
+
+                                  final dt = DateTime(
+                                    selectedDate.year,
+                                    selectedDate.month,
+                                    selectedDate.day,
+                                    selectedTime.hour,
+                                    selectedTime.minute,
+                                  );
+
+                                  Navigator.pop(ctx);
+
+                                  bool ok;
+                                  if (existing == null) {
+                                    final event = CalendarEvent(
+                                      id: '',
+                                      farmId: farmId,
+                                      title: title,
+                                      eventDatetime: dt,
+                                      description: descCtrl.text.trim().isEmpty
+                                          ? null
+                                          : descCtrl.text.trim(),
+                                      reminderSetting: selectedReminder,
+                                      cowId: selectedCowId,
+                                      eventType: 'general',
+                                    );
+                                    ok = await ref.read(calendarProvider.notifier).addEvent(event);
+                                  } else {
+                                    ok = await ref
+                                        .read(calendarProvider.notifier)
+                                        .updateEvent(existing.copyWith(
+                                          title: title,
+                                          eventDatetime: dt,
+                                          description: descCtrl.text.trim().isEmpty
+                                              ? null
+                                              : descCtrl.text.trim(),
+                                          reminderSetting: selectedReminder,
+                                          cowId: selectedCowId,
+                                        ));
+                                  }
+
+                                  if (mounted) {
+                                    if (ok) {
+                                      AppFeedback.showSuccess(context, 'บันทึกกิจกรรมและการแจ้งเตือนแล้ว');
+                                    } else {
+                                      AppFeedback.showError(context, 'เกิดข้อผิดพลาดในการบันทึก');
+                                    }
+                                  }
+                                },
+                                child: Text(existing == null ? 'บันทึก' : 'อัปเดต', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                  items: reminderOptions.map((r) => DropdownMenuItem(
-                        value: r,
-                        child: Text(r, style: TextStyle(fontSize: 15, color: AppColors.text(context))),
-                      )).toList(),
-                  onChanged: (v) => setDialogState(() => selectedReminder = v),
                 ),
               ],
             ),
           ),
-          actions: [
-            Row(children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
-                  child: const Text('ยกเลิก', style: TextStyle(fontSize: 16)),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
-                  onPressed: () async {
-                    final title = titleCtrl.text.trim();
-                    if (title.isEmpty) {
-                      setDialogState(() => titleError = 'กรุณากรอกชื่อกิจกรรม');
-                      return;
-                    }
-
-                    final dt = DateTime(
-                      selectedDate.year,
-                      selectedDate.month,
-                      selectedDate.day,
-                      selectedTime.hour,
-                      selectedTime.minute,
-                    );
-
-                    Navigator.pop(ctx);
-
-                    bool ok;
-                    if (existing == null) {
-                      final event = CalendarEvent(
-                        id: '',
-                        farmId: farmId,
-                        title: title,
-                        eventDatetime: dt,
-                        description: descCtrl.text.trim().isEmpty
-                            ? null
-                            : descCtrl.text.trim(),
-                        reminderSetting: selectedReminder,
-                        cowId: selectedCowId,
-                        eventType: 'general',
-                      );
-                      ok = await ref.read(calendarProvider.notifier).addEvent(event);
-                    } else {
-                      ok = await ref
-                          .read(calendarProvider.notifier)
-                          .updateEvent(existing.copyWith(
-                            title: title,
-                            eventDatetime: dt,
-                            description: descCtrl.text.trim().isEmpty
-                                ? null
-                                : descCtrl.text.trim(),
-                            reminderSetting: selectedReminder,
-                            cowId: selectedCowId,
-                          ));
-                    }
-
-                    if (mounted) {
-                      if (ok) {
-                        AppFeedback.showSuccess(context, 'บันทึกกิจกรรมและการแจ้งเตือนแล้ว');
-                      } else {
-                        AppFeedback.showError(context, 'เกิดข้อผิดพลาดในการบันทึก');
-                      }
-                    }
-                  },
-                  child: const Text('บันทึก', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                ),
-              ),
-            ]),
-          ],
         ),
       ),
     );
@@ -933,9 +1010,13 @@ class _EventCard extends ConsumerWidget {
                 return Row(children: [
                   const CowIcon(size: 14, color: AppColors.textHint),
                   const SizedBox(width: 4),
-                  Text(
-                    'วัว: $cowText',
-                    style: const TextStyle(fontSize: 13, color: AppColors.textHint, fontWeight: FontWeight.w500),
+                  Expanded(
+                    child: Text(
+                      'วัว: $cowText',
+                      style: const TextStyle(fontSize: 13, color: AppColors.textHint, fontWeight: FontWeight.w500),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ]);
               }),
@@ -945,9 +1026,13 @@ class _EventCard extends ConsumerWidget {
               Row(children: [
                 Icon(Icons.notifications_active_outlined, size: 14, color: typeColor),
                 const SizedBox(width: 4),
-                Text(
-                  'แจ้งเตือน ${event.reminderSetting}',
-                  style: TextStyle(fontSize: 12, color: typeColor, fontWeight: FontWeight.bold),
+                Expanded(
+                  child: Text(
+                    'แจ้งเตือน ${event.reminderSetting}',
+                    style: TextStyle(fontSize: 12, color: typeColor, fontWeight: FontWeight.bold),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ]),
             ],

@@ -119,20 +119,26 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
     final allItems = List.of(state.inventory)
       ..sort((a, b) => b.recordedAt.compareTo(a.recordedAt));
 
-    // Calculate totals for all items
-    final totalQuantity = allItems.fold<double>(
+    // Filter items for current month (ณ ปัจจุบัน)
+    final now = DateTime.now();
+    final currentMonthItems = allItems.where((item) =>
+      item.recordedAt.year == now.year && item.recordedAt.month == now.month
+    ).toList();
+
+    // Calculate totals for current month
+    final currentMonthQuantity = currentMonthItems.fold<double>(
       0,
       (sum, item) => sum + item.quantity,
     );
-    final totalCost = allItems.fold<double>(
+    final currentMonthCost = currentMonthItems.fold<double>(
       0,
       (sum, item) => sum + item.cost,
     );
 
-    // Category breakdown from all items
+    // Category breakdown from current month items
     final categoryMap = <String, double>{};
     final categoryCostMap = <String, double>{};
-    for (final item in allItems) {
+    for (final item in currentMonthItems) {
       final catName = item.category.name;
       categoryMap[catName] = (categoryMap[catName] ?? 0) + item.quantity;
       categoryCostMap[catName] = (categoryCostMap[catName] ?? 0) + item.cost;
@@ -147,8 +153,8 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
             Expanded(
               child: _buildSummaryCard(
                 context,
-                title: 'รายการทั้งหมด',
-                value: '${allItems.length} รายการ',
+                title: 'รายการเดือนนี้',
+                value: '${currentMonthItems.length} รายการ',
                 icon: Icons.list_alt_rounded,
                 color: Colors.deepPurple,
               ),
@@ -158,7 +164,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
               child: _buildSummaryCard(
                 context,
                 title: 'ปริมาณรวม',
-                value: '${totalQuantity.toStringAsFixed(1)} กก.',
+                value: '${currentMonthQuantity.toStringAsFixed(1)} กก.',
                 icon: Icons.scale_rounded,
                 color: Colors.blue[700]!,
               ),
@@ -174,7 +180,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
               child: _buildSummaryCard(
                 context,
                 title: 'มูลค่ารวม',
-                value: '${NumberFormat('#,##0').format(totalCost)} ฿',
+                value: '${NumberFormat('#,##0').format(currentMonthCost)} ฿',
                 icon: Icons.payments_rounded,
                 color: Colors.green[700]!,
               ),
@@ -184,8 +190,8 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
               child: _buildSummaryCard(
                 context,
                 title: 'ราคาเฉลี่ย/กก.',
-                value: totalQuantity > 0
-                    ? '${(totalCost / totalQuantity).toStringAsFixed(1)} ฿'
+                value: currentMonthQuantity > 0
+                    ? '${(currentMonthCost / currentMonthQuantity).toStringAsFixed(1)} ฿'
                     : '- ฿',
                 icon: Icons.analytics_rounded,
                 color: Colors.orange[800]!,
@@ -221,7 +227,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
               ],
             ),
           ),
-          _buildCategoryBreakdown(context, categoryMap, categoryCostMap, totalQuantity),
+          _buildCategoryBreakdown(context, categoryMap, categoryCostMap, currentMonthQuantity),
           const SizedBox(height: 24),
         ],
 
@@ -237,15 +243,19 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            Text(
-              'ประวัติการให้อาหารล่าสุด',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 17,
-                color: AppColors.text(context),
+            Expanded(
+              child: Text(
+                'ประวัติการให้อาหารล่าสุด',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 17,
+                  color: AppColors.text(context),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-            const Spacer(),
+            const SizedBox(width: 4),
             TextButton.icon(
               onPressed: () => context.push('/feed_history'),
               icon: const Icon(Icons.history_rounded, size: 18, color: AppColors.primary),
@@ -366,12 +376,12 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
               final catColor = _getCategoryColorByName(catName);
 
               return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 5),
+                padding: const EdgeInsets.symmetric(vertical: 6),
                 child: Row(
                   children: [
                     Container(
-                      width: 14,
-                      height: 14,
+                      width: 12,
+                      height: 12,
                       decoration: BoxDecoration(
                         color: catColor,
                         borderRadius: BorderRadius.circular(4),
@@ -379,16 +389,24 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text(
-                        catName,
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.text(context)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            catName,
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.text(context)),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${qty.toStringAsFixed(1)} กก. ($pct%)',
+                            style: TextStyle(fontSize: 13, color: AppColors.subText(context), fontWeight: FontWeight.w500),
+                          ),
+                        ],
                       ),
                     ),
-                    Text(
-                      '${qty.toStringAsFixed(1)} กก. ($pct%)',
-                      style: TextStyle(fontSize: 14, color: AppColors.subText(context), fontWeight: FontWeight.w500),
-                    ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     Text(
                       '${NumberFormat('#,##0').format(cost)} ฿',
                       style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.text(context)),
@@ -424,40 +442,47 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(7),
                   decoration: BoxDecoration(
                     color: color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(icon, color: color, size: 20),
+                  child: Icon(icon, color: color, size: 18),
                 ),
-                const SizedBox(width: 8),
-                Flexible(
+                const SizedBox(width: 6),
+                Expanded(
                   child: Text(
                     title,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: AppColors.subText(context),
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 21,
-                fontWeight: FontWeight.bold,
-                color: AppColors.text(context),
+            const SizedBox(height: 10),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.text(context),
+                ),
+                maxLines: 1,
               ),
             ),
           ],
@@ -536,6 +561,8 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                           fontSize: 18,
                           color: AppColors.text(context),
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
                       Wrap(
@@ -626,14 +653,20 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
               children: [
                 Icon(Icons.access_time_rounded, size: 14, color: AppColors.primary),
                 const SizedBox(width: 4),
-                Text(
-                  AppDateUtils.formatThaiDate(item.recordedAt, includeTime: true),
-                  style: TextStyle(fontSize: 13, color: AppColors.text(context), fontWeight: FontWeight.w600),
+                Expanded(
+                  child: Text(
+                    AppDateUtils.formatThaiDate(item.recordedAt, includeTime: true),
+                    style: TextStyle(fontSize: 13, color: AppColors.text(context), fontWeight: FontWeight.w600),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                const Spacer(),
+                const SizedBox(width: 4),
                 IconButton(
                   icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error, size: 20),
                   visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
                   onPressed: () => _confirmDeleteItem(context, item),
                   tooltip: 'ลบรายการ',
                 ),

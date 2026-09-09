@@ -96,6 +96,12 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: _selectedTime,
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+          child: child!,
+        );
+      },
     );
     if (picked != null && picked != _selectedTime) {
       setState(() => _selectedTime = picked);

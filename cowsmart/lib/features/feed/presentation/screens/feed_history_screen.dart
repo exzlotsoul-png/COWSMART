@@ -310,9 +310,15 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                     'พบ ${filteredItems.length} รายการ',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.text(context)),
                   ),
-                  Text(
-                    'รวม ${totalQuantity.toStringAsFixed(1)} กก. (${NumberFormat('#,##0').format(totalCost)} ฿)',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      'รวม ${totalQuantity.toStringAsFixed(1)} กก. (${NumberFormat('#,##0').format(totalCost)} ฿)',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.primary),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.end,
+                    ),
                   ),
                 ],
               ),
@@ -427,6 +433,8 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                           fontSize: 17,
                           color: AppColors.text(context),
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),
                       Wrap(
@@ -517,9 +525,13 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
               children: [
                 Icon(Icons.access_time_rounded, size: 13, color: AppColors.primary),
                 const SizedBox(width: 4),
-                Text(
-                  AppDateUtils.formatThaiDate(item.recordedAt, includeTime: true),
-                  style: TextStyle(fontSize: 12, color: AppColors.text(context), fontWeight: FontWeight.w600),
+                Expanded(
+                  child: Text(
+                    AppDateUtils.formatThaiDate(item.recordedAt, includeTime: true),
+                    style: TextStyle(fontSize: 12, color: AppColors.text(context), fontWeight: FontWeight.w600),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
