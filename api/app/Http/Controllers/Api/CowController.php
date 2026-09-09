@@ -14,7 +14,8 @@ class CowController extends Controller
 {
     protected function deleteStorageFile($imageUrl)
     {
-        if (empty($imageUrl)) return;
+        if (empty($imageUrl))
+            return;
         $path = $imageUrl;
         if (preg_match('/storage\/(.+)$/', $path, $matches)) {
             $path = $matches[1];
@@ -40,7 +41,7 @@ class CowController extends Controller
         $query = Cow::query()->whereIn('farm_id', $userFarmIds)
             ->where(function ($q) {
                 $q->whereNotIn('status', ['sold', 'deceased', 'removed'])
-                  ->orWhereNull('status');
+                    ->orWhereNull('status');
             });
 
         // Allow specific farm filtering if provided
@@ -54,11 +55,11 @@ class CowController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
-        
+
         // Ensure the cow is assigned to a farm owned by the user
         $farmId = $request->farm_id;
         $ownsFarm = Farm::where('farm_id', $farmId)->where('email', $user->email)->exists();
-        
+
         if (!$ownsFarm) {
             return response()->json(['message' => 'Unauthorized or farm not found'], 403);
         }
@@ -103,7 +104,7 @@ class CowController extends Controller
                 ->where('tag_number', trim($request->tag_number))
                 ->where(function ($q) {
                     $q->whereNotIn('status', ['sold', 'deceased', 'removed'])
-                      ->orWhereNull('status');
+                        ->orWhereNull('status');
                 })
                 ->exists();
             if ($tagExists) {
@@ -117,7 +118,7 @@ class CowController extends Controller
                 ->where('name', trim($request->name))
                 ->where(function ($q) {
                     $q->whereNotIn('status', ['sold', 'deceased', 'removed'])
-                      ->orWhereNull('status');
+                        ->orWhereNull('status');
                 })
                 ->exists();
             if ($nameExists) {
@@ -150,8 +151,8 @@ class CowController extends Controller
         $userFarmIds = Farm::where('email', $user->email)->pluck('farm_id');
 
         $cow = Cow::where('cow_id', $id)
-                  ->whereIn('farm_id', $userFarmIds)
-                  ->firstOrFail();
+            ->whereIn('farm_id', $userFarmIds)
+            ->firstOrFail();
 
         return response()->json($cow);
     }
@@ -162,8 +163,8 @@ class CowController extends Controller
         $userFarmIds = Farm::where('email', $user->email)->pluck('farm_id');
 
         $cow = Cow::where('cow_id', $id)
-                  ->whereIn('farm_id', $userFarmIds)
-                  ->firstOrFail();
+            ->whereIn('farm_id', $userFarmIds)
+            ->firstOrFail();
 
         $data = $request->all();
 
@@ -176,7 +177,7 @@ class CowController extends Controller
                 ->where('tag_number', trim($data['tag_number']))
                 ->where(function ($q) {
                     $q->whereNotIn('status', ['sold', 'deceased', 'removed'])
-                      ->orWhereNull('status');
+                        ->orWhereNull('status');
                 })
                 ->exists();
             if ($tagExists) {
@@ -191,7 +192,7 @@ class CowController extends Controller
                 ->where('name', trim($data['name']))
                 ->where(function ($q) {
                     $q->whereNotIn('status', ['sold', 'deceased', 'removed'])
-                      ->orWhereNull('status');
+                        ->orWhereNull('status');
                 })
                 ->exists();
             if ($nameExists) {
@@ -230,9 +231,9 @@ class CowController extends Controller
         $userFarmIds = Farm::where('email', $user->email)->pluck('farm_id');
 
         $cow = Cow::where('cow_id', $id)
-                  ->whereIn('farm_id', $userFarmIds)
-                  ->firstOrFail();
-                  
+            ->whereIn('farm_id', $userFarmIds)
+            ->firstOrFail();
+
         if ($cow->image_url) {
             $this->deleteStorageFile($cow->image_url);
         }
