@@ -61,11 +61,15 @@ class BasicInfoTab extends ConsumerWidget {
     final marketState = ref.watch(marketPriceProvider);
 
     final zones = ref.watch(zoneProvider).zones;
-    final zoneName = zones.isNotEmpty
-        ? zones
-              .firstWhere((z) => z.id == cow.zoneId, orElse: () => zones.first)
-              .name
-        : cow.zoneId;
+    final String zoneName;
+    if (cow.zoneId.isEmpty) {
+      zoneName = 'ไม่ระบุ';
+    } else if (zones.isNotEmpty) {
+      final matchingZone = zones.where((z) => z.id == cow.zoneId).toList();
+      zoneName = matchingZone.isNotEmpty ? matchingZone.first.name : cow.zoneId;
+    } else {
+      zoneName = cow.zoneId;
+    }
 
     // Use latest weight from growth records if available, otherwise fallback to cow.latestWeight
     final growthRecords = ref.watch(cowDetailProvider).growthRecords;

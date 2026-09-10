@@ -82,6 +82,17 @@ class NotificationNotifier extends Notifier<NotificationState> {
     } catch (_) {}
   }
 
+  Future<void> clearReadNotifications() async {
+    final readList = state.notifications.where((n) => n.isRead).toList();
+    for (final n in readList) {
+      try {
+        await _api.delete('/notifications/${n.id}');
+      } catch (_) {}
+    }
+    final updated = state.notifications.where((n) => !n.isRead).toList();
+    state = state.copyWith(notifications: updated);
+  }
+
   Future<bool> createTestNotification() async {
     try {
       await _api.post(

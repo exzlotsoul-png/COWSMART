@@ -354,7 +354,12 @@ class _BreedTabState extends ConsumerState<BreedTab> {
             children: [
               Icon(Icons.favorite, color: Colors.pink, size: 22),
               SizedBox(width: 8),
-              Text('บันทึกเป็นสัด'),
+              Flexible(
+                child: Text(
+                  'บันทึกเป็นสัด',
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ],
           ),
           content: Column(
@@ -499,7 +504,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
             children: [
               CowIcon(color: AppColors.primary, size: 22),
               SizedBox(width: 8),
-              Text('บันทึกผสมพันธุ์'),
+              Flexible(child: Text('บันทึกผสมพันธุ์', overflow: TextOverflow.ellipsis)),
             ],
           ),
           content: SingleChildScrollView(
@@ -553,10 +558,11 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                 // Select Bull Dropdown
                 DropdownButtonFormField<Cow>(
                   initialValue: selectedBull,
-                  style: TextStyle(fontSize: 16, color: AppColors.text(ctx)),
+                  isExpanded: true,
+                  style: TextStyle(fontSize: 15, color: AppColors.text(ctx)),
                   decoration: const InputDecoration(
                     labelText: 'เลือกพ่อพันธุ์ *',
-                    labelStyle: TextStyle(fontSize: 15),
+                    labelStyle: TextStyle(fontSize: 14),
                     prefixIcon: Icon(Icons.male, color: Colors.blue),
                   ),
                   items: bulls
@@ -566,9 +572,10 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                           child: Text(
                             '${b.name} (${b.tagNumber.isNotEmpty ? b.tagNumber : b.id})',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 15,
                               color: AppColors.text(ctx),
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       )
@@ -753,7 +760,12 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                 size: 22,
               ),
               SizedBox(width: 8),
-              Text('บันทึกตรวจท้อง / แท้ง'),
+              Flexible(
+                child: Text(
+                  'บันทึกตรวจท้อง / แท้ง',
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ],
           ),
           content: SingleChildScrollView(
@@ -772,29 +784,37 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                       color: Colors.blue.withValues(alpha: 0.2),
                     ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
                     children: [
-                      Row(
-                        children: [
-                          const CowIcon(color: Colors.blue, size: 18),
-                          const SizedBox(width: 8),
-                          Text(
-                            'ผสมกับ: ${_formatCowDisplayById(activeMating.sireId, allCows)}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ],
+                      const Icon(
+                        Icons.smart_toy_outlined,
+                        color: Colors.blue,
+                        size: 20,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'วันที่ผสม: ${AppDateUtils.formatThaiDate(activeMating.matingDate!)} (${DateTime.now().difference(activeMating.matingDate!).inDays} วันที่แล้ว)',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppColors.text(ctx),
-                          fontWeight: FontWeight.w500,
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'ผสมกับ: ${_formatCowDisplayById(activeMating.sireId, allCows)}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'วันที่ผสม: ${AppDateUtils.formatThaiDate(activeMating.matingDate!)} (${DateTime.now().difference(activeMating.matingDate!).inDays} วันที่แล้ว)',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: AppColors.text(ctx),
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -804,11 +824,13 @@ class _BreedTabState extends ConsumerState<BreedTab> {
 
                 DropdownButtonFormField<String>(
                   initialValue: result,
-                  style: TextStyle(fontSize: 16, color: AppColors.text(ctx)),
+                  isExpanded: true,
+                  style: TextStyle(fontSize: 15, color: AppColors.text(ctx)),
                   decoration: const InputDecoration(
                     labelText: 'ผลตรวจ / สถานะ *',
-                    labelStyle: TextStyle(fontSize: 15),
+                    labelStyle: TextStyle(fontSize: 14),
                     prefixIcon: Icon(Icons.fact_check_outlined),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                   ),
                   items: [
                     DropdownMenuItem(
@@ -816,9 +838,10 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                       child: Text(
                         'ตั้งท้อง (ผ่านการตรวจ)',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 15,
                           color: AppColors.text(ctx),
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     DropdownMenuItem(
@@ -826,16 +849,18 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                       child: Text(
                         'ไม่ตั้งท้อง (ผสมไม่ติด)',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 15,
                           color: AppColors.text(ctx),
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     DropdownMenuItem(
                       value: 'แท้งลูก',
                       child: Text(
                         'แท้งลูก (แท้งระหว่างตั้งท้อง)',
-                        style: TextStyle(color: Colors.red, fontSize: 16),
+                        style: const TextStyle(color: Colors.red, fontSize: 15),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -910,11 +935,13 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     initialValue: selectedCalvingReminder,
+                    isExpanded: true,
                     style: TextStyle(fontSize: 15, color: AppColors.text(ctx)),
                     decoration: const InputDecoration(
                       labelText: 'แจ้งเตือนล่วงหน้า (กำหนดคลอด)',
                       labelStyle: TextStyle(fontSize: 15),
                       prefixIcon: Icon(Icons.notifications_active_outlined),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                     ),
                     items: [
                       DropdownMenuItem(
@@ -925,6 +952,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                             fontSize: 15,
                             color: AppColors.text(ctx),
                           ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       DropdownMenuItem(
@@ -935,6 +963,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                             fontSize: 15,
                             color: AppColors.text(ctx),
                           ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       DropdownMenuItem(
@@ -945,6 +974,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                             fontSize: 15,
                             color: AppColors.text(ctx),
                           ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       DropdownMenuItem(
@@ -955,6 +985,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                             fontSize: 15,
                             color: AppColors.text(ctx),
                           ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       DropdownMenuItem(
@@ -965,6 +996,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                             fontSize: 15,
                             color: AppColors.text(ctx),
                           ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       DropdownMenuItem(
@@ -975,6 +1007,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                             fontSize: 15,
                             color: AppColors.text(ctx),
                           ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -1137,7 +1170,12 @@ class _BreedTabState extends ConsumerState<BreedTab> {
             children: [
               Icon(Icons.child_care_outlined, color: Colors.teal, size: 22),
               SizedBox(width: 8),
-              Text('บันทึกการคลอด'),
+              Flexible(
+                child: Text(
+                  'บันทึกการคลอด',
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ],
           ),
           content: SingleChildScrollView(
@@ -1186,6 +1224,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.textPrimary,
                               ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
@@ -1277,11 +1316,13 @@ class _BreedTabState extends ConsumerState<BreedTab> {
 
                 DropdownButtonFormField<String>(
                   initialValue: calvingResult,
-                  style: TextStyle(fontSize: 16, color: AppColors.text(ctx)),
+                  isExpanded: true,
+                  style: TextStyle(fontSize: 15, color: AppColors.text(ctx)),
                   decoration: const InputDecoration(
                     labelText: 'ผลการคลอด *',
-                    labelStyle: TextStyle(fontSize: 15),
+                    labelStyle: TextStyle(fontSize: 14),
                     prefixIcon: Icon(Icons.medical_services_outlined),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                   ),
                   items: resultOptions
                       .map(
@@ -1290,9 +1331,10 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                           child: Text(
                             r,
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 15,
                               color: AppColors.text(ctx),
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       )

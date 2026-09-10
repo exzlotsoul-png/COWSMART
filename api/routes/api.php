@@ -17,14 +17,12 @@ use App\Http\Controllers\Api\CullingRecordController;
 use App\Http\Controllers\Api\HealthRecordController;
 use App\Http\Controllers\Api\HealthAppointmentController;
 use App\Http\Controllers\Api\BreedingRecordController;
-use App\Http\Controllers\Api\CalvingRecordController;
-use App\Http\Controllers\Api\FeedingRecordController;
 use App\Http\Controllers\Api\FeedInventoryController;
 use App\Http\Controllers\Api\FinancialRecordController;
 use App\Http\Controllers\Api\CalendarEventController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\IssueReportController;
-use App\Http\Controllers\Api\ChatHistoryController;
+
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\MarketPriceController;
@@ -85,8 +83,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('health_records', HealthRecordController::class);
     Route::apiResource('health_appointments', HealthAppointmentController::class);
     Route::apiResource('breeding_records', BreedingRecordController::class);
-    Route::apiResource('calving_records', CalvingRecordController::class);
-    Route::apiResource('feeding_records', FeedingRecordController::class);
+
     Route::apiResource('feed_inventories', FeedInventoryController::class);
     Route::apiResource('financial_records', FinancialRecordController::class);
     Route::apiResource('calendar_events', CalendarEventController::class);
@@ -95,7 +92,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/admin/broadcast-notifications/delete-group', [NotificationController::class, 'deleteBroadcastByGroup']);
     Route::apiResource('notifications', NotificationController::class);
     Route::apiResource('issue_reports', IssueReportController::class);
-    Route::apiResource('chat_histories', ChatHistoryController::class);
+
     Route::post('/market_prices/sync', [MarketPriceController::class, 'sync']);
     Route::post('/market_prices/parse-image', [MarketPriceController::class, 'parseImageReport']);
     Route::post('/market_prices/batch', [MarketPriceController::class, 'batchStore']);

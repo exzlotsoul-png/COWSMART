@@ -8,7 +8,9 @@ import '../../providers/cow_detail_provider.dart';
 import '../../providers/cow_provider.dart';
 import 'detail_tabs/basic_info_tab.dart';
 import 'detail_tabs/breed_tab.dart';
-import 'detail_tabs/placeholder_tabs.dart';
+import 'detail_tabs/health_tab.dart';
+import 'detail_tabs/growth_tab.dart';
+import 'detail_tabs/cost_tab.dart';
 import '../widgets/cow_qr_dialog.dart';
 import '../widgets/nfc_writer_dialog.dart';
 

@@ -71,16 +71,155 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
-          if (state.unreadCount > 0)
-            TextButton.icon(
-              onPressed: () =>
-                  ref.read(notificationProvider.notifier).markAllAsRead(),
-              icon: const Icon(Icons.done_all, color: Colors.white, size: 20),
-              label: const Text(
-                'อ่านทั้งหมด',
-                style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: Colors.white),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            onSelected: (val) async {
+              if (val == 'mark_all_read') {
+                if (state.unreadCount > 0) {
+                  await ref.read(notificationProvider.notifier).markAllAsRead();
+                  if (context.mounted) {
+                    AppFeedback.showSuccess(context, 'อ่านทั้งหมดแล้ว');
+                  }
+                }
+              } else if (val == 'clear_read') {
+                final readCount = state.notifications.where((n) => n.isRead).length;
+                if (readCount == 0) {
+                  if (context.mounted) {
+                    AppFeedback.showInfo(context, 'ไม่มีการแจ้งเตือนที่อ่านแล้ว');
+                  }
+                  return;
+                }
+                // Show confirmation dialog
+                if (!context.mounted) return;
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    title: const Row(
+                      children: [
+                        Icon(Icons.delete_sweep_rounded, color: Colors.redAccent, size: 26),
+                        SizedBox(width: 8),
+                        Text('ล้างการแจ้งเตือน', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+                      ],
+                    ),
+                    content: Text(
+                      'ต้องการลบการแจ้งเตือนที่อ่านแล้ว $readCount รายการ ใช่หรือไม่?\nการดำเนินการนี้ไม่สามารถย้อนกลับได้',
+                    ),
+                    actions: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              onPressed: () => Navigator.pop(ctx, false),
+                              child: const Text('ยกเลิก'),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                elevation: 0,
+                              ),
+                              onPressed: () => Navigator.pop(ctx, true),
+                              child: const Text('ล้างเลย'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+                if (confirmed == true) {
+                  await ref.read(notificationProvider.notifier).clearReadNotifications();
+                  if (context.mounted) {
+                    AppFeedback.showSuccess(context, 'ล้างการแจ้งเตือนที่อ่านแล้ว $readCount รายการเรียบร้อย');
+                  }
+                }
+              }
+            },
+            itemBuilder: (ctx) => [
+              PopupMenuItem(
+                value: 'mark_all_read',
+                enabled: state.unreadCount > 0,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.done_all_rounded,
+                      size: 20,
+                      color: state.unreadCount > 0 ? AppColors.primary : Colors.grey,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'อ่านทั้งหมด',
+                      style: TextStyle(
+                        color: state.unreadCount > 0 ? null : Colors.grey,
+                      ),
+                    ),
+                    if (state.unreadCount > 0) ...[
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '${state.unreadCount}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.error,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
-            ),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'clear_read',
+                child: Row(
+                  children: [
+                    const Icon(Icons.delete_sweep_rounded, size: 20, color: Colors.redAccent),
+                    const SizedBox(width: 10),
+                    const Text('ล้างที่อ่านแล้ว', style: TextStyle(color: Colors.redAccent)),
+                    const Spacer(),
+                    Builder(
+                      builder: (ctx) {
+                        final readCount = state.notifications.where((n) => n.isRead).length;
+                        if (readCount == 0) return const SizedBox.shrink();
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '$readCount',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.redAccent,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ],
       ),
       body: Column(

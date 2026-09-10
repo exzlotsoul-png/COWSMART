@@ -75,7 +75,7 @@ class Cow {
     return Cow(
       id: (json['cow_id'] ?? json['id']).toString(),
       farmId: (json['farm_id'] ?? json['farmId']).toString(),
-      zoneId: (json['zone_id'] ?? json['zoneId']).toString(),
+      zoneId: (json['zone_id'] ?? json['zoneId'])?.toString() ?? '',
       name: json['name'].toString(),
       tagNumber: json['tag_number'] ?? json['tagNumber'] ?? '',
       birthDate: DateTime.parse(json['birth_date'] ?? json['birthDate']),

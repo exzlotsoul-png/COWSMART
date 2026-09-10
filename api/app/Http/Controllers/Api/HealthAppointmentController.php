@@ -27,7 +27,10 @@ class HealthAppointmentController extends Controller
             }
             $query->whereIn('cow_id', array_unique(array_filter($cowIds)));
         }
-        $appts = $query->get();
+        if ($request->has('cow_id')) {
+            $query->where('cow_id', $request->cow_id);
+        }
+        $appts = $query->orderBy('appoint_datetime', 'asc')->get();
         return response()->json($appts);
     }
 

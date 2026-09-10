@@ -20,6 +20,7 @@ import '../../features/cow/presentation/screens/edit_cow_screen.dart';
 import '../../features/cow/presentation/screens/cull_cow_screen.dart';
 import '../../features/cow/presentation/screens/culling_history_screen.dart';
 import '../../features/cow/presentation/screens/cow_history_list_screen.dart';
+import '../../features/cow/presentation/screens/cow_appointments_list_screen.dart';
 import '../../features/cow/presentation/screens/group_cull_screen.dart';
 import '../../features/cow/presentation/screens/group_health_screen.dart';
 import '../../features/cow/presentation/screens/group_appointment_screen.dart';
@@ -223,6 +224,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           final cow = args['cow'] as Cow;
           final initialTab = args['initialTab'] as String? ?? 'health';
           return CowHistoryListScreen(cow: cow, initialTab: initialTab);
+        },
+      ),
+      GoRoute(
+        path: '/cow_appointments_list',
+        builder: (context, state) {
+          final cow = state.extra as Cow;
+          return CowAppointmentsListScreen(cow: cow);
         },
       ),
       GoRoute(

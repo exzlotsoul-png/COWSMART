@@ -71,10 +71,16 @@ class CowController extends Controller
             'birth_date' => 'nullable|date',
             'entry_date' => 'nullable|date',
             'gender' => 'required|string|in:M,F',
-            'type' => 'required|string',
+            'cow_type_id' => 'required_without:type|nullable|string',
+            'type' => 'required_without:cow_type_id|nullable|string',
         ]);
 
         $data = $request->all();
+
+        if (empty($data['cow_type_id']) && !empty($data['type'])) {
+            $data['cow_type_id'] = $data['type'];
+        }
+        unset($data['type']);
 
         // Sanitize foreign keys
         foreach (['zone_id', 'sire_id', 'dam_id', 'breed_id'] as $fk) {
@@ -220,6 +226,11 @@ class CowController extends Controller
                 $data['zone_id'] = null;
             }
         }
+
+        if (empty($data['cow_type_id']) && !empty($data['type'])) {
+            $data['cow_type_id'] = $data['type'];
+        }
+        unset($data['type']);
 
         $cow->update($data);
         return response()->json($cow);

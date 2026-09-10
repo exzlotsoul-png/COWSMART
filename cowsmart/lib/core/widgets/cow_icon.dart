@@ -50,7 +50,8 @@ class _CowHeadIconPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final double iconSize = min(size.width, size.height);
-    final double scale = iconSize / 370.0;
+    // Scale factor adjusted to give standard icon padding matching Material Design icons (24dp bounding box)
+    final double scale = iconSize / 440.0;
 
     canvas.save();
     canvas.translate(size.width / 2, size.height / 2);
