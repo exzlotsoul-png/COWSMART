@@ -139,7 +139,15 @@ class MasterDataNotifier extends Notifier<MasterDataState> {
     return MasterDataState();
   }
 
-  Future<void> fetchAll() async {
+  Future<void> fetchAll({bool forceRefresh = false}) async {
+    // If already loaded and not forcing refresh, skip fetching to avoid network overhead
+    if (!forceRefresh &&
+        state.diseases.isNotEmpty &&
+        state.medicines.isNotEmpty &&
+        state.vaccines.isNotEmpty) {
+      return;
+    }
+
     state = state.copyWith(isLoading: true, error: null);
     try {
       final api = ref.read(apiClientProvider);

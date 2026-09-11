@@ -6,9 +6,20 @@ class ApiClient {
   final Dio _dio;
   String? _token;
 
-  // เมื่อเสียบสาย USB (ใช้ adb reverse tcp:8000 tcp:8000) สามารถใช้ 127.0.0.1 ได้โดยตรงทั้งบน Web และ มือถือ
-  // หากทดสอบผ่าน Wi-Fi โดยไม่เสียบสาย USB ให้เปลี่ยนเป็น IP คอมพิวเตอร์ เช่น 'http://192.168.1.43:8000/api'
-  static String get baseUrl => 'http://127.0.0.1:8000/api';
+  // IP เครื่องคอมพิวเตอร์สำหรับการต่อผ่าน Wi-Fi โดยไม่ต้องเสียบสาย USB (เฉพาะบนมือถือ)
+  static const String mobileWifiIp = '10.10.60.50';
+
+  // ถ้าทดสอบบนคอมพิวเตอร์/โน้ตบุ๊ก (Chrome / Windows Desktop) จะใช้ 127.0.0.1 เสมออัตโนมัติ
+  static String get serverHost {
+    if (kIsWeb || defaultTargetPlatform == TargetPlatform.windows) {
+      return '127.0.0.1';
+    }
+    return mobileWifiIp;
+  }
+
+  static String get baseServerUrl => 'http://$serverHost:8000';
+  static String get baseUrl => '$baseServerUrl/api';
+  static String get storageUrl => '$baseServerUrl/api/storage';
 
   ApiClient()
     : _dio = Dio(

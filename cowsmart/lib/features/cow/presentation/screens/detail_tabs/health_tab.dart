@@ -44,9 +44,7 @@ class _HealthTabState extends ConsumerState<HealthTab> {
   @override
   void initState() {
     super.initState();
-    // Load master data when tab opens
     Future.microtask(() {
-      ref.read(masterDataProvider.notifier).fetchAll();
       _fetchAppointments();
     });
   }
