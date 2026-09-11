@@ -41,6 +41,24 @@ Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
+Route::get('/test-db', function () {
+    try {
+        \Illuminate\Support\Facades\DB::connection()->getPdo();
+        $userCount = \App\Models\User::count();
+        return response()->json([
+            'status' => 'connected',
+            'database' => \Illuminate\Support\Facades\DB::connection()->getDatabaseName(),
+            'users_count' => $userCount
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+});
+
 // Serve storage files with CORS headers (for Flutter web)
 Route::get('/storage/{path}', function ($path) {
     $fullPath = storage_path('app/public/' . $path);
