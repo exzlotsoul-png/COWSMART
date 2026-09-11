@@ -11,6 +11,8 @@ use App\Models\Notification;
 use Carbon\Carbon;
 
 use App\Models\CalendarEvent;
+use App\Models\User;
+use App\Services\FirebaseService;
 
 class GenerateFarmNotifications extends Command
 {
@@ -70,15 +72,28 @@ class GenerateFarmNotifications extends Command
                 $diffDays = $today->diffInDays($targetCalvingDate, false);
                 $daysLabel = $diffDays == 0 ? 'วันนี้' : ($diffDays == 1 ? 'พรุ่งนี้' : "อีก {$diffDays} วัน");
                 $cowName = $cow->name ?: ($cow->tag_number ?: $cow->cow_id);
+                $notifTitle = 'วัวใกล้คลอด: ' . $cowName;
+                $notifMsg = "{$cowName} คาดว่าจะคลอด{$daysLabel} ({$targetCalvingDate->format('d/m/Y')})";
 
                 Notification::create([
                     'id' => 'N-' . substr(md5(uniqid(mt_rand(), true)), 0, 8),
                     'email' => $farm->email,
-                    'title' => 'วัวใกล้คลอด',
-                    'message' => "{$cowName} คาดว่าจะคลอด{$daysLabel} ({$targetCalvingDate->format('d/m/Y')}) [ref:{$existingKey}]",
+                    'title' => $notifTitle,
+                    'message' => "{$notifMsg} [ref:{$existingKey}]",
                     'notify_datetime' => now(),
                     'is_read' => 0,
                 ]);
+
+                // Send live push to user's mobile device
+                $user = User::where('email', $farm->email)->first();
+                if ($user && !empty($user->fcm_token)) {
+                    FirebaseService::sendPushNotification(
+                        $user->fcm_token,
+                        $notifTitle,
+                        $notifMsg,
+                        ['type' => 'calving', 'cow_id' => (string)$cow->cow_id]
+                    );
+                }
 
                 $this->info("Created calving notification for cow {$cowName}");
             }
@@ -134,14 +149,28 @@ class GenerateFarmNotifications extends Command
                 $apptTime = $apptDt->format('d/m/Y H:i');
                 $desc = $appt->description ? " ({$appt->description})" : '';
 
+                $notifTitle = 'นัดหมายสุขภาพวัว: ' . $cowName;
+                $notifMsg = "{$cowName} มีนัดหมาย{$daysLabel} วันที่ {$apptTime}{$desc}";
+
                 Notification::create([
                     'id' => 'N-' . substr(md5(uniqid(mt_rand(), true)), 0, 8),
                     'email' => $farm->email,
-                    'title' => 'นัดหมายสุขภาพวัว',
-                    'message' => "{$cowName} มีนัดหมาย{$daysLabel} วันที่ {$apptTime}{$desc} [ref:{$existingKey}]",
+                    'title' => $notifTitle,
+                    'message' => "{$notifMsg} [ref:{$existingKey}]",
                     'notify_datetime' => now(),
                     'is_read' => 0,
                 ]);
+
+                // Send live push to user's mobile device
+                $user = User::where('email', $farm->email)->first();
+                if ($user && !empty($user->fcm_token)) {
+                    FirebaseService::sendPushNotification(
+                        $user->fcm_token,
+                        $notifTitle,
+                        $notifMsg,
+                        ['type' => 'health_appointment', 'cow_id' => (string)$cow->cow_id]
+                    );
+                }
 
                 $this->info("Created health appointment notification for cow {$cowName}");
             }
@@ -199,14 +228,30 @@ class GenerateFarmNotifications extends Command
 
             $descText = $event->description ? "\n{$event->description}" : '';
 
+            $eventTitle = "กิจกรรมปฏิทิน: {$event->title}";
+            $eventMsg = "กิจกรรม \"{$event->title}\" กำหนดวันที่ {$eventDt->format('d/m/Y H:i')}{$cowText}";
+
             Notification::create([
                 'id' => 'N-' . substr(md5(uniqid(mt_rand(), true)), 0, 8),
                 'email' => $userEmail,
-                'title' => "กิจกรรมปฏิทิน: {$event->title}",
-                'message' => "กิจกรรม \"{$event->title}\" กำหนดวันที่ {$eventDt->format('d/m/Y H:i')}{$cowText}{$descText} {$refKey}",
+                'title' => $eventTitle,
+                'message' => "{$eventMsg}{$descText} {$refKey}",
                 'notify_datetime' => $notifyDt,
                 'is_read' => 0,
             ]);
+
+            // If due now/today, send live push notification
+            if (Carbon::now()->greaterThanOrEqualTo($notifyDt)) {
+                $user = User::where('email', $userEmail)->first();
+                if ($user && !empty($user->fcm_token)) {
+                    FirebaseService::sendPushNotification(
+                        $user->fcm_token,
+                        $eventTitle,
+                        $eventMsg,
+                        ['type' => 'calendar_event', 'event_id' => (string)$event->calendar_event_id]
+                    );
+                }
+            }
 
             $this->info("Created calendar notification for event {$event->title}");
         }

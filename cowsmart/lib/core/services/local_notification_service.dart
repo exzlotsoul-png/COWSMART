@@ -65,10 +65,21 @@ class LocalNotificationService {
         showBadge: true,
       );
 
-      await _flutterLocalNotificationsPlugin
+      const AndroidNotificationChannel eventsChannel = AndroidNotificationChannel(
+        'cowsmart_events_channel',
+        'Cowsmart Events',
+        description: 'Notifications for cowsmart calendar events and reminders',
+        importance: Importance.max,
+        playSound: true,
+        enableVibration: true,
+        showBadge: true,
+      );
+
+      final androidPlugin = _flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
-          ?.createNotificationChannel(channel);
+              AndroidFlutterLocalNotificationsPlugin>();
+      await androidPlugin?.createNotificationChannel(channel);
+      await androidPlugin?.createNotificationChannel(eventsChannel);
     }
 
     // Initialize Firebase Core & Messaging
@@ -142,6 +153,14 @@ class LocalNotificationService {
         scheduledTime = scheduledTime.subtract(const Duration(hours: 1));
       } else if (setting == 'ก่อน 1 วัน') {
         scheduledTime = scheduledTime.subtract(const Duration(days: 1));
+      } else if (setting == 'ก่อน 3 วัน') {
+        scheduledTime = scheduledTime.subtract(const Duration(days: 3));
+      } else if (setting == 'ก่อน 7 วัน') {
+        scheduledTime = scheduledTime.subtract(const Duration(days: 7));
+      } else if (setting == 'ก่อน 14 วัน') {
+        scheduledTime = scheduledTime.subtract(const Duration(days: 14));
+      } else if (setting == 'ก่อน 30 วัน') {
+        scheduledTime = scheduledTime.subtract(const Duration(days: 30));
       }
 
       if (scheduledTime.isAfter(DateTime.now())) {
@@ -163,6 +182,9 @@ class LocalNotificationService {
       channelDescription: 'Notifications for cowsmart calendar events',
       importance: Importance.max,
       priority: Priority.high,
+      fullScreenIntent: true,
+      enableVibration: true,
+      playSound: true,
       icon: '@mipmap/ic_launcher',
     );
     

@@ -59,6 +59,15 @@ Route::get('/test-db', function () {
     }
 });
 
+Route::get('/cron/generate-notifications', function () {
+    \Illuminate\Support\Facades\Artisan::call('notifications:generate');
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Farm notifications (calving, health appointments, events) processed successfully.',
+        'output' => \Illuminate\Support\Facades\Artisan::output(),
+    ]);
+});
+
 // Serve storage files with CORS headers (for Flutter web)
 Route::get('/storage/{path}', function ($path) {
     $fullPath = storage_path('app/public/' . $path);
