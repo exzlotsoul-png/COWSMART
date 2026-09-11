@@ -118,6 +118,10 @@ class FirebaseService
                             'notification' => [
                                 'sound' => 'default',
                                 'channel_id' => 'cowsmart_push_channel',
+                                'notification_priority' => 'PRIORITY_MAX',
+                                'visibility' => 'PUBLIC',
+                                'default_sound' => true,
+                                'default_vibrate_timings' => true,
                             ],
                         ],
                     ],

@@ -53,6 +53,24 @@ class LocalNotificationService {
       },
     );
 
+    // Create High Importance Android Notification Channel for Heads-up / Screen-wake
+    if (Platform.isAndroid) {
+      const AndroidNotificationChannel channel = AndroidNotificationChannel(
+        'cowsmart_push_channel',
+        'Cowsmart Alerts',
+        description: 'Notifications for broadcast alerts and real-time updates',
+        importance: Importance.max,
+        playSound: true,
+        enableVibration: true,
+        showBadge: true,
+      );
+
+      await _flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(channel);
+    }
+
     // Initialize Firebase Core & Messaging
     try {
       await Firebase.initializeApp();
