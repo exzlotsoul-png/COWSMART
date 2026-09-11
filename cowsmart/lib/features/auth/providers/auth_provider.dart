@@ -1,8 +1,7 @@
 import 'dart:convert';
-import 'dart:io' if (dart.library.io) 'dart:io';
-import 'package:flutter/foundation.dart';
 
 import 'package:cowsmart/core/network/api_client.dart';
+import 'package:cowsmart/core/services/local_notification_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -76,6 +75,8 @@ class AuthNotifier extends Notifier<AuthState> {
         isNewUser: false,
         isInitializing: false,
       );
+      // Sync FCM token to backend
+      ref.read(localNotificationProvider).syncFcmTokenToBackend(_api);
     } else {
       state = state.copyWith(isInitializing: false);
     }
@@ -107,6 +108,9 @@ class AuthNotifier extends Notifier<AuthState> {
         user: userData,
         isNewUser: false,
       );
+
+      // Sync FCM token after successful login
+      ref.read(localNotificationProvider).syncFcmTokenToBackend(_api);
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
@@ -151,6 +155,9 @@ class AuthNotifier extends Notifier<AuthState> {
         user: userData,
         isNewUser: true,
       );
+
+      // Sync FCM token after successful register
+      ref.read(localNotificationProvider).syncFcmTokenToBackend(_api);
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }

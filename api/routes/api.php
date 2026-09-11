@@ -60,6 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/change-password', [AuthController::class, 'changePassword']);
+    Route::post('/user/fcm-token', [UserController::class, 'updateFcmToken']);
     Route::post('/images/upload', [ImageController::class, 'upload']);
     Route::post('/images/delete', [ImageController::class, 'deleteImage']);
 

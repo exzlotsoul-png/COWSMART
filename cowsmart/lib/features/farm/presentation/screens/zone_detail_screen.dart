@@ -33,17 +33,23 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
     });
   }
 
+  bool _isCowActive(Cow cow) {
+    return cow.status != CowStatus.sold &&
+        cow.status != CowStatus.deceased &&
+        cow.status != CowStatus.removed;
+  }
+
   List<Cow> get _cowsInZone {
     final cowState = ref.watch(cowProvider);
     return cowState.allCows
-        .where((cow) => cow.zoneId == widget.zone.id)
+        .where((cow) => _isCowActive(cow) && cow.zoneId == widget.zone.id)
         .toList();
   }
 
   List<Cow> get _cowsNotInZone {
     final cowState = ref.watch(cowProvider);
     return cowState.allCows
-        .where((cow) => cow.zoneId != widget.zone.id)
+        .where((cow) => _isCowActive(cow) && cow.zoneId != widget.zone.id)
         .toList();
   }
 
@@ -536,6 +542,54 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                                                   ),
                                                 ),
                                                 const SizedBox(width: 6),
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(
+                                                      horizontal: 5, vertical: 1.5),
+                                                  decoration: BoxDecoration(
+                                                    color: (cow.gender == 'M'
+                                                            ? Colors.blue
+                                                            : Colors.pink)
+                                                        .withValues(alpha: 0.12),
+                                                    borderRadius:
+                                                        BorderRadius.circular(4),
+                                                    border: Border.all(
+                                                      color: (cow.gender == 'M'
+                                                              ? Colors.blue
+                                                              : Colors.pink)
+                                                          .withValues(alpha: 0.4),
+                                                      width: 0.8,
+                                                    ),
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      Icon(
+                                                        cow.gender == 'M'
+                                                            ? Icons.male_rounded
+                                                            : Icons.female_rounded,
+                                                        size: 14,
+                                                        color: cow.gender == 'M'
+                                                            ? Colors.blue[700]
+                                                            : Colors.pink[600],
+                                                      ),
+                                                      const SizedBox(width: 2),
+                                                      Text(
+                                                        cow.gender == 'M'
+                                                            ? 'ผู้'
+                                                            : 'เมีย',
+                                                        style: TextStyle(
+                                                          fontSize: 11,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: cow.gender == 'M'
+                                                              ? Colors.blue[700]
+                                                              : Colors.pink[600],
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 6),
                                                 Expanded(
                                                   child: Text(
                                                     'แท็ก: ${cow.tagNumber} · ${cow.type.label}',
@@ -993,6 +1047,16 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                     spacing: 6,
                     runSpacing: 4,
                     children: [
+                      _buildInfoChip(
+                        context,
+                        cow.gender == 'M' ? 'เพศผู้' : 'เพศเมีย',
+                        icon: cow.gender == 'M'
+                            ? Icons.male_rounded
+                            : Icons.female_rounded,
+                        iconColor: cow.gender == 'M'
+                            ? Colors.blue[700]
+                            : Colors.pink[600],
+                      ),
                       _buildInfoChip(context, 'แท็ก: ${cow.tagNumber}'),
                       _buildInfoChip(context, cow.type.label),
                       _buildInfoChip(context, cow.breed),
@@ -1024,7 +1088,8 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
     );
   }
 
-  Widget _buildInfoChip(BuildContext context, String text) {
+  Widget _buildInfoChip(BuildContext context, String text,
+      {IconData? icon, Color? iconColor}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
@@ -1032,13 +1097,22 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
       ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 13,
-          color: AppColors.subText(context),
-          fontWeight: FontWeight.w500,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 14, color: iconColor ?? AppColors.subText(context)),
+            const SizedBox(width: 4),
+          ],
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 13,
+              color: iconColor ?? AppColors.subText(context),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

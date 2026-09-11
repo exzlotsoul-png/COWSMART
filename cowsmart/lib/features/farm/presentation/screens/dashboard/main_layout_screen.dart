@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dashboard_screen.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -6,16 +8,38 @@ import '../../../../../core/widgets/cow_icon.dart';
 import '../../../../cow/presentation/screens/cow_list_screen.dart';
 import '../../../../feed/presentation/screens/feed_inventory_screen.dart';
 import '../../../../auth/presentation/screens/profile_screen.dart';
+import 'package:cowsmart/features/notifications/providers/notification_provider.dart';
 
-class MainLayoutScreen extends StatefulWidget {
+class MainLayoutScreen extends ConsumerStatefulWidget {
   const MainLayoutScreen({super.key});
 
   @override
-  State<MainLayoutScreen> createState() => _MainLayoutScreenState();
+  ConsumerState<MainLayoutScreen> createState() => _MainLayoutScreenState();
 }
 
-class _MainLayoutScreenState extends State<MainLayoutScreen> {
+class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
   int _currentIndex = 0;
+  Timer? _notificationTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(notificationProvider.notifier).fetchNotifications();
+    });
+    // Polling แจ้งเตือนแบบ background ทุก 10 วินาที เพื่อให้ badge บน dashboard แสดงแบบเรียลไทม์
+    _notificationTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (mounted) {
+        ref.read(notificationProvider.notifier).fetchNotifications();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _notificationTimer?.cancel();
+    super.dispose();
+  }
 
   final List<Widget> _screens = [
     const DashboardScreen(),

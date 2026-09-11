@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -36,6 +37,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchData();
+      ref.read(notificationProvider.notifier).fetchNotifications();
     });
   }
 
@@ -378,7 +380,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             _buildCircleAction(
               context,
               icon: Icons.notifications_outlined,
-              onTap: () => context.push('/notifications'),
+              onTap: () async {
+                await context.push('/notifications');
+                if (context.mounted) {
+                  ref.read(notificationProvider.notifier).fetchNotifications();
+                }
+              },
               tooltip: 'แจ้งเตือน',
             ),
             if (unread > 0)

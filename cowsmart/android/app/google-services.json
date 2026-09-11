@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "415912742158",
+    "project_id": "cowsmart-app",
+    "storage_bucket": "cowsmart-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:415912742158:android:0b2799bf966b44b2611b5f",
+        "android_client_info": {
+          "package_name": "com.cowsmart.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAmftvX1gvLJqlOJC8iFEpF6S3m4_C8ycQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

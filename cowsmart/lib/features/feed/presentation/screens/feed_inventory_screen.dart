@@ -119,26 +119,21 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
     final allItems = List.of(state.inventory)
       ..sort((a, b) => b.recordedAt.compareTo(a.recordedAt));
 
-    // Filter items for current month (ณ ปัจจุบัน)
-    final now = DateTime.now();
-    final currentMonthItems = allItems.where((item) =>
-      item.recordedAt.year == now.year && item.recordedAt.month == now.month
-    ).toList();
 
-    // Calculate totals for current month
-    final currentMonthQuantity = currentMonthItems.fold<double>(
+    // Calculate totals for ALL time
+    final totalQuantity = allItems.fold<double>(
       0,
       (sum, item) => sum + item.quantity,
     );
-    final currentMonthCost = currentMonthItems.fold<double>(
+    final totalCost = allItems.fold<double>(
       0,
       (sum, item) => sum + item.cost,
     );
 
-    // Category breakdown from current month items
+    // Category breakdown from ALL items
     final categoryMap = <String, double>{};
     final categoryCostMap = <String, double>{};
-    for (final item in currentMonthItems) {
+    for (final item in allItems) {
       final catName = item.category.name;
       categoryMap[catName] = (categoryMap[catName] ?? 0) + item.quantity;
       categoryCostMap[catName] = (categoryCostMap[catName] ?? 0) + item.cost;
@@ -153,8 +148,8 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
             Expanded(
               child: _buildSummaryCard(
                 context,
-                title: 'รายการเดือนนี้',
-                value: '${currentMonthItems.length} รายการ',
+                title: 'รายการทั้งหมด',
+                value: '${allItems.length} รายการ',
                 icon: Icons.list_alt_rounded,
                 color: Colors.deepPurple,
               ),
@@ -164,7 +159,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
               child: _buildSummaryCard(
                 context,
                 title: 'ปริมาณรวม',
-                value: '${currentMonthQuantity.toStringAsFixed(1)} กก.',
+                value: '${totalQuantity.toStringAsFixed(1)} กก.',
                 icon: Icons.scale_rounded,
                 color: Colors.blue[700]!,
               ),
@@ -180,7 +175,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
               child: _buildSummaryCard(
                 context,
                 title: 'มูลค่ารวม',
-                value: '${NumberFormat('#,##0').format(currentMonthCost)} ฿',
+                value: '${NumberFormat('#,##0').format(totalCost)} ฿',
                 icon: Icons.payments_rounded,
                 color: Colors.green[700]!,
               ),
@@ -190,8 +185,8 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
               child: _buildSummaryCard(
                 context,
                 title: 'ราคาเฉลี่ย/กก.',
-                value: currentMonthQuantity > 0
-                    ? '${(currentMonthCost / currentMonthQuantity).toStringAsFixed(1)} ฿'
+                value: totalQuantity > 0
+                    ? '${(totalCost / totalQuantity).toStringAsFixed(1)} ฿'
                     : '- ฿',
                 icon: Icons.analytics_rounded,
                 color: Colors.orange[800]!,
@@ -227,7 +222,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
               ],
             ),
           ),
-          _buildCategoryBreakdown(context, categoryMap, categoryCostMap, currentMonthQuantity),
+          _buildCategoryBreakdown(context, categoryMap, categoryCostMap, totalQuantity),
           const SizedBox(height: 24),
         ],
 

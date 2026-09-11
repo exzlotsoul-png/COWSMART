@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cowsmart/core/network/api_client.dart';
 import '../domain/cow.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
+import 'package:cowsmart/features/farm/providers/zone_provider.dart';
 import 'package:cowsmart/features/finance/providers/finance_provider.dart';
 import '../domain/culling_record.dart';
 
@@ -247,6 +248,7 @@ class CowNotifier extends Notifier<CowState> {
       final currentFarm = ref.read(farmProvider).currentFarm;
       if (currentFarm != null) {
         ref.read(financeProvider.notifier).fetchTransactions(currentFarm.id);
+        ref.read(zoneProvider.notifier).fetchZones(currentFarm.id);
       }
     } catch (e) {
       print('[ERROR] บันทึกการคัดทิ้งไม่สำเร็จ: $e');
@@ -275,6 +277,7 @@ class CowNotifier extends Notifier<CowState> {
       final currentFarm = ref.read(farmProvider).currentFarm;
       if (currentFarm != null) {
         ref.read(financeProvider.notifier).fetchTransactions(currentFarm.id);
+        ref.read(zoneProvider.notifier).fetchZones(currentFarm.id);
       }
     } catch (e) {
       print('[ERROR] กู้คืนวัวไม่สำเร็จ: $e');
@@ -305,6 +308,7 @@ class CowNotifier extends Notifier<CowState> {
       final currentFarm = ref.read(farmProvider).currentFarm;
       if (currentFarm != null) {
         ref.read(financeProvider.notifier).fetchTransactions(currentFarm.id);
+        ref.read(zoneProvider.notifier).fetchZones(currentFarm.id);
       }
     } catch (e) {
       print('[ERROR] บันทึกการคัดทิ้งแบบกลุ่มไม่สำเร็จ: $e');
@@ -328,6 +332,10 @@ class CowNotifier extends Notifier<CowState> {
         isLoading: false,
         isSuccess: true,
       );
+      final currentFarm = ref.read(farmProvider).currentFarm;
+      if (currentFarm != null) {
+        ref.read(zoneProvider.notifier).fetchZones(currentFarm.id);
+      }
     } catch (e) {
       print('[ERROR] ลบข้อมูลวัวไม่สำเร็จ: $e');
       state = state.copyWith(isLoading: false, errorMessage: e.toString());

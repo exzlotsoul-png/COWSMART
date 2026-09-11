@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   RefreshCw, Plus, Edit, Trash2, Search, ArrowUpDown, TrendingUp, TrendingDown, Tag, 
   Calendar, CheckCircle2, AlertCircle, History, Upload, Image as ImageIcon, 
-  Sparkles, Check, X, Filter, Scale, PawPrint, Coins, Award
+  Sparkles, Check, X, Filter, Scale, PawPrint, Coins, Award, Eye, Info
 } from 'lucide-react';
 import api from '../lib/axios';
 import Pagination from '../components/layout/Pagination';
@@ -40,6 +40,7 @@ const MarketPrices = () => {
     note: ''
   });
   const [isEditing, setIsEditing] = useState(false);
+  const [viewingPrice, setViewingPrice] = useState(null);
 
   // Smart Image Upload / Dropzone Modal State
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
@@ -47,6 +48,7 @@ const MarketPrices = () => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [parsingImage, setParsingImage] = useState(false);
   const [extractedData, setExtractedData] = useState(null);
+  const [parseError, setParseError] = useState(null);
   const [savingBatch, setSavingBatch] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -152,6 +154,7 @@ const MarketPrices = () => {
       setSelectedFile(file);
       setPreviewUrl(URL.createObjectURL(file));
       setExtractedData(null);
+      setParseError(null);
     } else {
       showToast('กรุณาเลือกไฟล์รูปภาพเท่านั้น', 'warning');
     }
@@ -168,6 +171,7 @@ const MarketPrices = () => {
     if (!selectedFile) return;
     try {
       setParsingImage(true);
+      setParseError(null);
       const formData = new FormData();
       formData.append('image', selectedFile);
 
@@ -177,11 +181,18 @@ const MarketPrices = () => {
 
       if (response.data.success) {
         setExtractedData(response.data);
-        showToast('อ่านข้อมูลจากรูปภาพสำเร็จ', 'success');
+        setParseError(null);
+        showToast('อ่านข้อมูลจากรูปภาพรายงานกรมปศุสัตว์สำเร็จ', 'success');
+      } else {
+        const errorMsg = response.data.message || 'รูปภาพไม่ถูกต้องตามเงื่อนไข';
+        setParseError(errorMsg);
+        showToast(errorMsg, 'error');
       }
     } catch (error) {
       console.error("Error parsing image:", error);
-      showToast("เกิดข้อผิดพลาดในการอ่านรูปภาพรายงาน", "error");
+      const errorMsg = error.response?.data?.message || 'เกิดข้อผิดพลาดในการอ่านรูปภาพรายงาน หรือรูปภาพไม่ใช่รายงานของกรมปศุสัตว์';
+      setParseError(errorMsg);
+      showToast(errorMsg, 'error');
     } finally {
       setParsingImage(false);
     }
@@ -692,7 +703,6 @@ const MarketPrices = () => {
                     <th>สายพันธุ์ / พิกัดน้ำหนัก</th>
                     <th>ราคาเฉลี่ย (บาท/กก.)</th>
                     <th>แหล่งที่มาอ้างอิง</th>
-                    <th>รายละเอียดรอบรายงาน</th>
                     <th style={{ textAlign: 'center' }}>จัดการ</th>
                   </tr>
                 </thead>
@@ -738,11 +748,16 @@ const MarketPrices = () => {
                             {item.source || 'NABC AGRI API'}
                           </span>
                         </td>
-                        <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem', maxWidth: '260px' }}>
-                          {item.note || '-'}
-                        </td>
                         <td>
                           <div className="action-links" style={{ justifyContent: 'center' }}>
+                            <button
+                              className="action-btn"
+                              title="ดูรายละเอียดข้อมูล"
+                              onClick={() => setViewingPrice(item)}
+                              style={{ color: '#0284c7', backgroundColor: '#f0f9ff' }}
+                            >
+                              <Eye size={16} />
+                            </button>
                             <button className="action-btn edit" title="แก้ไข" onClick={() => handleOpenModal(item)}>
                               <Edit size={16} />
                             </button>
@@ -755,7 +770,7 @@ const MarketPrices = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="6" style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
+                      <td colSpan="5" style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
                         ไม่พบรายการราคาตลาดกลางในเดือน/ปีที่เลือก
                       </td>
                     </tr>
@@ -840,6 +855,29 @@ const MarketPrices = () => {
                 )}
               </div>
 
+              {/* Error Warning Box if Image is Rejected */}
+              {parseError && (
+                <div style={{
+                  padding: '12px 16px',
+                  borderRadius: '10px',
+                  backgroundColor: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  color: '#991b1b',
+                  fontSize: '0.85rem',
+                  lineHeight: '1.5',
+                  marginBottom: '16px',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '10px'
+                }}>
+                  <AlertCircle size={20} style={{ color: '#dc2626', flexShrink: 0, marginTop: '2px' }} />
+                  <div>
+                    <strong style={{ display: 'block', marginBottom: '2px' }}>ภาพไม่ถูกต้องตามเงื่อนไข:</strong>
+                    <span>{parseError}</span>
+                  </div>
+                </div>
+              )}
+
               {/* Scan Button */}
               {selectedFile && !extractedData && (
                 <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -850,7 +888,7 @@ const MarketPrices = () => {
                     style={{ padding: '10px 24px', fontSize: '0.9rem' }}
                   >
                     <Sparkles size={16} />
-                    {parsingImage ? 'กำลังอ่านตัวเลขจากรูปภาพ...' : 'เริ่มสแกนอ่านตัวเลขราคาจากภาพ'}
+                    {parsingImage ? 'กำลังตรวจสอบและอ่านตัวเลขจากรูปภาพ...' : 'เริ่มสแกนอ่านตัวเลขราคาจากภาพ'}
                   </button>
                 </div>
               )}
@@ -1078,6 +1116,106 @@ const MarketPrices = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Detail View Modal */}
+      {viewingPrice && (
+        <div className="modal-overlay" onClick={() => setViewingPrice(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
+            <div className="modal-header" style={{ borderBottom: '1px solid var(--border-color)', padding: '16px 20px' }}>
+              <h3 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.05rem', margin: 0 }}>
+                <Info size={20} style={{ color: 'var(--primary-color)' }} />
+                รายละเอียดราคากลางปศุสัตว์
+              </h3>
+              <button className="modal-close" onClick={() => setViewingPrice(null)}>&times;</button>
+            </div>
+
+            <div className="modal-body" style={{ padding: '20px' }}>
+              <div style={{
+                display: 'grid',
+                gap: '14px',
+                fontSize: '0.9rem'
+              }}>
+                {/* Breed & Category */}
+                <div style={{ backgroundColor: '#f8fafc', padding: '12px 16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>สายพันธุ์ / พิกัดน้ำหนัก</span>
+                  <div style={{ fontWeight: '700', fontSize: '1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Tag size={16} style={{ color: 'var(--primary-color)' }} />
+                    {viewingPrice.category || 'ทั่วไป'}
+                  </div>
+                </div>
+
+                {/* Price & Effective Date */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div style={{ backgroundColor: 'var(--primary-light)', padding: '12px 16px', borderRadius: '8px', border: '1px solid rgba(22, 163, 74, 0.2)' }}>
+                    <span style={{ fontSize: '0.78rem', color: '#166534', display: 'block', marginBottom: '2px' }}>ราคาเฉลี่ย</span>
+                    <span style={{ fontWeight: '800', fontSize: '1.2rem', color: 'var(--primary-color)' }}>
+                      {parseFloat(viewingPrice.price_per_kg).toFixed(2)} ฿
+                    </span>
+                    <span style={{ fontSize: '0.75rem', color: '#166534', marginLeft: '4px' }}>/ กิโลกรัม</span>
+                  </div>
+
+                  <div style={{ backgroundColor: '#f8fafc', padding: '12px 16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>รอบสัปดาห์ (วันที่มีผล)</span>
+                    <div style={{ fontWeight: '600', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Calendar size={15} style={{ color: 'var(--primary-color)' }} />
+                      <span>{formatThaiDate(viewingPrice.effective_date)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Source */}
+                <div style={{ backgroundColor: '#f8fafc', padding: '12px 16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>แหล่งที่มาอ้างอิง</span>
+                  <span style={{
+                    display: 'inline-block',
+                    padding: '3px 10px',
+                    borderRadius: '6px',
+                    fontSize: '0.82rem',
+                    fontWeight: '500',
+                    backgroundColor: '#e2e8f0',
+                    color: '#1e293b'
+                  }}>
+                    {viewingPrice.source || 'NABC AGRI API'}
+                  </span>
+                </div>
+
+                {/* Note / Details */}
+                <div style={{ backgroundColor: '#fffbeb', padding: '14px 16px', borderRadius: '8px', border: '1px solid #fef3c7' }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#92400e', display: 'block', marginBottom: '4px' }}>
+                    รายละเอียดรอบรายงาน:
+                  </span>
+                  <p style={{ margin: 0, fontSize: '0.88rem', color: '#78350f', lineHeight: '1.5' }}>
+                    {viewingPrice.note ? viewingPrice.note : 'ไม่มีข้อมูลรายละเอียดเพิ่มเติม'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', borderTop: '1px solid var(--border-color)' }}>
+              <button
+                type="button"
+                className="btn btn-outline"
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}
+                onClick={() => {
+                  const target = viewingPrice;
+                  setViewingPrice(null);
+                  handleOpenModal(target);
+                }}
+              >
+                <Edit size={14} />
+                แก้ไขข้อมูลนี้
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => setViewingPrice(null)}
+                style={{ fontSize: '0.85rem', padding: '6px 16px' }}
+              >
+                ปิดหน้าต่าง
+              </button>
+            </div>
           </div>
         </div>
       )}

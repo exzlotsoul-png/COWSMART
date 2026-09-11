@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:permission_handler/permission_handler.dart';
@@ -8,11 +10,21 @@ import 'dart:io';
 
 import '../../features/calendar/domain/calendar_event.dart';
 
+// Background FCM message handler (must be a top-level function)
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  debugPrint('[FCM Background] Received message: ${message.messageId} | ${message.notification?.title}');
+}
+
 final localNotificationProvider = Provider((ref) => LocalNotificationService());
 
 class LocalNotificationService {
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
+
+  String? _fcmToken;
+  String? get fcmToken => _fcmToken;
 
   Future<void> init() async {
     if (kIsWeb) return;
@@ -37,9 +49,40 @@ class LocalNotificationService {
     await _flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) async {
-        // Handle notification tap
+        debugPrint('[LocalNotification] Tap response: ${response.payload}');
       },
     );
+
+    // Initialize Firebase Core & Messaging
+    try {
+      await Firebase.initializeApp();
+      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+      // Listen to foreground FCM messages and display local notification
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        debugPrint('[FCM Foreground] Received: ${message.notification?.title}');
+        final notif = message.notification;
+        if (notif != null) {
+          showNotification(
+            title: notif.title ?? 'แจ้งเตือนจากระบบ',
+            body: notif.body ?? '',
+            payload: message.data['type'] ?? '',
+          );
+        }
+      });
+
+      // Fetch FCM Token
+      _fcmToken = await FirebaseMessaging.instance.getToken();
+      debugPrint('[FCM Token] Generated: $_fcmToken');
+
+      // Listen for token refresh
+      FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
+        _fcmToken = newToken;
+        debugPrint('[FCM Token Refresh]: $_fcmToken');
+      });
+    } catch (e) {
+      debugPrint('[FCM Init Error]: $e');
+    }
   }
 
   Future<void> requestPermission() async {
@@ -119,5 +162,58 @@ class LocalNotificationService {
           UILocalNotificationDateInterpretation.absoluteTime,
       payload: event.id,
     );
+  }
+
+  Future<void> showNotification({
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
+    if (kIsWeb) return;
+
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'cowsmart_push_channel',
+      'Cowsmart Alerts',
+      channelDescription: 'Notifications for broadcast alerts and real-time updates',
+      importance: Importance.max,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+    );
+
+    const DarwinNotificationDetails iOSPlatformChannelSpecifics =
+        DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+      iOS: iOSPlatformChannelSpecifics,
+    );
+
+    await _flutterLocalNotificationsPlugin.show(
+      DateTime.now().millisecondsSinceEpoch.remainder(100000),
+      title,
+      body,
+      platformChannelSpecifics,
+      payload: payload,
+    );
+  }
+
+  /// Sync FCM token to backend database if token is available
+  Future<void> syncFcmTokenToBackend(dynamic apiClient) async {
+    if (kIsWeb) return;
+    try {
+      final token = _fcmToken ?? await FirebaseMessaging.instance.getToken();
+      if (token != null && token.isNotEmpty) {
+        _fcmToken = token;
+        await apiClient.post('/user/fcm-token', data: {'fcm_token': token});
+        debugPrint('[FCM Token Synced]: $token');
+      }
+    } catch (e) {
+      debugPrint('[FCM Token Sync Error]: $e');
+    }
   }
 }

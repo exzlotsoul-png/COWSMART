@@ -4,8 +4,12 @@ import 'app_colors.dart';
 
 class AppTheme {
   static ThemeData get lightTheme {
+    final baseTextTheme = GoogleFonts.promptTextTheme();
+    final promptFamily = GoogleFonts.prompt().fontFamily;
+
     return ThemeData(
       useMaterial3: true,
+      fontFamily: promptFamily,
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primary,
         primary: AppColors.primary,
@@ -14,7 +18,7 @@ class AppTheme {
         surface: AppColors.surface,
       ),
       scaffoldBackgroundColor: AppColors.background,
-      textTheme: GoogleFonts.promptTextTheme().copyWith(
+      textTheme: baseTextTheme.copyWith(
         displayLarge: GoogleFonts.prompt(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
         displayMedium: GoogleFonts.prompt(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
         displaySmall: GoogleFonts.prompt(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
@@ -24,6 +28,10 @@ class AppTheme {
         titleMedium: GoogleFonts.prompt(color: AppColors.textPrimary, fontWeight: FontWeight.w500),
         bodyLarge: GoogleFonts.prompt(color: AppColors.textPrimary),
         bodyMedium: GoogleFonts.prompt(color: AppColors.textSecondary),
+        bodySmall: GoogleFonts.prompt(color: AppColors.textSecondary),
+        labelLarge: GoogleFonts.prompt(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+        labelMedium: GoogleFonts.prompt(color: AppColors.textSecondary),
+        labelSmall: GoogleFonts.prompt(color: AppColors.textSecondary),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.primary,
@@ -80,6 +88,26 @@ class AppTheme {
         ),
         hintStyle: GoogleFonts.prompt(color: AppColors.textHint),
         labelStyle: GoogleFonts.prompt(color: AppColors.textSecondary),
+        floatingLabelStyle: GoogleFonts.prompt(color: AppColors.primary, fontWeight: FontWeight.w500),
+        errorStyle: GoogleFonts.prompt(color: AppColors.error, fontSize: 12),
+      ),
+      dropdownMenuTheme: DropdownMenuThemeData(
+        textStyle: GoogleFonts.prompt(color: AppColors.textPrimary),
+        menuStyle: const MenuStyle(
+          backgroundColor: WidgetStatePropertyAll(AppColors.surface),
+        ),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: AppColors.surface,
+        textStyle: GoogleFonts.prompt(color: AppColors.textPrimary),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.surface,
+        titleTextStyle: GoogleFonts.prompt(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
+        contentTextStyle: GoogleFonts.prompt(color: AppColors.textSecondary, fontSize: 14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
       ),
     );
   }
@@ -92,9 +120,13 @@ class AppTheme {
     const darkTextSecondary = Color(0xFFB8AE9D);
     const darkBorder = Color(0xFF353E30);
 
+    final baseDarkTextTheme = GoogleFonts.promptTextTheme(ThemeData.dark().textTheme);
+    final promptFamily = GoogleFonts.prompt().fontFamily;
+
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
+      fontFamily: promptFamily,
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primary,
         brightness: Brightness.dark,
@@ -130,9 +162,9 @@ class AppTheme {
         indicatorColor: AppColors.primaryLight.withValues(alpha: 0.25),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return const TextStyle(color: AppColors.primaryLight, fontWeight: FontWeight.bold, fontSize: 12);
+            return GoogleFonts.prompt(color: AppColors.primaryLight, fontWeight: FontWeight.bold, fontSize: 12);
           }
-          return const TextStyle(color: darkTextSecondary, fontSize: 12);
+          return GoogleFonts.prompt(color: darkTextSecondary, fontSize: 12);
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
@@ -146,7 +178,7 @@ class AppTheme {
         selectedItemColor: AppColors.primaryLight,
         unselectedItemColor: darkTextSecondary,
       ),
-      textTheme: GoogleFonts.promptTextTheme(ThemeData.dark().textTheme).copyWith(
+      textTheme: baseDarkTextTheme.copyWith(
         displayLarge: GoogleFonts.prompt(color: darkTextPrimary, fontWeight: FontWeight.bold),
         displayMedium: GoogleFonts.prompt(color: darkTextPrimary, fontWeight: FontWeight.bold),
         displaySmall: GoogleFonts.prompt(color: darkTextPrimary, fontWeight: FontWeight.bold),
@@ -156,6 +188,10 @@ class AppTheme {
         titleMedium: GoogleFonts.prompt(color: darkTextPrimary, fontWeight: FontWeight.w500),
         bodyLarge: GoogleFonts.prompt(color: darkTextPrimary),
         bodyMedium: GoogleFonts.prompt(color: darkTextSecondary),
+        bodySmall: GoogleFonts.prompt(color: darkTextSecondary),
+        labelLarge: GoogleFonts.prompt(color: darkTextPrimary, fontWeight: FontWeight.w600),
+        labelMedium: GoogleFonts.prompt(color: darkTextSecondary),
+        labelSmall: GoogleFonts.prompt(color: darkTextSecondary),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: darkSurface,
@@ -197,9 +233,9 @@ class AppTheme {
           backgroundColor: WidgetStatePropertyAll(darkSurface),
         ),
       ),
-      popupMenuTheme: const PopupMenuThemeData(
+      popupMenuTheme: PopupMenuThemeData(
         color: darkSurface,
-        textStyle: TextStyle(color: darkTextPrimary),
+        textStyle: GoogleFonts.prompt(color: darkTextPrimary),
       ),
       datePickerTheme: DatePickerThemeData(
         backgroundColor: darkSurface,
@@ -266,6 +302,8 @@ class AppTheme {
         ),
         hintStyle: GoogleFonts.prompt(color: darkTextSecondary.withValues(alpha: 0.6)),
         labelStyle: GoogleFonts.prompt(color: darkTextSecondary),
+        floatingLabelStyle: GoogleFonts.prompt(color: AppColors.primaryLight, fontWeight: FontWeight.w500),
+        errorStyle: GoogleFonts.prompt(color: AppColors.error, fontSize: 12),
       ),
     );
   }

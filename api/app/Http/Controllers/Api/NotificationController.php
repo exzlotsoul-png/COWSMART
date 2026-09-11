@@ -131,7 +131,7 @@ class NotificationController extends Controller
         if ($targetType === 'active') {
             $usersQuery->where('is_active', true);
         }
-        $users = $usersQuery->get(['email', 'first_name', 'last_name']);
+        $users = $usersQuery->get(['email', 'first_name', 'last_name', 'fcm_token']);
 
         if ($users->isEmpty()) {
             return response()->json([
@@ -142,6 +142,7 @@ class NotificationController extends Controller
 
         $now = Carbon::now();
         $createdCount = 0;
+        $fcmTokens = [];
 
         foreach ($users as $user) {
             Notification::create([
@@ -152,6 +153,21 @@ class NotificationController extends Controller
                 'is_read' => 0,
             ]);
             $createdCount++;
+
+            if (!empty($user->fcm_token)) {
+                $fcmTokens[] = $user->fcm_token;
+            }
+        }
+
+        // Send Push Notification to all users with registered FCM devices
+        $pushResult = null;
+        if (!empty($fcmTokens)) {
+            $pushResult = \App\Services\FirebaseService::sendPushNotification(
+                $fcmTokens,
+                $title,
+                $message,
+                ['type' => 'broadcast', 'category' => $category]
+            );
         }
 
         return response()->json([
@@ -162,6 +178,7 @@ class NotificationController extends Controller
                 'category' => $category,
                 'recipients_count' => $createdCount,
                 'sent_at' => $now->toDateTimeString(),
+                'push_notification' => $pushResult,
             ],
         ], 201);
     }

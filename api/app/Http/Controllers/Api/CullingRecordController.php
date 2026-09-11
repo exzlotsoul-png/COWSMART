@@ -55,7 +55,7 @@ class CullingRecordController extends Controller
                     $record = CullingRecord::create($rData);
                     $createdRecords[] = $record;
 
-                    // Update cow status
+                    // Update cow status and clear zone_id
                     $statusStr = 'normal';
                     switch ((int)$rData['status']) {
                         case 0:
@@ -68,7 +68,10 @@ class CullingRecordController extends Controller
                             $statusStr = 'removed';
                             break;
                     }
-                    $cow->update(['status' => $statusStr]);
+                    $cow->update([
+                        'status' => $statusStr,
+                        'zone_id' => null,
+                    ]);
 
                     // If sold (status == 0) and has price > 0, auto-insert into financial records
                     $price = (double)($rData['price'] ?? 0);
@@ -112,7 +115,7 @@ class CullingRecordController extends Controller
             // Create culling record
             $record = CullingRecord::create($data);
 
-            // Update cow status
+            // Update cow status and clear zone_id
             $cow = Cow::findOrFail($request->cow_id);
             $statusStr = 'normal';
             switch ((int)$request->status) {
@@ -126,7 +129,10 @@ class CullingRecordController extends Controller
                     $statusStr = 'removed';
                     break;
             }
-            $cow->update(['status' => $statusStr]);
+            $cow->update([
+                'status' => $statusStr,
+                'zone_id' => null,
+            ]);
 
             // If sold (status == 0) and has price > 0, auto-insert into financial records
             $price = (double)($request->price ?? 0);

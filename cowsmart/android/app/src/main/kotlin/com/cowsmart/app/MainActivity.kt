@@ -1,4 +1,4 @@
-package com.example.beef_farm
+package com.cowsmart.app
 
 import io.flutter.embedding.android.FlutterActivity
 

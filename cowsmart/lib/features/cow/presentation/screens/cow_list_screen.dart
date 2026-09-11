@@ -807,6 +807,25 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                         physics: const BouncingScrollPhysics(),
                         child: Row(
                           children: [
+                            _buildInfoChip(
+                              context,
+                              cow.gender == 'M'
+                                  ? Icons.male_rounded
+                                  : Icons.female_rounded,
+                              cow.gender == 'M' ? 'ผู้' : 'เมีย',
+                              color: cow.gender == 'M'
+                                  ? Colors.blue[700]
+                                  : Colors.pink[600],
+                              bgColor: (cow.gender == 'M'
+                                      ? Colors.blue
+                                      : Colors.pink)
+                                  .withValues(alpha: 0.12),
+                              borderColor: (cow.gender == 'M'
+                                      ? Colors.blue
+                                      : Colors.pink)
+                                  .withValues(alpha: 0.35),
+                            ),
+                            const SizedBox(width: 6),
                             _buildInfoChip(context, Icons.cake_outlined, cow.ageYearsOnly),
                             const SizedBox(width: 6),
                             _buildInfoChip(
@@ -815,14 +834,6 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                               cow.latestWeight > 0
                                   ? '${cow.latestWeight.toStringAsFixed(0)} กก.'
                                   : '- กก.',
-                            ),
-                            const SizedBox(width: 6),
-                            _buildInfoChip(
-                              context,
-                              cow.gender == 'M'
-                                  ? Icons.male_rounded
-                                  : Icons.female_rounded,
-                              cow.gender == 'M' ? 'ผู้' : 'เมีย',
                             ),
                           ],
                         ),
@@ -845,24 +856,27 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
     );
   }
 
-  Widget _buildInfoChip(BuildContext context, IconData icon, String label) {
+  Widget _buildInfoChip(BuildContext context, IconData icon, String label,
+      {Color? color, Color? bgColor, Color? borderColor}) {
+    final chipColor = color ?? AppColors.subText(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.surfAlt(context),
+        color: bgColor ?? AppColors.surfAlt(context),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
+        border: Border.all(
+            color: borderColor ?? AppColors.brd(context).withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 15, color: AppColors.subText(context)),
+          Icon(icon, size: 15, color: chipColor),
           const SizedBox(width: 4),
           Text(
             label,
             style: TextStyle(
               fontSize: 13,
-              color: AppColors.subText(context),
+              color: chipColor,
               fontWeight: FontWeight.w600,
             ),
           ),

@@ -15,7 +15,16 @@ class ZoneController extends Controller
         $user = Auth::user();
         $userFarmIds = Farm::where('email', $user->email)->pluck('farm_id');
 
-        $query = Zone::query()->whereIn('farm_id', $userFarmIds)->withCount('cows');
+        $query = Zone::query()
+            ->whereIn('farm_id', $userFarmIds)
+            ->withCount([
+                'cows' => function ($q) {
+                    $q->where(function ($sub) {
+                        $sub->whereNotIn('status', ['sold', 'deceased', 'removed'])
+                            ->orWhereNull('status');
+                    });
+                }
+            ]);
 
         if ($request->has('farm_id')) {
             $query->where('farm_id', $request->farm_id);

@@ -203,7 +203,7 @@ class NfcService {
             );
 
             // Android Application Record (AAR) forces Android to launch Cowsmart directly
-            final aarPayload = utf8.encode('com.example.beef_farm');
+            final aarPayload = utf8.encode('com.cowsmart.app');
             final aarRecord = NdefRecord(
               typeNameFormat: TypeNameFormat.external,
               type: Uint8List.fromList(utf8.encode('android.com:pkg')),

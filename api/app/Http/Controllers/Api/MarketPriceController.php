@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\MarketPrice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class MarketPriceController extends Controller
@@ -111,102 +113,150 @@ class MarketPriceController extends Controller
     public function parseImageReport(Request $request)
     {
         $request->validate([
-            'image' => 'nullable|image|max:10240', // 10MB
+            'image' => 'required|image|max:10240', // 10MB
         ]);
 
-        $filename = '';
-        if ($request->hasFile('image')) {
-            $filename = $request->file('image')->getClientOriginalName();
+        $file = $request->file('image');
+        $imgData = base64_encode(file_get_contents($file->getRealPath()));
+        $mimeType = $file->getMimeType() ?: 'image/png';
+
+        $geminiApiKey = config('services.gemini.api_key') ?: env('GEMINI_API_KEY');
+
+        if (empty($geminiApiKey)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ไม่พบการตั้งค่า GEMINI_API_KEY สำหรับการตรวจสอบรูปภาพรายงาน',
+            ], 500);
         }
 
-        $thYear = 2569;
-        $thMonth = 8;
-        $week = 3;
+        $prompt = <<<EOT
+คำสั่งสำคัญ: คุณคือระบบตรวจสอบและอ่านเอกสารรายงานราคาปศุสัตว์
+จงตรวจสอบรูปภาพที่ได้รับอย่างละเอียดและเข้มงวด:
 
-        if (preg_match('/(\d{4})(\d{2})_?(\d+)?/i', $filename, $matches)) {
-            $thYear = intval($matches[1]);
-            $thMonth = intval($matches[2]);
-            $week = isset($matches[3]) && !empty($matches[3]) ? intval($matches[3]) : 3;
+รูปภาพนี้เป็น "ภาพอินโฟกราฟิกรายงานราคาเฉลี่ยสินค้าปศุสัตว์ที่เกษตรกรขายได้ จากกรมปศุสัตว์" หรือไม่?
+เกณฑ์การพิจารณาว่า ใช่ (is_dld_report = true):
+1. ต้องเป็นภาพอินโฟกราฟิกตารางสรุปรายงานราคาสินค้าปศุสัตว์ (เช่น มีหัวข้อ "ราคาเฉลี่ยสินค้าปศุสัตว์ที่เกษตรกรขายได้", มีโลโก้กรมปศุสัตว์/กระทรวงเกษตรและสหกรณ์ หรือระบุกลุ่มเศรษฐกิจการปศุสัตว์)
+2. มีตารางหรือส่วนแสดงราคาปศุสัตว์ โดยเฉพาะหัวข้อ "โคเนื้อและกระบือ" หรือสัตว์ปศุสัตว์อื่นๆ พร้อมตัวเลขราคา
+
+เกณฑ์การพิจารณาว่า ไม่ใช่ (is_dld_report = false):
+- ภาพถ่ายวัวหรือสัตว์เลี้ยงเดี่ยวๆ ทั่วไปในฟาร์ม
+- ภาพหน้าจอแอปพลิเคชัน (Mobile App / Web Dashboard Screen)
+- ภาพสลิปโอนเงิน ใบเสร็จ เอกสารอื่นๆ ที่ไม่ใช่ภาพอินโฟกราฟิกรายงานราคาของกรมปศุสัตว์
+- ภาพบุคคล ภาพทิวทัศน์ หรือภาพกราฟิกอื่นๆ
+
+หากไม่ใช่ (is_dld_report = false):
+ให้ตอบ JSON:
+{
+  "is_dld_report": false,
+  "reason": "ระบุเหตุผลภาษาไทยสั้นๆ ชัดเจน เช่น รูปภาพที่อัปโหลดไม่ใช่ภาพรายงานราคาของกรมปศุสัตว์ แต่เป็นภาพถ่ายสัตว์ทั่วไป/หน้าจอแอป"
+}
+
+หากใช่ (is_dld_report = true):
+ให้อ่านและสกัดข้อมูลราคาของหมวด 'โคเนื้อและกระบือ' โดยยึดตัวเลขราคา ณ วันที่ล่าสุด (ช่องสัปดาห์นี้ หรือ ราคา ณ วันที่ล่าสุด) ออกมาดังนี้:
+{
+  "is_dld_report": true,
+  "title": "หัวข้อรายงาน เช่น ราคาเฉลี่ยสินค้าปศุสัตว์ที่เกษตรกรขายได้ สัปดาห์ที่ 1 เดือน กันยายน 2569",
+  "report_date_text": "วันที่ที่ระบุมุมบนขวาของภาพอย่างแม่นยำ เช่น 7 กันยายน 2569",
+  "effective_date": "วันที่มุมบนขวาของภาพในรูปแบบ YYYY-MM-DD โดยแปลงปี พ.ศ. เป็น ค.ศ. (ต้องตรงกับวันที่มุมบนขวาเป๊ะๆ เช่น รายงาน ณ วันที่ 7 กันยายน 2569 จะได้ 2026-09-07)",
+  "cattle_prices": [
+    {
+      "category": "สายพันธุ์และพิกัดน้ำหนัก เช่น ลูกผสมยุโรป (>250-400 กก.)",
+      "price_per_kg": 69.82
+    }
+  ]
+}
+ตอบเฉพาะ JSON เท่านั้น
+EOT;
+
+        $models = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.7-flash'];
+        $aiParsed = null;
+        $lastError = null;
+
+        foreach ($models as $model) {
+            try {
+                $response = Http::timeout(35)->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$geminiApiKey}", [
+                    'contents' => [
+                        [
+                            'role' => 'user',
+                            'parts' => [
+                                ['text' => $prompt],
+                                [
+                                    'inline_data' => [
+                                        'mime_type' => $mimeType,
+                                        'data' => $imgData
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    'generationConfig' => [
+                        'temperature' => 0.1,
+                        'responseMimeType' => 'application/json'
+                    ]
+                ]);
+
+                if ($response->successful()) {
+                    $jsonText = $response->json()['candidates'][0]['content']['parts'][0]['text'] ?? '';
+                    $decoded = json_decode($jsonText, true);
+                    if ($decoded && isset($decoded['is_dld_report'])) {
+                        $aiParsed = $decoded;
+                        break;
+                    }
+                } else {
+                    $lastError = "Model {$model} returned status " . $response->status() . ": " . $response->body();
+                    Log::warning("Gemini Vision failed with {$model}: " . $response->body());
+                }
+            } catch (\Exception $e) {
+                $lastError = $e->getMessage();
+                Log::error("Gemini Vision Exception with {$model}: " . $e->getMessage());
+            }
         }
 
-        $ceYear = $thYear > 2400 ? $thYear - 543 : $thYear;
-
-        // Map week number to report date in top-right corner of DLD Infographic:
-        // Week 1 -> 3 (e.g. 3 สิงหาคม 2569 -> 2026-08-03)
-        // Week 2 -> 10 (e.g. 10 สิงหาคม 2569 -> 2026-08-10)
-        // Week 3 -> 17 (e.g. 17 สิงหาคม 2569 -> 2026-08-17)
-        // Week 4 -> 24 (e.g. 24 สิงหาคม 2569 -> 2026-08-24)
-        // Week 5 -> 31 (e.g. 31 สิงหาคม 2569 -> 2026-08-31)
-        switch ($week) {
-            case 1: $reportDay = 3; break;
-            case 2: $reportDay = 10; break;
-            case 3: $reportDay = 17; break;
-            case 4: $reportDay = 24; break;
-            case 5: $reportDay = 31; break;
-            default: $reportDay = min(31, max(1, ($week - 1) * 7 + 3)); break;
+        if (!$aiParsed) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ระบบ AI ขัดข้องชั่วคราว ไม่สามารถตรวจสอบรูปภาพได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง (' . ($lastError ? substr($lastError, 0, 100) : 'Service Unavailable') . ')',
+            ], 503);
         }
 
-        $effectiveDate = sprintf('%04d-%02d-%02d', $ceYear, $thMonth, $reportDay);
+        // Validate whether it's truly a DLD livestock report
+        if (empty($aiParsed['is_dld_report'])) {
+            $reason = $aiParsed['reason'] ?? 'รูปภาพที่อัปโหลดไม่ใช่รายงานราคาสินค้าปศุสัตว์จากกรมปศุสัตว์';
+            return response()->json([
+                'success' => false,
+                'message' => "ไม่สามารถดำเนินการได้: {$reason} กรุณาอัปโหลดรูปภาพอินโฟกราฟิกรายงานราคาของกรมปศุสัตว์เท่านั้น",
+                'reason' => $reason,
+            ], 422);
+        }
 
-        $monthNames = [
-            1 => 'มกราคม', 2 => 'กุมภาพันธ์', 3 => 'มีนาคม', 4 => 'เมษายน',
-            5 => 'พฤษภาคม', 6 => 'มิถุนายน', 7 => 'กรกฎาคม', 8 => 'สิงหาคม',
-            9 => 'กันยายน', 10 => 'ตุลาคม', 11 => 'พฤศจิกายน', 12 => 'ธันวาคม'
-        ];
+        $reportTitle = $aiParsed['title'] ?? 'ราคาเฉลี่ยสินค้าปศุสัตว์ที่เกษตรกรขายได้ กรมปศุสัตว์';
+        $reportDateText = $aiParsed['report_date_text'] ?? '';
+        $effectiveDate = !empty($aiParsed['effective_date']) ? $aiParsed['effective_date'] : date('Y-m-d');
 
-        $reportMonthName = $monthNames[$thMonth] ?? 'สิงหาคม';
-        $reportTitle = "ราคาเฉลี่ยสินค้าปศุสัตว์ที่เกษตรกรขายได้ สัปดาห์ที่ {$week} เดือน {$reportMonthName} {$thYear}";
-        $reportDateText = "{$reportDay} {$reportMonthName} {$thYear}";
+        $extractedItems = [];
+        if (!empty($aiParsed['cattle_prices']) && is_array($aiParsed['cattle_prices'])) {
+            foreach ($aiParsed['cattle_prices'] as $item) {
+                if (empty($item['category']) || !isset($item['price_per_kg'])) continue;
+                $extractedItems[] = [
+                    'category' => $item['category'],
+                    'price_per_kg' => floatval($item['price_per_kg']),
+                    'effective_date' => $effectiveDate,
+                    'source' => 'กรมปศุสัตว์ (กลุ่มเศรษฐกิจการปศุสัตว์)',
+                    'note' => "{$reportTitle}" . ($reportDateText ? " (รายงาน ณ วันที่ {$reportDateText})" : ""),
+                ];
+            }
+        }
 
-        // Extracted items matching DLD Weekly Cattle Infographic structure
-        $extractedItems = [
-            [
-                'category' => 'ลูกผสมยุโรป (>250-400 กก.)',
-                'price_per_kg' => 68.03,
-                'effective_date' => $effectiveDate,
-                'source' => 'กรมปศุสัตว์ (กลุ่มเศรษฐกิจการปศุสัตว์)',
-                'note' => "{$reportTitle} (รายงาน ณ วันที่ {$reportDateText})",
-            ],
-            [
-                'category' => 'ลูกผสมยุโรป (>400-600 กก.)',
-                'price_per_kg' => 73.09,
-                'effective_date' => $effectiveDate,
-                'source' => 'กรมปศุสัตว์ (กลุ่มเศรษฐกิจการปศุสัตว์)',
-                'note' => "{$reportTitle} (รายงาน ณ วันที่ {$reportDateText})",
-            ],
-            [
-                'category' => 'ลูกผสมบราห์มัน (>250-400 กก.)',
-                'price_per_kg' => 64.59,
-                'effective_date' => $effectiveDate,
-                'source' => 'กรมปศุสัตว์ (กลุ่มเศรษฐกิจการปศุสัตว์)',
-                'note' => "{$reportTitle} (รายงาน ณ วันที่ {$reportDateText})",
-            ],
-            [
-                'category' => 'ลูกผสมบราห์มัน (>400-600 กก.)',
-                'price_per_kg' => 69.69,
-                'effective_date' => $effectiveDate,
-                'source' => 'กรมปศุสัตว์ (กลุ่มเศรษฐกิจการปศุสัตว์)',
-                'note' => "{$reportTitle} (รายงาน ณ วันที่ {$reportDateText})",
-            ],
-            [
-                'category' => 'พื้นเมืองไทย (≤250 กก.)',
-                'price_per_kg' => 56.36,
-                'effective_date' => $effectiveDate,
-                'source' => 'กรมปศุสัตว์ (กลุ่มเศรษฐกิจการปศุสัตว์)',
-                'note' => "{$reportTitle} (รายงาน ณ วันที่ {$reportDateText})",
-            ],
-            [
-                'category' => 'พื้นเมืองไทย (>250-400 กก.)',
-                'price_per_kg' => 60.53,
-                'effective_date' => $effectiveDate,
-                'source' => 'กรมปศุสัตว์ (กลุ่มเศรษฐกิจการปศุสัตว์)',
-                'note' => "{$reportTitle} (รายงาน ณ วันที่ {$reportDateText})",
-            ],
-        ];
+        if (empty($extractedItems)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ตรวจพบเป็นรายงานของกรมปศุสัตว์ แต่ไม่พบข้อมูลตารางราคาโคเนื้อในรูปภาพ กรุณาตรวจสอบรูปภาพอีกครั้ง',
+            ], 422);
+        }
 
         return response()->json([
             'success' => true,
-            'message' => 'อ่านข้อมูลราคาจากรูปภาพรายงานกรมปศุสัตว์สำเร็จ',
+            'message' => 'ตรวจสอบผ่าน: อ่านข้อมูลราคาจากรูปภาพรายงานกรมปศุสัตว์สำเร็จ',
             'report_title' => $reportTitle,
             'report_date_text' => $reportDateText,
             'effective_date' => $effectiveDate,

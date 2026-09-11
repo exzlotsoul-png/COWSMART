@@ -36,4 +36,25 @@ class UserController extends Controller
         User::destroy($id);
         return response()->json(null, 204);
     }
+
+    /**
+     * Update or bind FCM device token for push notifications
+     */
+    public function updateFcmToken(Request $request)
+    {
+        $request->validate([
+            'fcm_token' => 'nullable|string',
+        ]);
+
+        $user = $request->user();
+        if ($user) {
+            $user->update(['fcm_token' => $request->input('fcm_token')]);
+            return response()->json([
+                'success' => true,
+                'message' => 'FCM Device Token updated successfully',
+            ]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+    }
 }

@@ -12,7 +12,7 @@ class MarketPrice extends Model
     protected $guarded = [];
 
     protected $casts = [
-        'effective_date' => 'date',
+        'effective_date' => 'date:Y-m-d',
         'price_per_kg' => 'float',
     ];
 }
