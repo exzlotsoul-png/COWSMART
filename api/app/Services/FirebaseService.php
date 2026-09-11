@@ -29,9 +29,10 @@ class FirebaseService
         $serviceAccountPath = config('services.firebase.credentials') 
             ?? storage_path('app/firebase/service-account.json');
 
-        // Check if Firebase Service Account JSON is provided for FCM HTTP v1
-        if (file_exists($serviceAccountPath)) {
-            return self::sendViaV1($serviceAccountPath, $tokenList, $title, $body, $data);
+        // Check if Firebase Service Account is provided via env (Base64/JSON) or file for FCM HTTP v1
+        $serviceAccountJson = self::resolveServiceAccountData($serviceAccountPath);
+        if ($serviceAccountJson !== null) {
+            return self::sendViaV1($serviceAccountJson, $tokenList, $title, $body, $data);
         }
 
         // Check if legacy server key is provided in .env
@@ -55,13 +56,44 @@ class FirebaseService
     }
 
     /**
+     * Resolve Service Account data either from JSON/Base64 environment variable or local file
+     */
+    protected static function resolveServiceAccountData(?string $path): ?array
+    {
+        // 1. Check environment variable for raw JSON or Base64 encoded JSON
+        $envCredentials = env('FIREBASE_CREDENTIALS');
+        if (!empty($envCredentials)) {
+            $decoded = json_decode($envCredentials, true);
+            if (is_array($decoded) && !empty($decoded['project_id'])) {
+                return $decoded;
+            }
+            $fromBase64 = base64_decode($envCredentials, true);
+            if ($fromBase64 !== false) {
+                $decodedB64 = json_decode($fromBase64, true);
+                if (is_array($decodedB64) && !empty($decodedB64['project_id'])) {
+                    return $decodedB64;
+                }
+            }
+        }
+
+        // 2. Check local file path
+        if (!empty($path) && file_exists($path)) {
+            $fileData = json_decode(file_get_contents($path), true);
+            if (is_array($fileData) && !empty($fileData['project_id'])) {
+                return $fileData;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Send using Firebase Cloud Messaging HTTP v1 API
      */
-    protected static function sendViaV1(string $serviceAccountPath, array $tokens, string $title, string $body, array $data = []): array
+    protected static function sendViaV1(array $json, array $tokens, string $title, string $body, array $data = []): array
     {
         try {
-            $json = json_decode(file_get_contents($serviceAccountPath), true);
-            if (!$json || empty($json['project_id']) || empty($json['private_key']) || empty($json['client_email'])) {
+            if (empty($json['project_id']) || empty($json['private_key']) || empty($json['client_email'])) {
                 throw new \Exception('Invalid Firebase service account JSON structure.');
             }
 
