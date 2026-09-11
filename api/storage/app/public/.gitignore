@@ -1,2 +1,9 @@
-*
 !.gitignore
+!cows/
+!cows/**
+!farms/
+!farms/**
+!health/
+!health/**
+!issues/
+!issues/**
