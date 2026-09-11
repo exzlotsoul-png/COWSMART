@@ -211,7 +211,7 @@ const IssueReports = () => {
   const formatImageUrl = (url) => {
     if (!url) return null;
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    return `http://127.0.0.1:8000/api/storage/${url.replace(/^\/?storage\//, '')}`;
+    return `https://cowsmart-api.onrender.com/api/storage/${url.replace(/^\/?storage\//, '')}`;
   };
 
   return (

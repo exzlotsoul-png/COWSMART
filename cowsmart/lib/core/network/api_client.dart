@@ -6,10 +6,14 @@ class ApiClient {
   final Dio _dio;
   String? _token;
 
-  // IP เครื่องคอมพิวเตอร์สำหรับการต่อผ่าน Wi-Fi โดยไม่ต้องเสียบสาย USB (เฉพาะบนมือถือ)
-  static const String mobileWifiIp = '10.10.60.50';
+  // เลือกว่าจะใช้ Cloud Host (Render) หรือ Localhost
+  // ปรับเป็น true เพื่อใช้ Render.com (ทำงานตลอด 24 ชม. ไม่ต้องต่อสาย/Wi-Fi เดียวกัน)
+  static const bool useCloudServer = true;
+  static const String cloudApiUrl = 'https://cowsmart-api.onrender.com';
 
-  // ถ้าทดสอบบนคอมพิวเตอร์/โน้ตบุ๊ก (Chrome / Windows Desktop) จะใช้ 127.0.0.1 เสมออัตโนมัติ
+  // IP เครื่องคอมพิวเตอร์สำหรับการต่อผ่าน Wi-Fi ในวงเดียวกัน (กรณี useCloudServer = false)
+  static const String mobileWifiIp = '192.168.1.43';
+
   static String get serverHost {
     if (kIsWeb || defaultTargetPlatform == TargetPlatform.windows) {
       return '127.0.0.1';
@@ -17,7 +21,7 @@ class ApiClient {
     return mobileWifiIp;
   }
 
-  static String get baseServerUrl => 'http://$serverHost:8000';
+  static String get baseServerUrl => useCloudServer ? cloudApiUrl : 'http://$serverHost:8000';
   static String get baseUrl => '$baseServerUrl/api';
   static String get storageUrl => '$baseServerUrl/api/storage';
 

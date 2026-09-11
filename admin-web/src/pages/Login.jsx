@@ -24,7 +24,12 @@ const Login = () => {
     try {
       await login(email, password);
     } catch (err) {
-      setError(err.message || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+      const serverMsg = err.response?.data?.message;
+      if (err.response?.status === 401) {
+        setError(serverMsg || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+      } else {
+        setError(serverMsg || err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
+      }
     } finally {
       setIsLoading(false);
     }

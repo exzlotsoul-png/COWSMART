@@ -1,8 +1,11 @@
 import axios from 'axios';
 
+export const API_BASE_URL = 'https://cowsmart-api.onrender.com/api';
+export const STORAGE_BASE_URL = 'https://cowsmart-api.onrender.com/api/storage';
+
 const api = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api', // Laravel API endpoint
-  withCredentials: true, // Important for Sanctum cookies
+  baseURL: API_BASE_URL,
+  withCredentials: false,
   headers: {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
