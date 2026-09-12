@@ -271,7 +271,7 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
       labelText: labelText,
       labelStyle: TextStyle(
         fontSize: 12.5,
-        color: AppColors.sub(context),
+        color: AppColors.subText(context),
       ),
       floatingLabelStyle: const TextStyle(
         fontSize: 11.5,
@@ -285,7 +285,7 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
       ),
       suffixText: suffixText,
       suffixStyle: TextStyle(
-        color: AppColors.sub(context),
+        color: AppColors.subText(context),
         fontSize: 11.5,
         fontWeight: FontWeight.w600,
       ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
 import 'package:cowsmart/core/utils/app_toast.dart';
 import 'package:cowsmart/core/utils/date_formatter.dart';
@@ -191,7 +190,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
       labelText: labelText,
       labelStyle: TextStyle(
         fontSize: 12.5,
-        color: AppColors.sub(context),
+        color: AppColors.subText(context),
       ),
       floatingLabelStyle: const TextStyle(
         fontSize: 11.5,
@@ -205,7 +204,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
       ),
       suffixText: suffixText,
       suffixStyle: TextStyle(
-        color: AppColors.sub(context),
+        color: AppColors.subText(context),
         fontSize: 11.5,
         fontWeight: FontWeight.w600,
       ),
