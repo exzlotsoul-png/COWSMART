@@ -260,9 +260,9 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
     if (icon is Widget) {
       prefixWidget = icon;
     } else if (icon == Icons.pets || icon == Icons.pets_rounded || icon == Icons.pets_outlined) {
-      prefixWidget = const CowIcon(size: 18, color: AppColors.primary);
+      prefixWidget = const CowIcon(size: 20, color: AppColors.primary);
     } else if (icon is IconData) {
-      prefixWidget = Icon(icon, color: AppColors.primary, size: 18);
+      prefixWidget = Icon(icon, color: AppColors.primary, size: 20);
     } else {
       prefixWidget = const SizedBox.shrink();
     }
@@ -270,39 +270,29 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
     return InputDecoration(
       labelText: labelText,
       labelStyle: TextStyle(
-        fontSize: 12.5,
+        fontSize: 14,
         color: AppColors.subText(context),
       ),
       floatingLabelStyle: const TextStyle(
-        fontSize: 11.5,
+        fontSize: 13,
         color: AppColors.primary,
         fontWeight: FontWeight.w600,
       ),
       hintText: hintText,
       hintStyle: TextStyle(
         color: AppColors.hint(context),
-        fontSize: 12,
+        fontSize: 14,
       ),
       suffixText: suffixText,
       suffixStyle: TextStyle(
         color: AppColors.subText(context),
-        fontSize: 11.5,
+        fontSize: 13,
         fontWeight: FontWeight.w600,
       ),
-      prefixIcon: Padding(
-        padding: const EdgeInsets.only(left: 8, right: 6),
-        child: prefixWidget,
-      ),
-      prefixIconConstraints: const BoxConstraints(
-        minWidth: 32,
-        maxWidth: 36,
-        minHeight: 32,
-        maxHeight: 36,
-      ),
-      isDense: true,
+      prefixIcon: prefixWidget,
       filled: true,
       fillColor: AppColors.surfAlt(context),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide(color: AppColors.brd(context)),
@@ -315,6 +305,32 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
         borderRadius: BorderRadius.circular(14),
         borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
       ),
+    );
+  }
+
+  Widget _buildResponsiveRow(Widget first, Widget second) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth >= 500) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: first),
+              const SizedBox(width: 14),
+              Expanded(child: second),
+            ],
+          );
+        } else {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              first,
+              const SizedBox(height: 14),
+              second,
+            ],
+          );
+        }
+      },
     );
   }
 
@@ -343,10 +359,8 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
   }
 
   Widget _buildCardContainer({required List<Widget> children}) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final horizontalPad = screenWidth < 380 ? 12.0 : 16.0;
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: horizontalPad, vertical: 16),
+      padding: const EdgeInsets.all(16),
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: AppColors.cardBg(context),
@@ -375,9 +389,6 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
     // addCow(). We do NOT listen to cowProvider errors globally here because
     // other operations (e.g., cullCowsGroup) can set errorMessage on the same
     // provider while this screen is open, causing unrelated errors to appear.
-
-    final screenWidth = MediaQuery.of(context).size.width;
-    final outerPad = screenWidth < 380 ? 12.0 : 16.0;
 
     return Scaffold(
       backgroundColor: AppColors.bg(context),
@@ -441,7 +452,7 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
           // ── Form Body ──
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.fromLTRB(outerPad, 20, outerPad, 100),
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 100),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -485,140 +496,117 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                         _buildSectionHeader('ข้อมูลพื้นฐาน'),
                         const SizedBox(height: 16),
 
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextFormField(
-                                controller: _tagController,
-                                decoration: _buildInputDecoration('เบอร์วัว', Icons.tag_rounded, hintText: 'เช่น kp-001'),
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return 'กรุณากรอกหมายเลข';
-                                  }
-                                  final allCows = ref.read(cowProvider).allCows;
-                                  final isDup = allCows.any(
-                                    (c) => c.tagNumber.trim().toLowerCase() == value.trim().toLowerCase(),
-                                  );
-                                  if (isDup) {
-                                    return 'เบอร์วัวนี้มีในระบบแล้ว';
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: TextFormField(
-                                controller: _nameController,
-                                decoration: _buildInputDecoration('ชื่อวัว', Icons.pets_rounded, hintText: 'ถ้ามี'),
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return 'กรุณากรอกชื่อ';
-                                  }
-                                  final allCows = ref.read(cowProvider).allCows;
-                                  final isDup = allCows.any(
-                                    (c) => c.name.trim().toLowerCase() == value.trim().toLowerCase(),
-                                  );
-                                  if (isDup) {
-                                    return 'ชื่อวัวนี้มีในระบบแล้ว';
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ),
-                          ],
+                        _buildResponsiveRow(
+                          TextFormField(
+                            controller: _tagController,
+                            decoration: _buildInputDecoration('เบอร์วัว (Tag)', Icons.tag_rounded, hintText: 'เช่น kp-001'),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'กรุณากรอกหมายเลข';
+                              }
+                              final allCows = ref.read(cowProvider).allCows;
+                              final isDup = allCows.any(
+                                (c) => c.tagNumber.trim().toLowerCase() == value.trim().toLowerCase(),
+                              );
+                              if (isDup) {
+                                return 'เบอร์วัวนี้มีในระบบแล้ว';
+                              }
+                              return null;
+                            },
+                          ),
+                          TextFormField(
+                            controller: _nameController,
+                            decoration: _buildInputDecoration('ชื่อวัว (ถ้ามี)', Icons.pets_rounded, hintText: 'ถ้ามี'),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'กรุณากรอกชื่อ';
+                              }
+                              final allCows = ref.read(cowProvider).allCows;
+                              final isDup = allCows.any(
+                                (c) => c.name.trim().toLowerCase() == value.trim().toLowerCase(),
+                              );
+                              if (isDup) {
+                                return 'ชื่อวัวนี้มีในระบบแล้ว';
+                              }
+                              return null;
+                            },
+                          ),
                         ),
                         const SizedBox(height: 14),
 
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Consumer(
-                                builder: (context, ref, child) {
-                                  final breeds = ref.watch(breedProvider);
-                                  final uniqueBreeds = {
-                                    for (var b in breeds) b.id: b,
-                                  }.values.toList();
+                        _buildResponsiveRow(
+                          Consumer(
+                            builder: (context, ref, child) {
+                              final breeds = ref.watch(breedProvider);
+                              final uniqueBreeds = {
+                                for (var b in breeds) b.id: b,
+                              }.values.toList();
 
-                                  final bool isValueInList = uniqueBreeds.any(
-                                    (b) => b.id == _selectedBreedId,
-                                  );
-                                  final String? safeValue = isValueInList
-                                      ? _selectedBreedId
-                                      : null;
+                              final bool isValueInList = uniqueBreeds.any(
+                                (b) => b.id == _selectedBreedId,
+                              );
+                              final String? safeValue = isValueInList
+                                  ? _selectedBreedId
+                                  : null;
 
-                                  return DropdownButtonFormField<String?>(
-                                    value: safeValue,
-                                    dropdownColor: AppColors.cardBg(context),
-                                    isExpanded: true,
-                                    icon: const Icon(Icons.arrow_drop_down, size: 20),
-                                    style: TextStyle(color: AppColors.text(context), fontSize: 13),
-                                    decoration: _buildInputDecoration('สายพันธุ์', Icons.category_rounded),
-                                    items: uniqueBreeds.map((breed) {
-                                      return DropdownMenuItem<String?>(
-                                        value: breed.id,
-                                        child: Text(
-                                          breed.name,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(fontSize: 13),
-                                        ),
-                                      );
-                                    }).toList(),
-                                    onChanged: (val) =>
-                                        setState(() => _selectedBreedId = val),
-                                    validator: (val) =>
-                                        val == null ? 'กรุณาเลือกสายพันธุ์' : null,
+                              return DropdownButtonFormField<String?>(
+                                value: safeValue,
+                                dropdownColor: AppColors.cardBg(context),
+                                isExpanded: true,
+                                style: TextStyle(color: AppColors.text(context), fontSize: 14),
+                                decoration: _buildInputDecoration('สายพันธุ์', Icons.category_rounded),
+                                items: uniqueBreeds.map((breed) {
+                                  return DropdownMenuItem<String?>(
+                                    value: breed.id,
+                                    child: Text(
+                                      breed.name,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontSize: 14),
+                                    ),
                                   );
-                                },
-                              ),
+                                }).toList(),
+                                onChanged: (val) =>
+                                    setState(() => _selectedBreedId = val),
+                                validator: (val) =>
+                                    val == null ? 'กรุณาเลือกสายพันธุ์' : null,
+                              );
+                            },
+                          ),
+                          TextFormField(
+                            controller: _weightController,
+                            keyboardType: TextInputType.number,
+                            decoration: _buildInputDecoration(
+                              'น้ำหนัก (กก.)',
+                              Icons.scale_rounded,
+                              hintText: '0.00',
                             ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: TextFormField(
-                                controller: _weightController,
-                                keyboardType: TextInputType.number,
-                                decoration: _buildInputDecoration(
-                                  'น้ำหนัก',
-                                  Icons.scale_rounded,
-                                  hintText: '0.0',
-                                  suffixText: 'กก.',
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                         const SizedBox(height: 14),
 
-                        Row(
-                          children: [
-                            Expanded(
-                              child: InkWell(
-                                onTap: () => _selectDate(context),
-                                borderRadius: BorderRadius.circular(14),
-                                child: InputDecorator(
-                                  decoration: _buildInputDecoration('วันเกิด', Icons.cake_rounded),
-                                  child: Text(
-                                    AppDateUtils.formatThaiDate(_selectedDate),
-                                    style: TextStyle(fontSize: 13, color: AppColors.text(context), fontWeight: FontWeight.bold),
-                                  ),
-                                ),
+                        _buildResponsiveRow(
+                          InkWell(
+                            onTap: () => _selectDate(context),
+                            borderRadius: BorderRadius.circular(14),
+                            child: InputDecorator(
+                              decoration: _buildInputDecoration('วันเกิด', Icons.cake_rounded),
+                              child: Text(
+                                AppDateUtils.formatThaiDate(_selectedDate),
+                                style: TextStyle(fontSize: 14, color: AppColors.text(context), fontWeight: FontWeight.bold),
                               ),
                             ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: InkWell(
-                                onTap: () => _selectEntryDate(context),
-                                borderRadius: BorderRadius.circular(14),
-                                child: InputDecorator(
-                                  decoration: _buildInputDecoration('วันเข้าฟาร์ม', Icons.login_rounded),
-                                  child: Text(
-                                    AppDateUtils.formatThaiDate(_selectedEntryDate),
-                                    style: TextStyle(fontSize: 13, color: AppColors.text(context), fontWeight: FontWeight.bold),
-                                  ),
-                                ),
+                          ),
+                          InkWell(
+                            onTap: () => _selectEntryDate(context),
+                            borderRadius: BorderRadius.circular(14),
+                            child: InputDecorator(
+                              decoration: _buildInputDecoration('วันเข้าฟาร์ม', Icons.login_rounded),
+                              child: Text(
+                                AppDateUtils.formatThaiDate(_selectedEntryDate),
+                                style: TextStyle(fontSize: 14, color: AppColors.text(context), fontWeight: FontWeight.bold),
                               ),
                             ),
-                          ],
+                          ),
                         ),
                         const SizedBox(height: 14),
                         TextFormField(
@@ -779,92 +767,83 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                       children: [
                         _buildSectionHeader('สายเลือด (พ่อ/แม่)'),
                         const SizedBox(height: 14),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Builder(
-                                builder: (context) {
-                                  final bool isFatherInList = cowState.allCows
-                                      .any((c) => c.gender == 'M' && c.id == _selectedFatherId);
-                                  final String? safeFatherValue = isFatherInList ? _selectedFatherId : null;
+                        _buildResponsiveRow(
+                          Builder(
+                            builder: (context) {
+                              final bool isFatherInList = cowState.allCows
+                                  .any((c) => c.gender == 'M' && c.id == _selectedFatherId);
+                              final String? safeFatherValue = isFatherInList ? _selectedFatherId : null;
 
-                                  return DropdownButtonFormField<String?>(
-                                    value: safeFatherValue,
-                                    dropdownColor: AppColors.cardBg(context),
-                                    isExpanded: true,
-                                    icon: const Icon(Icons.arrow_drop_down, size: 20),
-                                    style: TextStyle(color: AppColors.text(context), fontSize: 13),
-                                    decoration: _buildInputDecoration('พ่อพันธุ์', Icons.male_rounded),
-                                    items: [
-                                      const DropdownMenuItem<String?>(
-                                        value: null,
-                                        child: Text('ไม่ระบุพ่อพันธุ์', overflow: TextOverflow.ellipsis),
+                              return DropdownButtonFormField<String?>(
+                                value: safeFatherValue,
+                                dropdownColor: AppColors.cardBg(context),
+                                isExpanded: true,
+                                style: TextStyle(color: AppColors.text(context), fontSize: 14),
+                                decoration: _buildInputDecoration('พ่อพันธุ์ (Sire)', Icons.male_rounded),
+                                items: [
+                                  const DropdownMenuItem<String?>(
+                                    value: null,
+                                    child: Text('ไม่ระบุพ่อพันธุ์', overflow: TextOverflow.ellipsis),
+                                  ),
+                                  ...cowState.allCows
+                                      .where((c) => c.gender == 'M')
+                                      .map((cow) {
+                                    return DropdownMenuItem<String?>(
+                                      value: cow.id,
+                                      child: Text(
+                                        cow.name.isNotEmpty ? '${cow.name} (${cow.tagNumber})' : cow.tagNumber,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      ...cowState.allCows
-                                          .where((c) => c.gender == 'M')
-                                          .map((cow) {
-                                        return DropdownMenuItem<String?>(
-                                          value: cow.id,
-                                          child: Text(
-                                            cow.name.isNotEmpty ? '${cow.name} (${cow.tagNumber})' : cow.tagNumber,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        );
-                                      }),
-                                    ],
-                                    onChanged: (val) {
-                                      setState(() {
-                                        _selectedFatherId = val;
-                                        _checkAndAutoSetBreed(cowState.allCows);
-                                      });
-                                    },
-                                  );
+                                    );
+                                  }),
+                                ],
+                                onChanged: (val) {
+                                  setState(() {
+                                    _selectedFatherId = val;
+                                    _checkAndAutoSetBreed(cowState.allCows);
+                                  });
                                 },
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Builder(
-                                builder: (context) {
-                                  final bool isMotherInList = cowState.allCows
-                                      .any((c) => c.gender == 'F' && c.id == _selectedMotherId);
-                                  final String? safeMotherValue = isMotherInList ? _selectedMotherId : null;
+                              );
+                            },
+                          ),
+                          Builder(
+                            builder: (context) {
+                              final bool isMotherInList = cowState.allCows
+                                  .any((c) => c.gender == 'F' && c.id == _selectedMotherId);
+                              final String? safeMotherValue = isMotherInList ? _selectedMotherId : null;
 
-                                  return DropdownButtonFormField<String?>(
-                                    value: safeMotherValue,
-                                    dropdownColor: AppColors.cardBg(context),
-                                    isExpanded: true,
-                                    icon: const Icon(Icons.arrow_drop_down, size: 20),
-                                    style: TextStyle(color: AppColors.text(context), fontSize: 13),
-                                    decoration: _buildInputDecoration('แม่พันธุ์', Icons.female_rounded),
-                                    items: [
-                                      const DropdownMenuItem<String?>(
-                                        value: null,
-                                        child: Text('ไม่ระบุแม่พันธุ์', overflow: TextOverflow.ellipsis),
+                              return DropdownButtonFormField<String?>(
+                                value: safeMotherValue,
+                                dropdownColor: AppColors.cardBg(context),
+                                isExpanded: true,
+                                style: TextStyle(color: AppColors.text(context), fontSize: 14),
+                                decoration: _buildInputDecoration('แม่พันธุ์ (Dam)', Icons.female_rounded),
+                                items: [
+                                  const DropdownMenuItem<String?>(
+                                    value: null,
+                                    child: Text('ไม่ระบุแม่พันธุ์', overflow: TextOverflow.ellipsis),
+                                  ),
+                                  ...cowState.allCows
+                                      .where((c) => c.gender == 'F')
+                                      .map((cow) {
+                                    return DropdownMenuItem<String?>(
+                                      value: cow.id,
+                                      child: Text(
+                                        cow.name.isNotEmpty ? '${cow.name} (${cow.tagNumber})' : cow.tagNumber,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      ...cowState.allCows
-                                          .where((c) => c.gender == 'F')
-                                          .map((cow) {
-                                        return DropdownMenuItem<String?>(
-                                          value: cow.id,
-                                          child: Text(
-                                            cow.name.isNotEmpty ? '${cow.name} (${cow.tagNumber})' : cow.tagNumber,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        );
-                                      }),
-                                    ],
-                                    onChanged: (val) {
-                                      setState(() {
-                                        _selectedMotherId = val;
-                                        _checkAndAutoSetBreed(cowState.allCows);
-                                      });
-                                    },
-                                  );
+                                    );
+                                  }),
+                                ],
+                                onChanged: (val) {
+                                  setState(() {
+                                    _selectedMotherId = val;
+                                    _checkAndAutoSetBreed(cowState.allCows);
+                                  });
                                 },
-                              ),
-                            ),
-                          ],
+                              );
+                            },
+                          ),
                         ),
                       ],
                     ),
