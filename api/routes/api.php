@@ -41,62 +41,6 @@ Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
-Route::get('/migrate-existing-images', function () {
-    $cloudinary = app(\App\Services\CloudinaryService::class);
-    $results = [];
-
-    // 1. Migrating Farms
-    $farms = \App\Models\Farm::whereNotNull('image_url')->where('image_url', 'not like', 'http%')->get();
-    foreach ($farms as $farm) {
-        $rawPath = preg_replace('/^storage\//', '', ltrim($farm->image_url, '/'));
-        $localPath = storage_path('app/public/' . $rawPath);
-        if (file_exists($localPath)) {
-            $upload = $cloudinary->upload($localPath, 'farms');
-            if ($upload && !empty($upload['secure_url'])) {
-                $farm->image_url = $upload['secure_url'];
-                $farm->save();
-                $results[] = "Farm {$farm->farm_id}: {$upload['secure_url']}";
-            }
-        }
-    }
-
-    // 2. Migrating Cows
-    $cows = \App\Models\Cow::whereNotNull('image_url')->where('image_url', 'not like', 'http%')->get();
-    foreach ($cows as $cow) {
-        $rawPath = preg_replace('/^storage\//', '', ltrim($cow->image_url, '/'));
-        $localPath = storage_path('app/public/' . $rawPath);
-        if (file_exists($localPath)) {
-            $upload = $cloudinary->upload($localPath, 'cows');
-            if ($upload && !empty($upload['secure_url'])) {
-                $cow->image_url = $upload['secure_url'];
-                $cow->save();
-                $results[] = "Cow {$cow->cow_id}: {$upload['secure_url']}";
-            }
-        }
-    }
-
-    // 3. Migrating Users
-    $users = \App\Models\User::whereNotNull('profile_image')->where('profile_image', 'not like', 'http%')->get();
-    foreach ($users as $u) {
-        $rawPath = preg_replace('/^storage\//', '', ltrim($u->profile_image, '/'));
-        $localPath = storage_path('app/public/' . $rawPath);
-        if (file_exists($localPath)) {
-            $upload = $cloudinary->upload($localPath, 'avatars');
-            if ($upload && !empty($upload['secure_url'])) {
-                $u->profile_image = $upload['secure_url'];
-                $u->save();
-                $results[] = "User {$u->email}: {$upload['secure_url']}";
-            }
-        }
-    }
-
-    return response()->json([
-        'status' => 'completed',
-        'count' => count($results),
-        'migrated' => $results,
-    ]);
-});
-
 Route::get('/test-db', function () {
     try {
         \Illuminate\Support\Facades\DB::connection()->getPdo();
