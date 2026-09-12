@@ -17,8 +17,10 @@ class MainLayoutScreen extends ConsumerStatefulWidget {
   ConsumerState<MainLayoutScreen> createState() => _MainLayoutScreenState();
 }
 
-class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
+class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen>
+    with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
+  int _previousIndex = 0;
   Timer? _notificationTimer;
 
   @override
@@ -51,7 +53,30 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_currentIndex],
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 320),
+        switchInCurve: Curves.easeOutQuart,
+        switchOutCurve: Curves.easeInQuart,
+        transitionBuilder: (child, animation) {
+          // ทิศทาง slide: ไปขวา = index เพิ่ม, ไปซ้าย = index ลด
+          final isForward = _currentIndex >= _previousIndex;
+          final slideIn = Tween<Offset>(
+            begin: Offset(isForward ? 0.025 : -0.025, 0),
+            end: Offset.zero,
+          ).animate(animation);
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: slideIn,
+              child: child,
+            ),
+          );
+        },
+        child: KeyedSubtree(
+          key: ValueKey<int>(_currentIndex),
+          child: _screens[_currentIndex],
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         heroTag: 'main_layout_fab',
         onPressed: () {
@@ -67,6 +92,7 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
         selectedIndex: _currentIndex,
         onDestinationSelected: (index) {
           setState(() {
+            _previousIndex = _currentIndex;
             _currentIndex = index;
           });
         },
@@ -98,3 +124,4 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
     );
   }
 }
+
