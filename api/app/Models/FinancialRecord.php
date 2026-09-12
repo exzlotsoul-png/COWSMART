@@ -13,7 +13,17 @@ class FinancialRecord extends Model
     protected $primaryKey = 'financial_record_id';
     protected $keyType = 'string';
     public $incrementing = false;
-    protected $guarded = [];
+    protected $fillable = [
+        'financial_record_id',
+        'farm_id',
+        'title',
+        'transaction_date',
+        'trans_type',
+        'category',
+        'amount',
+        'related_cow_id',
+        'notes',
+    ];
 
     protected string $idPrefix = 'FR';
     protected int $idPadLength = 4;

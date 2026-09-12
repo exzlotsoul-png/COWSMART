@@ -326,11 +326,9 @@ class FinanceNotifier extends Notifier<FinanceState> {
         'farm_id': tx.farmId,
         'title': tx.title,
         'trans_type': tx.type.apiValue,
-        'type': tx.type.name,
         'category': tx.category.label,
         'amount': tx.amount,
         'transaction_date': tx.date.toIso8601String().split('T')[0],
-        'date': tx.date.toIso8601String().split('T')[0],
         if (tx.relatedCowId != null) 'related_cow_id': tx.relatedCowId,
         if (tx.notes != null) 'notes': tx.notes,
       };
@@ -359,11 +357,9 @@ class FinanceNotifier extends Notifier<FinanceState> {
       final body = {
         'title': tx.title,
         'trans_type': tx.type.apiValue,
-        'type': tx.type.name,
         'category': tx.category.label,
         'amount': tx.amount,
         'transaction_date': tx.date.toIso8601String().split('T')[0],
-        'date': tx.date.toIso8601String().split('T')[0],
         if (tx.relatedCowId != null) 'related_cow_id': tx.relatedCowId,
         if (tx.notes != null) 'notes': tx.notes,
       };

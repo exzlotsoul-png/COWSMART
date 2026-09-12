@@ -37,6 +37,7 @@ class FinancialRecordController extends Controller
             $typeVal = strtolower(trim($payload['type']));
             $payload['trans_type'] = ($typeVal === 'income' || $typeVal === 'รายรับ') ? 'income' : 'expense';
         }
+        unset($payload['date'], $payload['type']);
 
         $data = FinancialRecord::create($payload);
         return response()->json($data, 201);
@@ -59,6 +60,7 @@ class FinancialRecordController extends Controller
             $typeVal = strtolower(trim($payload['type']));
             $payload['trans_type'] = ($typeVal === 'income' || $typeVal === 'รายรับ') ? 'income' : 'expense';
         }
+        unset($payload['date'], $payload['type']);
 
         $data->update($payload);
         return response()->json($data);
