@@ -10,6 +10,7 @@ class CowState {
   final List<Cow> allCows;
   final String? searchQuery;
   final bool isLoading;
+  final bool isLoaded; // true หลัง fetchCows เสร็จแล้วอย่างน้อยครั้งหนึ่ง
   final String? errorMessage;
   final bool isSuccess;
   final CowStatus? filterStatus;
@@ -20,6 +21,7 @@ class CowState {
     this.allCows = const [],
     this.searchQuery = '',
     this.isLoading = false,
+    this.isLoaded = false,
     this.errorMessage,
     this.isSuccess = false,
     this.filterStatus,
@@ -58,6 +60,7 @@ class CowState {
     List<Cow>? allCows,
     String? searchQuery,
     bool? isLoading,
+    bool? isLoaded,
     String? errorMessage,
     bool? isSuccess,
     Object? filterStatus = _sentinel,
@@ -68,6 +71,7 @@ class CowState {
       allCows: allCows ?? this.allCows,
       searchQuery: searchQuery ?? this.searchQuery,
       isLoading: isLoading ?? this.isLoading,
+      isLoaded: isLoaded ?? this.isLoaded,
       errorMessage: errorMessage ?? this.errorMessage,
       isSuccess: isSuccess ?? this.isSuccess,
       filterStatus: filterStatus == _sentinel
@@ -106,10 +110,10 @@ class CowNotifier extends Notifier<CowState> {
 
       print('[SUCCESS] ดึงข้อมูลวัวสำเร็จ: ${farmCows.length} ตัว');
 
-      state = state.copyWith(allCows: farmCows, isLoading: false);
+      state = state.copyWith(allCows: farmCows, isLoading: false, isLoaded: true);
     } catch (e) {
       print('[ERROR] ดึงข้อมูลวัวไม่สำเร็จ: $e');
-      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      state = state.copyWith(isLoading: false, isLoaded: true, errorMessage: e.toString());
     }
   }
 

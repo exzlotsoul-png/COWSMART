@@ -48,11 +48,16 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
       }
     });
 
-    // Auto-fetch if farm changed or empty
+    // Auto-fetch ถ้ายังไม่เคย fetch สำหรับฟาร์มนี้
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (currentFarm != null &&
+      if (currentFarm != null && !cowState.isLoading && !cowState.isLoaded) {
+        ref.read(cowProvider.notifier).fetchCows(currentFarm.id);
+      } else if (currentFarm != null &&
           !cowState.isLoading &&
-          (cowState.allCows.isEmpty || (cowState.allCows.isNotEmpty && cowState.allCows.first.farmId != currentFarm.id))) {
+          cowState.isLoaded &&
+          cowState.allCows.isNotEmpty &&
+          cowState.allCows.first.farmId != currentFarm.id) {
+        // ฟาร์มเปลี่ยน ให้ fetch ใหม่
         ref.read(cowProvider.notifier).fetchCows(currentFarm.id);
       }
     });
