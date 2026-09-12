@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
-import 'package:cowsmart/core/widgets/cow_icon.dart';
 import 'package:cowsmart/core/widgets/custom_date_range_picker.dart';
 import 'package:cowsmart/core/utils/app_toast.dart';
 import 'package:cowsmart/core/utils/date_formatter.dart';
@@ -252,16 +251,6 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
     if (range != null) {
       ref.read(financeProvider.notifier).setCustomDateRange(range);
     }
-  }
-
-  Widget _buildPresetChip({required String label, required VoidCallback onTap}) {
-    return ActionChip(
-      label: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.text(context))),
-      backgroundColor: AppColors.surfAlt(context),
-      side: BorderSide(color: AppColors.brd(context)),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      onPressed: onTap,
-    );
   }
 
   void _showMonthYearPicker(BuildContext context) {
@@ -673,17 +662,22 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                               children: [
                                 const Icon(Icons.date_range_rounded, color: Colors.white, size: 20),
                                 const SizedBox(width: 8),
-                                Text(
-                                  financeState.customDateRange != null
-                                      ? AppDateUtils.formatThaiDateRange(
-                                          financeState.customDateRange!.start,
-                                          financeState.customDateRange!.end,
-                                        )
-                                      : 'กดที่นี่เพื่อเลือกช่วงวันที่ (จากวันที่ - ถึงวันที่)',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
+                                Expanded(
+                                  child: Text(
+                                    financeState.customDateRange != null
+                                        ? AppDateUtils.formatThaiDateRange(
+                                            financeState.customDateRange!.start,
+                                            financeState.customDateRange!.end,
+                                          )
+                                        : 'เลือกช่วงวันที่...',
+                                    textAlign: TextAlign.center,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 6),

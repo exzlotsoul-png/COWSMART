@@ -170,6 +170,74 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
     }
   }
 
+  InputDecoration _buildInputDecoration(
+    String labelText,
+    dynamic icon, {
+    String? hintText,
+    String? suffixText,
+  }) {
+    Widget prefixWidget;
+    if (icon is Widget) {
+      prefixWidget = icon;
+    } else if (icon == Icons.pets || icon == Icons.pets_rounded || icon == Icons.pets_outlined) {
+      prefixWidget = const CowIcon(size: 18, color: AppColors.primary);
+    } else if (icon is IconData) {
+      prefixWidget = Icon(icon, color: AppColors.primary, size: 18);
+    } else {
+      prefixWidget = const SizedBox.shrink();
+    }
+
+    return InputDecoration(
+      labelText: labelText,
+      labelStyle: TextStyle(
+        fontSize: 12.5,
+        color: AppColors.sub(context),
+      ),
+      floatingLabelStyle: const TextStyle(
+        fontSize: 11.5,
+        color: AppColors.primary,
+        fontWeight: FontWeight.w600,
+      ),
+      hintText: hintText,
+      hintStyle: TextStyle(
+        color: AppColors.hint(context),
+        fontSize: 12,
+      ),
+      suffixText: suffixText,
+      suffixStyle: TextStyle(
+        color: AppColors.sub(context),
+        fontSize: 11.5,
+        fontWeight: FontWeight.w600,
+      ),
+      prefixIcon: Padding(
+        padding: const EdgeInsets.only(left: 8, right: 6),
+        child: prefixWidget,
+      ),
+      prefixIconConstraints: const BoxConstraints(
+        minWidth: 32,
+        maxWidth: 36,
+        minHeight: 32,
+        maxHeight: 36,
+      ),
+      isDense: true,
+      filled: true,
+      fillColor: AppColors.surfAlt(context),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: AppColors.brd(context)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: AppColors.brd(context)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cowState = ref.watch(cowProvider);
@@ -252,10 +320,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                     Expanded(
                       child: TextFormField(
                         controller: _tagController,
-                        decoration: const InputDecoration(
-                          labelText: 'เบอร์วัว (Tag)',
-                          prefixIcon: Icon(Icons.tag),
-                        ),
+                        decoration: _buildInputDecoration('เบอร์วัว', Icons.tag_rounded, hintText: 'เช่น kp-001'),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return 'กรุณากรอกหมายเลข';
@@ -271,14 +336,11 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                         },
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: TextFormField(
                         controller: _nameController,
-                        decoration: const InputDecoration(
-                          labelText: 'ชื่อ (ถ้ามี)',
-                          prefixIcon: CowIcon(size: 20, color: AppColors.primary),
-                        ),
+                        decoration: _buildInputDecoration('ชื่อวัว', Icons.pets_rounded, hintText: 'ถ้ามี'),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return 'กรุณากรอกชื่อ';
@@ -296,7 +358,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
 
                 Row(
                   children: [
@@ -317,14 +379,13 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                           return DropdownButtonFormField<String?>(
                             value: safeValue,
                             isExpanded: true,
-                            decoration: const InputDecoration(
-                              labelText: 'สายพันธุ์',
-                              prefixIcon: Icon(Icons.category),
-                            ),
+                            icon: const Icon(Icons.arrow_drop_down, size: 20),
+                            style: TextStyle(color: AppColors.text(context), fontSize: 13),
+                            decoration: _buildInputDecoration('สายพันธุ์', Icons.category_rounded),
                             items: uniqueBreeds.map((breed) {
                               return DropdownMenuItem<String?>(
                                 value: breed.id,
-                                child: Text(breed.name, overflow: TextOverflow.ellipsis),
+                                child: Text(breed.name, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13)),
                               );
                             }).toList(),
                             onChanged: (val) =>
@@ -337,52 +398,44 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
 
                 Row(
                   children: [
                     Expanded(
                       child: InkWell(
                         onTap: () => _selectDate(context),
+                        borderRadius: BorderRadius.circular(14),
                         child: InputDecorator(
-                          decoration: const InputDecoration(
-                            labelText: 'วันเกิด',
-                            prefixIcon: Icon(Icons.cake),
-                          ),
+                          decoration: _buildInputDecoration('วันเกิด', Icons.cake_rounded),
                           child: Text(
                             AppDateUtils.formatThaiDate(_selectedDate),
-                            style: TextStyle(color: AppColors.text(context), fontWeight: FontWeight.w600),
+                            style: TextStyle(fontSize: 13, color: AppColors.text(context), fontWeight: FontWeight.bold),
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: InkWell(
                         onTap: () => _selectEntryDate(context),
+                        borderRadius: BorderRadius.circular(14),
                         child: InputDecorator(
-                          decoration: const InputDecoration(
-                            labelText: 'วันที่เข้าฟาร์ม',
-                            prefixIcon: Icon(Icons.login),
-                          ),
+                          decoration: _buildInputDecoration('วันเข้าฟาร์ม', Icons.login_rounded),
                           child: Text(
                             AppDateUtils.formatThaiDate(_selectedEntryDate),
-                            style: TextStyle(color: AppColors.text(context), fontWeight: FontWeight.w600),
+                            style: TextStyle(fontSize: 13, color: AppColors.text(context), fontWeight: FontWeight.bold),
                           ),
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
                 TextFormField(
                   controller: _purchasePriceController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'ราคาที่ซื้อมา (บาท)',
-                    prefixIcon: Icon(Icons.payments),
-                    hintText: '0.00',
-                  ),
+                  decoration: _buildInputDecoration('ราคาที่ซื้อมา (บาท)', Icons.payments_rounded, hintText: '0.00'),
                 ),
                 const SizedBox(height: 24),
 
@@ -501,10 +554,9 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                           return DropdownButtonFormField<String?>(
                             value: validFatherId,
                             isExpanded: true,
-                            decoration: const InputDecoration(
-                              labelText: 'พ่อพันธุ์ (Sire)',
-                              prefixIcon: Icon(Icons.male),
-                            ),
+                            icon: const Icon(Icons.arrow_drop_down, size: 20),
+                            style: TextStyle(color: AppColors.text(context), fontSize: 13),
+                            decoration: _buildInputDecoration('พ่อพันธุ์', Icons.male_rounded),
                             items: [
                               const DropdownMenuItem<String?>(
                                 value: null,
@@ -526,7 +578,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                         },
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Builder(
                         builder: (context) {
@@ -540,10 +592,9 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                           return DropdownButtonFormField<String?>(
                             value: validMotherId,
                             isExpanded: true,
-                            decoration: const InputDecoration(
-                              labelText: 'แม่พันธุ์ (Dam)',
-                              prefixIcon: Icon(Icons.female),
-                            ),
+                            icon: const Icon(Icons.arrow_drop_down, size: 20),
+                            style: TextStyle(color: AppColors.text(context), fontSize: 13),
+                            decoration: _buildInputDecoration('แม่พันธุ์', Icons.female_rounded),
                             items: [
                               const DropdownMenuItem<String?>(
                                 value: null,

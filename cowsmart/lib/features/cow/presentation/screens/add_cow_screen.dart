@@ -250,26 +250,59 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
     }
   }
 
-  InputDecoration _buildInputDecoration(String labelText, dynamic icon, {String? hintText}) {
+  InputDecoration _buildInputDecoration(
+    String labelText,
+    dynamic icon, {
+    String? hintText,
+    String? suffixText,
+  }) {
     Widget prefixWidget;
     if (icon is Widget) {
       prefixWidget = icon;
     } else if (icon == Icons.pets || icon == Icons.pets_rounded || icon == Icons.pets_outlined) {
-      prefixWidget = const CowIcon(size: 20, color: AppColors.primary);
+      prefixWidget = const CowIcon(size: 18, color: AppColors.primary);
     } else if (icon is IconData) {
-      prefixWidget = Icon(icon, color: AppColors.primary, size: 20);
+      prefixWidget = Icon(icon, color: AppColors.primary, size: 18);
     } else {
       prefixWidget = const SizedBox.shrink();
     }
 
     return InputDecoration(
       labelText: labelText,
+      labelStyle: TextStyle(
+        fontSize: 12.5,
+        color: AppColors.sub(context),
+      ),
+      floatingLabelStyle: const TextStyle(
+        fontSize: 11.5,
+        color: AppColors.primary,
+        fontWeight: FontWeight.w600,
+      ),
       hintText: hintText,
-      hintStyle: TextStyle(color: AppColors.hint(context)),
-      prefixIcon: prefixWidget,
+      hintStyle: TextStyle(
+        color: AppColors.hint(context),
+        fontSize: 12,
+      ),
+      suffixText: suffixText,
+      suffixStyle: TextStyle(
+        color: AppColors.sub(context),
+        fontSize: 11.5,
+        fontWeight: FontWeight.w600,
+      ),
+      prefixIcon: Padding(
+        padding: const EdgeInsets.only(left: 8, right: 6),
+        child: prefixWidget,
+      ),
+      prefixIconConstraints: const BoxConstraints(
+        minWidth: 32,
+        maxWidth: 36,
+        minHeight: 32,
+        maxHeight: 36,
+      ),
+      isDense: true,
       filled: true,
       fillColor: AppColors.surfAlt(context),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide(color: AppColors.brd(context)),
@@ -310,8 +343,10 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
   }
 
   Widget _buildCardContainer({required List<Widget> children}) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final horizontalPad = screenWidth < 380 ? 12.0 : 16.0;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.symmetric(horizontal: horizontalPad, vertical: 16),
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: AppColors.cardBg(context),
@@ -340,6 +375,9 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
     // addCow(). We do NOT listen to cowProvider errors globally here because
     // other operations (e.g., cullCowsGroup) can set errorMessage on the same
     // provider while this screen is open, causing unrelated errors to appear.
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final outerPad = screenWidth < 380 ? 12.0 : 16.0;
 
     return Scaffold(
       backgroundColor: AppColors.bg(context),
@@ -403,7 +441,7 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
           // ── Form Body ──
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 20, 16, 100),
+              padding: EdgeInsets.fromLTRB(outerPad, 20, outerPad, 100),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -452,7 +490,7 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                             Expanded(
                               child: TextFormField(
                                 controller: _tagController,
-                                decoration: _buildInputDecoration('เบอร์วัว (Tag)', Icons.tag_rounded),
+                                decoration: _buildInputDecoration('เบอร์วัว', Icons.tag_rounded, hintText: 'เช่น kp-001'),
                                 validator: (value) {
                                   if (value == null || value.trim().isEmpty) {
                                     return 'กรุณากรอกหมายเลข';
@@ -468,11 +506,11 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                                 },
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 10),
                             Expanded(
                               child: TextFormField(
                                 controller: _nameController,
-                                decoration: _buildInputDecoration('ชื่อ (ถ้ามี)', Icons.pets_rounded),
+                                decoration: _buildInputDecoration('ชื่อวัว', Icons.pets_rounded, hintText: 'ถ้ามี'),
                                 validator: (value) {
                                   if (value == null || value.trim().isEmpty) {
                                     return 'กรุณากรอกชื่อ';
@@ -513,7 +551,8 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                                     value: safeValue,
                                     dropdownColor: AppColors.cardBg(context),
                                     isExpanded: true,
-                                    style: TextStyle(color: AppColors.text(context), fontSize: 14),
+                                    icon: const Icon(Icons.arrow_drop_down, size: 20),
+                                    style: TextStyle(color: AppColors.text(context), fontSize: 13),
                                     decoration: _buildInputDecoration('สายพันธุ์', Icons.category_rounded),
                                     items: uniqueBreeds.map((breed) {
                                       return DropdownMenuItem<String?>(
@@ -521,6 +560,7 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                                         child: Text(
                                           breed.name,
                                           overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(fontSize: 13),
                                         ),
                                       );
                                     }).toList(),
@@ -532,12 +572,17 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                                 },
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 10),
                             Expanded(
                               child: TextFormField(
                                 controller: _weightController,
                                 keyboardType: TextInputType.number,
-                                decoration: _buildInputDecoration('น้ำหนัก (กก.)', Icons.scale_rounded),
+                                decoration: _buildInputDecoration(
+                                  'น้ำหนัก',
+                                  Icons.scale_rounded,
+                                  hintText: '0.0',
+                                  suffixText: 'กก.',
+                                ),
                               ),
                             ),
                           ],
@@ -554,12 +599,12 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                                   decoration: _buildInputDecoration('วันเกิด', Icons.cake_rounded),
                                   child: Text(
                                     AppDateUtils.formatThaiDate(_selectedDate),
-                                    style: TextStyle(fontSize: 14, color: AppColors.text(context), fontWeight: FontWeight.bold),
+                                    style: TextStyle(fontSize: 13, color: AppColors.text(context), fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 10),
                             Expanded(
                               child: InkWell(
                                 onTap: () => _selectEntryDate(context),
@@ -568,7 +613,7 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                                   decoration: _buildInputDecoration('วันเข้าฟาร์ม', Icons.login_rounded),
                                   child: Text(
                                     AppDateUtils.formatThaiDate(_selectedEntryDate),
-                                    style: TextStyle(fontSize: 14, color: AppColors.text(context), fontWeight: FontWeight.bold),
+                                    style: TextStyle(fontSize: 13, color: AppColors.text(context), fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ),
@@ -747,8 +792,9 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                                     value: safeFatherValue,
                                     dropdownColor: AppColors.cardBg(context),
                                     isExpanded: true,
-                                    style: TextStyle(color: AppColors.text(context), fontSize: 14),
-                                    decoration: _buildInputDecoration('พ่อพันธุ์ (Sire)', Icons.male_rounded),
+                                    icon: const Icon(Icons.arrow_drop_down, size: 20),
+                                    style: TextStyle(color: AppColors.text(context), fontSize: 13),
+                                    decoration: _buildInputDecoration('พ่อพันธุ์', Icons.male_rounded),
                                     items: [
                                       const DropdownMenuItem<String?>(
                                         value: null,
@@ -776,7 +822,7 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                                 },
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 10),
                             Expanded(
                               child: Builder(
                                 builder: (context) {
@@ -788,8 +834,9 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                                     value: safeMotherValue,
                                     dropdownColor: AppColors.cardBg(context),
                                     isExpanded: true,
-                                    style: TextStyle(color: AppColors.text(context), fontSize: 14),
-                                    decoration: _buildInputDecoration('แม่พันธุ์ (Dam)', Icons.female_rounded),
+                                    icon: const Icon(Icons.arrow_drop_down, size: 20),
+                                    style: TextStyle(color: AppColors.text(context), fontSize: 13),
+                                    decoration: _buildInputDecoration('แม่พันธุ์', Icons.female_rounded),
                                     items: [
                                       const DropdownMenuItem<String?>(
                                         value: null,
