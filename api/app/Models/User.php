@@ -59,6 +59,10 @@ class User extends Authenticatable
             return $this->profile_image;
         }
 
-        return url('api/storage/' . $this->profile_image);
+        $url = url('api/storage/' . $this->profile_image);
+        if (str_contains($url, 'onrender.com') || request()->isSecure() || request()->header('X-Forwarded-Proto') === 'https') {
+            $url = preg_replace('/^http:/i', 'https:', $url);
+        }
+        return $url;
     }
 }

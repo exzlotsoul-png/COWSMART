@@ -26,7 +26,11 @@ class Cow extends Model
             return $this->image_url;
         }
 
-        return url('api/storage/' . $this->image_url);
+        $url = url('api/storage/' . $this->image_url);
+        if (str_contains($url, 'onrender.com') || request()->isSecure() || request()->header('X-Forwarded-Proto') === 'https') {
+            $url = preg_replace('/^http:/i', 'https:', $url);
+        }
+        return $url;
     }
 
     public function getLatestDiseaseNameAttribute(): ?string
