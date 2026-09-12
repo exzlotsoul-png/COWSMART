@@ -7,6 +7,7 @@ use App\Models\Cow;
 use App\Models\FinancialRecord;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class CowCostController extends Controller
 {
@@ -20,120 +21,128 @@ class CowCostController extends Controller
         $purchasePrice = (double) ($cow->purchase_price ?? 0);
 
         // 1. Health costs (from health_records)
-        $healthCost = DB::table('health_records')
-            ->where('cow_id', $cowId)
-            ->sum('cost') ?? 0;
+        $healthCost = 0;
+        $healthDetails = collect();
+        if (Schema::hasTable('health_records')) {
+            $healthCost = (double) (DB::table('health_records')
+                ->where('cow_id', $cowId)
+                ->sum('cost') ?? 0);
 
-        // 2. Feed costs (from feeding_records AND feed_inventories with matching zone_id weighted by body weight)
+            // Get detailed health record list
+            $query = DB::table('health_records')->where('health_records.cow_id', $cowId);
+            if (Schema::hasTable('diseases')) {
+                $query->leftJoin('diseases', 'health_records.disease_id', '=', 'diseases.disease_id');
+            }
+            if (Schema::hasTable('medicines')) {
+                $query->leftJoin('medicines', 'health_records.med_id', '=', 'medicines.medicine_id');
+            }
+            if (Schema::hasTable('vaccines')) {
+                $query->leftJoin('vaccines', 'health_records.vac_id', '=', 'vaccines.vaccine_id');
+            }
+
+            $healthDetails = $query
+                ->whereNotNull('health_records.cost')
+                ->where('health_records.cost', '>', 0)
+                ->select(
+                    'health_records.health_record_id',
+                    'health_records.record_date',
+                    'health_records.cost',
+                    'health_records.checkup_type_id',
+                    Schema::hasTable('diseases') ? 'diseases.name as disease_name' : DB::raw('NULL as disease_name'),
+                    Schema::hasTable('medicines') ? 'medicines.name as medicine_name' : DB::raw('NULL as medicine_name'),
+                    Schema::hasTable('vaccines') ? 'vaccines.name as vaccine_name' : DB::raw('NULL as vaccine_name')
+                )
+                ->orderBy('health_records.record_date', 'desc')
+                ->get();
+        }
+
+        // 2. Feed costs (from feed_inventories with matching zone_id weighted by body weight)
         $feedCost = 0;
+        $feedDetails = [];
         $zoneId = $cow->zone_id;
         if ($zoneId) {
-            $totalFeedingRecordsCost = DB::table('feeding_records')
-                ->where('zone_id', $zoneId)
-                ->sum('cost') ?? 0;
+            $totalFeedingRecordsCost = 0;
+            if (Schema::hasTable('feeding_records')) {
+                $totalFeedingRecordsCost = (double) (DB::table('feeding_records')
+                    ->where('zone_id', $zoneId)
+                    ->sum('cost') ?? 0);
+            }
 
-            $totalFeedInventoriesCost = DB::table('feed_inventories')
-                ->where('zone_id', $zoneId)
-                ->sum('cost_per_kg') ?? 0;
+            $totalFeedInventoriesCost = 0;
+            if (Schema::hasTable('feed_inventories') && Schema::hasColumn('feed_inventories', 'zone_id')) {
+                $totalFeedInventoriesCost = (double) (DB::table('feed_inventories')
+                    ->where('zone_id', $zoneId)
+                    ->sum('cost_per_kg') ?? 0);
+            }
 
             $totalFeedCost = $totalFeedingRecordsCost + $totalFeedInventoriesCost;
 
             // Get total weight of all cows in this zone
             $cowsList = Cow::where('zone_id', $zoneId)->get();
-            $totalWeight = $cowsList->sum(function($c) {
+            $totalWeight = $cowsList->sum(function ($c) {
                 return (double) ($c->latest_weight > 0 ? $c->latest_weight : 100);
             });
 
-            if ($totalWeight > 0) {
-                $cowWeight = (double) ($cow->latest_weight > 0 ? $cow->latest_weight : 100);
-                $weightRatio = $cowWeight / $totalWeight;
-                $feedCost = round($totalFeedCost * $weightRatio, 2);
+            $cowWeight = (double) ($cow->latest_weight > 0 ? $cow->latest_weight : 100);
+            $weightRatio = $totalWeight > 0 ? ($cowWeight / $totalWeight) : 0;
+            $feedCost = round($totalFeedCost * $weightRatio, 2);
+
+            $feedingRecs = [];
+            if (Schema::hasTable('feeding_records')) {
+                $feedingRecs = DB::table('feeding_records')
+                    ->where('zone_id', $zoneId)
+                    ->whereNotNull('cost')
+                    ->where('cost', '>', 0)
+                    ->select('feeding_record_id as id', 'feed_date as date', 'feed_type as type', 'amount', 'cost')
+                    ->get()
+                    ->map(function ($item) use ($weightRatio) {
+                        $item->cost_per_cow = round($item->cost * $weightRatio, 2);
+                        $item->source = 'feeding_record';
+                        return (array) $item;
+                    })
+                    ->toArray();
             }
+
+            $feedInvs = [];
+            if (Schema::hasTable('feed_inventories') && Schema::hasColumn('feed_inventories', 'zone_id')) {
+                $feedInvs = DB::table('feed_inventories')
+                    ->where('zone_id', $zoneId)
+                    ->whereNotNull('cost_per_kg')
+                    ->where('cost_per_kg', '>', 0)
+                    ->select('feed_inventory_id as id', 'created_at as date', 'name as type', 'stock_quantity as amount', 'cost_per_kg as cost')
+                    ->get()
+                    ->map(function ($item) use ($weightRatio) {
+                        $item->cost_per_cow = round($item->cost * $weightRatio, 2);
+                        $item->source = 'feed_inventory';
+                        return (array) $item;
+                    })
+                    ->toArray();
+            }
+
+            $feedDetails = array_merge($feedingRecs, $feedInvs);
+            usort($feedDetails, function ($a, $b) {
+                return strcmp($b['date'] ?? '', $a['date'] ?? '');
+            });
+            $feedDetails = array_slice($feedDetails, 0, 50);
         }
 
         // 3. Direct financial records linked to this cow
-        $directCosts = FinancialRecord::where('related_cow_id', $cowId)
-            ->where('trans_type', 'expense')
-            ->get();
+        $directCosts = collect();
+        $directCostTotal = 0;
+        $directIncome = 0;
+        if (Schema::hasTable('financial_records') && Schema::hasColumn('financial_records', 'related_cow_id')) {
+            $directCosts = FinancialRecord::where('related_cow_id', $cowId)
+                ->where('trans_type', 'expense')
+                ->get();
+            $directCostTotal = (double) $directCosts->sum('amount');
 
-        $directCostTotal = $directCosts->sum('amount');
-
-        // 4. Direct income linked to this cow
-        $directIncome = FinancialRecord::where('related_cow_id', $cowId)
-            ->where('trans_type', 'income')
-            ->sum('amount');
+            $directIncome = (double) FinancialRecord::where('related_cow_id', $cowId)
+                ->where('trans_type', 'income')
+                ->sum('amount');
+        }
 
         // Build breakdown
         $totalCost = $healthCost + $feedCost + $directCostTotal + $purchasePrice;
-
-        // Get detailed health record list
-        $healthDetails = DB::table('health_records')
-            ->leftJoin('diseases', 'health_records.disease_id', '=', 'diseases.disease_id')
-            ->leftJoin('medicines', 'health_records.med_id', '=', 'medicines.medicine_id')
-            ->leftJoin('vaccines', 'health_records.vac_id', '=', 'vaccines.vaccine_id')
-            ->where('health_records.cow_id', $cowId)
-            ->whereNotNull('health_records.cost')
-            ->where('health_records.cost', '>', 0)
-            ->select(
-                'health_records.health_record_id',
-                'health_records.record_date',
-                'health_records.cost',
-                'health_records.checkup_type_id',
-                'diseases.name as disease_name',
-                'medicines.name as medicine_name',
-                'vaccines.name as vaccine_name'
-            )
-            ->orderBy('health_records.record_date', 'desc')
-            ->get();
-
-        // Get feeding records & feed inventories for this zone
-        $feedDetails = [];
-        if ($zoneId) {
-            $cowsList = Cow::where('zone_id', $zoneId)->get();
-            $totalWeight = $cowsList->sum(function($c) {
-                return (double) ($c->latest_weight > 0 ? $c->latest_weight : 100);
-            });
-            $cowWeight = (double) ($cow->latest_weight > 0 ? $cow->latest_weight : 100);
-            $weightRatio = $totalWeight > 0 ? ($cowWeight / $totalWeight) : 0;
-
-            // Fetch from feeding_records
-            $feedingRecs = DB::table('feeding_records')
-                ->where('zone_id', $zoneId)
-                ->whereNotNull('cost')
-                ->where('cost', '>', 0)
-                ->select('feeding_record_id as id', 'feed_date as date', 'feed_type as type', 'amount', 'cost')
-                ->get()
-                ->map(function ($item) use ($weightRatio) {
-                    $item->cost_per_cow = round($item->cost * $weightRatio, 2);
-                    $item->source = 'feeding_record';
-                    return (array) $item;
-                })
-                ->toArray();
-
-            // Fetch from feed_inventories linked to this zone
-            $feedInvs = DB::table('feed_inventories')
-                ->where('zone_id', $zoneId)
-                ->whereNotNull('cost_per_kg')
-                ->where('cost_per_kg', '>', 0)
-                ->select('feed_inventory_id as id', 'created_at as date', 'name as type', 'stock_quantity as amount', 'cost_per_kg as cost')
-                ->get()
-                ->map(function ($item) use ($weightRatio) {
-                    $item->cost_per_cow = round($item->cost * $weightRatio, 2);
-                    $item->source = 'feed_inventory';
-                    return (array) $item;
-                })
-                ->toArray();
-
-            $feedDetails = array_merge($feedingRecs, $feedInvs);
-
-            // Sort merged array by date desc
-            usort($feedDetails, function ($a, $b) {
-                return strcmp($b['date'], $a['date']);
-            });
-
-            // Limit to 50 items
-            $feedDetails = array_slice($feedDetails, 0, 50);
-        }
 
         return response()->json([
             'cow_id' => $cowId,

@@ -56,10 +56,13 @@ class _CostTabState extends ConsumerState<CostTab> {
       final api = ref.read(apiClientProvider);
       final response = await api.get('/cow_costs/${widget.cow.id}');
       setState(() {
-        _costData = response.data;
+        _costData = response.data is Map<String, dynamic>
+            ? response.data as Map<String, dynamic>
+            : Map<String, dynamic>.from(response.data as Map);
         _isLoading = false;
       });
     } catch (e) {
+      debugPrint('[CostTab] Error fetching cow_costs: $e');
       setState(() {
         _error = e.toString();
         _isLoading = false;
@@ -90,6 +93,19 @@ class _CostTabState extends ConsumerState<CostTab> {
               'โหลดข้อมูลไม่สำเร็จ',
               style: TextStyle(color: Colors.grey[500]),
             ),
+            if (_error != null) ...[
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  _error!,
+                  style: TextStyle(color: Colors.grey[400], fontSize: 11),
+                  textAlign: TextAlign.center,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
             const SizedBox(height: 8),
             ElevatedButton.icon(
               onPressed: _fetchCostData,
@@ -101,8 +117,8 @@ class _CostTabState extends ConsumerState<CostTab> {
       );
     }
 
-    final summary = _costData!['summary'] as Map<String, dynamic>;
-    final breakdown = _costData!['breakdown'] as Map<String, dynamic>;
+    final summary = (_costData!['summary'] as Map?)?.cast<String, dynamic>() ?? {};
+    final breakdown = (_costData!['breakdown'] as Map?)?.cast<String, dynamic>() ?? {};
 
     final totalCost = _parseDouble(summary['total_cost']);
     final healthCost = _parseDouble(summary['health_cost']);
@@ -113,14 +129,20 @@ class _CostTabState extends ConsumerState<CostTab> {
     final netCost = _parseDouble(summary['net_cost']);
 
     // Health details
-    final healthDetails =
-        (breakdown['health'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final healthDetails = (breakdown['health'] as List?)
+            ?.map((e) => e is Map ? Map<String, dynamic>.from(e) : <String, dynamic>{})
+            .toList() ??
+        [];
     // Feed details
-    final feedDetails =
-        (breakdown['feed'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final feedDetails = (breakdown['feed'] as List?)
+            ?.map((e) => e is Map ? Map<String, dynamic>.from(e) : <String, dynamic>{})
+            .toList() ??
+        [];
     // Direct cost details
-    final directDetails =
-        (breakdown['direct'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final directDetails = (breakdown['direct'] as List?)
+            ?.map((e) => e is Map ? Map<String, dynamic>.from(e) : <String, dynamic>{})
+            .toList() ??
+        [];
 
     // Cost breakdown for proportion bar
     final costParts = <_CostPart>[
