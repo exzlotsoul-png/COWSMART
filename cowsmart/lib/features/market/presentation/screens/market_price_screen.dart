@@ -1149,13 +1149,21 @@ class _PriceCalculatorModalState extends State<_PriceCalculatorModal> {
             ),
             if (isOutOfBounds) ...[
               const SizedBox(height: 4),
-              Text(
-                '⚠️ น้ำหนักสำหรับพิกัดนี้ต้องอยู่ในช่วง ${minWeight.toInt()} - ${maxWeight.toInt()} กก.',
-                style: const TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFFDC2626),
-                ),
+              Row(
+                children: [
+                  const Icon(Icons.warning_amber_rounded, size: 15, color: Color(0xFFDC2626)),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      'น้ำหนักสำหรับพิกัดนี้ต้องอยู่ในช่วง ${minWeight.toInt()} - ${maxWeight.toInt()} กก.',
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFFDC2626),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
             const SizedBox(height: 8),

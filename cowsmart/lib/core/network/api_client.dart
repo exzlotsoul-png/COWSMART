@@ -7,7 +7,7 @@ class ApiClient {
   String? _token;
 
   // เลือกว่าจะใช้ Cloud Host (Render) หรือ Localhost
-  // ปรับเป็น true เพื่อใช้ Render.com (ทำงานตลอด 24 ชม. ไม่ต้องต่อสาย/Wi-Fi เดียวกัน)
+  // ปรับเป็น true เพื่อใช้ Render.com
   static const bool useCloudServer = true;
   static const String cloudApiUrl = 'https://cowsmart-api.onrender.com';
 
@@ -21,7 +21,8 @@ class ApiClient {
     return mobileWifiIp;
   }
 
-  static String get baseServerUrl => useCloudServer ? cloudApiUrl : 'http://$serverHost:8000';
+  static String get baseServerUrl =>
+      useCloudServer ? cloudApiUrl : 'http://$serverHost:8000';
   static String get baseUrl => '$baseServerUrl/api';
   static String get storageUrl => '$baseServerUrl/api/storage';
 
@@ -110,8 +111,10 @@ class ApiClient {
     if (e.type == DioExceptionType.receiveTimeout)
       return 'เซิร์ฟเวอร์ตอบสนองช้า (Receive Timeout)';
     if (e.response != null) {
-      String message = e.response?.data['message'] ?? 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์ (${e.response?.statusCode})';
-      
+      String message =
+          e.response?.data['message'] ??
+          'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์ (${e.response?.statusCode})';
+
       // Handle Laravel Validation Errors (422)
       if (e.response?.statusCode == 422 && e.response?.data['errors'] != null) {
         final errors = e.response?.data['errors'] as Map<String, dynamic>;

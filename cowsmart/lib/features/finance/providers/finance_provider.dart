@@ -4,6 +4,7 @@ import 'package:cowsmart/core/network/api_client.dart';
 import '../domain/finance.dart';
 import '../../feed/domain/feed.dart';
 import '../../cow/domain/culling_record.dart';
+import '../../cow/domain/cow.dart';
 
 enum FinanceFilterMode { month, range }
 
@@ -181,7 +182,7 @@ class FinanceNotifier extends Notifier<FinanceState> {
           }
         }
       } catch (e) {
-        print('⚠️ ไม่สามารถดึงข้อมูลคลังอาหารมารวมในบัญชีได้: $e');
+        print('[WARN] ไม่สามารถดึงข้อมูลคลังอาหารมารวมในบัญชีได้: $e');
       }
 
       // Also fetch culling records (sold cows) and merge with financial transactions
@@ -242,7 +243,67 @@ class FinanceNotifier extends Notifier<FinanceState> {
           }
         }
       } catch (e) {
-        print('⚠️ ไม่สามารถดึงข้อมูลการขายวัวมารวมในบัญชีได้: $e');
+        print('[WARN] ไม่สามารถดึงข้อมูลการขายวัวมารวมในบัญชีได้: $e');
+      }
+
+      // Also fetch cows with purchase_price > 0 and include as expense transactions
+      try {
+        final cowRes = await _api.get(
+          '/cows',
+          query: {'farm_id': farmId},
+        );
+        final List<dynamic> cowData = cowRes.data;
+        for (var cJson in cowData) {
+          final cow = Cow.fromJson(cJson);
+          if (cow.purchasePrice > 0) {
+            final cowName = cow.name.isNotEmpty
+                ? cow.name
+                : (cow.tagNumber.isNotEmpty ? 'หมายเลข ${cow.tagNumber}' : 'รหัส ${cow.id}');
+            final formattedTitle = 'ซื้อวัว $cowName';
+            final cowDate = cow.entryDate ?? cow.birthDate;
+
+            // Check if manualTransactions already has this purchase transaction
+            final existingIndex = manualTransactions.indexWhere((t) {
+              if (t.id == 'cow_buy_${cow.id}' || t.relatedCowId == cow.id) return true;
+              final isSameDate = t.date.year == cowDate.year &&
+                  t.date.month == cowDate.month &&
+                  t.date.day == cowDate.day;
+              final isSameAmount = (t.amount - cow.purchasePrice).abs() < 0.01;
+              final isExpense = t.type == TransactionType.expense;
+              return isSameDate && isSameAmount && isExpense;
+            });
+
+            if (existingIndex != -1) {
+              manualTransactions[existingIndex] = FinancialTransaction(
+                id: manualTransactions[existingIndex].id,
+                farmId: manualTransactions[existingIndex].farmId,
+                title: formattedTitle,
+                type: manualTransactions[existingIndex].type,
+                category: TransactionCategory.cowPurchase,
+                amount: manualTransactions[existingIndex].amount,
+                date: manualTransactions[existingIndex].date,
+                relatedCowId: cow.id,
+                notes: manualTransactions[existingIndex].notes ?? 'ต้นทุนราคาซื้อวัวเข้าฟาร์ม',
+              );
+            } else {
+              manualTransactions.add(
+                FinancialTransaction(
+                  id: 'cow_buy_${cow.id}',
+                  farmId: farmId,
+                  title: formattedTitle,
+                  type: TransactionType.expense,
+                  category: TransactionCategory.cowPurchase,
+                  amount: cow.purchasePrice,
+                  date: cowDate,
+                  relatedCowId: cow.id,
+                  notes: 'ระบบบันทึกรายจ่ายอัตโนมัติจากการซื้อวัวเข้าฟาร์ม',
+                ),
+              );
+            }
+          }
+        }
+      } catch (e) {
+        print('[WARN] ไม่สามารถดึงข้อมูลต้นทุนการซื้อวัวมารวมในบัญชีได้: $e');
       }
 
       final allTx = [...manualTransactions, ...feedTransactions];
@@ -264,10 +325,13 @@ class FinanceNotifier extends Notifier<FinanceState> {
       final body = {
         'farm_id': tx.farmId,
         'title': tx.title,
+        'trans_type': tx.type.apiValue,
         'type': tx.type.name,
         'category': tx.category.label,
         'amount': tx.amount,
+        'transaction_date': tx.date.toIso8601String().split('T')[0],
         'date': tx.date.toIso8601String().split('T')[0],
+        if (tx.relatedCowId != null) 'related_cow_id': tx.relatedCowId,
         if (tx.notes != null) 'notes': tx.notes,
       };
 
@@ -285,6 +349,7 @@ class FinanceNotifier extends Notifier<FinanceState> {
     } catch (e) {
       print('[ERROR] บันทึกธุรกรรมไม่สำเร็จ: $e');
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      rethrow;
     }
   }
 
@@ -293,10 +358,13 @@ class FinanceNotifier extends Notifier<FinanceState> {
     try {
       final body = {
         'title': tx.title,
+        'trans_type': tx.type.apiValue,
         'type': tx.type.name,
         'category': tx.category.label,
         'amount': tx.amount,
+        'transaction_date': tx.date.toIso8601String().split('T')[0],
         'date': tx.date.toIso8601String().split('T')[0],
+        if (tx.relatedCowId != null) 'related_cow_id': tx.relatedCowId,
         if (tx.notes != null) 'notes': tx.notes,
       };
 
@@ -313,6 +381,7 @@ class FinanceNotifier extends Notifier<FinanceState> {
     } catch (e) {
       print('[ERROR] แก้ไขธุรกรรมไม่สำเร็จ: $e');
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      rethrow;
     }
   }
 

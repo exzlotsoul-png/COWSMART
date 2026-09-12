@@ -28,6 +28,16 @@ class FinancialRecordController extends Controller
     public function store(Request $request)
     {
         $payload = $request->all();
+
+        // Support both frontend field names ('date', 'type') and database column names ('transaction_date', 'trans_type')
+        if (empty($payload['transaction_date']) && !empty($payload['date'])) {
+            $payload['transaction_date'] = $payload['date'];
+        }
+        if (empty($payload['trans_type']) && !empty($payload['type'])) {
+            $typeVal = strtolower(trim($payload['type']));
+            $payload['trans_type'] = ($typeVal === 'income' || $typeVal === 'รายรับ') ? 'income' : 'expense';
+        }
+
         $data = FinancialRecord::create($payload);
         return response()->json($data, 201);
     }
@@ -40,7 +50,17 @@ class FinancialRecordController extends Controller
     public function update(Request $request, $id)
     {
         $data = FinancialRecord::findOrFail($id);
-        $data->update($request->all());
+        $payload = $request->all();
+
+        if (empty($payload['transaction_date']) && !empty($payload['date'])) {
+            $payload['transaction_date'] = $payload['date'];
+        }
+        if (empty($payload['trans_type']) && !empty($payload['type'])) {
+            $typeVal = strtolower(trim($payload['type']));
+            $payload['trans_type'] = ($typeVal === 'income' || $typeVal === 'รายรับ') ? 'income' : 'expense';
+        }
+
+        $data->update($payload);
         return response()->json($data);
     }
 

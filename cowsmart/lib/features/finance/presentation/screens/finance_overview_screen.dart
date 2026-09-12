@@ -212,9 +212,15 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                             );
 
                             Navigator.pop(modalContext);
-                            await ref.read(financeProvider.notifier).addTransaction(tx);
-                            if (context.mounted) {
-                              AppFeedback.showSuccess(context, 'บันทึกรายการรายรับ/รายจ่ายเรียบร้อยแล้ว');
+                            try {
+                              await ref.read(financeProvider.notifier).addTransaction(tx);
+                              if (context.mounted) {
+                                AppFeedback.showSuccess(context, 'บันทึกรายการรายรับ/รายจ่ายเรียบร้อยแล้ว');
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                AppFeedback.showError(context, 'บันทึกรายการไม่สำเร็จ: $e');
+                              }
                             }
                           },
                           icon: const Icon(Icons.check_circle_rounded, size: 20),
