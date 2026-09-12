@@ -527,9 +527,14 @@ class _HealthTabState extends ConsumerState<HealthTab> {
             _buildSummaryCard(context, records),
             Builder(
               builder: (context) {
-                final isCalfOrYoung = widget.cow.type == CowType.calf ||
-                    DateTime.now().difference(widget.cow.birthDate).inDays <= 365;
-                if (!isCalfOrYoung) return const SizedBox.shrink();
+                final now = DateTime.now();
+                final ageInDays = now.difference(widget.cow.birthDate).inDays;
+                final isWithinOneYear = ageInDays >= 0 && ageInDays <= 365;
+
+                // แสดงเฉพาะลูกวัว หรือวัวที่อายุไม่เกิน 1 ปี (365 วัน)
+                if (!isWithinOneYear || (widget.cow.type != CowType.calf && ageInDays > 365)) {
+                  return const SizedBox.shrink();
+                }
 
                 final allSchedule = CalfVaccineScheduleService.generateSchedule(
                   birthDate: widget.cow.birthDate,
@@ -635,7 +640,9 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'กด "ตั้งนัดหมาย" จากแถบโปรแกรมวัคซีนด้านบน หรือกดปุ่มปฏิทินสีส้มด้านล่าง',
+                            (DateTime.now().difference(widget.cow.birthDate).inDays <= 365)
+                                ? 'กด "ตั้งนัดหมาย" จากแถบโปรแกรมวัคซีนด้านบน หรือกดปุ่มปฏิทินสีส้มด้านล่าง'
+                                : 'กดปุ่มปฏิทินสีส้มด้านล่างเพื่อเพิ่มนัดหมายตรวจสุขภาพหรือวัคซีน',
                             style: TextStyle(
                               fontSize: 13,
                               color: AppColors.subText(context),
