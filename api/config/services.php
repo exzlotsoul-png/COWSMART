@@ -45,4 +45,10 @@ return [
         'api_secret' => env('CLOUDINARY_API_SECRET'),
     ],
 
+    'brevo' => [
+        'key' => env('BREVO_API_KEY'),
+        'sender_email' => env('BREVO_SENDER_EMAIL', 'exzlotsoul@gmail.com'),
+        'sender_name' => env('BREVO_SENDER_NAME', 'COWSMART'),
+    ],
+
 ];

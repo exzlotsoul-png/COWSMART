@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -171,31 +172,68 @@ class AuthController extends Controller
 
         $mailSent = false;
         $errorMessage = '';
-        try {
-            Mail::send([], [], function ($message) use ($request, $otp) {
-                $message->to($request->email)
-                    ->subject('รหัส OTP สำหรับรีเซ็ตรหัสผ่าน - COWSMART')
-                    ->html("
-                        <div style='font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e0e0e0; border-radius: 12px; background-color: #ffffff;'>
-                            <div style='text-align: center; margin-bottom: 24px;'>
-                                <h2 style='color: #2E7D32; margin: 0; font-size: 26px; font-weight: bold;'>COWSMART</h2>
-                                <p style='color: #666; font-size: 14px; margin-top: 4px;'>ระบบบริหารจัดการฟาร์มวัว</p>
-                            </div>
-                            <div style='background-color: #F1F8E9; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 24px; border: 1px solid #C8E6C9;'>
-                                <p style='margin: 0 0 10px 0; color: #2E7D32; font-size: 16px; font-weight: 500;'>รหัส OTP สำหรับรีเซ็ตรหัสผ่านของคุณคือ:</p>
-                                <h1 style='color: #1B5E20; font-size: 40px; letter-spacing: 6px; margin: 12px 0; font-family: monospace;'>{$otp}</h1>
-                                <p style='margin: 0; color: #558B2F; font-size: 13px;'>⏱️ รหัสนี้มีอายุใช้งาน 10 นาที</p>
-                            </div>
-                            <p style='color: #666; font-size: 14px; line-height: 1.6;'>หากคุณไม่ได้เป็นผู้ร้องขอการรีเซ็ตรหัสผ่าน โปรดข้ามอีเมลฉบับนี้</p>
-                            <hr style='border: none; border-top: 1px solid #eee; margin: 24px 0;'>
-                            <p style='color: #aaa; font-size: 12px; text-align: center; margin: 0;'>© COWSMART Farm Management System</p>
-                        </div>
-                    ");
-            });
-            $mailSent = true;
-        } catch (\Throwable $e) {
-            Log::error('Failed to send OTP email to ' . $request->email . ': ' . $e->getMessage());
-            $errorMessage = $e->getMessage();
+        $htmlContent = "
+            <div style='font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e0e0e0; border-radius: 12px; background-color: #ffffff;'>
+                <div style='text-align: center; margin-bottom: 24px;'>
+                    <h2 style='color: #2E7D32; margin: 0; font-size: 26px; font-weight: bold;'>COWSMART</h2>
+                    <p style='color: #666; font-size: 14px; margin-top: 4px;'>ระบบบริหารจัดการฟาร์มวัว</p>
+                </div>
+                <div style='background-color: #F1F8E9; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 24px; border: 1px solid #C8E6C9;'>
+                    <p style='margin: 0 0 10px 0; color: #2E7D32; font-size: 16px; font-weight: 500;'>รหัส OTP สำหรับรีเซ็ตรหัสผ่านของคุณคือ:</p>
+                    <h1 style='color: #1B5E20; font-size: 40px; letter-spacing: 6px; margin: 12px 0; font-family: monospace;'>{$otp}</h1>
+                    <p style='margin: 0; color: #558B2F; font-size: 13px;'>⏱️ รหัสนี้มีอายุใช้งาน 10 นาที</p>
+                </div>
+                <p style='color: #666; font-size: 14px; line-height: 1.6;'>หากคุณไม่ได้เป็นผู้ร้องขอการรีเซ็ตรหัสผ่าน โปรดข้ามอีเมลฉบับนี้</p>
+                <hr style='border: none; border-top: 1px solid #eee; margin: 24px 0;'>
+                <p style='color: #aaa; font-size: 12px; text-align: center; margin: 0;'>© COWSMART Farm Management System</p>
+            </div>
+        ";
+
+        $brevoKey = config('services.brevo.key');
+        if (!empty($brevoKey)) {
+            try {
+                $response = Http::withHeaders([
+                    'api-key' => $brevoKey,
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json',
+                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                ])->timeout(10)->post('https://api.brevo.com/v3/smtp/email', [
+                    'sender' => [
+                        'name' => config('services.brevo.sender_name', 'COWSMART'),
+                        'email' => config('services.brevo.sender_email', 'exzlotsoul@gmail.com'),
+                    ],
+                    'to' => [
+                        ['email' => $request->email],
+                    ],
+                    'subject' => 'รหัส OTP สำหรับรีเซ็ตรหัสผ่าน - COWSMART',
+                    'htmlContent' => $htmlContent,
+                ]);
+
+                if ($response->successful()) {
+                    $mailSent = true;
+                } else {
+                    $errorMessage = 'Brevo API error: ' . $response->body();
+                    Log::error('Brevo send failed: ' . $response->body());
+                }
+            } catch (\Throwable $e) {
+                Log::error('Failed to send via Brevo to ' . $request->email . ': ' . $e->getMessage());
+                $errorMessage = $e->getMessage();
+            }
+        }
+
+        // Fallback to Laravel standard Mail if Brevo not used or failed
+        if (!$mailSent && empty($brevoKey)) {
+            try {
+                Mail::send([], [], function ($message) use ($request, $htmlContent) {
+                    $message->to($request->email)
+                        ->subject('รหัส OTP สำหรับรีเซ็ตรหัสผ่าน - COWSMART')
+                        ->html($htmlContent);
+                });
+                $mailSent = true;
+            } catch (\Throwable $e) {
+                Log::error('Failed to send OTP email to ' . $request->email . ': ' . $e->getMessage());
+                $errorMessage = $e->getMessage();
+            }
         }
 
         $res = [
