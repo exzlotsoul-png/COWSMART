@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ToggleLeft, ToggleRight, Trash2, Search, ArrowUpDown } from 'lucide-react';
+import { ToggleLeft, ToggleRight, Trash2, Search, ArrowUpDown, Shield, User } from 'lucide-react';
 import api from '../lib/axios';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
@@ -13,7 +13,6 @@ const Users = () => {
   const [sortOrder, setSortOrder] = useState('newest');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
-  const uniqueRoles = Array.from(new Set(users.map(u => u.role).filter(Boolean)));
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -26,7 +25,7 @@ const Users = () => {
     try {
       const response = await api.get('/users');
       setUsers(response.data.data || response.data);
-      setCurrentPage(1); // reset to page 1 on fetch
+      setCurrentPage(1);
     } catch (error) {
       console.error("Error fetching users:", error);
       showToast("ไม่สามารถดึงข้อมูลผู้ใช้งานได้", "error");
@@ -44,6 +43,17 @@ const Users = () => {
     } catch (error) {
       console.error("Error updating user status:", error);
       showToast("เกิดข้อผิดพลาดในการอัปเดตสถานะผู้ใช้งาน", "error");
+    }
+  };
+
+  const handleRoleChange = async (email, newRole, userName = '') => {
+    try {
+      await api.put(`/users/${email}`, { role: newRole });
+      showToast(`เปลี่ยนบทบาทของ "${userName || email}" เป็น ${newRole === 'admin' ? 'แอดมิน' : 'ผู้ใช้'} เรียบร้อยแล้ว`, "success");
+      fetchUsers();
+    } catch (error) {
+      console.error("Error updating user role:", error);
+      showToast("เกิดข้อผิดพลาดในการเปลี่ยนบทบาท", "error");
     }
   };
 
@@ -74,6 +84,7 @@ const Users = () => {
       const compare = (b.email || '').localeCompare(a.email || '');
       return sortOrder === 'newest' ? compare : -compare;
     });
+
   const totalItems = filteredAndSorted.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -129,47 +140,69 @@ const Users = () => {
           </button>
         </div>
 
-
         {loading ? (
-          <p>กำลังโหลดข้อมูล...</p>
+          <p style={{ padding: '24px' }}>กำลังโหลดข้อมูล...</p>
         ) : (
           <>
             <div className="table-container">
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th style={{ width: '28%', minWidth: '220px' }}>อีเมล</th>
-                    <th style={{ width: '15%', minWidth: '120px' }}>ชื่อ</th>
-                    <th style={{ width: '15%', minWidth: '120px' }}>นามสกุล</th>
-                    <th style={{ width: '11%', minWidth: '90px', whiteSpace: 'nowrap' }}>บทบาท</th>
+                    <th style={{ width: '26%', minWidth: '220px' }}>อีเมล</th>
+                    <th style={{ width: '15%', minWidth: '110px' }}>ชื่อ</th>
+                    <th style={{ width: '15%', minWidth: '110px' }}>นามสกุล</th>
+                    <th style={{ width: '14%', minWidth: '130px', whiteSpace: 'nowrap' }}>บทบาท</th>
                     <th style={{ width: '11%', minWidth: '110px', whiteSpace: 'nowrap' }}>วันที่สมัคร</th>
                     <th style={{ width: '10%', minWidth: '110px', whiteSpace: 'nowrap' }}>สถานะ</th>
-                    <th style={{ width: '10%', minWidth: '90px', textAlign: 'right', paddingRight: '24px', whiteSpace: 'nowrap' }}>จัดการ</th>
+                    <th style={{ width: '9%', minWidth: '90px', textAlign: 'right', paddingRight: '24px', whiteSpace: 'nowrap' }}>จัดการ</th>
                   </tr>
                 </thead>
                 <tbody>
                   {currentUsers.length > 0 ? (
                     currentUsers.map((user) => {
                       const isAdmin = user.role === 1 || user.role === '1' || user.role === 'admin';
+                      const isMe = currentUser?.email === user.email;
+                      const displayName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email;
+
                       return (
                         <tr key={user.email}>
                           <td style={{ wordBreak: 'break-all' }}>{user.email}</td>
                           <td>{user.first_name || '-'}</td>
                           <td>{user.last_name || '-'}</td>
                           <td style={{ whiteSpace: 'nowrap' }}>
-                            <span style={{ 
-                              display: 'inline-block',
-                              whiteSpace: 'nowrap',
-                              padding: '4px 10px', 
-                              borderRadius: '10px', 
-                              fontSize: '0.8rem',
-                              fontWeight: '600',
-                              backgroundColor: isAdmin ? '#ede9fe' : '#f3f4f6',
-                              color: isAdmin ? '#6d28d9' : '#4b5563',
-                              border: isAdmin ? '1px solid #ddd6fe' : '1px solid #e5e7eb',
-                            }}>
-                              {isAdmin ? 'แอดมิน' : 'ผู้ใช้'}
-                            </span>
+                            {isMe ? (
+                              <span style={{ 
+                                display: 'inline-block',
+                                padding: '4px 10px', 
+                                borderRadius: '10px', 
+                                fontSize: '0.8rem',
+                                fontWeight: '600',
+                                backgroundColor: isAdmin ? '#ede9fe' : '#f3f4f6',
+                                color: isAdmin ? '#6d28d9' : '#4b5563',
+                                border: isAdmin ? '1px solid #ddd6fe' : '1px solid #e5e7eb',
+                              }}>
+                                {isAdmin ? 'แอดมิน' : 'ผู้ใช้'}
+                              </span>
+                            ) : (
+                              <select
+                                value={isAdmin ? 'admin' : 'user'}
+                                onChange={(e) => handleRoleChange(user.email, e.target.value, displayName)}
+                                style={{
+                                  padding: '4px 8px',
+                                  borderRadius: '8px',
+                                  fontSize: '0.82rem',
+                                  fontWeight: '600',
+                                  cursor: 'pointer',
+                                  border: isAdmin ? '1px solid #c4b5fd' : '1px solid #d1d5db',
+                                  backgroundColor: isAdmin ? '#ede9fe' : '#f9fafb',
+                                  color: isAdmin ? '#6d28d9' : '#374151',
+                                  outline: 'none',
+                                }}
+                              >
+                                <option value="user">ผู้ใช้ (User)</option>
+                                <option value="admin">แอดมิน (Admin)</option>
+                              </select>
+                            )}
                           </td>
                           <td style={{ whiteSpace: 'nowrap', color: '#4b5563' }}>
                             {user.created_at ? new Date(user.created_at).toLocaleDateString('th-TH') : '-'}
@@ -190,13 +223,13 @@ const Users = () => {
                           </td>
                           <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                             <div className="action-links" style={{ justifyContent: 'flex-end', paddingRight: '4px' }}>
-                              {currentUser?.email === user.email ? (
+                              {isMe ? (
                                 <span style={{ color: '#9ca3af', fontSize: '0.85rem' }}>บัญชีของคุณ</span>
                               ) : (
                                 <button 
                                   className="action-btn" 
                                   style={{ color: user.is_active ? 'var(--primary-color)' : '#9ca3af' }}
-                                  onClick={() => handleToggleActive(user.email, user.is_active, `${user.first_name || ''} ${user.last_name || ''}`.trim())}
+                                  onClick={() => handleToggleActive(user.email, user.is_active, displayName)}
                                   title={user.is_active ? "ปิดใช้งานบัญชี" : "เปิดใช้งานบัญชี"}
                                 >
                                   {user.is_active ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
