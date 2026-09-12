@@ -5,18 +5,21 @@ import '../domain/zone.dart';
 class ZoneState {
   final List<Zone> zones;
   final bool isLoading;
+  final bool isLoaded; // true หลัง fetchZones เสร็จแล้วอย่างน้อยครั้งหนึ่ง
   final String? errorMessage;
 
-  ZoneState({this.zones = const [], this.isLoading = false, this.errorMessage});
+  ZoneState({this.zones = const [], this.isLoading = false, this.isLoaded = false, this.errorMessage});
 
   ZoneState copyWith({
     List<Zone>? zones,
     bool? isLoading,
+    bool? isLoaded,
     String? errorMessage,
   }) {
     return ZoneState(
       zones: zones ?? this.zones,
       isLoading: isLoading ?? this.isLoading,
+      isLoaded: isLoaded ?? this.isLoaded,
       errorMessage: errorMessage ?? this.errorMessage,
     );
   }
@@ -38,9 +41,9 @@ class ZoneNotifier extends Notifier<ZoneState> {
       final List<dynamic> data = response.data;
       final List<Zone> zones = data.map((json) => Zone.fromJson(json)).toList();
 
-      state = state.copyWith(zones: zones, isLoading: false);
+      state = state.copyWith(zones: zones, isLoading: false, isLoaded: true);
     } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      state = state.copyWith(isLoading: false, isLoaded: true, errorMessage: e.toString());
     }
   }
 }
@@ -48,3 +51,4 @@ class ZoneNotifier extends Notifier<ZoneState> {
 final zoneProvider = NotifierProvider<ZoneNotifier, ZoneState>(() {
   return ZoneNotifier();
 });
+

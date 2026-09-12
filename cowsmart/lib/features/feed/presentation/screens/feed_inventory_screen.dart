@@ -27,7 +27,10 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
       final currentFarm = ref.read(farmProvider).currentFarm;
       if (currentFarm != null) {
         ref.read(feedProvider.notifier).fetchFeedInventory(currentFarm.id);
-        ref.read(zoneProvider.notifier).fetchZones(currentFarm.id);
+        // ดึง zones เฉพาะถ้ายังไม่เคย load ไว้
+        if (!ref.read(zoneProvider).isLoaded) {
+          ref.read(zoneProvider.notifier).fetchZones(currentFarm.id);
+        }
       }
     });
   }
