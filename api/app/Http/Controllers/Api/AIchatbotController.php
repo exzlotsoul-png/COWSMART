@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\AiChatbot;
-use App\Models\ChatHistory;
 use App\Models\Cow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -252,20 +251,8 @@ class AIchatbotController extends Controller
                 . "คำแนะนำ: กรุณาติดต่อปรึกษาสัตวแพทย์ในพื้นที่เพื่อตรวจดูอาการโดยตรง หรือเลือกแตะหัวข้ออาการที่แนะนำจากรายการด้านล่างครับ";
         }
 
-        // Save into ChatHistory
-        $chatRecord = null;
-        try {
-            $chatRecord = ChatHistory::create([
-                'email' => $userEmail,
-                'user_message' => $userMessage,
-                'ai_response' => $aiResponse,
-                'chat_datetime' => Carbon::now(),
-            ]);
-        } catch (\Exception $e) {
-            Log::warning("Could not persist chat history: " . $e->getMessage());
-        }
-
-        $chatId = $chatRecord ? $chatRecord->id : 'CH0001';
+        // Unique Chat Identifier for UI state and tracking
+        $chatId = 'CH' . strtoupper(substr(md5(uniqid((string) mt_rand(), true)), 0, 8));
 
         return response()->json([
             'success' => true,
@@ -363,7 +350,7 @@ class AIchatbotController extends Controller
             }
 
             // Verified active high-speed models
-            $models = ['gemini-3.5-flash', 'gemini-3.6-flash', 'gemini-3.7-flash'];
+            $models = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.7-flash', 'gemini-flash-latest'];
 
             foreach ($models as $model) {
                 $response = Http::timeout(20)->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}", [
