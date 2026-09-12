@@ -72,7 +72,7 @@ class AuthController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
             'password' => Hash::make($request->password),
-            'role' => '1', // Default role
+            'role' => '0', // Default role: 0 = user, 1 = admin
             'created_at' => now(),
         ]);
 
