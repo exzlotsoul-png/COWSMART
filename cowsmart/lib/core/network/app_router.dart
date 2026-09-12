@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cowsmart/features/auth/presentation/screens/splash_screen.dart';
 import 'package:cowsmart/features/auth/presentation/screens/login_screen.dart';
 import 'package:cowsmart/features/auth/presentation/screens/register_screen.dart';
 import 'package:cowsmart/features/auth/presentation/screens/otp_screen.dart';
@@ -69,11 +70,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: '/splash',
-        builder: (context, state) => const Scaffold(
-          body: Center(
-            child: CircularProgressIndicator(),
-          ),
-        ),
+        builder: (context, state) => const SplashScreen(),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(

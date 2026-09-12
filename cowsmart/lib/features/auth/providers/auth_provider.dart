@@ -58,6 +58,9 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<void> _checkPersistedToken() async {
+    // Smooth splash screen delay so user can see CowSmart logo
+    await Future.delayed(const Duration(milliseconds: 1500));
+
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
     final userJson = prefs.getString('user_data');
@@ -78,7 +81,10 @@ class AuthNotifier extends Notifier<AuthState> {
       // Sync FCM token to backend
       ref.read(localNotificationProvider).syncFcmTokenToBackend(_api);
     } else {
-      state = state.copyWith(isInitializing: false);
+      state = state.copyWith(
+        isAuthenticated: false,
+        isInitializing: false,
+      );
     }
   }
 
@@ -166,12 +172,18 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> logout() async {
     try {
       await _api.post('/logout');
+    } catch (_) {
+      // Ignore network errors on logout
     } finally {
       _api.setToken(null);
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('auth_token');
       await prefs.remove('user_data');
-      state = AuthState();
+      state = AuthState(
+        isAuthenticated: false,
+        isInitializing: false,
+        isLoading: false,
+      );
     }
   }
 
