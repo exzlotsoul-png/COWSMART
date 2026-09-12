@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "beef_farm" "\0"
+            VALUE "CompanyName", "com.cowsmart.app" "\0"
+            VALUE "FileDescription", "COWSMART" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "beef_farm" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "beef_farm.exe" "\0"
-            VALUE "ProductName", "beef_farm" "\0"
+            VALUE "InternalName", "COWSMART" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 com.cowsmart.app. All rights reserved." "\0"
+            VALUE "OriginalFilename", "cowsmart.exe" "\0"
+            VALUE "ProductName", "COWSMART" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
