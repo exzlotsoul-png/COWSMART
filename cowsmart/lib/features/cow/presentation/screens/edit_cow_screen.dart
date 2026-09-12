@@ -355,8 +355,8 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                             const SizedBox(height: 2),
                             Text(
                               widget.cow.name.isNotEmpty
-                                  ? ' ()'
-                                  : 'เบอร์วัว: ',
+                                  ? '${widget.cow.name} (${widget.cow.tagNumber})'
+                                  : 'เบอร์วัว: ${widget.cow.tagNumber}',
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.85),
                                 fontSize: 13,
