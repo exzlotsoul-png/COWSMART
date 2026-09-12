@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'core/theme/app_theme.dart';
 import 'core/constants/app_constants.dart';
@@ -13,6 +14,9 @@ import 'features/settings/providers/app_settings_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('th_TH', null);
+
+  // Use local Prompt asset font without depending on internet download
+  GoogleFonts.config.allowRuntimeFetching = true;
   
   final container = ProviderContainer();
   await container.read(localNotificationProvider).init();
