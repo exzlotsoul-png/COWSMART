@@ -3,12 +3,20 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\CloudinaryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 
 class ImageController extends Controller
 {
+    protected CloudinaryService $cloudinary;
+
+    public function __construct(CloudinaryService $cloudinary)
+    {
+        $this->cloudinary = $cloudinary;
+    }
+
     public function upload(Request $request)
     {
         $request->validate([
@@ -21,28 +29,42 @@ class ImageController extends Controller
         $entityId = $request->input('entity_id');
         $user = Auth::user();
 
-        $path = null;
         $response = [];
+
+        // Upload to Cloudinary first
+        $cloudinaryResult = $this->cloudinary->upload($request->file('image'), $type . 's');
+        $imageUrl = $cloudinaryResult['secure_url'] ?? null;
+
+        // Fallback to local storage if Cloudinary fails
+        if (!$imageUrl) {
+            $folderMap = [
+                'avatar' => 'avatars',
+                'farm' => 'farms',
+                'cow' => 'cows',
+                'health' => 'health',
+                'issue' => 'issues',
+            ];
+            $localFolder = $folderMap[$type] ?? 'uploads';
+            $path = $request->file('image')->store($localFolder, 'public');
+            $imageUrl = $path; // relative path for local storage
+        }
 
         switch ($type) {
             case 'avatar':
-                // User's primary key is email, so entity_id should be the user's email
                 if ($user->email != $entityId) {
                     return response()->json(['message' => 'ไม่มีสิทธิ์อัปโหลดรูปนี้'], 403);
                 }
 
-                if ($user->profile_image && !str_starts_with($user->profile_image, 'http')) {
-                    Storage::disk('public')->delete($user->profile_image);
-                }
+                // Delete old avatar
+                $this->deleteOldImage($user->profile_image);
 
-                $path = $request->file('image')->store('avatars', 'public');
-                $user->profile_image = $path;
+                $user->profile_image = $imageUrl;
                 $user->save();
 
                 $response = [
                     'message' => 'อัปโหลดรูปโปรไฟล์สำเร็จ',
                     'user' => $user,
-                    'url' => asset('storage/' . $path),
+                    'url' => $user->avatar_full_url ?? $imageUrl,
                 ];
                 break;
 
@@ -51,18 +73,16 @@ class ImageController extends Controller
                     ->where('email', $user->email)
                     ->firstOrFail();
 
-                if ($farm->image_url && !str_starts_with($farm->image_url, 'http')) {
-                    Storage::disk('public')->delete($farm->image_url);
-                }
+                // Delete old farm image
+                $this->deleteOldImage($farm->image_url);
 
-                $path = $request->file('image')->store('farms', 'public');
-                $farm->image_url = $path;
+                $farm->image_url = $imageUrl;
                 $farm->save();
 
                 $response = [
                     'message' => 'อัปโหลดรูปฟาร์มสำเร็จ',
                     'farm' => $farm,
-                    'url' => asset('storage/' . $path),
+                    'url' => $farm->image_full_url ?? $imageUrl,
                 ];
                 break;
 
@@ -73,41 +93,57 @@ class ImageController extends Controller
                     })
                     ->firstOrFail();
 
-                if ($cow->image_url && !str_starts_with($cow->image_url, 'http')) {
-                    Storage::disk('public')->delete($cow->image_url);
-                }
+                // Delete old cow image
+                $this->deleteOldImage($cow->image_url);
 
-                $path = $request->file('image')->store('cows', 'public');
-                $cow->image_url = $path;
+                $cow->image_url = $imageUrl;
                 $cow->save();
 
                 $response = [
                     'message' => 'อัปโหลดรูปวัวสำเร็จ',
                     'cow' => $cow,
-                    'url' => asset('storage/' . $path),
+                    'url' => $cow->image_full_url ?? $imageUrl,
                 ];
                 break;
 
             case 'health':
-                $path = $request->file('image')->store('health', 'public');
                 $response = [
                     'message' => 'อัปโหลดรูปแผล/อาการสำเร็จ',
-                    'path' => $path,
-                    'url' => asset('storage/' . $path),
+                    'path' => $imageUrl,
+                    'url' => str_starts_with($imageUrl, 'http') ? $imageUrl : asset('storage/' . $imageUrl),
                 ];
                 break;
 
             case 'issue':
-                $path = $request->file('image')->store('issues', 'public');
                 $response = [
                     'message' => 'อัปโหลดรูปภาพรายงานปัญหาสำเร็จ',
-                    'path' => $path,
-                    'url' => asset('storage/' . $path),
+                    'path' => $imageUrl,
+                    'url' => str_starts_with($imageUrl, 'http') ? $imageUrl : asset('storage/' . $imageUrl),
                 ];
                 break;
         }
 
         return response()->json($response);
+    }
+
+    /**
+     * Delete an old image whether it is stored on Cloudinary or local storage
+     */
+    protected function deleteOldImage(?string $pathOrUrl): void
+    {
+        if (empty($pathOrUrl)) {
+            return;
+        }
+
+        if (str_contains($pathOrUrl, 'cloudinary.com')) {
+            $this->cloudinary->delete($pathOrUrl);
+        } else {
+            $localPath = preg_match('/storage\/(.+)$/', $pathOrUrl, $matches) ? $matches[1] : ltrim($pathOrUrl, '/');
+            $localPath = preg_replace('/^storage\//', '', $localPath);
+            if ($localPath && !str_starts_with($localPath, 'http') && Storage::disk('public')->exists($localPath)) {
+                Storage::disk('public')->delete($localPath);
+            }
+        }
     }
 
     public function deleteImage(Request $request)
@@ -117,16 +153,7 @@ class ImageController extends Controller
         ]);
 
         $rawPath = $request->input('path');
-        if (preg_match('/storage\/(.+)$/', $rawPath, $matches)) {
-            $path = $matches[1];
-        } else {
-            $path = ltrim($rawPath, '/');
-            $path = preg_replace('/^storage\//', '', $path);
-        }
-
-        if ($path && !str_starts_with($path, 'http') && Storage::disk('public')->exists($path)) {
-            Storage::disk('public')->delete($path);
-        }
+        $this->deleteOldImage($rawPath);
 
         return response()->json(['message' => 'ลบรูปภาพจากระบบเรียบร้อยแล้ว']);
     }

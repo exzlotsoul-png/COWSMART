@@ -465,7 +465,8 @@ class _ImagePickerWidgetState extends ConsumerState<ImagePickerWidget> {
         if (_hasPendingImage && !_isUploading && !widget.showConfirmButtons) ...[
           const SizedBox(height: 10),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            margin: const EdgeInsets.symmetric(horizontal: 8),
             decoration: BoxDecoration(
               color: Colors.orange.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(14),
@@ -476,12 +477,16 @@ class _ImagePickerWidgetState extends ConsumerState<ImagePickerWidget> {
               children: [
                 Icon(Icons.info_outline_rounded, size: 14, color: Colors.orange),
                 SizedBox(width: 6),
-                Text(
-                  'เลือกรูปใหม่แล้ว — กด "บันทึก" เพื่ออัปโหลด',
-                  style: TextStyle(
-                    color: Colors.orange,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                Flexible(
+                  child: Text(
+                    'เลือกรูปใหม่แล้ว — กด "บันทึก" เพื่ออัปโหลด',
+                    style: TextStyle(
+                      color: Colors.orange,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
                   ),
                 ),
               ],
