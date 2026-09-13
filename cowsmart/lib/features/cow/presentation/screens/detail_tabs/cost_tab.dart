@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -128,11 +129,55 @@ class _CostTabState extends ConsumerState<CostTab> {
     final totalIncome = _parseDouble(summary['total_income']);
     final netCost = _parseDouble(summary['net_cost']);
 
-    // Health details
-    final healthDetails = (breakdown['health'] as List?)
+    // Health details (unpack items_json if available so each vaccine/medicine is shown)
+    final rawHealthDetails = (breakdown['health'] as List?)
             ?.map((e) => e is Map ? Map<String, dynamic>.from(e) : <String, dynamic>{})
             .toList() ??
         [];
+
+    final List<Map<String, dynamic>> healthDetails = [];
+    for (final h in rawHealthDetails) {
+      dynamic items = h['items_json'] ?? h['items'];
+      if (items is String && items.isNotEmpty) {
+        try {
+          items = jsonDecode(items);
+        } catch (_) {}
+      }
+
+      if (items is List && items.isNotEmpty) {
+        for (final item in items) {
+          if (item is Map) {
+            final itemMap = Map<String, dynamic>.from(item);
+            final itemCost = _parseDouble(itemMap['cost']);
+            final itemName = (itemMap['item_name'] ?? itemMap['itemName'] ?? '').toString();
+            final itemType = (itemMap['item_type'] ?? itemMap['itemType'] ?? '').toString();
+            final amount = itemMap['amount'];
+            final unit = itemMap['unit_abbreviation'] ?? itemMap['unit_name'] ?? '';
+
+            String amountStr = '';
+            if (amount != null) {
+              final a = _parseDouble(amount);
+              if (a > 0) {
+                amountStr = ' (${a % 1 == 0 ? a.toInt() : a} $unit)'.trimRight();
+              }
+            }
+
+            healthDetails.add({
+              'health_record_id': h['health_record_id'],
+              'record_date': h['record_date'],
+              'cost': itemCost > 0 ? itemCost : _parseDouble(h['cost']),
+              'disease_name': itemType == 'disease' ? '$itemName$amountStr' : null,
+              'medicine_name': itemType == 'medicine' ? '$itemName$amountStr' : null,
+              'vaccine_name': itemType == 'vaccine' ? '$itemName$amountStr' : (itemType.isEmpty ? '$itemName$amountStr' : null),
+              'raw_item': itemMap,
+            });
+          }
+        }
+      } else {
+        healthDetails.add(h);
+      }
+    }
+
     // Feed details
     final feedDetails = (breakdown['feed'] as List?)
             ?.map((e) => e is Map ? Map<String, dynamic>.from(e) : <String, dynamic>{})
@@ -560,6 +605,9 @@ class _CostTabState extends ConsumerState<CostTab> {
       description += '${description.isNotEmpty ? ' | ' : ''}วัคซีน: $vaccine';
     if (description.isEmpty) description = 'บันทึกสุขภาพ';
 
+    final isVaccine = vaccine != null;
+    final iconColor = isVaccine ? const Color(0xFF0284C7) : AppColors.error;
+
     return Card(
       elevation: 1,
       margin: const EdgeInsets.only(bottom: 8),
@@ -569,12 +617,12 @@ class _CostTabState extends ConsumerState<CostTab> {
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppColors.error.withValues(alpha: 0.1),
+            color: iconColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: const Icon(
-            Icons.medical_services_outlined,
-            color: AppColors.error,
+          child: Icon(
+            isVaccine ? Icons.vaccines_rounded : Icons.medical_services_outlined,
+            color: iconColor,
             size: 20,
           ),
         ),
