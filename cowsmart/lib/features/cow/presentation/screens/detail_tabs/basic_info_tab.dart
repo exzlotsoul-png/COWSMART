@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/widgets/cow_icon.dart';
 import '../../../../../core/utils/date_formatter.dart';
 import '../../../domain/cow.dart';
 import '../../../domain/breed.dart';
@@ -80,108 +79,180 @@ class BasicInfoTab extends ConsumerWidget {
     final estimatedValue = latestWeight * pricePerKg;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Quick Stats Row
+          // Quick Highlight Stats Cards
           _buildQuickStats(context, cow, latestWeight, estimatedValue),
           const SizedBox(height: 18),
 
-          _buildInfoCard(
+          // Card 1: ข้อมูลประจำตัวและประวัติเบื้องต้น
+          _buildSectionCard(
             context,
-            icon: Icons.info_outline,
+            icon: Icons.badge_outlined,
             iconColor: AppColors.primary,
             title: 'ข้อมูลเบื้องต้น',
             children: [
-              _buildInfoRow(context, Icons.nfc, 'หมายเลขประจำตัว', cow.tagNumber),
-              _buildInfoRow(context, Icons.label_outline, 'ชื่อ', cow.name.isNotEmpty ? cow.name : '-'),
-              _buildInfoRow(context, Icons.category_outlined, 'สายพันธุ์', breedName),
-              _buildInfoRow(context, Icons.pets, 'ประเภท', cow.type.label),
-              _buildInfoRow(context, cow.gender == 'M' ? Icons.male : Icons.female, 'เพศ', cow.gender == 'M' ? 'ผู้' : 'เมีย'),
-              _buildInfoRow(context, Icons.cake_outlined, 'อายุ', cow.ageDetailed),
-              _buildInfoRow(
+              _buildModernInfoTile(
                 context,
-                Icons.cake_outlined,
-                'วันเกิด',
-                AppDateUtils.formatThaiDate(cow.birthDate, useFullMonth: true),
+                icon: Icons.tag_rounded,
+                label: 'หมายเลขประจำตัว',
+                value: cow.tagNumber,
+                isHighlightValue: true,
               ),
-              _buildInfoRow(
+              _buildModernInfoTile(
                 context,
-                Icons.login_rounded,
-                'วันที่เข้าฟาร์ม',
-                cow.entryDate != null
+                icon: Icons.label_outline_rounded,
+                label: 'ชื่อวัว',
+                value: cow.name.isNotEmpty ? cow.name : '-',
+              ),
+              _buildModernInfoTile(
+                context,
+                icon: Icons.category_outlined,
+                label: 'สายพันธุ์',
+                value: breedName,
+              ),
+              _buildModernInfoTile(
+                context,
+                icon: Icons.pets_outlined,
+                label: 'ประเภท',
+                value: cow.type.label,
+              ),
+              _buildModernInfoTile(
+                context,
+                icon: cow.gender == 'M' ? Icons.male_rounded : Icons.female_rounded,
+                label: 'เพศ',
+                value: cow.gender == 'M' ? 'ผู้ (Male)' : 'เมีย (Female)',
+                valueColor: cow.gender == 'M' ? Colors.blue[700] : Colors.pink[600],
+              ),
+              _buildModernInfoTile(
+                context,
+                icon: Icons.cake_outlined,
+                label: 'อายุ',
+                value: cow.ageDetailed,
+              ),
+              _buildModernInfoTile(
+                context,
+                icon: Icons.calendar_today_outlined,
+                label: 'วันเกิด',
+                value: AppDateUtils.formatThaiDate(cow.birthDate, useFullMonth: true),
+              ),
+              _buildModernInfoTile(
+                context,
+                icon: Icons.login_rounded,
+                label: 'วันที่เข้าฟาร์ม',
+                value: cow.entryDate != null
                     ? AppDateUtils.formatThaiDate(cow.entryDate!, useFullMonth: true)
                     : 'ไม่ได้ระบุ',
+                isLast: true,
               ),
             ],
           ),
           const SizedBox(height: 16),
-          _buildInfoCard(
+
+          // Card 2: สถานะและความเป็นอยู่ปัจจุบัน
+          _buildSectionCard(
             context,
             icon: Icons.monitor_heart_outlined,
-            iconColor: AppColors.success,
-            title: 'สถานะปัจจุบัน',
+            iconColor: const Color(0xFF10B981),
+            title: 'สถานะและความเป็นอยู่',
             children: [
-              _buildInfoRowStatus(
+              _buildModernInfoTile(
                 context,
-                'สถานะสุขภาพ',
-                cow.status,
+                icon: Icons.health_and_safety_outlined,
+                label: 'สถานะสุขภาพ',
+                customValueWidget: _buildStatusBadge(cow.status),
               ),
-              _buildInfoRow(
+              _buildModernInfoTile(
                 context,
-                Icons.scale_outlined,
-                'น้ำหนักล่าสุด',
-                latestWeight > 0
+                icon: Icons.scale_outlined,
+                label: 'น้ำหนักล่าสุด',
+                value: latestWeight > 0
                     ? '${latestWeight.toStringAsFixed(1)} กก.'
                     : 'ยังไม่มีข้อมูล',
+                isHighlightValue: latestWeight > 0,
               ),
-              _buildInfoRow(
+              _buildModernInfoTile(
                 context,
-                Icons.monetization_on_outlined,
-                'มูลค่าประเมิน',
-                latestWeight > 0
+                icon: Icons.monetization_on_outlined,
+                label: 'มูลค่าประเมินในตลาด',
+                value: latestWeight > 0
                     ? '฿${NumberFormat('#,##0').format(estimatedValue)}'
                     : '-',
+                valueColor: const Color(0xFF10B981),
               ),
-              _buildInfoRow(context, Icons.location_on_outlined, 'โซน/คอกปัจจุบัน', zoneName),
+              _buildModernInfoTile(
+                context,
+                icon: Icons.roofing_outlined,
+                label: 'โซน / คอกปัจจุบัน',
+                value: zoneName,
+                isLast: true,
+              ),
             ],
           ),
           const SizedBox(height: 16),
-          _buildInfoCard(
+
+          // Card 3: ข้อมูลสายเลือด / พันธุกรรม
+          _buildSectionCard(
             context,
             icon: Icons.account_tree_outlined,
-            iconColor: AppColors.secondary,
-            title: 'สายเลือด/พ่อแม่',
+            iconColor: const Color(0xFF6366F1),
+            title: 'สายเลือด / พ่อแม่พันธุ์',
             children: [
-              _buildInfoRow(context, Icons.male, 'พ่อกำเนิด', formatCowNameWithBreed(cow.fatherId)),
-              _buildInfoRow(context, Icons.female, 'แม่กำเนิด', formatCowNameWithBreed(cow.motherId)),
+              _buildModernInfoTile(
+                context,
+                icon: Icons.male_rounded,
+                label: 'พ่อกำเนิด (Sire)',
+                value: formatCowNameWithBreed(cow.fatherId),
+                valueColor: Colors.blue[700],
+              ),
+              _buildModernInfoTile(
+                context,
+                icon: Icons.female_rounded,
+                label: 'แม่กำเนิด (Dam)',
+                value: formatCowNameWithBreed(cow.motherId),
+                valueColor: Colors.pink[600],
+                isLast: true,
+              ),
             ],
           ),
           const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
+
+          // Action Button: Cull Cow
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.red.withValues(alpha: 0.08),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
             child: OutlinedButton.icon(
               onPressed: () => context.push('/cull_cow', extra: cow),
-              icon: const Icon(Icons.delete_forever, color: Colors.red, size: 22),
+              icon: const Icon(Icons.delete_sweep_outlined, color: Colors.redAccent, size: 22),
               label: const Text(
-                'จำหน่าย/คัดออกวัวตัวนี้',
+                'จำหน่าย / คัดออกวัวตัวนี้',
                 style: TextStyle(
-                  color: Colors.red,
+                  color: Colors.redAccent,
                   fontWeight: FontWeight.bold,
-                  fontSize: 16,
+                  fontSize: 15.5,
                 ),
               ),
               style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Colors.red, width: 1.5),
+                side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.5), width: 1.2),
+                backgroundColor: Colors.red.withValues(alpha: 0.03),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(16),
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
         ],
       ),
     );
@@ -189,19 +260,21 @@ class BasicInfoTab extends ConsumerWidget {
 
   Widget _buildQuickStats(BuildContext context, Cow cow, double weight, double value) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF5D7552), Color(0xFF4A6040)],
+        gradient: LinearGradient(
+          colors: AppColors.isDark(context)
+              ? [const Color(0xFF2C3E28), const Color(0xFF1E2C1B)]
+              : [const Color(0xFF4D6544), const Color(0xFF384C31)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryDark.withValues(alpha: 0.25),
+            color: Colors.black.withValues(alpha: AppColors.isDark(context) ? 0.3 : 0.15),
             blurRadius: 12,
-            offset: const Offset(0, 4),
+            offset: const Offset(0, 5),
           ),
         ],
       ),
@@ -209,23 +282,23 @@ class BasicInfoTab extends ConsumerWidget {
         children: [
           Expanded(
             child: _buildQuickStatItem(
-              icon: Icons.scale,
-              label: 'น้ำหนัก',
+              icon: Icons.scale_rounded,
+              label: 'น้ำหนักล่าสุด',
               value: weight > 0 ? '${weight.toStringAsFixed(0)} กก.' : '-',
             ),
           ),
-          Container(width: 1, height: 45, color: Colors.white24),
+          Container(width: 1, height: 42, color: Colors.white.withValues(alpha: 0.2)),
           Expanded(
             child: _buildQuickStatItem(
-              icon: Icons.payments,
+              icon: Icons.payments_rounded,
               label: 'มูลค่าประเมิน',
               value: weight > 0 ? '฿${NumberFormat('#,##0').format(value)}' : '-',
             ),
           ),
-          Container(width: 1, height: 45, color: Colors.white24),
+          Container(width: 1, height: 42, color: Colors.white.withValues(alpha: 0.2)),
           Expanded(
             child: _buildQuickStatItem(
-              icon: Icons.cake,
+              icon: Icons.cake_rounded,
               label: 'อายุ',
               value: cow.ageDetailed,
             ),
@@ -241,24 +314,28 @@ class BasicInfoTab extends ConsumerWidget {
     required String value,
   }) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: Colors.white70, size: 22),
+        Icon(icon, color: Colors.white.withValues(alpha: 0.85), size: 22),
         const SizedBox(height: 6),
         Text(
           value,
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
-            fontSize: 17,
+            fontSize: 16.5,
           ),
           textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 2),
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.6),
+            color: Colors.white.withValues(alpha: 0.7),
             fontSize: 12,
+            fontWeight: FontWeight.w500,
           ),
           textAlign: TextAlign.center,
         ),
@@ -266,119 +343,126 @@ class BasicInfoTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildInfoCard(
+  Widget _buildSectionCard(
     BuildContext context, {
     required IconData icon,
     required Color iconColor,
     required String title,
     required List<Widget> children,
   }) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: Padding(
-        padding: const EdgeInsets.all(18.0),
+    final isDark = AppColors.isDark(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.cardBg(context),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.6)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: iconColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
+            // Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: iconColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(icon, color: iconColor, size: 20),
                   ),
-                  child: Icon(icon, color: iconColor, size: 22),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: AppColors.text(context),
+                  const SizedBox(width: 12),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16.5,
+                      color: AppColors.text(context),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            const SizedBox(height: 6),
-            Divider(height: 24, thickness: 1, color: AppColors.div(context)),
-            ...children,
+            Divider(height: 1, color: AppColors.brd(context).withValues(alpha: 0.5)),
+            // Body rows
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              child: Column(children: children),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildInfoRow(BuildContext context, dynamic icon, String label, String value) {
-    final Widget iconWidget = icon is Widget
-        ? icon
-        : (icon == Icons.pets || icon == Icons.pets_rounded || icon == Icons.pets_outlined)
-            ? const CowIcon(size: 20, color: AppColors.primary)
-            : Icon(icon as IconData, size: 20, color: AppColors.primary);
+  Widget _buildModernInfoTile(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    String? value,
+    Widget? customValueWidget,
+    Color? valueColor,
+    bool isHighlightValue = false,
+    bool isLast = false,
+  }) {
+    final effectiveValueColor = valueColor ??
+        (isHighlightValue
+            ? (AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary)
+            : AppColors.text(context));
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          iconWidget,
-          const SizedBox(width: 10),
-          Expanded(
-            flex: 2,
-            child: Text(
+      padding: EdgeInsets.only(bottom: isLast ? 4 : 10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColors.surfAlt(context).withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(icon, size: 19, color: AppColors.subText(context)),
+            const SizedBox(width: 10),
+            Text(
               label,
               style: TextStyle(
                 color: AppColors.subText(context),
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
               ),
             ),
-          ),
-          Expanded(
-            flex: 3,
-            child: Text(
-              value,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-                color: AppColors.text(context),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: customValueWidget ??
+                    Text(
+                      value ?? '-',
+                      style: TextStyle(
+                        color: effectiveValueColor,
+                        fontSize: 15,
+                        fontWeight: isHighlightValue ? FontWeight.bold : FontWeight.w600,
+                      ),
+                      textAlign: TextAlign.end,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRowStatus(BuildContext context, String label, CowStatus status) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const Icon(Icons.favorite, size: 20, color: AppColors.primary),
-          const SizedBox(width: 10),
-          Expanded(
-            flex: 2,
-            child: Text(
-              label,
-              style: TextStyle(
-                color: AppColors.subText(context),
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 3,
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: _buildStatusBadge(status),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -407,7 +491,7 @@ class BasicInfoTab extends ConsumerWidget {
         textColor = Colors.white;
         break;
       case CowStatus.recovering:
-        bgColor = const Color(0xFF2563EB); // Royal Blue for resting / recovery
+        bgColor = const Color(0xFF2563EB); // Royal Blue
         textColor = Colors.white;
         break;
       case CowStatus.sold:
@@ -423,16 +507,23 @@ class BasicInfoTab extends ConsumerWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: bgColor.withValues(alpha: 0.3),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Text(
         status.label,
         style: TextStyle(
           color: textColor,
-          fontSize: 14,
+          fontSize: 13,
           fontWeight: FontWeight.bold,
         ),
       ),

@@ -40,6 +40,8 @@ class _HealthTabState extends ConsumerState<HealthTab> {
   List<Map<String, dynamic>> _appointments = [];
   bool _isLoadingAppointments = true;
   bool _hasFetchedAppointments = false;
+  bool _showAllAppointments = false;
+  static const int _initialAppointmentLimit = 3;
 
   @override
   void initState() {
@@ -583,6 +585,27 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                if (_appointments.length > _initialAppointmentLimit) ...[
+                  const SizedBox(width: 4),
+                  TextButton(
+                    onPressed: () {
+                      setState(() => _showAllAppointments = !_showAllAppointments);
+                    },
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(
+                      _showAllAppointments ? 'ย่อรายการ' : 'ขยายดู',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFFF57C00),
+                      ),
+                    ),
+                  ),
+                ],
                 if (_appointments.isNotEmpty) ...[
                   const SizedBox(width: 4),
                   TextButton.icon(
@@ -658,8 +681,54 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                   ],
                 ),
               )
-            else
-              ..._appointments.take(5).map((appt) => _buildAppointmentCard(context, appt)),
+            else ...[
+              ...(_showAllAppointments
+                      ? _appointments
+                      : _appointments.take(_initialAppointmentLimit))
+                  .map((appt) => _buildAppointmentCard(context, appt)),
+              if (_appointments.length > _initialAppointmentLimit)
+                InkWell(
+                  onTap: () {
+                    setState(() => _showAllAppointments = !_showAllAppointments);
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 4, bottom: 8),
+                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF57C00).withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFFF57C00).withValues(alpha: 0.25),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _showAllAppointments
+                              ? 'ย่อรายการนัดหมาย'
+                              : 'ขยายดูนัดหมายทั้งหมด (${_appointments.length} รายการ)',
+                          style: const TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFFF57C00),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Icon(
+                          _showAllAppointments
+                              ? Icons.keyboard_arrow_up_rounded
+                              : Icons.keyboard_arrow_down_rounded,
+                          size: 20,
+                          color: const Color(0xFFF57C00),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
 
             // ── ประวัติการรักษาและตรวจสุขภาพ ──
             const SizedBox(height: 24),
