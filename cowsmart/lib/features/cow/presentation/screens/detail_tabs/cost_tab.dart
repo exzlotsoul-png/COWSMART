@@ -111,7 +111,6 @@ class _CostTabState extends ConsumerState<CostTab> {
     final totalCost = _parseDouble(summary['total_cost']);
     final healthCost = _parseDouble(summary['health_cost']);
     final feedCost = _parseDouble(summary['feed_cost']);
-    final directCost = _parseDouble(summary['direct_cost']);
     final purchasePrice = _parseDouble(summary['purchase_price']);
     final totalIncome = _parseDouble(summary['total_income']);
     final netCost = _parseDouble(summary['net_cost']);
@@ -155,38 +154,6 @@ class _CostTabState extends ConsumerState<CostTab> {
             ?.map((e) => e is Map ? Map<String, dynamic>.from(e) : <String, dynamic>{})
             .toList() ??
         [];
-
-    // Cost breakdown for proportion bar
-    final costParts = <_CostPart>[
-      if (purchasePrice > 0)
-        _CostPart(
-          'ราคาซื้อวัว',
-          purchasePrice,
-          Colors.purple,
-          Icons.payments_outlined,
-        ),
-      if (healthCost > 0)
-        _CostPart(
-          'ค่ารักษา/วัคซีน',
-          healthCost,
-          AppColors.error,
-          Icons.medical_services_outlined,
-        ),
-      if (feedCost > 0)
-        _CostPart(
-          'ค่าอาหาร',
-          feedCost,
-          Colors.green,
-          Icons.grass_rounded,
-        ),
-      if (directCost > 0)
-        _CostPart(
-          'ค่าใช้จ่ายตรง',
-          directCost,
-          Colors.blue,
-          Icons.receipt_long_outlined,
-        ),
-    ];
 
     final isBornInFarm =
         purchasePrice <= 0 &&
@@ -233,14 +200,6 @@ class _CostTabState extends ConsumerState<CostTab> {
             ],
           ),
           const SizedBox(height: 20),
-
-          // Proportion bar
-          if (costParts.isNotEmpty) ...[
-            _buildSectionTitle('สัดส่วนต้นทุน'),
-            const SizedBox(height: 8),
-            _buildProportionBar(costParts, totalCost),
-            const SizedBox(height: 20),
-          ],
 
           // Health cost history
           if (healthDetails.isNotEmpty) ...[
@@ -630,91 +589,7 @@ class _CostTabState extends ConsumerState<CostTab> {
     );
   }
 
-  Widget _buildProportionBar(List<_CostPart> parts, double total) {
-    final isDark = AppColors.isDark(context);
-    final partsSum = parts.fold<double>(0, (sum, p) => sum + p.amount);
-    final effectiveTotal = partsSum > 0 ? partsSum : total;
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : Colors.grey[200]!,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          // Bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: SizedBox(
-              height: 18,
-              child: Row(
-                children: parts.map((p) {
-                  final ratio = effectiveTotal > 0 ? p.amount / effectiveTotal : 0.0;
-                  return Expanded(
-                    flex: (ratio * 100).round().clamp(1, 100),
-                    child: Container(color: p.color),
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          // Legend
-          ...parts.map((p) {
-            final pct = effectiveTotal > 0
-                ? (p.amount / effectiveTotal * 100).toStringAsFixed(0)
-                : '0';
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 3),
-              child: Row(
-                children: [
-                  Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: p.color,
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(p.icon, size: 16, color: p.color),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      p.label,
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.text(context),
-                      ),
-                    ),
-                  ),
-                  Text(
-                    '${NumberFormat('#,##0').format(p.amount)} ฿ ($pct%)',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.text(context),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildHealthDetailCard(Map<String, dynamic> h) {
     final isDark = AppColors.isDark(context);
@@ -1321,12 +1196,4 @@ class _CostTabState extends ConsumerState<CostTab> {
         ),
       );
   }
-}
-
-class _CostPart {
-  final String label;
-  final double amount;
-  final Color color;
-  final IconData icon;
-  _CostPart(this.label, this.amount, this.color, this.icon);
 }
