@@ -152,7 +152,7 @@ class _CowQrDialogState extends State<CowQrDialog> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        'แท็ก: ${widget.cow.tagNumber} · ${widget.cow.type.label}',
+                        'แท็ก: ${widget.cow.tagNumber} · ${widget.cow.displayTypeName}',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,

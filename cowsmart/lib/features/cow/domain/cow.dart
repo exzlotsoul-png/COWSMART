@@ -17,15 +17,19 @@ enum CowStatus {
 enum CowType {
   breederMale('พ่อพันธุ์', 'T001'),
   breederFemale('แม่พันธุ์', 'T002'),
+  fattening('วัวขุน', 'T003'),
   calf('ลูกวัว', 'T004'),
-  fattening('วัวขุน', 'T003');
+  other('อื่นๆ', '');
 
   final String label;
   final String id;
   const CowType(this.label, this.id);
 
   static CowType fromId(String id) {
-    return CowType.values.firstWhere((e) => e.id == id, orElse: () => CowType.fattening);
+    return CowType.values.firstWhere(
+      (e) => e.id == id,
+      orElse: () => CowType.other,
+    );
   }
 }
 
@@ -49,6 +53,9 @@ class Cow {
   final String? imageFullUrl;
   final String? latestDiseaseName;
 
+  final String? typeId;
+  final String? customTypeName;
+
   Cow({
     required this.id,
     required this.farmId,
@@ -59,12 +66,14 @@ class Cow {
     this.entryDate,
     required this.gender,
     required this.type,
+    this.typeId,
+    this.customTypeName,
     required this.breed,
-    this.latestWeight = 0.0,
-    this.purchasePrice = 0.0,
+    required this.latestWeight,
+    required this.purchasePrice,
     this.fatherId,
     this.motherId,
-    this.status = CowStatus.normal,
+    required this.status,
     this.imageUrl,
     this.imageFullUrl,
     this.latestDiseaseName,
@@ -72,6 +81,8 @@ class Cow {
 
   factory Cow.fromJson(Map<String, dynamic> json) {
     final entryDateStr = json['entry_date'] ?? json['entryDate'];
+    final rawTypeId = (json['cow_type_id'] ?? json['type_id'] ?? '').toString();
+    final rawTypeName = (json['cow_type_name'] ?? json['type_name'])?.toString();
     return Cow(
       id: (json['cow_id'] ?? json['id']).toString(),
       farmId: (json['farm_id'] ?? json['farmId']).toString(),
@@ -81,7 +92,9 @@ class Cow {
       birthDate: DateTime.parse(json['birth_date'] ?? json['birthDate']),
       entryDate: entryDateStr != null ? DateTime.tryParse(entryDateStr.toString()) : null,
       gender: json['gender'].toString(),
-      type: CowType.fromId(json['cow_type_id'] ?? ''),
+      type: CowType.fromId(rawTypeId),
+      typeId: rawTypeId.isNotEmpty ? rawTypeId : null,
+      customTypeName: rawTypeName,
       breed: (json['breed_id'] ?? json['breed'] ?? 'Unknown').toString(),
       latestWeight: double.tryParse(json['latest_weight']?.toString() ?? '0') ?? 0.0,
       purchasePrice: double.tryParse(json['purchase_price']?.toString() ?? '0') ?? 0.0,
@@ -104,7 +117,7 @@ class Cow {
       'birth_date': birthDate.toIso8601String().split('T')[0],
       'entry_date': entryDate?.toIso8601String().split('T')[0],
       'gender': gender,
-      'cow_type_id': type.id,
+      'cow_type_id': typeId ?? type.id,
       'breed_id': breed.isEmpty ? null : breed,
       'status': status.name,
       'latest_weight': latestWeight,
@@ -170,6 +183,13 @@ class Cow {
 
   double get estimatedValue => latestWeight * 120.0; // Mock current market price 120 THB/kg
 
+  String get displayTypeName {
+    if (customTypeName != null && customTypeName!.trim().isNotEmpty) {
+      return customTypeName!;
+    }
+    return type.label;
+  }
+
   Cow copyWith({
     String? id,
     String? farmId,
@@ -179,6 +199,8 @@ class Cow {
     DateTime? birthDate,
     String? gender,
     CowType? type,
+    String? typeId,
+    String? customTypeName,
     String? breed,
     double? latestWeight,
     double? purchasePrice,
@@ -198,6 +220,8 @@ class Cow {
       birthDate: birthDate ?? this.birthDate,
       gender: gender ?? this.gender,
       type: type ?? this.type,
+      typeId: typeId ?? this.typeId,
+      customTypeName: customTypeName ?? this.customTypeName,
       breed: breed ?? this.breed,
       latestWeight: latestWeight ?? this.latestWeight,
       purchasePrice: purchasePrice ?? this.purchasePrice,

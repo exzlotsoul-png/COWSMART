@@ -6,9 +6,11 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/utils/date_formatter.dart';
 import '../../../domain/cow.dart';
 import '../../../domain/breed.dart';
+import '../../../domain/cow_type_model.dart';
 import '../../../providers/breed_provider.dart';
 import '../../../providers/cow_provider.dart';
 import '../../../providers/cow_detail_provider.dart';
+import '../../../providers/cow_type_provider.dart';
 import '../../../../farm/providers/zone_provider.dart';
 import '../../../../market/providers/market_price_provider.dart';
 
@@ -21,6 +23,15 @@ class BasicInfoTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final allCows = ref.watch(cowProvider).allCows;
     final breeds = ref.watch(breedProvider);
+    final cowTypes = ref.watch(cowTypeProvider);
+
+    final resolvedTypeId = cow.typeId ?? (cow.type != CowType.other ? cow.type.id : '');
+    final cowTypeName = cowTypes
+        .firstWhere(
+          (t) => t.id == resolvedTypeId,
+          orElse: () => CowTypeModel(id: resolvedTypeId, name: cow.displayTypeName),
+        )
+        .name;
 
     String formatCowNameWithBreed(String? id) {
       if (id == null || id.isEmpty) return 'ไม่ทราบข้อมูล';
@@ -117,7 +128,7 @@ class BasicInfoTab extends ConsumerWidget {
                 context,
                 icon: Icons.pets_outlined,
                 label: 'ประเภท',
-                value: cow.type.label,
+                value: cowTypeName,
               ),
               _buildModernInfoTile(
                 context,

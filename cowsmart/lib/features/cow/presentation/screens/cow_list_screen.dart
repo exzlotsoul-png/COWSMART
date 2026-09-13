@@ -792,7 +792,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              '${cow.breed} • ${cow.type.label}',
+                              '${cow.breed} • ${cow.displayTypeName}',
                               style: TextStyle(
                                 color: AppColors.subText(context),
                                 fontSize: 14,

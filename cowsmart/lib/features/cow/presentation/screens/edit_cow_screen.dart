@@ -13,6 +13,7 @@ import 'package:cowsmart/core/widgets/cow_icon.dart';
 import 'package:cowsmart/core/services/image_upload_service.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
+import 'package:cowsmart/features/cow/providers/cow_type_provider.dart';
 
 class EditCowScreen extends ConsumerStatefulWidget {
   final Cow cow;
@@ -37,6 +38,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
   late DateTime _selectedEntryDate;
   late String _selectedGender;
   late CowType _selectedType;
+  String? _selectedTypeId;
   late CowStatus _selectedStatus;
 
   XFile? _pendingImageFile;
@@ -55,6 +57,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
     _selectedEntryDate = widget.cow.entryDate ?? DateTime.now();
     _selectedGender = widget.cow.gender;
     _selectedType = widget.cow.type;
+    _selectedTypeId = widget.cow.typeId ?? (widget.cow.type != CowType.other ? widget.cow.type.id : null);
     _selectedStatus = widget.cow.status;
     _selectedZoneId = widget.cow.zoneId.isEmpty ? null : widget.cow.zoneId;
     _selectedFatherId = widget.cow.fatherId;
@@ -124,6 +127,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
         entryDate: _selectedEntryDate,
         gender: _selectedGender,
         type: _selectedType,
+        typeId: _selectedTypeId ?? (widget.cow.type != CowType.other ? widget.cow.type.id : widget.cow.typeId),
         breed: _selectedBreedId ?? widget.cow.breed,
         latestWeight: widget.cow.latestWeight,
         purchasePrice: purchasePrice,
@@ -579,29 +583,42 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                           ],
                         ),
                         const SizedBox(height: 14),
-                        DropdownButtonFormField<CowType>(
-                          value: _selectedType,
-                          dropdownColor: AppColors.cardBg(context),
-                          isExpanded: true,
-                          style: TextStyle(color: AppColors.text(context), fontSize: 15.5),
-                          decoration: _buildInputDecoration('ประเภทวัว', Icons.merge_type_rounded),
-                          items: CowType.values.map((type) {
-                            return DropdownMenuItem(
-                              value: type,
-                              child: Text(type.label, overflow: TextOverflow.ellipsis, style: TextStyle(color: AppColors.text(context), fontSize: 15.5)),
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final dbTypes = ref.watch(cowTypeProvider);
+                            final selectedId = _selectedTypeId ?? (_selectedType != CowType.other ? _selectedType.id : null);
+
+                            return DropdownButtonFormField<String>(
+                              key: ValueKey(selectedId),
+                              value: dbTypes.any((t) => t.id == selectedId) ? selectedId : null,
+                              dropdownColor: AppColors.cardBg(context),
+                              isExpanded: true,
+                              style: TextStyle(color: AppColors.text(context), fontSize: 15.5),
+                              decoration: _buildInputDecoration('ประเภทวัว', Icons.merge_type_rounded, hintText: 'กรุณาเลือกประเภทวัว'),
+                              items: dbTypes.map((type) {
+                                return DropdownMenuItem(
+                                  value: type.id,
+                                  child: Text(
+                                    type.name,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(color: AppColors.text(context), fontSize: 15.5),
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (String? newTypeId) {
+                                if (newTypeId == null) return;
+                                setState(() {
+                                  _selectedTypeId = newTypeId;
+                                  _selectedType = CowType.fromId(newTypeId);
+                                  if (newTypeId == 'T001') {
+                                    _selectedGender = 'M';
+                                  } else if (newTypeId == 'T002') {
+                                    _selectedGender = 'F';
+                                  }
+                                });
+                              },
+                              validator: (val) => val == null ? 'กรุณาเลือกประเภทวัว' : null,
                             );
-                          }).toList(),
-                          onChanged: (CowType? newValue) {
-                            setState(() {
-                              if (newValue != null) {
-                                _selectedType = newValue;
-                                if (newValue == CowType.breederMale) {
-                                  _selectedGender = 'M';
-                                } else if (newValue == CowType.breederFemale) {
-                                  _selectedGender = 'F';
-                                }
-                              }
-                            });
                           },
                         ),
                       ],
