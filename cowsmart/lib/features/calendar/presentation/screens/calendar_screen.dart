@@ -575,31 +575,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                 ),
                               ],
                             ),
-                          )
-                        else if (cows.isNotEmpty)
-                          DropdownButtonFormField<String>(
-                            value: selectedCowId,
-                            isExpanded: true,
-                            dropdownColor: AppColors.cardBg(context),
-                            style: TextStyle(fontSize: 15, color: AppColors.text(context)),
-                            decoration: InputDecoration(
-                              labelText: 'เกี่ยวข้องกับวัว (ไม่บังคับ)',
-                              labelStyle: TextStyle(fontSize: 14, color: AppColors.subText(context)),
-                              prefixIcon: const CowIcon(size: 20, color: AppColors.primary),
-                            ),
-                            items: [
-                              DropdownMenuItem(value: null, child: Text('ไม่ระบุ', style: TextStyle(fontSize: 14, color: AppColors.text(context)))),
-                              ...cows.map((c) => DropdownMenuItem(
-                                    value: c.id,
-                                    child: Text(
-                                      '${c.name} (${c.tagNumber})',
-                                      style: TextStyle(fontSize: 14, color: AppColors.text(context)),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  )),
-                            ],
-                            onChanged: (v) => setDialogState(() => selectedCowId = v),
                           ),
                         const SizedBox(height: 12),
                         DropdownButtonFormField<String>(
