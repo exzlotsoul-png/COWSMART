@@ -401,85 +401,96 @@ class _CostTabState extends ConsumerState<CostTab> {
     Color color, {
     bool isBornInFarm = false,
   }) {
-    return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(5),
-              decoration: BoxDecoration(
-                color: (isBornInFarm ? Colors.teal : color).withValues(
-                  alpha: 0.1,
-                ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                label.contains('รักษา')
-                    ? Icons.medical_services_outlined
-                    : label.contains('อาหาร')
-                    ? Icons.grass_outlined
-                    : isBornInFarm
-                    ? Icons.child_care_outlined
-                    : label.contains('ซื้อ')
-                    ? Icons.payments_outlined
-                    : Icons.receipt_long_outlined,
-                color: isBornInFarm ? Colors.teal : color,
-                size: 18,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12.5,
-                color: AppColors.subText(context),
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-            isBornInFarm
-                ? Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.teal.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      'เกิดในฟาร์ม',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 11,
-                        color: AppColors.isDark(context) ? const Color(0xFF2DD4BF) : Colors.teal,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  )
-                : FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      '${NumberFormat('#,##0').format(amount)} ฿',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        color: amount > 0
-                            ? AppColors.text(context)
-                            : AppColors.hint(context),
-                      ),
-                      maxLines: 1,
-                    ),
-                  ),
-          ],
+    final isDark = AppColors.isDark(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : Colors.grey[200]!,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              color: (isBornInFarm ? Colors.teal : color).withValues(
+                alpha: 0.1,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              label.contains('รักษา')
+                  ? Icons.medical_services_outlined
+                  : label.contains('อาหาร')
+                  ? Icons.grass_outlined
+                  : isBornInFarm
+                  ? Icons.child_care_outlined
+                  : label.contains('ซื้อ')
+                  ? Icons.payments_outlined
+                  : Icons.receipt_long_outlined,
+              color: isBornInFarm ? Colors.teal : color,
+              size: 18,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12.5,
+              color: AppColors.subText(context),
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          isBornInFarm
+              ? Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.teal.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    'เกิดในฟาร์ม',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                      color: isDark ? const Color(0xFF2DD4BF) : Colors.teal,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )
+              : FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    '${NumberFormat('#,##0').format(amount)} ฿',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: amount > 0
+                          ? AppColors.text(context)
+                          : AppColors.hint(context),
+                    ),
+                    maxLines: 1,
+                  ),
+                ),
+        ],
       ),
     );
   }
@@ -496,76 +507,87 @@ class _CostTabState extends ConsumerState<CostTab> {
   }
 
   Widget _buildProportionBar(List<_CostPart> parts, double total) {
+    final isDark = AppColors.isDark(context);
     final partsSum = parts.fold<double>(0, (sum, p) => sum + p.amount);
     final effectiveTotal = partsSum > 0 ? partsSum : total;
-    return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // Bar
-            ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: SizedBox(
-                height: 18,
-                child: Row(
-                  children: parts.map((p) {
-                    final ratio = effectiveTotal > 0 ? p.amount / effectiveTotal : 0.0;
-                    return Expanded(
-                      flex: (ratio * 100).round().clamp(1, 100),
-                      child: Container(color: p.color),
-                    );
-                  }).toList(),
-                ),
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : Colors.grey[200]!,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          // Bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: SizedBox(
+              height: 18,
+              child: Row(
+                children: parts.map((p) {
+                  final ratio = effectiveTotal > 0 ? p.amount / effectiveTotal : 0.0;
+                  return Expanded(
+                    flex: (ratio * 100).round().clamp(1, 100),
+                    child: Container(color: p.color),
+                  );
+                }).toList(),
               ),
             ),
-            const SizedBox(height: 12),
-            // Legend
-            ...parts.map((p) {
-              final pct = effectiveTotal > 0
-                  ? (p.amount / effectiveTotal * 100).toStringAsFixed(0)
-                  : '0';
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 3),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: p.color,
-                        borderRadius: BorderRadius.circular(3),
-                      ),
+          ),
+          const SizedBox(height: 12),
+          // Legend
+          ...parts.map((p) {
+            final pct = effectiveTotal > 0
+                ? (p.amount / effectiveTotal * 100).toStringAsFixed(0)
+                : '0';
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: Row(
+                children: [
+                  Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: p.color,
+                      borderRadius: BorderRadius.circular(3),
                     ),
-                    const SizedBox(width: 8),
-                    Icon(p.icon, size: 16, color: p.color),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        p.label,
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.text(context),
-                        ),
-                      ),
-                    ),
-                    Text(
-                      '${NumberFormat('#,##0').format(p.amount)} ฿ ($pct%)',
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(p.icon, size: 16, color: p.color),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      p.label,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 13.5,
                         fontWeight: FontWeight.w600,
                         color: AppColors.text(context),
                       ),
                     ),
-                  ],
-                ),
-              );
-            }),
-          ],
-        ),
+                  ),
+                  Text(
+                    '${NumberFormat('#,##0').format(p.amount)} ฿ ($pct%)',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.text(context),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
@@ -867,6 +889,7 @@ class _CostTabState extends ConsumerState<CostTab> {
   }
 
   Widget _buildFeedDetailCard(Map<String, dynamic> f) {
+    final isDark = AppColors.isDark(context);
     final rawDate = f['date'] ?? '-';
     final feedType = f['type'] ?? 'อาหาร';
     final costPerCow = _parseDouble(f['cost_per_cow']);
@@ -874,10 +897,22 @@ class _CostTabState extends ConsumerState<CostTab> {
 
     String displayDate = AppDateUtils.formatDynamicDate(rawDate);
 
-    return Card(
-      elevation: 1,
+    return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : Colors.grey[200]!,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
       child: ListTile(
         dense: false,
         leading: Container(
@@ -902,7 +937,7 @@ class _CostTabState extends ConsumerState<CostTab> {
         ),
         subtitle: Row(
           children: [
-            Icon(Icons.calendar_today, size: 14, color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary),
+            Icon(Icons.calendar_today, size: 14, color: isDark ? AppColors.primaryLight : AppColors.primary),
             const SizedBox(width: 4),
             Text(
               displayDate,
@@ -927,7 +962,7 @@ class _CostTabState extends ConsumerState<CostTab> {
           '${NumberFormat('#,##0').format(costPerCow)} ฿',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: AppColors.isDark(context) ? const Color(0xFF4ADE80) : Colors.green,
+            color: isDark ? const Color(0xFF4ADE80) : Colors.green,
             fontSize: 16,
           ),
         ),
@@ -936,15 +971,28 @@ class _CostTabState extends ConsumerState<CostTab> {
   }
 
   Widget _buildDirectCostCard(Map<String, dynamic> d) {
+    final isDark = AppColors.isDark(context);
     final date = AppDateUtils.formatDynamicDate(d['transaction_date']);
     final amount = _parseDouble(d['amount']);
     final title = d['title'] ?? d['category'] ?? 'ค่าใช้จ่าย';
     final notes = d['notes'];
 
-    return Card(
-      elevation: 1,
+    return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : Colors.grey[200]!,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
       child: ListTile(
         dense: false,
         leading: Container(
@@ -997,7 +1045,7 @@ class _CostTabState extends ConsumerState<CostTab> {
           '${NumberFormat('#,##0').format(amount)} ฿',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: AppColors.isDark(context) ? const Color(0xFF60A5FA) : Colors.blue,
+            color: isDark ? const Color(0xFF60A5FA) : Colors.blue,
             fontSize: 16,
           ),
         ),
@@ -1006,6 +1054,7 @@ class _CostTabState extends ConsumerState<CostTab> {
   }
 
   Widget _buildValueComparisonCard(double totalCost, Cow cow) {
+    final isDark = AppColors.isDark(context);
     final marketState = ref.watch(marketPriceProvider);
     final breeds = ref.watch(breedProvider);
     final breedName = breeds
@@ -1019,32 +1068,43 @@ class _CostTabState extends ConsumerState<CostTab> {
     final profit = estimatedValue - totalCost;
     final isProfitable = profit >= 0;
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Row(
-              children: [
-                Icon(
-                  Icons.analytics_outlined,
-                  size: 22,
-                  color: AppColors.primary,
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : Colors.grey[200]!,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(
+                Icons.analytics_outlined,
+                size: 22,
+                color: AppColors.primary,
+              ),
+              SizedBox(width: 6),
+              Text(
+                'การวิเคราะห์ความคุ้มค่า',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: AppColors.textPrimary,
                 ),
-                SizedBox(width: 6),
-                Text(
-                  'การวิเคราะห์ความคุ้มค่า',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
+          ),
             const SizedBox(height: 16),
             Row(
               children: [
@@ -1135,8 +1195,7 @@ class _CostTabState extends ConsumerState<CostTab> {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 }
 
