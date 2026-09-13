@@ -7,6 +7,7 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../features/calendar/domain/calendar_event.dart';
 
@@ -26,8 +27,20 @@ class LocalNotificationService {
   String? _fcmToken;
   String? get fcmToken => _fcmToken;
 
+  bool _notificationsEnabled = true;
+  bool get notificationsEnabled => _notificationsEnabled;
+
+  void setNotificationsEnabled(bool enabled) {
+    _notificationsEnabled = enabled;
+  }
+
   Future<void> init() async {
     if (kIsWeb) return;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _notificationsEnabled = prefs.getBool('app_notifications_enabled') ?? true;
+    } catch (_) {}
 
     tz.initializeTimeZones();
     tz.setLocalLocation(tz.getLocation('Asia/Bangkok'));
@@ -143,6 +156,11 @@ class LocalNotificationService {
     if (kIsWeb) return;
     await cancelAll();
 
+    if (!_notificationsEnabled) {
+      debugPrint('[LocalNotification] Notifications are disabled in settings. Skipping scheduling.');
+      return;
+    }
+
     for (final event in events) {
       DateTime scheduledTime = event.eventDatetime;
       final setting = event.reminderSetting ?? 'ตรงเวลาที่บันทึก';
@@ -216,6 +234,10 @@ class LocalNotificationService {
     String? payload,
   }) async {
     if (kIsWeb) return;
+    if (!_notificationsEnabled) {
+      debugPrint('[LocalNotification] Notification muted because notifications are turned off in settings.');
+      return;
+    }
 
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(

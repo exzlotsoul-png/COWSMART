@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
+import '../../../core/services/local_notification_service.dart';
+import '../../calendar/providers/calendar_provider.dart';
 
 class AppSettingsState {
   final bool notificationsEnabled;
@@ -72,6 +74,21 @@ class AppSettingsNotifier extends Notifier<AppSettingsState> {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_keyNotifications, enabled);
+
+      final notifService = ref.read(localNotificationProvider);
+      notifService.setNotificationsEnabled(enabled);
+
+      if (!enabled) {
+        await notifService.cancelAll();
+        debugPrint('[SETTINGS] Notifications disabled -> All notifications canceled');
+      } else {
+        // Re-sync calendar event notifications if events exist
+        final calState = ref.read(calendarProvider);
+        if (calState.events.isNotEmpty) {
+          await notifService.syncEventNotifications(calState.events);
+          debugPrint('[SETTINGS] Notifications enabled -> Re-synced ${calState.events.length} calendar notifications');
+        }
+      }
     } catch (e) {
       debugPrint('[SETTINGS] Save notifications error: $e');
     }
