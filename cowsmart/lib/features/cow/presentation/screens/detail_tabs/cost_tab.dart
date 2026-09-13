@@ -18,7 +18,13 @@ class CostTab extends ConsumerStatefulWidget {
   ConsumerState<CostTab> createState() => _CostTabState();
 }
 
-class _CostTabState extends ConsumerState<CostTab> {
+// In-memory cache for instant tab switching across cows
+final Map<String, Map<String, dynamic>> _cowCostMemoryCache = {};
+
+class _CostTabState extends ConsumerState<CostTab> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   Map<String, dynamic>? _costData;
   bool _isLoading = true;
   String? _error;
@@ -32,29 +38,51 @@ class _CostTabState extends ConsumerState<CostTab> {
   @override
   void initState() {
     super.initState();
-    _fetchCostData();
+    // Use memory cache immediately if available
+    final cached = _cowCostMemoryCache[widget.cow.id];
+    if (cached != null) {
+      _costData = cached;
+      _isLoading = false;
+      // Revalidate in background
+      _fetchCostData(silent: true);
+    } else {
+      _fetchCostData(silent: false);
+    }
   }
 
-  Future<void> _fetchCostData() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
+  Future<void> _fetchCostData({bool silent = false}) async {
+    if (!silent) {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+    }
     try {
       final api = ref.read(apiClientProvider);
       final response = await api.get('/cow_costs/${widget.cow.id}');
-      setState(() {
-        _costData = response.data is Map<String, dynamic>
-            ? response.data as Map<String, dynamic>
-            : Map<String, dynamic>.from(response.data as Map);
-        _isLoading = false;
-      });
+      final data = response.data is Map<String, dynamic>
+          ? response.data as Map<String, dynamic>
+          : Map<String, dynamic>.from(response.data as Map);
+
+      _cowCostMemoryCache[widget.cow.id] = data;
+
+      if (mounted) {
+        setState(() {
+          _costData = data;
+          _isLoading = false;
+          _error = null;
+        });
+      }
     } catch (e) {
       debugPrint('[CostTab] Error fetching cow_costs: $e');
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          if (_costData == null) {
+            _error = e.toString();
+          }
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -67,6 +95,7 @@ class _CostTabState extends ConsumerState<CostTab> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
