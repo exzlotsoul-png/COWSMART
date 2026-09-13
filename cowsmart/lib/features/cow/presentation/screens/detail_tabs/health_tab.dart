@@ -781,20 +781,28 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                 child: const Icon(Icons.event_available, color: Colors.white, size: 22),
               ),
               const SizedBox(height: 10),
-              FloatingActionButton(
+              FloatingActionButton.extended(
                 heroTag: 'add_health_record_fab',
                 onPressed: detailState.isSaving ? null : _showAddHealthRecordDialog,
                 backgroundColor: AppColors.primary,
-                child: detailState.isSaving
+                icon: detailState.isSaving
                     ? const SizedBox(
-                        width: 22,
-                        height: 22,
+                        width: 20,
+                        height: 20,
                         child: CircularProgressIndicator(
                           color: Colors.white,
                           strokeWidth: 2,
                         ),
                       )
-                    : const Icon(Icons.add, color: Colors.white, size: 28),
+                    : const Icon(Icons.add, color: Colors.white, size: 24),
+                label: const Text(
+                  'บันทึกสุขภาพ',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
               ),
             ],
           ),
