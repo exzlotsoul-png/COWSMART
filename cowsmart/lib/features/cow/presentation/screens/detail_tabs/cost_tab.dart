@@ -129,7 +129,7 @@ class _CostTabState extends ConsumerState<CostTab> {
     final totalIncome = _parseDouble(summary['total_income']);
     final netCost = _parseDouble(summary['net_cost']);
 
-    // Health details (unpack items_json if available so each vaccine/medicine is shown)
+    // Health details (group items within the same health record into one card)
     final rawHealthDetails = (breakdown['health'] as List?)
             ?.map((e) => e is Map ? Map<String, dynamic>.from(e) : <String, dynamic>{})
             .toList() ??
@@ -144,38 +144,18 @@ class _CostTabState extends ConsumerState<CostTab> {
         } catch (_) {}
       }
 
+      final List<Map<String, dynamic>> parsedItems = [];
       if (items is List && items.isNotEmpty) {
         for (final item in items) {
           if (item is Map) {
-            final itemMap = Map<String, dynamic>.from(item);
-            final itemCost = _parseDouble(itemMap['cost']);
-            final itemName = (itemMap['item_name'] ?? itemMap['itemName'] ?? '').toString();
-            final itemType = (itemMap['item_type'] ?? itemMap['itemType'] ?? '').toString();
-            final amount = itemMap['amount'];
-            final unit = itemMap['unit_abbreviation'] ?? itemMap['unit_name'] ?? '';
-
-            String amountStr = '';
-            if (amount != null) {
-              final a = _parseDouble(amount);
-              if (a > 0) {
-                amountStr = ' (${a % 1 == 0 ? a.toInt() : a} $unit)'.trimRight();
-              }
-            }
-
-            healthDetails.add({
-              'health_record_id': h['health_record_id'],
-              'record_date': h['record_date'],
-              'cost': itemCost > 0 ? itemCost : _parseDouble(h['cost']),
-              'disease_name': itemType == 'disease' ? '$itemName$amountStr' : null,
-              'medicine_name': itemType == 'medicine' ? '$itemName$amountStr' : null,
-              'vaccine_name': itemType == 'vaccine' ? '$itemName$amountStr' : (itemType.isEmpty ? '$itemName$amountStr' : null),
-              'raw_item': itemMap,
-            });
+            parsedItems.add(Map<String, dynamic>.from(item));
           }
         }
-      } else {
-        healthDetails.add(h);
       }
+
+      final copy = Map<String, dynamic>.from(h);
+      copy['parsed_items'] = parsedItems;
+      healthDetails.add(copy);
     }
 
     // Feed details
@@ -596,67 +576,191 @@ class _CostTabState extends ConsumerState<CostTab> {
     final disease = h['disease_name'];
     final medicine = h['medicine_name'];
     final vaccine = h['vaccine_name'];
+    final List parsedItems = (h['parsed_items'] as List?) ?? [];
 
-    String description = '';
-    if (disease != null) description += 'โรค: $disease';
-    if (medicine != null)
-      description += '${description.isNotEmpty ? ' | ' : ''}ยา: $medicine';
-    if (vaccine != null)
-      description += '${description.isNotEmpty ? ' | ' : ''}วัคซีน: $vaccine';
-    if (description.isEmpty) description = 'บันทึกสุขภาพ';
-
-    final isVaccine = vaccine != null;
+    final hasMultipleItems = parsedItems.isNotEmpty;
+    final isVaccine = hasMultipleItems
+        ? parsedItems.any((it) => (it['item_type'] ?? it['itemType']) == 'vaccine')
+        : (vaccine != null || h['checkup_type_id'] == 'CT02');
     final iconColor = isVaccine ? const Color(0xFF0284C7) : AppColors.error;
+
+    // Build main title
+    String title = isVaccine ? 'ฉีดวัคซีน' : 'บันทึกสุขภาพ/รักษา';
+    if (!hasMultipleItems) {
+      String description = '';
+      if (disease != null) description += 'โรค: $disease';
+      if (medicine != null) {
+        description += '${description.isNotEmpty ? ' | ' : ''}ยา: $medicine';
+      }
+      if (vaccine != null) {
+        description += '${description.isNotEmpty ? ' | ' : ''}วัคซีน: $vaccine';
+      }
+      if (description.isNotEmpty) title = description;
+    }
 
     return Card(
       elevation: 1,
       margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      child: ListTile(
-        dense: false,
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: iconColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            isVaccine ? Icons.vaccines_rounded : Icons.medical_services_outlined,
-            color: iconColor,
-            size: 20,
-          ),
-        ),
-        title: Text(
-          description,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.bold,
-            color: AppColors.text(context),
-          ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        subtitle: Row(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.calendar_today, size: 14, color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary),
-            const SizedBox(width: 4),
-            Text(
-              date,
-              style: TextStyle(
-                fontSize: 13,
-                color: AppColors.subText(context),
-                fontWeight: FontWeight.w500,
-              ),
+            // Header Row: Icon + Title + Date & Total Cost
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: iconColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    isVaccine ? Icons.vaccines_rounded : Icons.medical_services_outlined,
+                    color: iconColor,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.text(context),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            size: 13,
+                            color: AppColors.isDark(context)
+                                ? AppColors.primaryLight
+                                : AppColors.primary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            date,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppColors.subText(context),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  '${NumberFormat('#,##0').format(cost)} ฿',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.isDark(context)
+                        ? const Color(0xFFF87171)
+                        : AppColors.error,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
             ),
+
+            // If there are multiple items or structured items, display them row by row inside this card
+            if (hasMultipleItems) ...[
+              const SizedBox(height: 10),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.isDark(context)
+                      ? AppColors.darkSurfaceAlt
+                      : Colors.grey[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: AppColors.isDark(context)
+                        ? AppColors.darkBorder
+                        : Colors.grey[200]!,
+                  ),
+                ),
+                child: Column(
+                  children: parsedItems.map((item) {
+                    final itemMap = Map<String, dynamic>.from(item as Map);
+                    final itemName = (itemMap['item_name'] ?? itemMap['itemName'] ?? '').toString();
+                    final itemType = (itemMap['item_type'] ?? itemMap['itemType'] ?? '').toString();
+                    final itemCost = _parseDouble(itemMap['cost']);
+                    final amount = itemMap['amount'];
+                    final unit = itemMap['unit_abbreviation'] ?? itemMap['unit_name'] ?? '';
+
+                    String amountStr = '';
+                    if (amount != null) {
+                      final a = _parseDouble(amount);
+                      if (a > 0) {
+                        amountStr = ' (${a % 1 == 0 ? a.toInt() : a} $unit)'.trimRight();
+                      }
+                    }
+
+                    final isItemVaccine = itemType == 'vaccine';
+                    final itemIcon = isItemVaccine ? Icons.vaccines : Icons.medication;
+                    final itemLabel = isItemVaccine ? 'วัคซีน' : 'ยา';
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 3),
+                      child: Row(
+                        children: [
+                          Icon(
+                            itemIcon,
+                            size: 14,
+                            color: isItemVaccine
+                                ? const Color(0xFF0284C7)
+                                : AppColors.error,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '$itemLabel: ',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.subText(context),
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              '$itemName$amountStr',
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.text(context),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (itemCost > 0)
+                            Text(
+                              '${NumberFormat('#,##0').format(itemCost)} ฿',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.text(context),
+                              ),
+                            ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
           ],
-        ),
-        trailing: Text(
-          '${NumberFormat('#,##0').format(cost)} ฿',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: AppColors.isDark(context) ? const Color(0xFFF87171) : AppColors.error,
-            fontSize: 16,
-          ),
         ),
       ),
     );
