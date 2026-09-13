@@ -2296,7 +2296,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
   Widget build(BuildContext context) {
     final masterData = ref.watch(masterDataProvider);
     final showVaccine = selectedType == 'CT02';
-    final showDisease = selectedType == 'CT03' || (selectedType == 'CT01' && selectedHealthStatus == CowStatus.sick);
+    final showDisease = selectedType == 'CT01' && selectedHealthStatus == CowStatus.sick;
     final showMedicine = selectedType == 'CT03';
 
     return Padding(
@@ -2673,16 +2673,6 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
               ],
 
               TextField(
-                controller: adminController,
-                style: const TextStyle(fontSize: 15),
-                decoration: const InputDecoration(
-                  labelText: 'ผู้ดำเนินการ (ชื่อ)',
-                  labelStyle: TextStyle(fontSize: 15),
-                  prefixIcon: Icon(Icons.person, size: 22),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
                 controller: noteController,
                 maxLines: 2,
                 style: const TextStyle(fontSize: 15),
@@ -2692,6 +2682,16 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                   hintText: 'กรอกรายละเอียดหรือข้อมูลเพิ่มเติม (ถ้ามี)',
                   hintStyle: TextStyle(fontSize: 14),
                   prefixIcon: Icon(Icons.description, size: 22),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: adminController,
+                style: const TextStyle(fontSize: 15),
+                decoration: const InputDecoration(
+                  labelText: 'ผู้ดำเนินการ (ชื่อ)',
+                  labelStyle: TextStyle(fontSize: 15),
+                  prefixIcon: Icon(Icons.person, size: 22),
                 ),
               ),
             ] else ...[

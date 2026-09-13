@@ -147,8 +147,8 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
       String? primaryVacId;
       String? primaryMedId;
 
-      // Diseases
-      if (_selectedType == 'CT01' || _selectedType == 'CT03') {
+      // Diseases (เฉพาะกรณีตรวจสุขภาพ CT01 และสถานะป่วย)
+      if (_selectedType == 'CT01' && _selectedHealthStatus == 'sick') {
         for (final dId in _selectedDiseaseIds) {
           if (dId == 'other') {
             final customName = _customDiseaseController.text.trim();
@@ -1056,23 +1056,25 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                   _buildStatusChip('injured', 'บาดเจ็บ', const Color(0xFFD97706)),
                 ],
               ),
-              const SizedBox(height: 16),
-              _buildDropdownChecklistSelector(
-                title: 'เลือกโรคที่พบ / ที่รักษา *',
-                icon: Icons.coronavirus_outlined,
-                color: AppColors.primary,
-                selectedIds: _selectedDiseaseIds,
-                options: [
-                  ...masterData.diseases.map((d) => {'id': d.id, 'name': d.name}),
-                  {'id': 'other', 'name': 'อื่นๆ (ระบุเอง)'},
-                ],
-                customController: _customDiseaseController,
-                hintText: 'แตะเพื่อเลือกโรค...',
-                onChanged: (newSet) => setState(() {
-                  _selectedDiseaseIds.clear();
-                  _selectedDiseaseIds.addAll(newSet);
-                }),
-              ),
+              if (_selectedHealthStatus == 'sick') ...[
+                const SizedBox(height: 16),
+                _buildDropdownChecklistSelector(
+                  title: 'เลือกโรคที่พบ / ที่รักษา *',
+                  icon: Icons.coronavirus_outlined,
+                  color: AppColors.primary,
+                  selectedIds: _selectedDiseaseIds,
+                  options: [
+                    ...masterData.diseases.map((d) => {'id': d.id, 'name': d.name}),
+                    {'id': 'other', 'name': 'อื่นๆ (ระบุเอง)'},
+                  ],
+                  customController: _customDiseaseController,
+                  hintText: 'แตะเพื่อเลือกโรค...',
+                  onChanged: (newSet) => setState(() {
+                    _selectedDiseaseIds.clear();
+                    _selectedDiseaseIds.addAll(newSet);
+                  }),
+                ),
+              ],
             ],
 
             // ── TYPE CT02: VACCINE FIELDS ──
@@ -1099,23 +1101,6 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
 
             // ── TYPE CT03: MEDICINE FIELDS ──
             if (_selectedType == 'CT03') ...[
-              _buildDropdownChecklistSelector(
-                title: 'เลือกโรคที่พบ / ที่รักษา *',
-                icon: Icons.coronavirus_outlined,
-                color: AppColors.primary,
-                selectedIds: _selectedDiseaseIds,
-                options: [
-                  ...masterData.diseases.map((d) => {'id': d.id, 'name': d.name}),
-                  {'id': 'other', 'name': 'อื่นๆ (ระบุเอง)'},
-                ],
-                customController: _customDiseaseController,
-                hintText: 'แตะเพื่อเลือกโรค...',
-                onChanged: (newSet) => setState(() {
-                  _selectedDiseaseIds.clear();
-                  _selectedDiseaseIds.addAll(newSet);
-                }),
-              ),
-              const SizedBox(height: 16),
               _buildDropdownChecklistSelector(
                 title: 'เลือกยารักษาที่ใช้ *',
                 icon: Icons.medication_outlined,
@@ -1787,7 +1772,12 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
         color: isSelected ? Colors.white : AppColors.text(context),
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
-      onSelected: (_) => setState(() => _selectedHealthStatus = status),
+      onSelected: (_) => setState(() {
+        _selectedHealthStatus = status;
+        if (status != 'sick') {
+          _selectedDiseaseIds.clear();
+        }
+      }),
     );
   }
 }
