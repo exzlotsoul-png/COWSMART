@@ -694,23 +694,41 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const SizedBox(width: 4),
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined, color: AppColors.primary, size: 20),
-                  visualDensity: VisualDensity.compact,
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert, size: 20, color: AppColors.textSecondary),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
-                  onPressed: () => _showFeedDialog(context, initialItem: item),
-                  tooltip: 'แก้ไขรายการ',
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error, size: 20),
-                  visualDensity: VisualDensity.compact,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  onPressed: () => _confirmDeleteItem(context, item),
-                  tooltip: 'ลบรายการ',
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  tooltip: 'ตัวเลือก',
+                  onSelected: (val) {
+                    if (val == 'edit') {
+                      _showFeedDialog(context, initialItem: item);
+                    } else if (val == 'delete') {
+                      _confirmDeleteItem(context, item);
+                    }
+                  },
+                  itemBuilder: (ctx) => [
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit_outlined, color: AppColors.primary, size: 20),
+                          SizedBox(width: 8),
+                          Text('แก้ไขรายการ'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete_outline_rounded, color: AppColors.error, size: 20),
+                          SizedBox(width: 8),
+                          Text('ลบรายการ', style: TextStyle(color: AppColors.error)),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

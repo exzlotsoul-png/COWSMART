@@ -24,7 +24,6 @@ import 'package:cowsmart/features/market/providers/market_price_provider.dart';
 import 'package:cowsmart/features/cow/providers/breed_provider.dart';
 import 'package:cowsmart/features/cow/domain/breed.dart';
 import 'package:cowsmart/core/network/api_client.dart';
-import 'package:go_router/go_router.dart';
 import 'package:cowsmart/features/health/presentation/widgets/calf_vaccine_dialog.dart';
 import 'package:cowsmart/features/health/services/calf_vaccine_schedule_service.dart';
 
@@ -192,6 +191,51 @@ class GrowthTab extends ConsumerStatefulWidget {
 }
 
 class _GrowthTabState extends ConsumerState<GrowthTab> {
+  bool _showAllGrowth = false;
+  static const int _initialItemLimit = 3;
+
+  Widget _buildViewAllButton({
+    required bool isExpanded,
+    required int totalCount,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        margin: const EdgeInsets.only(top: 4, bottom: 8),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppColors.primary.withValues(alpha: 0.25),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              isExpanded ? 'ย่อรายการ' : 'ดูทั้งหมด ($totalCount รายการ)',
+              style: const TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Icon(
+              isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+              size: 20,
+              color: AppColors.primary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showAddWeightSheet(BuildContext context, {GrowthRecord? initialRecord}) {
     final weightCtrl = TextEditingController(
       text: initialRecord != null ? initialRecord.weight.toStringAsFixed(1) : '',
@@ -1287,24 +1331,27 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const SizedBox(width: 4),
-                TextButton.icon(
-                  onPressed: () {
-                    context.push(
-                      '/cow_history_list',
-                      extra: {'cow': widget.cow, 'initialTab': 'growth'},
-                    );
-                  },
-                  icon: Icon(Icons.arrow_forward, size: 16, color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary),
-                  label: Text(
-                    'ดูทั้งหมด (${records.length})',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary,
-                      fontWeight: FontWeight.bold,
+                if (records.length > _initialItemLimit) ...[
+                  const SizedBox(width: 4),
+                  TextButton(
+                    onPressed: () {
+                      setState(() => _showAllGrowth = !_showAllGrowth);
+                    },
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(
+                      _showAllGrowth ? 'ย่อรายการ' : 'ดูทั้งหมด',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary,
+                      ),
                     ),
                   ),
-                ),
+                ],
               ],
             ),
             const SizedBox(height: 14),
@@ -1400,8 +1447,12 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                 ),
               )
             else ...[
-              // Display max 5 records in main tab
-              ...records.take(5).toList().asMap().entries.map((entry) {
+              // Display records (collapsible / expandable)
+              ...(_showAllGrowth ? records : records.take(_initialItemLimit))
+                  .toList()
+                  .asMap()
+                  .entries
+                  .map((entry) {
                 final i = entry.key;
                 final r = entry.value;
                 final prev = i < records.length - 1 ? records[i + 1].weight : null;
@@ -1568,32 +1619,11 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                 );
               }),
 
-              if (records.length > 5)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4, bottom: 8),
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      context.push(
-                        '/cow_history_list',
-                        extra: {'cow': widget.cow, 'initialTab': 'growth'},
-                      );
-                    },
-                    icon: const Icon(Icons.history, size: 20),
-                    label: Text(
-                      'ดูประวัติทั้งหมด (${records.length} รายการ)',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      side: const BorderSide(color: AppColors.primary),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                  ),
+              if (records.length > _initialItemLimit)
+                _buildViewAllButton(
+                  isExpanded: _showAllGrowth,
+                  totalCount: records.length,
+                  onTap: () => setState(() => _showAllGrowth = !_showAllGrowth),
                 ),
             ],
           ],

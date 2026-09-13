@@ -149,7 +149,8 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
         final disease = (r.diseaseName ?? '').toLowerCase();
         final med = (r.medicineName ?? '').toLowerCase();
         final vac = (r.vaccineName ?? '').toLowerCase();
-        return note.contains(q) || admin.contains(q) || disease.contains(q) || med.contains(q) || vac.contains(q);
+        final itemsMatch = r.items.any((i) => i.itemName.toLowerCase().contains(q));
+        return note.contains(q) || admin.contains(q) || disease.contains(q) || med.contains(q) || vac.contains(q) || itemsMatch;
       }
       return true;
     }).toList();
@@ -397,8 +398,8 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                 ],
               ),
 
-              // Items Section (Vaccine, Disease, Medicine) using Icons instead of Emojis
-              if (record.vaccineName != null || record.diseaseName != null || record.medicineName != null) ...[
+              // Items Section (record.items or fallback to vaccine, disease, medicine)
+              if (record.items.isNotEmpty || record.vaccineName != null || record.diseaseName != null || record.medicineName != null) ...[
                 const SizedBox(height: 12),
                 Container(
                   width: double.infinity,
@@ -411,51 +412,103 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (record.vaccineName != null)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.vaccines_outlined, size: 16, color: AppColors.info),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  'วัคซีน: ${record.vaccineName!}$dosageStr',
-                                  style: TextStyle(fontSize: 13.5, color: AppColors.text(context)),
+                      if (record.items.isNotEmpty) ...[
+                        ...record.items.map((item) {
+                          String amtStr = '';
+                          if (item.amount != null && item.amount! > 0) {
+                            final a = item.amount!;
+                            amtStr = ' (${a % 1 == 0 ? a.toInt() : a} ${item.unitAbbreviation ?? item.unitName ?? ''})'.trimRight();
+                          }
+                          String costStr = '';
+                          if (item.cost != null && item.cost! > 0) {
+                            costStr = ' - ${NumberFormat('#,##0').format(item.cost)} ฿';
+                          }
+
+                          IconData iconData = Icons.medication_outlined;
+                          Color iconColor = AppColors.warning;
+                          String labelText = 'ยา';
+                          if (item.itemType == 'vaccine') {
+                            iconData = Icons.vaccines_outlined;
+                            iconColor = AppColors.info;
+                            labelText = 'วัคซีน';
+                          } else if (item.itemType == 'disease') {
+                            iconData = Icons.coronavirus_outlined;
+                            iconColor = AppColors.error;
+                            labelText = 'โรค';
+                          }
+
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 6),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(iconData, size: 16, color: iconColor),
+                                const SizedBox(width: 6),
+                                Text(
+                                  '$labelText: ',
+                                  style: TextStyle(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: iconColor,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      if (record.diseaseName != null)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.coronavirus_outlined, size: 16, color: AppColors.error),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  'โรค: ${record.diseaseName!}',
-                                  style: TextStyle(fontSize: 13.5, color: AppColors.text(context)),
+                                Expanded(
+                                  child: Text(
+                                    '${item.itemName}$amtStr$costStr',
+                                    style: TextStyle(fontSize: 13.5, color: AppColors.text(context)),
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      if (record.medicineName != null)
-                        Row(
-                          children: [
-                            const Icon(Icons.medication_outlined, size: 16, color: AppColors.warning),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                'ยา: ${record.medicineName!}$dosageStr',
-                                style: TextStyle(fontSize: 13.5, color: AppColors.text(context)),
-                              ),
+                              ],
                             ),
-                          ],
-                        ),
+                          );
+                        }),
+                      ] else ...[
+                        if (record.vaccineName != null)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 6),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.vaccines_outlined, size: 16, color: AppColors.info),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    'วัคซีน: ${record.vaccineName!}$dosageStr',
+                                    style: TextStyle(fontSize: 13.5, color: AppColors.text(context)),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        if (record.diseaseName != null)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 6),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.coronavirus_outlined, size: 16, color: AppColors.error),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    'โรค: ${record.diseaseName!}',
+                                    style: TextStyle(fontSize: 13.5, color: AppColors.text(context)),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        if (record.medicineName != null)
+                          Row(
+                            children: [
+                              const Icon(Icons.medication_outlined, size: 16, color: AppColors.warning),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  'ยา: ${record.medicineName!}$dosageStr',
+                                  style: TextStyle(fontSize: 13.5, color: AppColors.text(context)),
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
                     ],
                   ),
                 ),
