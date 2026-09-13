@@ -100,18 +100,95 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         );
   }
 
+  // Show success dialog before navigating
+  Future<void> _showSuccessDialog() async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2E7D32).withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_circle_rounded,
+                  color: Color(0xFF2E7D32),
+                  size: 48,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'สมัครสมาชิกสำเร็จ!',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF2E7D32),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'ยินดีต้อนรับสู่ระบบจัดการฟาร์ม COWSMART\nกรุณาสร้างฟาร์มของคุณเพื่อเริ่มต้นใช้งาน',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(ctx).pop();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'เริ่มต้นใช้งาน',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
 
     // Watch for success or error
-    ref.listen(authProvider, (previous, next) {
-      if (next.isAuthenticated) {
-        context.go('/create_farm');
+    ref.listen(authProvider, (previous, next) async {
+      if (next.isAuthenticated &&
+          !(previous?.isAuthenticated ?? false) &&
+          next.isNewUser) {
+        await _showSuccessDialog();
+        if (mounted) context.go('/create_farm');
       }
       if (next.errorMessage != null &&
           next.errorMessage != previous?.errorMessage) {
-        AppFeedback.showError(context, next.errorMessage!);
+        // Show inline email error for duplicate email
+        final err = next.errorMessage!;
+        if (err.contains('อีเมลนี้ถูกใช้งาน') || err.toLowerCase().contains('email')) {
+          setState(() => _emailError = err);
+        } else {
+          AppFeedback.showError(context, err);
+        }
       }
     });
 

@@ -119,10 +119,16 @@ class ApiClient {
       if (e.response?.statusCode == 422 && e.response?.data['errors'] != null) {
         final errors = e.response?.data['errors'] as Map<String, dynamic>;
         if (errors.isNotEmpty) {
-          final firstError = errors.values.first;
-          if (firstError is List && firstError.isNotEmpty) {
-            message = firstError.first.toString();
+          // Try to find the specific field error and return a Thai message
+          String? raw;
+          final firstEntry = errors.entries.first;
+          final fieldName = firstEntry.key;
+          final fieldErrors = firstEntry.value;
+          if (fieldErrors is List && fieldErrors.isNotEmpty) {
+            raw = fieldErrors.first.toString();
           }
+          // Map common English Laravel messages → Thai
+          message = _mapValidationMessage(fieldName, raw ?? message);
         }
       }
 
@@ -130,6 +136,21 @@ class ApiClient {
       return message;
     }
     return 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาตรวจสอบอินเทอร์เน็ต';
+  }
+
+  String _mapValidationMessage(String field, String raw) {
+    final r = raw.toLowerCase();
+    if (r.contains('already been taken') || r.contains('unique')) {
+      if (field == 'email') return 'อีเมลนี้ถูกใช้งานไปแล้ว กรุณาใช้อีเมลอื่น';
+      if (field == 'phone') return 'เบอร์โทรศัพท์นี้ถูกใช้งานไปแล้ว';
+      return 'ข้อมูลนี้ถูกใช้งานไปแล้ว';
+    }
+    if (field == 'email' && (r.contains('invalid') || r.contains('format'))) {
+      return 'รูปแบบอีเมลไม่ถูกต้อง';
+    }
+    if (field == 'password' && r.contains('minimum')) return 'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร';
+    if (field == 'password' && r.contains('confirmation')) return 'รหัสผ่านไม่ตรงกัน';
+    return raw;
   }
 }
 
