@@ -571,90 +571,150 @@ class _CostTabState extends ConsumerState<CostTab> {
   }
 
   Widget _buildHealthDetailCard(Map<String, dynamic> h) {
-    final date = AppDateUtils.formatDynamicDate(h['record_date']);
+    final isDark = AppColors.isDark(context);
+    final date = AppDateUtils.formatThaiDate(DateTime.tryParse(h['record_date']?.toString() ?? '') ?? DateTime.now());
     final cost = _parseDouble(h['cost']);
     final disease = h['disease_name'];
     final medicine = h['medicine_name'];
     final vaccine = h['vaccine_name'];
+    final note = h['note'];
+    final adminName = h['admin_name'];
     final List parsedItems = (h['parsed_items'] as List?) ?? [];
 
-    final hasMultipleItems = parsedItems.isNotEmpty;
-    final isVaccine = hasMultipleItems
-        ? parsedItems.any((it) => (it['item_type'] ?? it['itemType']) == 'vaccine')
-        : (vaccine != null || h['checkup_type_id'] == 'CT02');
-    final iconColor = isVaccine ? const Color(0xFF0284C7) : AppColors.error;
+    final checkupTypeId = h['checkup_type_id']?.toString() ?? 'CT02';
+    final typeLabels = {
+      'CT01': 'ตรวจสุขภาพทั่วไป',
+      'CT02': 'ฉีดวัคซีน',
+      'CT03': 'รักษาโรค',
+      'CT04': 'ถ่ายพยาธิ',
+    };
 
-    // Build main title
-    String title = isVaccine ? 'ฉีดวัคซีน' : 'บันทึกสุขภาพ/รักษา';
-    if (!hasMultipleItems) {
-      String description = '';
-      if (disease != null) description += 'โรค: $disease';
-      if (medicine != null) {
-        description += '${description.isNotEmpty ? ' | ' : ''}ยา: $medicine';
+    Color getTypeColor() {
+      switch (checkupTypeId) {
+        case 'CT02':
+          return const Color(0xFF0284C7); // ฟ้าครามสดใส (วัคซีน)
+        case 'CT03':
+          return const Color(0xFFDC2626); // แดง (รักษาโรค)
+        case 'CT04':
+          return const Color(0xFFD97706); // ส้มอำพัน (ถ่ายพยาธิ)
+        default:
+          return const Color(0xFF16A34A); // เขียว (ตรวจสุขภาพทั่วไป)
       }
-      if (vaccine != null) {
-        description += '${description.isNotEmpty ? ' | ' : ''}วัคซีน: $vaccine';
-      }
-      if (description.isNotEmpty) title = description;
     }
 
-    return Card(
-      elevation: 1,
-      margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    IconData getIcon() {
+      switch (checkupTypeId) {
+        case 'CT02':
+          return Icons.vaccines_rounded;
+        case 'CT03':
+          return Icons.medical_services_outlined;
+        case 'CT04':
+          return Icons.bug_report_outlined;
+        default:
+          return Icons.health_and_safety_outlined;
+      }
+    }
+
+    final typeColor = getTypeColor();
+    final typeName = typeLabels[checkupTypeId] ?? 'ฉีดวัคซีน';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: typeColor.withValues(alpha: 0.35),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Row: Icon + Title + Date & Total Cost
+            // Top Row: 48x48 icon + Category/Title/Date + Cost Tag
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // 48x48 rounded icon container with record tag
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
-                    color: iconColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    color: typeColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(
-                    isVaccine ? Icons.vaccines_rounded : Icons.medical_services_outlined,
-                    color: iconColor,
-                    size: 22,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(getIcon(), color: typeColor, size: 20),
+                      const SizedBox(height: 2),
+                      Text(
+                        'บันทึก',
+                        style: TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.bold,
+                          color: typeColor,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Badge category tag
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: typeColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          typeName,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: typeColor,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
                       Text(
-                        title,
+                        typeName,
                         style: TextStyle(
-                          fontSize: 15,
+                          fontSize: 15.5,
                           fontWeight: FontWeight.bold,
                           color: AppColors.text(context),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 5),
                       Row(
                         children: [
                           Icon(
-                            Icons.calendar_today,
-                            size: 13,
-                            color: AppColors.isDark(context)
-                                ? AppColors.primaryLight
-                                : AppColors.primary,
+                            Icons.calendar_month_outlined,
+                            size: 14,
+                            color: AppColors.subText(context),
                           ),
                           const SizedBox(width: 4),
                           Text(
                             date,
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w600,
                               color: AppColors.subText(context),
-                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],
@@ -662,106 +722,193 @@ class _CostTabState extends ConsumerState<CostTab> {
                     ],
                   ),
                 ),
-                Text(
-                  '${NumberFormat('#,##0').format(cost)} ฿',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.isDark(context)
-                        ? const Color(0xFFF87171)
-                        : AppColors.error,
-                    fontSize: 16,
+                if (cost > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: (isDark ? AppColors.warning : const Color(0xFFF59E0B)).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: (isDark ? AppColors.warning : const Color(0xFFF59E0B)).withValues(alpha: 0.3),
+                        width: 0.8,
+                      ),
+                    ),
+                    child: Text(
+                      '${NumberFormat('#,##0').format(cost)} ฿',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706),
+                        fontSize: 13.5,
+                      ),
+                    ),
                   ),
-                ),
               ],
             ),
 
-            // If there are multiple items or structured items, display them row by row inside this card
-            if (hasMultipleItems) ...[
-              const SizedBox(height: 10),
+            // Detail rows & items box
+            if (parsedItems.isNotEmpty || vaccine != null || disease != null || medicine != null) ...[
+              const SizedBox(height: 12),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.isDark(context)
-                      ? AppColors.darkSurfaceAlt
-                      : Colors.grey[50],
-                  borderRadius: BorderRadius.circular(8),
+                  color: isDark ? AppColors.darkSurfaceAlt : Colors.grey[50],
+                  borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: AppColors.isDark(context)
-                        ? AppColors.darkBorder
-                        : Colors.grey[200]!,
+                    color: isDark ? AppColors.darkBorder : Colors.grey[200]!,
                   ),
                 ),
                 child: Column(
-                  children: parsedItems.map((item) {
-                    final itemMap = Map<String, dynamic>.from(item as Map);
-                    final itemName = (itemMap['item_name'] ?? itemMap['itemName'] ?? '').toString();
-                    final itemType = (itemMap['item_type'] ?? itemMap['itemType'] ?? '').toString();
-                    final itemCost = _parseDouble(itemMap['cost']);
-                    final amount = itemMap['amount'];
-                    final unit = itemMap['unit_abbreviation'] ?? itemMap['unit_name'] ?? '';
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (parsedItems.isNotEmpty)
+                      ...parsedItems.map((item) {
+                        final itemMap = Map<String, dynamic>.from(item as Map);
+                        final itemName = (itemMap['item_name'] ?? itemMap['itemName'] ?? '').toString();
+                        final itemType = (itemMap['item_type'] ?? itemMap['itemType'] ?? '').toString();
+                        final itemCost = _parseDouble(itemMap['cost']);
+                        final amount = itemMap['amount'];
+                        final unit = itemMap['unit_abbreviation'] ?? itemMap['unit_name'] ?? '';
 
-                    String amountStr = '';
-                    if (amount != null) {
-                      final a = _parseDouble(amount);
-                      if (a > 0) {
-                        amountStr = ' (${a % 1 == 0 ? a.toInt() : a} $unit)'.trimRight();
-                      }
-                    }
+                        String amtStr = '';
+                        if (amount != null) {
+                          final a = _parseDouble(amount);
+                          if (a > 0) {
+                            amtStr = ' (${a % 1 == 0 ? a.toInt() : a} $unit)'.trimRight();
+                          }
+                        }
+                        String costStr = '';
+                        if (itemCost > 0) {
+                          costStr = ' - ${NumberFormat('#,##0').format(itemCost)} ฿';
+                        }
 
-                    final isItemVaccine = itemType == 'vaccine';
-                    final itemIcon = isItemVaccine ? Icons.vaccines : Icons.medication;
-                    final itemLabel = isItemVaccine ? 'วัคซีน' : 'ยา';
+                        IconData iconData = Icons.medication;
+                        String labelText = 'ยา';
+                        if (itemType == 'vaccine') {
+                          iconData = Icons.vaccines;
+                          labelText = 'วัคซีน';
+                        } else if (itemType == 'disease') {
+                          iconData = Icons.coronavirus;
+                          labelText = 'โรค';
+                        }
 
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 3),
-                      child: Row(
-                        children: [
-                          Icon(
-                            itemIcon,
-                            size: 14,
-                            color: isItemVaccine
-                                ? const Color(0xFF0284C7)
-                                : AppColors.error,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            '$itemLabel: ',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.subText(context),
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              '$itemName$amountStr',
-                              style: TextStyle(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.text(context),
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (itemCost > 0)
-                            Text(
-                              '${NumberFormat('#,##0').format(itemCost)} ฿',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.text(context),
-                              ),
-                            ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
+                        return _buildHealthDetailItemRow(
+                          context,
+                          iconData,
+                          labelText,
+                          '$itemName$amtStr$costStr',
+                        );
+                      })
+                    else ...[
+                      if (vaccine != null)
+                        _buildHealthDetailItemRow(
+                          context,
+                          Icons.vaccines,
+                          'วัคซีน',
+                          vaccine,
+                        ),
+                      if (disease != null)
+                        _buildHealthDetailItemRow(
+                          context,
+                          Icons.coronavirus,
+                          'โรค',
+                          disease,
+                        ),
+                      if (medicine != null)
+                        _buildHealthDetailItemRow(
+                          context,
+                          Icons.medication,
+                          'ยา',
+                          medicine,
+                        ),
+                    ],
+                  ],
                 ),
+              ),
+            ],
+
+            // Note
+            if (note != null && note.toString().isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.notes, size: 16, color: AppColors.subText(context)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      note.toString(),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.text(context),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+
+            // Admin Name
+            if (adminName != null && adminName.toString().isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(
+                    Icons.person_outline,
+                    size: 16,
+                    color: AppColors.subText(context),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'ผู้ดำเนินการ: $adminName',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.text(context),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildHealthDetailItemRow(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: AppColors.primary),
+          const SizedBox(width: 8),
+          Text(
+            '$label: ',
+            style: TextStyle(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w600,
+              color: AppColors.subText(context),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.text(context),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
