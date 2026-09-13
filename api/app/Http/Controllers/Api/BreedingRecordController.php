@@ -7,6 +7,8 @@ use App\Models\BreedingRecord;
 use App\Models\Cow;
 use App\Models\Farm;
 use App\Models\Notification;
+use App\Models\User;
+use App\Services\FirebaseService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -101,7 +103,7 @@ class BreedingRecordController extends Controller
             $notifyDt->subDays(1);
         } elseif (str_contains($setting, '3 วัน')) {
             $notifyDt->subDays(3);
-        } elseif (str_contains($setting, '7 วัน')) {
+        } elseif (str_contains($setting, '1 สัปดาห์') || str_contains($setting, '7 วัน')) {
             $notifyDt->subDays(7);
         } elseif (str_contains($setting, '14 วัน')) {
             $notifyDt->subDays(14);
@@ -132,6 +134,20 @@ class BreedingRecordController extends Controller
                 'notify_datetime' => $notifyDt,
                 'is_read' => 0,
             ]);
+        }
+
+        // Send live FCM push outside app if reminder time has arrived or is due now
+        if (Carbon::now()->greaterThanOrEqualTo($notifyDt->copy()->subMinutes(1))) {
+            $user = User::where('email', $userEmail)->first();
+            if ($user && !empty($user->fcm_token)) {
+                $pushBody = "{$cowName} คาดว่าจะคลอด วันที่ {$calvingDt->format('d/m/Y')}";
+                FirebaseService::sendPushNotification(
+                    $user->fcm_token,
+                    $title,
+                    $pushBody,
+                    ['type' => 'calving', 'cow_id' => (string)$cow->cow_id]
+                );
+            }
         }
     }
 }

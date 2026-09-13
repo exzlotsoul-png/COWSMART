@@ -47,6 +47,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       _hasFetchedData = true;
       ref.read(zoneProvider.notifier).fetchZones(currentFarm.id);
       ref.read(financeProvider.notifier).fetchTransactions(currentFarm.id);
+      ref.read(calendarProvider.notifier).fetchEvents(currentFarm.id);
       ref.read(notificationProvider.notifier).fetchNotifications();
       ref.read(localNotificationProvider).requestPermission();
     }
@@ -61,6 +62,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ref.read(cowProvider.notifier).fetchCows(currentFarm.id),
         ref.read(zoneProvider.notifier).fetchZones(currentFarm.id),
         ref.read(financeProvider.notifier).fetchTransactions(currentFarm.id),
+        ref.read(calendarProvider.notifier).fetchEvents(currentFarm.id),
       ]);
       _hasFetchedData = true;
     }
@@ -76,6 +78,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ref
             .read(financeProvider.notifier)
             .fetchTransactions(next.currentFarm!.id);
+        ref.read(calendarProvider.notifier).fetchEvents(next.currentFarm!.id);
       }
     });
 

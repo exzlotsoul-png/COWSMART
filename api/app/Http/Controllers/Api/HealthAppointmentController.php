@@ -7,6 +7,8 @@ use App\Models\HealthAppointment;
 use App\Models\Cow;
 use App\Models\Farm;
 use App\Models\Notification;
+use App\Models\User;
+use App\Services\FirebaseService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -138,6 +140,20 @@ class HealthAppointmentController extends Controller
                 'notify_datetime' => $notifyDt,
                 'is_read' => 0,
             ]);
+        }
+
+        // Send live FCM push outside app if reminder time has arrived or is due now
+        if (Carbon::now()->greaterThanOrEqualTo($notifyDt->copy()->subMinutes(1))) {
+            $user = User::where('email', $userEmail)->first();
+            if ($user && !empty($user->fcm_token)) {
+                $pushBody = "{$cowName} มีนัดหมายตรวจสุขภาพ/ฉีดวัคซีน/ถ่ายพยาธิ วันที่ {$apptDt->format('d/m/Y H:i')}";
+                FirebaseService::sendPushNotification(
+                    $user->fcm_token,
+                    $title,
+                    $pushBody,
+                    ['type' => 'health_appointment', 'cow_id' => (string)$cow->cow_id]
+                );
+            }
         }
     }
 }

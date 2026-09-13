@@ -5,6 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
+import 'package:cowsmart/features/calendar/providers/calendar_provider.dart';
 import 'package:cowsmart/core/utils/app_toast.dart';
 import 'package:cowsmart/features/auth/providers/auth_provider.dart';
 
@@ -37,6 +38,7 @@ class _SelectFarmScreenState extends ConsumerState<SelectFarmScreen> {
       await Future.wait([
         ref.read(cowProvider.notifier).fetchCows(farm.id),
         ref.read(zoneProvider.notifier).fetchZones(farm.id),
+        ref.read(calendarProvider.notifier).fetchEvents(farm.id),
       ]);
 
       if (mounted) {

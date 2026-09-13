@@ -147,7 +147,13 @@ class LocalNotificationService {
       DateTime scheduledTime = event.eventDatetime;
       final setting = event.reminderSetting ?? 'ตรงเวลาที่บันทึก';
 
-      if (setting == 'ก่อน 15 นาที') {
+      if (setting == 'ไม่แจ้งเตือน') {
+        continue;
+      }
+
+      if (setting == 'ก่อน 30 นาที') {
+        scheduledTime = scheduledTime.subtract(const Duration(minutes: 30));
+      } else if (setting == 'ก่อน 15 นาที') {
         scheduledTime = scheduledTime.subtract(const Duration(minutes: 15));
       } else if (setting == 'ก่อน 1 ชั่วโมง') {
         scheduledTime = scheduledTime.subtract(const Duration(hours: 1));
@@ -155,7 +161,7 @@ class LocalNotificationService {
         scheduledTime = scheduledTime.subtract(const Duration(days: 1));
       } else if (setting == 'ก่อน 3 วัน') {
         scheduledTime = scheduledTime.subtract(const Duration(days: 3));
-      } else if (setting == 'ก่อน 7 วัน') {
+      } else if (setting == 'ก่อน 1 สัปดาห์' || setting == 'ก่อน 7 วัน') {
         scheduledTime = scheduledTime.subtract(const Duration(days: 7));
       } else if (setting == 'ก่อน 14 วัน') {
         scheduledTime = scheduledTime.subtract(const Duration(days: 14));

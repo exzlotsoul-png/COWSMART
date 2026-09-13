@@ -9,6 +9,8 @@ use App\Models\BreedingRecord;
 use App\Models\Cow;
 use App\Models\Farm;
 use App\Models\Notification;
+use App\Models\User;
+use App\Services\FirebaseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -489,6 +491,20 @@ class CalendarEventController extends Controller
                 'notify_datetime' => $notifyDt,
                 'is_read' => 0,
             ]);
+        }
+
+        // Send live FCM push outside app if reminder time has arrived or is due now
+        if (Carbon::now()->greaterThanOrEqualTo($notifyDt->copy()->subMinutes(1))) {
+            $user = User::where('email', $userEmail)->first();
+            if ($user && !empty($user->fcm_token)) {
+                $pushBody = "กิจกรรม \"{$event->title}\" กำหนดวันที่ {$eventDt->format('d/m/Y H:i')}{$cowText}";
+                FirebaseService::sendPushNotification(
+                    $user->fcm_token,
+                    $title,
+                    $pushBody,
+                    ['type' => 'calendar_event', 'event_id' => (string)$event->calendar_event_id]
+                );
+            }
         }
     }
 }
