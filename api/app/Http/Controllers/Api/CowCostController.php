@@ -71,9 +71,16 @@ class CowCostController extends Controller
 
             $totalFeedInventoriesCost = 0;
             if (Schema::hasTable('feed_inventories') && Schema::hasColumn('feed_inventories', 'zone_id')) {
-                $totalFeedInventoriesCost = (double) (DB::table('feed_inventories')
-                    ->where('zone_id', $zoneId)
-                    ->sum('cost_per_kg') ?? 0);
+                $totalFeedQuery = DB::table('feed_inventories')
+                    ->where('zone_id', $zoneId);
+
+                if (Schema::hasColumn('feed_inventories', 'cow_ids')) {
+                    $totalFeedQuery->where(function ($q) {
+                        $q->whereNull('cow_ids')->orWhere('cow_ids', '[]')->orWhere('cow_ids', '');
+                    });
+                }
+
+                $totalFeedInventoriesCost = (double) ($totalFeedQuery->sum('cost_per_kg') ?? 0);
             }
 
             $totalFeedCost = $totalFeedingRecordsCost + $totalFeedInventoriesCost;
@@ -104,12 +111,21 @@ class CowCostController extends Controller
                     ->toArray();
             }
 
+            // Only include feed inventories that are assigned to the zone generally (not assigned to specific cows)
             $feedInvs = [];
             if (Schema::hasTable('feed_inventories') && Schema::hasColumn('feed_inventories', 'zone_id')) {
-                $feedInvs = DB::table('feed_inventories')
+                $feedInvsQuery = DB::table('feed_inventories')
                     ->where('zone_id', $zoneId)
                     ->whereNotNull('cost_per_kg')
-                    ->where('cost_per_kg', '>', 0)
+                    ->where('cost_per_kg', '>', 0);
+
+                if (Schema::hasColumn('feed_inventories', 'cow_ids')) {
+                    $feedInvsQuery->where(function ($q) {
+                        $q->whereNull('cow_ids')->orWhere('cow_ids', '[]')->orWhere('cow_ids', '');
+                    });
+                }
+
+                $feedInvs = $feedInvsQuery
                     ->select('feed_inventory_id as id', 'created_at as date', 'name as type', 'stock_quantity as amount', 'cost_per_kg as cost')
                     ->get()
                     ->map(function ($item) use ($weightRatio) {
@@ -121,6 +137,42 @@ class CowCostController extends Controller
             }
 
             $feedDetails = array_merge($feedingRecs, $feedInvs);
+            usort($feedDetails, function ($a, $b) {
+                return strcmp($b['date'] ?? '', $a['date'] ?? '');
+            });
+            $feedDetails = array_slice($feedDetails, 0, 50);
+        }
+
+        // Direct feed assigned specifically to this cow (via cow_ids)
+        if (Schema::hasTable('feed_inventories') && Schema::hasColumn('feed_inventories', 'cow_ids')) {
+            $directCowFeeds = DB::table('feed_inventories')
+                ->whereNotNull('cow_ids')
+                ->whereNotNull('cost_per_kg')
+                ->where('cost_per_kg', '>', 0)
+                ->get();
+
+            foreach ($directCowFeeds as $feedRecord) {
+                $targetCowIds = is_string($feedRecord->cow_ids)
+                    ? json_decode($feedRecord->cow_ids, true)
+                    : (array) $feedRecord->cow_ids;
+
+                if (is_array($targetCowIds) && in_array($cowId, $targetCowIds)) {
+                    $numCows = count($targetCowIds);
+                    $allocatedCost = $numCows > 0 ? round(((double) $feedRecord->cost_per_kg) / $numCows, 2) : 0;
+                    $feedCost += $allocatedCost;
+
+                    $feedDetails[] = [
+                        'id' => $feedRecord->feed_inventory_id,
+                        'date' => $feedRecord->created_at,
+                        'type' => $feedRecord->name . ($numCows > 1 ? " (ระบุ $numCows ตัว)" : " (ระบุเฉพาะตัว)"),
+                        'amount' => $numCows > 0 ? round(((double) $feedRecord->stock_quantity) / $numCows, 2) : 0,
+                        'cost' => (double) $feedRecord->cost_per_kg,
+                        'cost_per_cow' => $allocatedCost,
+                        'source' => 'feed_inventory_direct',
+                    ];
+                }
+            }
+
             usort($feedDetails, function ($a, $b) {
                 return strcmp($b['date'] ?? '', $a['date'] ?? '');
             });

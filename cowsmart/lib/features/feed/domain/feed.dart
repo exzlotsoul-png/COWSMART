@@ -39,6 +39,7 @@ class FeedItem {
   final String id;
   final String farmId;
   final String? zoneId;
+  final List<String>? cowIds;
   final String name;
   final FeedCategory category;
   final double quantity; // ปริมาณที่บันทึก
@@ -50,6 +51,7 @@ class FeedItem {
     required this.id,
     required this.farmId,
     this.zoneId,
+    this.cowIds,
     required this.name,
     required this.category,
     required this.quantity,
@@ -59,10 +61,32 @@ class FeedItem {
   });
 
   factory FeedItem.fromJson(Map<String, dynamic> json) {
+    List<String>? parsedCowIds;
+    if (json['cow_ids'] != null) {
+      if (json['cow_ids'] is List) {
+        parsedCowIds = (json['cow_ids'] as List)
+            .map((e) => e.toString())
+            .toList();
+      } else if (json['cow_ids'] is String && json['cow_ids'].toString().isNotEmpty) {
+        try {
+          final decoded = json['cow_ids'].toString();
+          if (decoded.startsWith('[') && decoded.endsWith(']')) {
+            parsedCowIds = decoded
+                .substring(1, decoded.length - 1)
+                .split(',')
+                .map((e) => e.replaceAll('"', '').trim())
+                .where((e) => e.isNotEmpty)
+                .toList();
+          }
+        } catch (_) {}
+      }
+    }
+
     return FeedItem(
       id: json['feed_inventory_id'] ?? json['id'] ?? '',
       farmId: json['farm_id'] ?? json['farmId'] ?? '',
       zoneId: json['zone_id'] ?? json['zoneId'],
+      cowIds: parsedCowIds,
       name: json['name'] ?? '',
       category: FeedCategory.fromString(json['category'] ?? 'other'),
       quantity:
@@ -80,6 +104,7 @@ class FeedItem {
       'feed_inventory_id': id.isEmpty ? null : id,
       'farm_id': farmId,
       'zone_id': zoneId,
+      'cow_ids': cowIds,
       'name': name,
       'category': category.apiValue,
       'stock_quantity': quantity,
@@ -93,6 +118,7 @@ class FeedItem {
     String? id,
     String? farmId,
     String? zoneId,
+    List<String>? cowIds,
     String? name,
     FeedCategory? category,
     double? quantity,
@@ -104,6 +130,7 @@ class FeedItem {
       id: id ?? this.id,
       farmId: farmId ?? this.farmId,
       zoneId: zoneId ?? this.zoneId,
+      cowIds: cowIds ?? this.cowIds,
       name: name ?? this.name,
       category: category ?? this.category,
       quantity: quantity ?? this.quantity,

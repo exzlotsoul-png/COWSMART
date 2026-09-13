@@ -17,4 +17,8 @@ class FeedInventory extends Model
 
     protected string $idPrefix = 'FD';
     protected int $idPadLength = 4;
+
+    protected $casts = [
+        'cow_ids' => 'array',
+    ];
 }
