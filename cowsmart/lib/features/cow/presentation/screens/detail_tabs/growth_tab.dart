@@ -1465,151 +1465,212 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                     ? diff / periodDays
                     : null;
 
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 14),
-                  elevation: 1.5,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardBg(context),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: AppColors.isDark(context) ? 0.2 : 0.04),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: (AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary).withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Icon(
-                            Icons.monitor_weight_outlined,
-                            color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                AppDateUtils.formatThaiDate(r.recordDate),
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: AppColors.text(context),
-                                ),
-                              ),
-                              if (r.girth != null)
-                                Text(
-                                  'รอบอก: ${r.girth!.toStringAsFixed(1)} ซม.',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.subText(context),
-                                  ),
-                                ),
-                              if (periodAdg != null) ...[
-                                const SizedBox(height: 2),
-                                Text(
-                                  'ADG ช่วงนี้: ${periodAdg >= 0 ? '+' : ''}${periodAdg.toStringAsFixed(2)} กก./วัน ($periodDays วัน)',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: periodAdg >= 0
-                                        ? (AppColors.isDark(context) ? const Color(0xFF8FD475) : AppColors.primary)
-                                        : AppColors.error,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                        // Row 1: Icon + Date & Girth + Weight & Diff Badge
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Text(
-                              '${r.weight.toStringAsFixed(1)} กก.',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: (AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary).withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                Icons.monitor_weight_outlined,
                                 color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary,
+                                size: 22,
                               ),
                             ),
-                            if (diff != null)
-                              Container(
-                                margin: const EdgeInsets.only(top: 4),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: (diff >= 0 ? AppColors.success : AppColors.error)
-                                      .withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  '${diff >= 0 ? '+' : ''}${diff.toStringAsFixed(1)}',
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    AppDateUtils.formatThaiDate(r.recordDate),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      color: AppColors.text(context),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    r.girth != null
+                                        ? 'รอบอก: ${r.girth!.toStringAsFixed(1)} ซม.'
+                                        : 'ไม่ได้ระบุรอบอก',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: AppColors.subText(context),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  '${r.weight.toStringAsFixed(1)} กก.',
                                   style: TextStyle(
-                                    fontSize: 13,
+                                    fontSize: 19,
                                     fontWeight: FontWeight.bold,
-                                    color: diff >= 0
-                                        ? (AppColors.isDark(context) ? const Color(0xFF8FD475) : AppColors.success)
-                                        : AppColors.error,
+                                    color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary,
                                   ),
                                 ),
-                              ),
+                                if (diff != null) ...[
+                                  const SizedBox(height: 3),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 7,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: (diff >= 0 ? AppColors.success : AppColors.error)
+                                          .withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      '${diff >= 0 ? '+' : ''}${diff.toStringAsFixed(1)} กก.',
+                                      style: TextStyle(
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.bold,
+                                        color: diff >= 0
+                                            ? (AppColors.isDark(context) ? const Color(0xFF8FD475) : AppColors.success)
+                                            : AppColors.error,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
                           ],
                         ),
-                        PopupMenuButton<String>(
-                          icon: const Icon(Icons.more_vert, size: 20, color: AppColors.textSecondary),
-                          onSelected: (val) {
-                            if (val == 'edit') {
-                              _showAddWeightSheet(context, initialRecord: r);
-                            } else if (val == 'delete') {
-                              showDialog(
-                                context: context,
-                                builder: (c) => AlertDialog(
-                                  title: const Text('ยืนยันการลบ'),
-                                  content: const Text('คุณต้องการลบข้อมูลประวัติน้ำหนักนี้ใช่หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(c),
-                                      child: const Text('ยกเลิก'),
+
+                        // Row 2: Bottom metadata (ADG Tag + 3-dots Menu Button)
+                        const SizedBox(height: 10),
+                        Divider(height: 1, color: AppColors.brd(context).withValues(alpha: 0.4)),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            if (periodAdg != null) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: (periodAdg >= 0 ? AppColors.primary : AppColors.error).withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      periodAdg >= 0 ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+                                      size: 14,
+                                      color: periodAdg >= 0
+                                          ? (AppColors.isDark(context) ? const Color(0xFF8FD475) : AppColors.primary)
+                                          : AppColors.error,
                                     ),
-                                    TextButton(
-                                      onPressed: () {
-                                        ref.read(cowDetailProvider.notifier).deleteGrowthRecord(r.id);
-                                        Navigator.pop(c);
-                                      },
-                                      style: TextButton.styleFrom(foregroundColor: Colors.red),
-                                      child: const Text('ลบ'),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'ADG: ${periodAdg >= 0 ? '+' : ''}${periodAdg.toStringAsFixed(2)} กก./วัน ($periodDays วัน)',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: periodAdg >= 0
+                                            ? (AppColors.isDark(context) ? const Color(0xFF8FD475) : AppColors.primary)
+                                            : AppColors.error,
+                                      ),
                                     ),
                                   ],
                                 ),
-                              );
-                            }
-                          },
-                          itemBuilder: (c) => [
-                            const PopupMenuItem(
-                              value: 'edit',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.edit, color: AppColors.primary, size: 20),
-                                  SizedBox(width: 8),
-                                  Text('แก้ไขประวัติ'),
-                                ],
                               ),
-                            ),
-                            const PopupMenuItem(
-                              value: 'delete',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.delete, color: Colors.red, size: 20),
-                                  SizedBox(width: 8),
-                                  Text('ลบประวัติ', style: TextStyle(color: Colors.red)),
-                                ],
+                            ] else ...[
+                              Text(
+                                'บันทึกครั้งแรก / ไม่มีข้อมูลเปรียบเทียบ',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  color: AppColors.hint(context),
+                                ),
                               ),
+                            ],
+                            const Spacer(),
+                            PopupMenuButton<String>(
+                              icon: const Icon(Icons.more_vert, size: 20, color: AppColors.textSecondary),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              tooltip: 'ตัวเลือก',
+                              onSelected: (val) {
+                                if (val == 'edit') {
+                                  _showAddWeightSheet(context, initialRecord: r);
+                                } else if (val == 'delete') {
+                                  showDialog(
+                                    context: context,
+                                    builder: (c) => AlertDialog(
+                                      title: const Text('ยืนยันการลบ'),
+                                      content: const Text('คุณต้องการลบข้อมูลประวัติน้ำหนักนี้ใช่หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(c),
+                                          child: const Text('ยกเลิก'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            ref.read(cowDetailProvider.notifier).deleteGrowthRecord(r.id);
+                                            Navigator.pop(c);
+                                          },
+                                          style: TextButton.styleFrom(foregroundColor: Colors.red),
+                                          child: const Text('ลบ'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }
+                              },
+                              itemBuilder: (c) => [
+                                const PopupMenuItem(
+                                  value: 'edit',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.edit_outlined, color: AppColors.primary, size: 20),
+                                      SizedBox(width: 8),
+                                      Text('แก้ไขประวัติ'),
+                                    ],
+                                  ),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'delete',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.delete_outline_rounded, color: Colors.red, size: 20),
+                                      SizedBox(width: 8),
+                                      Text('ลบประวัติ', style: TextStyle(color: Colors.red)),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
