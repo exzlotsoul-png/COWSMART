@@ -374,19 +374,31 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     TimeOfDay selectedTime = existing != null
         ? TimeOfDay.fromDateTime(existing.eventDatetime)
         : TimeOfDay.now();
+
     String? selectedCowId = existing?.cowId;
-    String? selectedReminder = existing?.reminderSetting ?? 'ก่อน 1 วัน';
-    String? titleError;
+    if (selectedCowId != null && !cows.any((c) => c.id == selectedCowId)) {
+      final match = cows.where((c) => c.tagNumber == selectedCowId || c.name == selectedCowId);
+      selectedCowId = match.isNotEmpty ? match.first.id : null;
+    }
 
     final reminderOptions = [
       'ตรงเวลาที่บันทึก',
+      'ในวันนัดหมาย',
       'ก่อน 15 นาที',
       'ก่อน 1 ชั่วโมง',
       'ก่อน 1 วัน',
+      'ก่อน 2 วัน',
       'ก่อน 3 วัน',
       'ก่อน 7 วัน',
+      'ก่อน 1 สัปดาห์',
       'ไม่แจ้งเตือน'
     ];
+
+    String? selectedReminder = existing?.reminderSetting;
+    if (selectedReminder == null || !reminderOptions.contains(selectedReminder)) {
+      selectedReminder = 'ก่อน 1 วัน';
+    }
+    String? titleError;
 
     showModalBottomSheet(
       context: context,
