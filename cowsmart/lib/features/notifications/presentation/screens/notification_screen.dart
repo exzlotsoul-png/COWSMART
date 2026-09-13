@@ -505,38 +505,37 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
           ],
         ),
         actions: [
-          Row(
-            children: [
-              if (isCalendarNotif) ...[
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      context.push('/calendar');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    icon: const Icon(Icons.calendar_month, size: 20),
-                    label: const Text('เปิดดูในปฏิทิน', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  ),
+          if (isCalendarNotif) ...[
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  context.push('/calendar');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                const SizedBox(width: 10),
-              ],
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: const Text('ปิด', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                ),
+                icon: const Icon(Icons.calendar_month, size: 20),
+                label: const Text('เปิดดูในปฏิทิน', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
               ),
-            ],
+            ),
+            const SizedBox(height: 8),
+          ],
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () => Navigator.pop(context),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                side: BorderSide(color: AppColors.div(context)),
+              ),
+              child: const Text('ปิด', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+            ),
           ),
         ],
       ),
