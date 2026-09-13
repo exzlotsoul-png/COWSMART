@@ -1,33 +1,14 @@
 import 'dart:convert';
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:cowsmart/core/theme/app_colors.dart';
 import 'package:cowsmart/core/utils/date_formatter.dart';
-import 'package:cowsmart/core/widgets/custom_date_range_picker.dart';
-import 'package:cowsmart/core/services/image_upload_service.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
-import 'package:cowsmart/features/cow/domain/health_record.dart';
-import 'package:cowsmart/features/cow/domain/growth_record.dart';
-import 'package:cowsmart/features/calendar/domain/calendar_event.dart';
-import 'package:cowsmart/core/widgets/image_picker_widget.dart';
-import 'package:cowsmart/core/utils/app_toast.dart';
-import 'package:cowsmart/features/calendar/providers/appointment_type_provider.dart';
-import 'package:cowsmart/features/calendar/providers/calendar_provider.dart';
-import 'package:cowsmart/features/farm/providers/farm_provider.dart';
-import 'package:cowsmart/features/cow/providers/cow_provider.dart';
-import '../../../providers/cow_detail_provider.dart';
-import '../../../../health/providers/master_data_provider.dart';
 import 'package:cowsmart/features/market/providers/market_price_provider.dart';
 import 'package:cowsmart/features/cow/providers/breed_provider.dart';
 import 'package:cowsmart/features/cow/domain/breed.dart';
 import 'package:cowsmart/core/network/api_client.dart';
-import 'package:go_router/go_router.dart';
-import 'package:cowsmart/features/health/presentation/widgets/calf_vaccine_dialog.dart';
-import 'package:cowsmart/features/health/services/calf_vaccine_schedule_service.dart';
 
 class CostTab extends ConsumerStatefulWidget {
   final Cow cow;
@@ -197,6 +178,13 @@ class _CostTabState extends ConsumerState<CostTab> {
           feedCost,
           Colors.green,
           Icons.grass_rounded,
+        ),
+      if (directCost > 0)
+        _CostPart(
+          'ค่าใช้จ่ายตรง',
+          directCost,
+          Colors.blue,
+          Icons.receipt_long_outlined,
         ),
     ];
 
