@@ -29,10 +29,10 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(notificationProvider.notifier).fetchNotifications();
     });
-    // Polling แจ้งเตือนแบบ background ทุก 10 วินาที เพื่อให้ badge บน dashboard แสดงแบบเรียลไทม์
-    _notificationTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+    // Polling แจ้งเตือนแบบ background เป็นระยะ เพื่ออัปเดต badge โดยไม่รบกวนหน้าจอ
+    _notificationTimer = Timer.periodic(const Duration(seconds: 60), (_) {
       if (mounted) {
-        ref.read(notificationProvider.notifier).fetchNotifications();
+        ref.read(notificationProvider.notifier).fetchNotifications(showLoading: false);
       }
     });
   }

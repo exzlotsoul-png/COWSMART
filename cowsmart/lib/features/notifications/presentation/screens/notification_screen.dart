@@ -740,9 +740,9 @@ class _NotificationCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 10),
 
-                        // Time
-                        if (notification.createdAt != null ||
-                            notification.notifyDatetime != null)
+                        // Time (เริ่มนับเวลาจากตอนที่แจ้งเตือนเข้า notifyDatetime ก่อน)
+                        if (notification.notifyDatetime != null ||
+                            notification.createdAt != null)
                           Row(
                             children: [
                               Icon(
@@ -754,8 +754,8 @@ class _NotificationCard extends StatelessWidget {
                               ),
                               const SizedBox(width: 5),
                               Text(
-                                _timeAgo(notification.createdAt ??
-                                    notification.notifyDatetime!),
+                                _timeAgo(notification.notifyDatetime ??
+                                    notification.createdAt!),
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: isUnread

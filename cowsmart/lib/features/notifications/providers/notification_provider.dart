@@ -37,8 +37,10 @@ class NotificationNotifier extends Notifier<NotificationState> {
     return NotificationState();
   }
 
-  Future<void> fetchNotifications() async {
-    state = state.copyWith(isLoading: true, errorMessage: null);
+  Future<void> fetchNotifications({bool showLoading = true}) async {
+    if (showLoading && state.notifications.isEmpty) {
+      state = state.copyWith(isLoading: true, errorMessage: null);
+    }
     try {
       final response = await _api.get('/notifications');
       final now = DateTime.now();
@@ -47,8 +49,8 @@ class NotificationNotifier extends Notifier<NotificationState> {
           .where((n) => n.notifyDatetime == null || !n.notifyDatetime!.isAfter(now))
           .toList();
       list.sort((a, b) {
-        final tA = a.createdAt ?? a.notifyDatetime ?? DateTime(0);
-        final tB = b.createdAt ?? b.notifyDatetime ?? DateTime(0);
+        final tA = a.notifyDatetime ?? a.createdAt ?? DateTime(0);
+        final tB = b.notifyDatetime ?? b.createdAt ?? DateTime(0);
         return tB.compareTo(tA);
       });
       state = state.copyWith(notifications: list, isLoading: false);
