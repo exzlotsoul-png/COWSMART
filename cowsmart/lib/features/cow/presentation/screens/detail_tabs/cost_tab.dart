@@ -42,6 +42,12 @@ class _CostTabState extends ConsumerState<CostTab> {
   bool _isLoading = true;
   String? _error;
 
+  bool _showAllHealth = false;
+  bool _showAllFeed = false;
+  bool _showAllDirect = false;
+
+  static const int _initialItemLimit = 3;
+
   @override
   void initState() {
     super.initState();
@@ -252,25 +258,76 @@ class _CostTabState extends ConsumerState<CostTab> {
           if (healthDetails.isNotEmpty) ...[
             _buildSectionTitle(
               'ประวัติค่ารักษา/วัคซีน (${healthDetails.length} รายการ)',
+              trailing: healthDetails.length > _initialItemLimit
+                  ? TextButton(
+                      onPressed: () {
+                        setState(() => _showAllHealth = !_showAllHealth);
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        _showAllHealth ? 'ย่อรายการ' : 'ดูทั้งหมด',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    )
+                  : null,
             ),
             const SizedBox(height: 8),
-            ...healthDetails.map((h) => _buildHealthDetailCard(h)),
+            ...(_showAllHealth
+                    ? healthDetails
+                    : healthDetails.take(_initialItemLimit))
+                .map((h) => _buildHealthDetailCard(h)),
+            if (healthDetails.length > _initialItemLimit)
+              _buildViewAllButton(
+                isExpanded: _showAllHealth,
+                totalCount: healthDetails.length,
+                onTap: () => setState(() => _showAllHealth = !_showAllHealth),
+              ),
             const SizedBox(height: 16),
           ],
 
           // Feed cost history
           if (feedDetails.isNotEmpty) ...[
-            _buildSectionTitle('ประวัติค่าอาหาร (เฉลี่ยตามโซน)'),
+            _buildSectionTitle(
+              'ประวัติค่าอาหาร (เฉลี่ยตามโซน)',
+              trailing: feedDetails.length > _initialItemLimit
+                  ? TextButton(
+                      onPressed: () {
+                        setState(() => _showAllFeed = !_showAllFeed);
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        _showAllFeed ? 'ย่อรายการ' : 'ดูทั้งหมด',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    )
+                  : null,
+            ),
             const SizedBox(height: 8),
-            ...feedDetails.take(10).map((f) => _buildFeedDetailCard(f)),
-            if (feedDetails.length > 10)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(
-                  'แสดง 10 จาก ${feedDetails.length} รายการ',
-                  style: TextStyle(color: Colors.grey[500], fontSize: 12),
-                  textAlign: TextAlign.center,
-                ),
+            ...(_showAllFeed
+                    ? feedDetails
+                    : feedDetails.take(_initialItemLimit))
+                .map((f) => _buildFeedDetailCard(f)),
+            if (feedDetails.length > _initialItemLimit)
+              _buildViewAllButton(
+                isExpanded: _showAllFeed,
+                totalCount: feedDetails.length,
+                onTap: () => setState(() => _showAllFeed = !_showAllFeed),
               ),
             const SizedBox(height: 16),
           ],
@@ -279,9 +336,38 @@ class _CostTabState extends ConsumerState<CostTab> {
           if (directDetails.isNotEmpty) ...[
             _buildSectionTitle(
               'ค่าใช้จ่ายตรงรายตัว (${directDetails.length} รายการ)',
+              trailing: directDetails.length > _initialItemLimit
+                  ? TextButton(
+                      onPressed: () {
+                        setState(() => _showAllDirect = !_showAllDirect);
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        _showAllDirect ? 'ย่อรายการ' : 'ดูทั้งหมด',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    )
+                  : null,
             ),
             const SizedBox(height: 8),
-            ...directDetails.map((d) => _buildDirectCostCard(d)),
+            ...(_showAllDirect
+                    ? directDetails
+                    : directDetails.take(_initialItemLimit))
+                .map((d) => _buildDirectCostCard(d)),
+            if (directDetails.length > _initialItemLimit)
+              _buildViewAllButton(
+                isExpanded: _showAllDirect,
+                totalCount: directDetails.length,
+                onTap: () => setState(() => _showAllDirect = !_showAllDirect),
+              ),
             const SizedBox(height: 16),
           ],
 
@@ -495,13 +581,63 @@ class _CostTabState extends ConsumerState<CostTab> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: TextStyle(
-        fontWeight: FontWeight.bold,
-        fontSize: 15,
-        color: AppColors.text(context),
+  Widget _buildSectionTitle(String title, {Widget? trailing}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+              color: AppColors.text(context),
+            ),
+          ),
+        ),
+        if (trailing != null) trailing,
+      ],
+    );
+  }
+
+  Widget _buildViewAllButton({
+    required bool isExpanded,
+    required int totalCount,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        margin: const EdgeInsets.only(top: 4, bottom: 8),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppColors.primary.withValues(alpha: 0.25),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              isExpanded ? 'ย่อรายการ' : 'ดูทั้งหมด ($totalCount รายการ)',
+              style: const TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Icon(
+              isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+              size: 20,
+              color: AppColors.primary,
+            ),
+          ],
+        ),
       ),
     );
   }
