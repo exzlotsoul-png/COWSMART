@@ -383,20 +383,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
     final reminderOptions = [
       'ตรงเวลาที่บันทึก',
-      'ในวันนัดหมาย',
-      'ก่อน 15 นาที',
+      'ก่อน 30 นาที',
       'ก่อน 1 ชั่วโมง',
       'ก่อน 1 วัน',
-      'ก่อน 2 วัน',
-      'ก่อน 3 วัน',
-      'ก่อน 7 วัน',
       'ก่อน 1 สัปดาห์',
-      'ไม่แจ้งเตือน'
+      'ไม่แจ้งเตือน',
     ];
 
     String? selectedReminder = existing?.reminderSetting;
     if (selectedReminder == null || !reminderOptions.contains(selectedReminder)) {
-      selectedReminder = 'ก่อน 1 วัน';
+      selectedReminder = 'ตรงเวลาที่บันทึก';
     }
     String? titleError;
 

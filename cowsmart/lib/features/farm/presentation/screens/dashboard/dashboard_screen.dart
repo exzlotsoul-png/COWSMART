@@ -1406,7 +1406,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final descCtrl = TextEditingController();
     DateTime selectedDate = DateTime.now().add(const Duration(days: 7));
     TimeOfDay selectedTime = const TimeOfDay(hour: 9, minute: 0);
-    String selectedReminder = 'ก่อน 1 วัน';
+    String selectedReminder = 'ตรงเวลาที่บันทึก';
     String selectedType = 'ฉีดวัคซีน/ถ่ายพยาธิ';
     final selectedCowIds = <String>{};
 
@@ -1435,11 +1435,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     final reminderOptions = [
       'ตรงเวลาที่บันทึก',
-      'ก่อน 15 นาที',
+      'ก่อน 30 นาที',
       'ก่อน 1 ชั่วโมง',
       'ก่อน 1 วัน',
-      'ก่อน 3 วัน',
-      'ก่อน 7 วัน',
+      'ก่อน 1 สัปดาห์',
       'ไม่แจ้งเตือน',
     ];
 

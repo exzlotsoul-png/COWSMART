@@ -98,15 +98,19 @@ class HealthAppointmentController extends Controller
         $apptDt = Carbon::parse($appt->appoint_datetime);
         $notifyDt = $apptDt->copy();
 
-        if (str_contains($setting, '15 นาที')) {
+        if (str_contains($setting, '30 นาที')) {
+            $notifyDt->subMinutes(30);
+        } elseif (str_contains($setting, '15 นาที')) {
             $notifyDt->subMinutes(15);
         } elseif (str_contains($setting, '1 ชั่วโมง')) {
             $notifyDt->subHours(1);
         } elseif (str_contains($setting, '1 วัน')) {
             $notifyDt->subDays(1);
+        } elseif (str_contains($setting, '2 วัน')) {
+            $notifyDt->subDays(2);
         } elseif (str_contains($setting, '3 วัน')) {
             $notifyDt->subDays(3);
-        } elseif (str_contains($setting, '7 วัน')) {
+        } elseif (str_contains($setting, '1 สัปดาห์') || str_contains($setting, '7 วัน')) {
             $notifyDt->subDays(7);
         }
 

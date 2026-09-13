@@ -40,7 +40,7 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
   String _selectedType = 'ฉีดวัคซีน/ถ่ายพยาธิ';
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 7));
   TimeOfDay _selectedTime = const TimeOfDay(hour: 9, minute: 0);
-  String _selectedReminder = 'ก่อน 1 วัน';
+  String _selectedReminder = 'ตรงเวลาที่บันทึก';
 
   bool _isSubmitting = false;
 
@@ -52,11 +52,12 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
   ];
 
   final List<String> _reminderOptions = [
-    'ในวันนัดหมาย',
+    'ตรงเวลาที่บันทึก',
+    'ก่อน 30 นาที',
+    'ก่อน 1 ชั่วโมง',
     'ก่อน 1 วัน',
-    'ก่อน 2 วัน',
-    'ก่อน 3 วัน',
     'ก่อน 1 สัปดาห์',
+    'ไม่แจ้งเตือน',
   ];
 
   @override

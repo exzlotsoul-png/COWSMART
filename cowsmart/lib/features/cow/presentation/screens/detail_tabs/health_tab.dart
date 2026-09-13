@@ -178,7 +178,6 @@ class _HealthTabState extends ConsumerState<HealthTab> {
           )
         : const TimeOfDay(hour: 9, minute: 0);
 
-    String selectedReminder = existingAppt?['reminder_setting']?.toString() ?? 'ก่อน 1 วัน';
     String selectedType = 'ฉีดวัคซีน/ถ่ายพยาธิ';
 
     List<String> types = [
@@ -208,13 +207,17 @@ class _HealthTabState extends ConsumerState<HealthTab> {
 
     final reminderOptions = [
       'ตรงเวลาที่บันทึก',
-      'ก่อน 15 นาที',
+      'ก่อน 30 นาที',
       'ก่อน 1 ชั่วโมง',
       'ก่อน 1 วัน',
-      'ก่อน 3 วัน',
-      'ก่อน 7 วัน',
-      'ไม่แจ้งเตือน'
+      'ก่อน 1 สัปดาห์',
+      'ไม่แจ้งเตือน',
     ];
+
+    String selectedReminder = existingAppt?['reminder_setting']?.toString() ?? 'ตรงเวลาที่บันทึก';
+    if (!reminderOptions.contains(selectedReminder)) {
+      selectedReminder = 'ตรงเวลาที่บันทึก';
+    }
 
     if (!mounted) return;
     showModalBottomSheet(
