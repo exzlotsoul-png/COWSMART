@@ -433,14 +433,14 @@ class BasicInfoTab extends ConsumerWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Icon(icon, size: 19, color: AppColors.subText(context)),
+            Icon(icon, size: 19, color: AppColors.text(context).withValues(alpha: 0.85)),
             const SizedBox(width: 10),
             Text(
               label,
               style: TextStyle(
-                color: AppColors.subText(context),
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+                color: AppColors.text(context),
+                fontSize: 14.5,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(width: 8),
