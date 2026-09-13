@@ -28,7 +28,7 @@ class CalendarEvent {
       id: (json['calendar_event_id'] ?? json['id']).toString(),
       farmId: json['farm_id']?.toString() ?? '',
       title: json['title']?.toString() ?? '',
-      eventDatetime: DateTime.parse(json['event_datetime']),
+      eventDatetime: DateTime.parse(json['event_datetime']).toLocal(),
       description: json['description']?.toString(),
       reminderSetting: json['reminder_setting']?.toString(),
       cowId: json['cow_id']?.toString(),

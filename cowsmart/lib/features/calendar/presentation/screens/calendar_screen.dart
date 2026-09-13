@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart' hide TextDirection;
+import 'package:go_router/go_router.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
 import 'package:cowsmart/core/widgets/cow_icon.dart';
 import 'package:cowsmart/core/utils/date_formatter.dart';
@@ -9,7 +10,6 @@ import 'package:cowsmart/core/utils/app_toast.dart';
 import 'package:cowsmart/features/calendar/domain/calendar_event.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
-import '../../domain/calendar_event.dart';
 import '../../providers/calendar_provider.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
@@ -49,6 +49,38 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                const Icon(Icons.history_rounded, size: 26),
+                if (calState.pastEvents.isNotEmpty)
+                  Positioned(
+                    top: -2,
+                    right: -4,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                      decoration: BoxDecoration(
+                        color: AppColors.secondary,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                      child: Text(
+                        '${calState.pastEvents.length}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            onPressed: () => context.push('/calendar_history'),
+            tooltip: 'ประวัติกิจกรรมย้อนหลัง',
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
@@ -252,21 +284,45 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   Widget _buildEventList(List<CalendarEvent> events) {
     if (events.isEmpty) {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final isPastDay = DateTime(_selectedDay.year, _selectedDay.month, _selectedDay.day).isBefore(today);
+
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.event_available, size: 56, color: AppColors.textHint),
+            Icon(
+              isPastDay ? Icons.history_toggle_off_rounded : Icons.event_available,
+              size: 56,
+              color: AppColors.textHint,
+            ),
             const SizedBox(height: 12),
-            const Text(
-              'ไม่มีกิจกรรมในหมวดนี้สำหรับวันนี้',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 16, fontWeight: FontWeight.w500),
+            Text(
+              isPastDay
+                  ? 'วันที่เลือกเป็นวันที่ผ่านมาแล้ว'
+                  : 'ไม่มีกิจกรรมในหมวดนี้สำหรับวันนี้',
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 16, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 6),
             Text(
               AppDateUtils.formatThaiDate(_selectedDay, useFullMonth: true),
               style: const TextStyle(color: AppColors.textHint, fontSize: 14),
             ),
+            if (isPastDay) ...[
+              const SizedBox(height: 14),
+              OutlinedButton.icon(
+                onPressed: () => context.push('/calendar_history'),
+                icon: const Icon(Icons.history_rounded, size: 18),
+                label: const Text('ดูประวัติกิจกรรมย้อนหลัง'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  side: const BorderSide(color: AppColors.primary),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ],
           ],
         ),
       );
@@ -303,8 +359,17 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   void _showEventDialog(BuildContext context, CalendarEvent? existing) {
     final farmId = ref.read(farmProvider).currentFarm?.id ?? '';
     final cows = ref.read(cowProvider).allCows;
-    final titleCtrl = TextEditingController(text: existing?.title ?? '');
-    final descCtrl = TextEditingController(text: existing?.description ?? '');
+
+    // Clean initial title and description for editing
+    String initTitle = existing?.title ?? '';
+    String initDesc = existing?.description ?? '';
+    if (existing != null && existing.isGrouped) {
+      // Remove trailing ' (X ตัว)'
+      initDesc = initDesc.replaceAll(RegExp(r'\s*\(\d+\s*ตัว\)$'), '');
+    }
+
+    final titleCtrl = TextEditingController(text: initTitle);
+    final descCtrl = TextEditingController(text: initDesc);
     DateTime selectedDate = existing?.eventDatetime ?? _selectedDay;
     TimeOfDay selectedTime = existing != null
         ? TimeOfDay.fromDateTime(existing.eventDatetime)
@@ -471,7 +536,39 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        if (cows.isNotEmpty)
+                        if (existing != null && existing.isGrouped)
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.surf(context),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.brd(context)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.groups_rounded, color: AppColors.primary, size: 22),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'นัดหมายแบบกลุ่ม (${existing.cowCount ?? 0} ตัว)',
+                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.text(context)),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'การแก้ไขจะมีผลกับวัวทุกตัวในกลุ่มนี้',
+                                        style: TextStyle(fontSize: 12, color: AppColors.subText(context)),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        else if (cows.isNotEmpty)
                           DropdownButtonFormField<String>(
                             value: selectedCowId,
                             isExpanded: true,
@@ -585,7 +682,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                     if (ok) {
                                       AppFeedback.showSuccess(context, 'บันทึกกิจกรรมและการแจ้งเตือนแล้ว');
                                     } else {
-                                      AppFeedback.showError(context, 'เกิดข้อผิดพลาดในการบันทึก');
+                                      final err = ref.read(calendarProvider).errorMessage;
+                                      AppFeedback.showError(
+                                        context,
+                                        err != null && err.isNotEmpty
+                                            ? 'บันทึกไม่สำเร็จ: $err'
+                                            : 'เกิดข้อผิดพลาดในการบันทึก',
+                                      );
                                     }
                                   }
                                 },
@@ -997,7 +1100,21 @@ class _EventCard extends ConsumerWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ],
-            if (event.cowId != null && event.cowId!.isNotEmpty) ...[
+            if (event.isGrouped && event.cowCount != null) ...[
+              const SizedBox(height: 4),
+              Row(children: [
+                const Icon(Icons.groups_rounded, size: 15, color: AppColors.textHint),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    'วัวในกลุ่ม: ${event.cowCount} ตัว',
+                    style: const TextStyle(fontSize: 13, color: AppColors.textHint, fontWeight: FontWeight.w500),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ]),
+            ] else if (event.cowId != null && event.cowId!.isNotEmpty) ...[
               const SizedBox(height: 4),
               Builder(builder: (context) {
                 final allCows = ref.watch(cowProvider).allCows;

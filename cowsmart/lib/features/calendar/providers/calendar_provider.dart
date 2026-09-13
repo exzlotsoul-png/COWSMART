@@ -19,9 +19,42 @@ class CalendarState {
     this.selectedCategory = 'all',
   });
 
+  /// Today at 00:00:00 for boundary comparison
+  static DateTime get _todayBoundary {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
+
+  /// All upcoming events (Today and Future)
+  List<CalendarEvent> get upcomingEvents {
+    final boundary = _todayBoundary;
+    return events.where((e) {
+      final eventDay = DateTime(e.eventDatetime.year, e.eventDatetime.month, e.eventDatetime.day);
+      return !eventDay.isBefore(boundary);
+    }).toList();
+  }
+
+  /// All past events (Before Today)
+  List<CalendarEvent> get pastEvents {
+    final boundary = _todayBoundary;
+    return events.where((e) {
+      final eventDay = DateTime(e.eventDatetime.year, e.eventDatetime.month, e.eventDatetime.day);
+      return eventDay.isBefore(boundary);
+    }).toList();
+  }
+
+  /// Filtered upcoming events according to category
   List<CalendarEvent> get filteredEvents {
-    if (selectedCategory == 'all') return events;
-    return events.where((e) => e.eventType == selectedCategory).toList();
+    final list = upcomingEvents;
+    if (selectedCategory == 'all') return list;
+    return list.where((e) => e.eventType == selectedCategory).toList();
+  }
+
+  /// Filtered past events according to category
+  List<CalendarEvent> get filteredPastEvents {
+    final list = pastEvents;
+    if (selectedCategory == 'all') return list;
+    return list.where((e) => e.eventType == selectedCategory).toList();
   }
 
   Map<DateTime, List<CalendarEvent>> get eventsByDay {

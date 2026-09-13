@@ -92,24 +92,6 @@ class NotificationNotifier extends Notifier<NotificationState> {
     final updated = state.notifications.where((n) => !n.isRead).toList();
     state = state.copyWith(notifications: updated);
   }
-
-  Future<bool> createTestNotification() async {
-    try {
-      await _api.post(
-        '/notifications',
-        data: {
-          'title': 'ทดสอบการแจ้งเตือน',
-          'message': 'ระบบแจ้งเตือนทำงานปกติ ✓',
-          'notify_datetime': DateTime.now().toIso8601String(),
-          'is_read': 0,
-        },
-      );
-      await fetchNotifications();
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
 }
 
 final notificationProvider =

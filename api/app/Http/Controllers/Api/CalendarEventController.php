@@ -82,7 +82,7 @@ class CalendarEventController extends Controller
 
                 if (empty($cowNames)) continue;
 
-                $dt = Carbon::parse($firstAppt->appoint_datetime)->toIso8601String();
+                $dt = Carbon::parse($firstAppt->appoint_datetime)->timezone('Asia/Bangkok')->toIso8601String();
                 $calEventId = 'HAG-' . $groupId;
 
                 $cowCount = count($cowNames);
@@ -92,12 +92,25 @@ class CalendarEventController extends Controller
                     $cowDisplay = implode(', ', array_slice($cowNames, 0, 3)) . ' +' . ($cowCount - 3) . ' ตัว';
                 }
 
+                // Clean description: remove trailing ' (X ตัว)' if already present
+                $rawDesc = $firstAppt->description ?: 'นัดหมายตรวจสุขภาพ / ฉีดวัคซีน / ถ่ายพยาธิ';
+                $cleanDesc = preg_replace('/\s*\(\d+\s*ตัว\)$/u', '', $rawDesc);
+
+                // Derive title from description if formatted as [Type] Title
+                $eventTitle = 'นัดหมายสุขภาพ: ' . $cowDisplay;
+                if (preg_match('/^\[(.*?)\]\s*(.*)$/u', $cleanDesc, $matches)) {
+                    $extractedTitle = trim($matches[2]);
+                    if (!empty($extractedTitle)) {
+                        $eventTitle = $extractedTitle;
+                    }
+                }
+
                 $healthEvents[] = [
                     'calendar_event_id' => $calEventId,
                     'farm_id' => $farmId,
-                    'title' => 'นัดหมายสุขภาพ: ' . $cowDisplay,
+                    'title' => $eventTitle,
                     'event_datetime' => $dt,
-                    'description' => ($firstAppt->description ?: 'นัดหมายตรวจสุขภาพ / ฉีดวัคซีน / ถ่ายพยาธิ') . ' (' . $cowCount . ' ตัว)',
+                    'description' => $cleanDesc . ' (' . $cowCount . ' ตัว)',
                     'reminder_setting' => $firstAppt->reminder_setting ?: 'ก่อน 1 วัน',
                     'cow_id' => null,
                     'event_type' => 'health',
@@ -113,7 +126,7 @@ class CalendarEventController extends Controller
                 if (!$cow) continue;
 
                 $cowName = $cow->name ?: ($cow->tag_number ?: $cow->cow_id);
-                $dt = Carbon::parse($appt->appoint_datetime)->toIso8601String();
+                $dt = Carbon::parse($appt->appoint_datetime)->timezone('Asia/Bangkok')->toIso8601String();
                 $calEventId = str_starts_with($appt->health_appointment_id, 'HA-')
                     ? $appt->health_appointment_id
                     : 'HA-' . $appt->health_appointment_id;
@@ -221,12 +234,27 @@ class CalendarEventController extends Controller
                 $cowCount = count($cowNames);
                 $cowDisplay = $cowCount <= 3 ? implode(', ', $cowNames) : implode(', ', array_slice($cowNames, 0, 3)) . ' +' . ($cowCount - 3) . ' ตัว';
 
+                $farmId = $cows->isNotEmpty() ? ($cows->first()->farm_id ?? '') : '';
+
+                // Clean description
+                $rawDesc = $firstAppt->description ?: 'นัดหมายตรวจสุขภาพ / ฉีดวัคซีน / ถ่ายพยาธิ';
+                $cleanDesc = preg_replace('/\s*\(\d+\s*ตัว\)$/u', '', $rawDesc);
+
+                // Derive title from description if formatted as [Type] Title
+                $eventTitle = 'นัดหมายสุขภาพ: ' . $cowDisplay;
+                if (preg_match('/^\[(.*?)\]\s*(.*)$/u', $cleanDesc, $matches)) {
+                    $extractedTitle = trim($matches[2]);
+                    if (!empty($extractedTitle)) {
+                        $eventTitle = $extractedTitle;
+                    }
+                }
+
                 return response()->json([
                     'calendar_event_id' => $id,
-                    'farm_id' => $firstAppt->farm_id,
-                    'title' => 'นัดหมายสุขภาพ: ' . $cowDisplay,
-                    'event_datetime' => Carbon::parse($firstAppt->appoint_datetime)->toIso8601String(),
-                    'description' => ($firstAppt->description ?: 'นัดหมายตรวจสุขภาพ / ฉีดวัคซีน / ถ่ายพยาธิ') . ' (' . $cowCount . ' ตัว)',
+                    'farm_id' => $farmId,
+                    'title' => $eventTitle,
+                    'event_datetime' => Carbon::parse($firstAppt->appoint_datetime)->timezone('Asia/Bangkok')->toIso8601String(),
+                    'description' => $cleanDesc . ' (' . $cowCount . ' ตัว)',
                     'reminder_setting' => $firstAppt->reminder_setting ?: 'ก่อน 1 วัน',
                     'cow_id' => null,
                     'event_type' => 'health',
@@ -241,14 +269,25 @@ class CalendarEventController extends Controller
             $realId = preg_replace('/^(HA-)+/', '', $id);
             $appt = HealthAppointment::find($realId) ?? HealthAppointment::find('HA-' . $realId);
             if ($appt) {
-                $cow = Cow::find($appt->cow_id);
+                $cow = Cow::find($appt->cow_id) ?? Cow::where('cow_id', $appt->cow_id)->orWhere('tag_number', $appt->cow_id)->first();
                 $cowName = $cow ? ($cow->name ?: ($cow->tag_number ?: $cow->cow_id)) : $appt->cow_id;
+                $farmId = $cow ? ($cow->farm_id ?? '') : '';
+
+                $rawDesc = $appt->description ?: 'นัดหมายตรวจสุขภาพ / ฉีดวัคซีน / ถ่ายพยาธิ';
+                $eventTitle = 'นัดหมายสุขภาพ: ' . $cowName;
+                if (preg_match('/^\[(.*?)\]\s*(.*)$/u', $rawDesc, $matches)) {
+                    $extractedTitle = trim($matches[2]);
+                    if (!empty($extractedTitle)) {
+                        $eventTitle = $extractedTitle;
+                    }
+                }
+
                 return response()->json([
                     'calendar_event_id' => str_starts_with($appt->health_appointment_id, 'HA-') ? $appt->health_appointment_id : 'HA-' . $appt->health_appointment_id,
-                    'farm_id' => $appt->farm_id,
-                    'title' => 'นัดหมายสุขภาพ: ' . $cowName,
-                    'event_datetime' => Carbon::parse($appt->appoint_datetime)->toIso8601String(),
-                    'description' => $appt->description ?: 'นัดหมายตรวจสุขภาพ / ฉีดวัคซีน / ถ่ายพยาธิ',
+                    'farm_id' => $farmId,
+                    'title' => $eventTitle,
+                    'event_datetime' => Carbon::parse($appt->appoint_datetime)->timezone('Asia/Bangkok')->toIso8601String(),
+                    'description' => $rawDesc,
                     'reminder_setting' => $appt->reminder_setting ?: 'ก่อน 1 วัน',
                     'cow_id' => $appt->cow_id,
                     'event_type' => 'health',
@@ -290,10 +329,17 @@ class CalendarEventController extends Controller
             $groupId = substr($id, 4);
             $appts = HealthAppointment::where('group_id', $groupId)->get();
             if ($appts->isNotEmpty()) {
+                $rawDesc = $request->get('description');
+                if ($rawDesc === null) {
+                    $rawDesc = $request->get('title', $appts[0]->description);
+                }
+                // Strip trailing count if passed back
+                $cleanDesc = preg_replace('/\s*\(\d+\s*ตัว\)$/u', '', $rawDesc);
+
                 foreach ($appts as $appt) {
                     $appt->update([
                         'appoint_datetime' => $request->get('event_datetime', $appt->appoint_datetime),
-                        'description' => $request->get('description', $appt->description),
+                        'description' => $cleanDesc,
                         'reminder_setting' => $request->get('reminder_setting', $appt->reminder_setting),
                     ]);
                     HealthAppointmentController::syncNotificationForHealthAppt($appt);

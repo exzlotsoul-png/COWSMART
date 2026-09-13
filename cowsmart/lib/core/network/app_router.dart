@@ -31,6 +31,7 @@ import '../../features/finance/presentation/screens/finance_overview_screen.dart
 import '../../features/market/presentation/screens/market_price_screen.dart';
 import '../../features/notifications/presentation/screens/notification_screen.dart';
 import '../../features/calendar/presentation/screens/calendar_screen.dart';
+import '../../features/calendar/presentation/screens/calendar_history_screen.dart';
 import '../../features/chat/presentation/screens/ai_vet_chat_screen.dart';
 import '../../features/cow/domain/cow.dart';
 import '../../features/farm/domain/zone.dart';
@@ -209,6 +210,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/calendar',
         builder: (context, state) => const CalendarScreen(),
+      ),
+      GoRoute(
+        path: '/calendar_history',
+        builder: (context, state) => const CalendarHistoryScreen(),
       ),
       GoRoute(
         path: '/culling_history',

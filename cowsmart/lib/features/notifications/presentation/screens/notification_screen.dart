@@ -629,29 +629,6 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
             'การแจ้งเตือนใหม่จะแสดงที่นี่',
             style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
           ),
-          const SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: () async {
-              final ok = await ref
-                  .read(notificationProvider.notifier)
-                  .createTestNotification();
-              if (mounted) {
-                if (ok) {
-                  AppFeedback.showSuccess(context, 'สร้างการแจ้งเตือนทดสอบแล้ว');
-                } else {
-                  AppFeedback.showError(context, 'เกิดข้อผิดพลาด');
-                }
-              }
-            },
-            icon: const Icon(Icons.science_outlined, size: 20),
-            label: const Text('ทดสอบการแจ้งเตือน', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-            ),
-          ),
         ],
       ),
     );
