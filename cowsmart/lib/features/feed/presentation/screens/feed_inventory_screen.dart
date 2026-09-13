@@ -696,6 +696,15 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                 ),
                 const SizedBox(width: 4),
                 IconButton(
+                  icon: const Icon(Icons.edit_outlined, color: AppColors.primary, size: 20),
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () => _showFeedDialog(context, initialItem: item),
+                  tooltip: 'แก้ไขรายการ',
+                ),
+                const SizedBox(width: 8),
+                IconButton(
                   icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error, size: 20),
                   visualDensity: VisualDensity.compact,
                   padding: EdgeInsets.zero,
@@ -1152,19 +1161,38 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
   }
 
   void _showAddFeedDialog(BuildContext context) {
-    final nameController = TextEditingController();
-    final quantityController = TextEditingController();
-    final costController = TextEditingController();
-    final noteController = TextEditingController();
+    _showFeedDialog(context);
+  }
 
-    String selectedCategory = 'grass';
-    String targetType = 'zone'; // 'zone' หรือ 'cow'
-    String? selectedZoneId;
-    final Set<String> selectedCowIds = {};
+  void _showFeedDialog(BuildContext context, {FeedItem? initialItem}) {
+    final isEdit = initialItem != null;
+    final nameController = TextEditingController(text: initialItem?.name ?? '');
+    final quantityController = TextEditingController(
+      text: initialItem != null ? initialItem.quantity.toString() : '',
+    );
+    final costController = TextEditingController(
+      text: initialItem != null ? initialItem.cost.toString() : '',
+    );
+    final noteController = TextEditingController(text: initialItem?.notes ?? '');
+
+    String selectedCategory = initialItem?.category.id ?? 'grass';
+    if (!['grass', 'concentrate', 'supplement'].contains(selectedCategory)) {
+      selectedCategory = 'grass';
+    }
+
+    String targetType = (initialItem?.cowIds != null && initialItem!.cowIds!.isNotEmpty)
+        ? 'cow'
+        : 'zone';
+
+    String? selectedZoneId = initialItem?.zoneId;
+    final Set<String> selectedCowIds = initialItem?.cowIds != null
+        ? Set<String>.from(initialItem!.cowIds!)
+        : {};
+
     String? nameError;
     String? qtyError;
     String? cowSelectionError;
-    DateTime selectedDate = DateTime.now();
+    DateTime selectedDate = initialItem?.recordedAt ?? DateTime.now();
 
     final zones = ref.read(zoneProvider).zones;
     final cows = ref.read(cowProvider).allCows;
@@ -1206,7 +1234,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'บันทึกการให้อาหาร',
+                  isEdit ? 'แก้ไขการให้อาหาร' : 'บันทึกการให้อาหาร',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -1600,7 +1628,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                       final category = FeedCategory.fromString(selectedCategory);
 
                       final item = FeedItem(
-                        id: '',
+                        id: isEdit ? initialItem.id : '',
                         farmId: currentFarm.id,
                         zoneId: targetType == 'zone' ? selectedZoneId : null,
                         cowIds: targetType == 'cow' ? selectedCowIds.toList() : null,
@@ -1613,9 +1641,16 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                       );
 
                       Navigator.pop(ctx);
-                      await ref.read(feedProvider.notifier).addFeed(item);
-                      if (context.mounted) {
-                        AppFeedback.showSuccess(context, 'บันทึกรายการอาหารเรียบร้อยแล้ว');
+                      if (isEdit) {
+                        await ref.read(feedProvider.notifier).updateFeed(item);
+                        if (context.mounted) {
+                          AppFeedback.showSuccess(context, 'แก้ไขรายการอาหารเรียบร้อยแล้ว');
+                        }
+                      } else {
+                        await ref.read(feedProvider.notifier).addFeed(item);
+                        if (context.mounted) {
+                          AppFeedback.showSuccess(context, 'บันทึกรายการอาหารเรียบร้อยแล้ว');
+                        }
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -1623,9 +1658,9 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
-                    child: const Text(
-                      'บันทึกข้อมูล',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    child: Text(
+                      isEdit ? 'บันทึกการแก้ไข' : 'บันทึกข้อมูล',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
