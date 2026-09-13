@@ -577,8 +577,6 @@ class _CostTabState extends ConsumerState<CostTab> {
     final disease = h['disease_name'];
     final medicine = h['medicine_name'];
     final vaccine = h['vaccine_name'];
-    final note = h['note'];
-    final adminName = h['admin_name'];
     final List parsedItems = (h['parsed_items'] as List?) ?? [];
 
     final checkupTypeId = h['checkup_type_id']?.toString() ?? 'CT02';
@@ -824,51 +822,6 @@ class _CostTabState extends ConsumerState<CostTab> {
                     ],
                   ],
                 ),
-              ),
-            ],
-
-            // Note
-            if (note != null && note.toString().isNotEmpty) ...[
-              const SizedBox(height: 10),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.notes, size: 16, color: AppColors.subText(context)),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      note.toString(),
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.text(context),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-
-            // Admin Name
-            if (adminName != null && adminName.toString().isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(
-                    Icons.person_outline,
-                    size: 16,
-                    color: AppColors.subText(context),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'ผู้ดำเนินการ: $adminName',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.text(context),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
               ),
             ],
           ],

@@ -49,9 +49,6 @@ class CowCostController extends Controller
                     'health_records.cost',
                     'health_records.checkup_type_id',
                     'health_records.items_json',
-                    'health_records.note',
-                    'health_records.admin_name',
-                    'health_records.images',
                     Schema::hasTable('diseases') ? 'diseases.name as disease_name' : DB::raw('NULL as disease_name'),
                     Schema::hasTable('medicines') ? 'medicines.name as medicine_name' : DB::raw('NULL as medicine_name'),
                     Schema::hasTable('vaccines') ? 'vaccines.name as vaccine_name' : DB::raw('NULL as vaccine_name')
