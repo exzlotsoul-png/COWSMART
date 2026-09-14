@@ -1502,7 +1502,7 @@ class _HealthTabState extends ConsumerState<HealthTab> {
         case 'CT04':
           return const Color(0xFFD97706); // ส้มอำพัน (ถ่ายพยาธิ)
         default:
-          return const Color(0xFF16A34A); // เขียว (ตรวจสุขภาพทั่วไป)
+          return AppColors.primary; // เขียวหลักของแอป (ตรวจสุขภาพทั่วไป)
       }
     }
 
@@ -1523,12 +1523,12 @@ class _HealthTabState extends ConsumerState<HealthTab> {
     final typeName = typeLabels[record.checkupTypeId] ?? 'บันทึกสุขภาพ';
 
     String? statusText;
-    Color statusBgColor = const Color(0xFF16A34A);
+    Color statusBgColor = AppColors.primary;
     // Only display status tag for General Checkup (CT01)
     if (record.checkupTypeId == 'CT01') {
       if (record.status == 'normal') {
         statusText = 'ปกติ';
-        statusBgColor = const Color(0xFF16A34A);
+        statusBgColor = AppColors.primary;
       } else if (record.status == 'sick') {
         statusText = 'ป่วย';
         statusBgColor = const Color(0xFFDC2626);
