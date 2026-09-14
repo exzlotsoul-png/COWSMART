@@ -1552,7 +1552,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                         });
                                       },
                                       decoration: InputDecoration(
-                                        hintText: 'ค้นหาชื่อ หรือ เบอร์หู...',
+                                        hintText: 'ค้นหาชื่อ หรือ เบอร์วัว...',
                                         hintStyle: const TextStyle(
                                           fontSize: 13,
                                           color: AppColors.textHint,
@@ -1624,7 +1624,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                                     ),
                                                   ),
                                                   subtitle: Text(
-                                                    'แท็ก: ${cow.tagNumber} · ${cow.type.label}',
+                                                    'เบอร์วัว: ${cow.tagNumber} · ${cow.type.label}',
                                                     style: const TextStyle(
                                                       fontSize: 12,
                                                     ),

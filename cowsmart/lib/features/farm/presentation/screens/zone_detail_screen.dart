@@ -195,6 +195,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
     final allZonesMap = {for (final z in ref.read(zoneProvider).zones) z.id: z.name};
     final selectedCows = <Cow>{};
     bool showOnlyUnassigned = false;
+    String searchQuery = '';
 
     showModalBottomSheet(
       context: context,
@@ -204,9 +205,14 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
         return StatefulBuilder(
           builder: (context, setModalState) {
             final isCowUnassigned = (Cow c) => c.zoneId.isEmpty || c.zoneId == 'null' || c.zoneId == '0';
-            final filteredCows = showOnlyUnassigned
-                ? allCowsInFarm.where((c) => isCowUnassigned(c)).toList()
-                : allCowsInFarm;
+            final filteredCows = allCowsInFarm.where((c) {
+              if (showOnlyUnassigned && !isCowUnassigned(c)) return false;
+              if (searchQuery.isNotEmpty) {
+                final q = searchQuery.toLowerCase();
+                return c.name.toLowerCase().contains(q) || c.tagNumber.toLowerCase().contains(q);
+              }
+              return true;
+            }).toList();
 
             final unassignedCount = allCowsInFarm.where((c) => isCowUnassigned(c)).length;
 
@@ -272,9 +278,42 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                     ),
                   ),
 
+                  // Search Field
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                    child: TextField(
+                      style: TextStyle(fontSize: 15, color: AppColors.text(context)),
+                      decoration: InputDecoration(
+                        hintText: 'ค้นหาด้วยชื่อ หรือเบอร์วัว...',
+                        hintStyle: TextStyle(fontSize: 14, color: AppColors.hint(context)),
+                        prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary, size: 20),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        filled: true,
+                        fillColor: AppColors.surfAlt(context),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: AppColors.brd(context)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: AppColors.brd(context)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                        ),
+                      ),
+                      onChanged: (val) {
+                        setModalState(() {
+                          searchQuery = val.trim();
+                        });
+                      },
+                    ),
+                  ),
+
                   // Filter Chips (ทั้งหมด / ยังไม่มีโซน)
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                     child: Row(
                       children: [
                         FilterChip(
@@ -592,7 +631,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                                                 const SizedBox(width: 6),
                                                 Expanded(
                                                   child: Text(
-                                                    'แท็ก: ${cow.tagNumber} · ${cow.type.label}',
+                                                    'เบอร์วัว: ${cow.tagNumber} · ${cow.type.label}',
                                                     style: TextStyle(
                                                       color: AppColors.subText(context),
                                                       fontSize: 13,
@@ -1057,7 +1096,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                             ? Colors.blue[700]
                             : Colors.pink[600],
                       ),
-                      _buildInfoChip(context, 'แท็ก: ${cow.tagNumber}'),
+                      _buildInfoChip(context, 'เบอร์วัว: ${cow.tagNumber}'),
                       _buildInfoChip(context, cow.type.label),
                       _buildInfoChip(context, cow.breed),
                     ],

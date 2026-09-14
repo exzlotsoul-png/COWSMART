@@ -108,7 +108,7 @@ class BasicInfoTab extends ConsumerWidget {
               _buildModernInfoTile(
                 context,
                 icon: Icons.tag_rounded,
-                label: 'หมายเลขประจำตัว',
+                label: 'เบอร์วัว',
                 value: cow.tagNumber,
                 isHighlightValue: true,
               ),

@@ -583,30 +583,23 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                         ),
                                         child: Column(
                                           children: [
-                                            Center(
-                                              child: Container(
-                                                margin: const EdgeInsets.only(top: 12, bottom: 8),
-                                                width: 40,
-                                                height: 4,
-                                                decoration: BoxDecoration(
-                                                  color: AppColors.border,
-                                                  borderRadius: BorderRadius.circular(2),
-                                                ),
+                                            // Handle bar
+                                            Container(
+                                              margin: const EdgeInsets.only(top: 12),
+                                              width: 40,
+                                              height: 4,
+                                              decoration: BoxDecoration(
+                                                color: AppColors.brd(sheetCtx),
+                                                borderRadius: BorderRadius.circular(2),
                                               ),
                                             ),
+
+                                            // Header
                                             Padding(
-                                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                                              padding: const EdgeInsets.fromLTRB(20, 16, 12, 0),
                                               child: Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                 children: [
-                                                  Container(
-                                                    padding: const EdgeInsets.all(8),
-                                                    decoration: BoxDecoration(
-                                                      color: AppColors.primary.withValues(alpha: 0.1),
-                                                      borderRadius: BorderRadius.circular(10),
-                                                    ),
-                                                    child: const Icon(Icons.groups_rounded, color: AppColors.primary, size: 22),
-                                                  ),
-                                                  const SizedBox(width: 12),
                                                   Expanded(
                                                     child: Column(
                                                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -614,222 +607,376 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                                         Text(
                                                           'เลือกวัวในกลุ่มนัดหมาย',
                                                           style: TextStyle(
-                                                            fontSize: 17,
+                                                            fontSize: 20,
                                                             fontWeight: FontWeight.bold,
                                                             color: AppColors.text(sheetCtx),
                                                           ),
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow.ellipsis,
                                                         ),
+                                                        const SizedBox(height: 2),
                                                         Text(
-                                                          'เลือกแล้ว ${groupCowIds.length} ตัว',
+                                                          'เลือกวัวที่ต้องการเพิ่มในกลุ่มนัดหมาย',
                                                           style: TextStyle(
-                                                            fontSize: 13,
-                                                            color: AppColors.primary,
-                                                            fontWeight: FontWeight.w600,
+                                                            fontSize: 14,
+                                                            color: AppColors.subText(sheetCtx),
                                                           ),
                                                         ),
                                                       ],
                                                     ),
                                                   ),
                                                   IconButton(
-                                                    icon: const Icon(Icons.close, size: 20),
                                                     onPressed: () => Navigator.pop(sheetCtx, groupCowIds),
+                                                    icon: Icon(Icons.close_rounded,
+                                                        color: AppColors.subText(sheetCtx), size: 24),
                                                   ),
                                                 ],
                                               ),
                                             ),
-                                            Divider(height: 1, color: AppColors.div(sheetCtx)),
+
+                                            // Search Field
                                             Padding(
-                                              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                                              child: Column(
+                                              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                                              child: TextField(
+                                                style: TextStyle(fontSize: 15, color: AppColors.text(sheetCtx)),
+                                                decoration: InputDecoration(
+                                                  hintText: 'ค้นหาด้วยชื่อ หรือเบอร์วัว...',
+                                                  hintStyle: TextStyle(fontSize: 14, color: AppColors.hint(sheetCtx)),
+                                                  prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary, size: 20),
+                                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                                  filled: true,
+                                                  fillColor: AppColors.surfAlt(sheetCtx),
+                                                  border: OutlineInputBorder(
+                                                    borderRadius: BorderRadius.circular(12),
+                                                    borderSide: BorderSide(color: AppColors.brd(sheetCtx)),
+                                                  ),
+                                                  enabledBorder: OutlineInputBorder(
+                                                    borderRadius: BorderRadius.circular(12),
+                                                    borderSide: BorderSide(color: AppColors.brd(sheetCtx)),
+                                                  ),
+                                                  focusedBorder: OutlineInputBorder(
+                                                    borderRadius: BorderRadius.circular(12),
+                                                    borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                                                  ),
+                                                ),
+                                                onChanged: (val) {
+                                                  setSheetState(() {
+                                                    groupCowSearch = val.trim();
+                                                  });
+                                                },
+                                              ),
+                                            ),
+
+                                            // Selection Controls Row
+                                            Padding(
+                                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                              child: Row(
                                                 children: [
-                                                  TextField(
-                                                    style: TextStyle(fontSize: 15, color: AppColors.text(sheetCtx)),
-                                                    decoration: InputDecoration(
-                                                      hintText: 'ค้นหาด้วยชื่อ หรือเบอร์หู...',
-                                                      hintStyle: TextStyle(fontSize: 14, color: AppColors.hint(sheetCtx)),
-                                                      prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary, size: 20),
-                                                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                                      border: OutlineInputBorder(
-                                                        borderRadius: BorderRadius.circular(12),
-                                                        borderSide: BorderSide(color: AppColors.brd(sheetCtx)),
-                                                      ),
-                                                      enabledBorder: OutlineInputBorder(
-                                                        borderRadius: BorderRadius.circular(12),
-                                                        borderSide: BorderSide(color: AppColors.brd(sheetCtx)),
-                                                      ),
-                                                      focusedBorder: OutlineInputBorder(
-                                                        borderRadius: BorderRadius.circular(12),
-                                                        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-                                                      ),
-                                                    ),
-                                                    onChanged: (val) {
+                                                  TextButton.icon(
+                                                    onPressed: () {
                                                       setSheetState(() {
-                                                        groupCowSearch = val.trim();
+                                                        if (isAllSelected) {
+                                                          for (final c in filteredCows) {
+                                                            groupCowIds.remove(c.id);
+                                                          }
+                                                        } else {
+                                                          for (final c in filteredCows) {
+                                                            if (!groupCowIds.contains(c.id)) {
+                                                              groupCowIds.add(c.id);
+                                                            }
+                                                          }
+                                                        }
                                                       });
                                                     },
+                                                    icon: Icon(
+                                                      isAllSelected
+                                                          ? Icons.check_box_rounded
+                                                          : Icons.check_box_outline_blank_rounded,
+                                                      color: AppColors.primary,
+                                                      size: 24,
+                                                    ),
+                                                    label: Text(
+                                                      isAllSelected ? 'ยกเลิกทั้งหมด' : 'เลือกทั้งหมด',
+                                                      style: const TextStyle(
+                                                        color: AppColors.primary,
+                                                        fontWeight: FontWeight.w600,
+                                                        fontSize: 15,
+                                                      ),
+                                                    ),
                                                   ),
-                                                  const SizedBox(height: 8),
-                                                  Row(
-                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                    children: [
-                                                      Text(
-                                                        'พบ ${filteredCows.length} ตัว',
-                                                        style: TextStyle(fontSize: 13, color: AppColors.subText(sheetCtx)),
+                                                  const Spacer(),
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                                                    decoration: BoxDecoration(
+                                                      color: AppColors.primary.withValues(alpha: 0.1),
+                                                      borderRadius: BorderRadius.circular(10),
+                                                    ),
+                                                    child: Text(
+                                                      '${groupCowIds.length}/${filteredCows.length} ตัว',
+                                                      style: const TextStyle(
+                                                        color: AppColors.primary,
+                                                        fontWeight: FontWeight.bold,
+                                                        fontSize: 14,
                                                       ),
-                                                      TextButton.icon(
-                                                        onPressed: () {
-                                                          setSheetState(() {
-                                                            if (isAllSelected) {
-                                                              for (final c in filteredCows) {
-                                                                groupCowIds.remove(c.id);
-                                                              }
-                                                            } else {
-                                                              for (final c in filteredCows) {
-                                                                if (!groupCowIds.contains(c.id)) {
-                                                                  groupCowIds.add(c.id);
-                                                                }
-                                                              }
-                                                            }
-                                                          });
-                                                        },
-                                                        icon: Icon(
-                                                          isAllSelected ? Icons.deselect : Icons.select_all,
-                                                          size: 18,
-                                                          color: AppColors.primary,
-                                                        ),
-                                                        label: Text(
-                                                          isAllSelected ? 'ยกเลิกทั้งหมด' : 'เลือกทั้งหมด',
-                                                          style: const TextStyle(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.bold),
-                                                        ),
-                                                      ),
-                                                    ],
+                                                    ),
                                                   ),
                                                 ],
                                               ),
                                             ),
+
                                             Divider(height: 1, color: AppColors.div(sheetCtx)),
+
+                                            // Cow List
                                             Expanded(
                                               child: filteredCows.isEmpty
                                                   ? Center(
-                                                      child: Text(
-                                                        'ไม่พบวัวที่ค้นหา',
-                                                        style: TextStyle(color: AppColors.subText(sheetCtx)),
+                                                      child: Column(
+                                                        mainAxisAlignment: MainAxisAlignment.center,
+                                                        children: [
+                                                          CowIcon(size: 48, color: Colors.grey[400]),
+                                                          const SizedBox(height: 8),
+                                                          Text(
+                                                            'ไม่พบวัวที่ค้นหา',
+                                                            style: TextStyle(color: AppColors.subText(sheetCtx), fontSize: 15),
+                                                          ),
+                                                        ],
                                                       ),
                                                     )
                                                   : ListView.separated(
-                                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                                      padding: const EdgeInsets.symmetric(vertical: 8),
                                                       itemCount: filteredCows.length,
-                                                      separatorBuilder: (_, __) => const SizedBox(height: 6),
+                                                      separatorBuilder: (_, __) => Divider(
+                                                        height: 1,
+                                                        indent: 76,
+                                                        color: AppColors.div(sheetCtx),
+                                                      ),
                                                       itemBuilder: (cCtx, idx) {
                                                         final cow = filteredCows[idx];
-                                                        final isChecked = groupCowIds.contains(cow.id);
-                                                        return Material(
-                                                          color: isChecked
-                                                              ? AppColors.primary.withValues(alpha: 0.08)
-                                                              : AppColors.surf(sheetCtx),
-                                                          borderRadius: BorderRadius.circular(12),
-                                                          child: InkWell(
-                                                            borderRadius: BorderRadius.circular(12),
-                                                            onTap: () {
-                                                              setSheetState(() {
-                                                                if (isChecked) {
-                                                                  groupCowIds.remove(cow.id);
-                                                                } else {
-                                                                  groupCowIds.add(cow.id);
-                                                                }
-                                                              });
-                                                            },
-                                                            child: Padding(
-                                                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                                              child: Row(
-                                                                children: [
-                                                                  Checkbox(
-                                                                    value: isChecked,
-                                                                    activeColor: AppColors.primary,
-                                                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                                                                    onChanged: (val) {
-                                                                      setSheetState(() {
-                                                                        if (val == true) {
-                                                                          if (!groupCowIds.contains(cow.id)) groupCowIds.add(cow.id);
-                                                                        } else {
-                                                                          groupCowIds.remove(cow.id);
-                                                                        }
-                                                                      });
-                                                                    },
-                                                                  ),
-                                                                  ClipRRect(
+                                                        final isSelected = groupCowIds.contains(cow.id);
+
+                                                        Color statusColor;
+                                                        switch (cow.status) {
+                                                          case CowStatus.normal:
+                                                            statusColor = AppColors.success;
+                                                            break;
+                                                          case CowStatus.sick:
+                                                          case CowStatus.deceased:
+                                                            statusColor = AppColors.error;
+                                                            break;
+                                                          case CowStatus.injured:
+                                                            statusColor = const Color(0xFFD97706);
+                                                            break;
+                                                          case CowStatus.estrous:
+                                                            statusColor = const Color(0xFFEC4899);
+                                                            break;
+                                                          case CowStatus.pregnant:
+                                                            statusColor = const Color(0xFF9333EA);
+                                                            break;
+                                                          case CowStatus.recovering:
+                                                            statusColor = const Color(0xFF2563EB);
+                                                            break;
+                                                          case CowStatus.sold:
+                                                            statusColor = AppColors.textHint;
+                                                            break;
+                                                          case CowStatus.removed:
+                                                            statusColor = AppColors.warning;
+                                                            break;
+                                                        }
+
+                                                        return InkWell(
+                                                          onTap: () {
+                                                            setSheetState(() {
+                                                              if (isSelected) {
+                                                                groupCowIds.remove(cow.id);
+                                                              } else {
+                                                                groupCowIds.add(cow.id);
+                                                              }
+                                                            });
+                                                          },
+                                                          child: Padding(
+                                                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                                            child: Row(
+                                                              children: [
+                                                                // Custom Checkbox
+                                                                Container(
+                                                                  width: 26,
+                                                                  height: 26,
+                                                                  decoration: BoxDecoration(
+                                                                    color: isSelected ? AppColors.primary : Colors.transparent,
                                                                     borderRadius: BorderRadius.circular(8),
-                                                                    child: Container(
-                                                                      width: 40,
-                                                                      height: 40,
-                                                                      color: AppColors.surfAlt(sheetCtx),
-                                                                      child: (cow.imageFullUrl != null || cow.imageUrl != null)
-                                                                          ? Image.network(
-                                                                              cow.imageFullUrl ?? cow.imageUrl!,
-                                                                              width: 40,
-                                                                              height: 40,
-                                                                              fit: BoxFit.cover,
-                                                                              errorBuilder: (_, __, ___) => Center(
-                                                                                child: CowIcon(size: 20, color: AppColors.primary),
+                                                                    border: Border.all(
+                                                                      color: isSelected ? AppColors.primary : AppColors.brd(sheetCtx),
+                                                                      width: 2,
+                                                                    ),
+                                                                  ),
+                                                                  child: isSelected
+                                                                      ? const Icon(Icons.check_rounded, color: Colors.white, size: 18)
+                                                                      : null,
+                                                                ),
+                                                                const SizedBox(width: 14),
+
+                                                                // Avatar
+                                                                Container(
+                                                                  width: 48,
+                                                                  height: 48,
+                                                                  decoration: BoxDecoration(
+                                                                    color: AppColors.primary.withValues(alpha: 0.1),
+                                                                    borderRadius: BorderRadius.circular(12),
+                                                                  ),
+                                                                  child: (cow.imageFullUrl != null && cow.imageFullUrl!.isNotEmpty) ||
+                                                                          (cow.imageUrl != null && cow.imageUrl!.isNotEmpty)
+                                                                      ? ClipRRect(
+                                                                          borderRadius: BorderRadius.circular(12),
+                                                                          child: Image.network(
+                                                                            cow.imageFullUrl ?? cow.imageUrl!,
+                                                                            width: 48,
+                                                                            height: 48,
+                                                                            fit: BoxFit.cover,
+                                                                            errorBuilder: (_, __, ___) => const CowIcon(
+                                                                                color: AppColors.primary, size: 22),
+                                                                          ),
+                                                                        )
+                                                                      : const CowIcon(color: AppColors.primary, size: 22),
+                                                                ),
+                                                                const SizedBox(width: 14),
+
+                                                                // Info
+                                                                Expanded(
+                                                                  child: Column(
+                                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                                    children: [
+                                                                      Row(
+                                                                        children: [
+                                                                          Flexible(
+                                                                            child: Text(
+                                                                              cow.name.isNotEmpty ? cow.name : 'เบอร์วัว ${cow.tagNumber}',
+                                                                              style: TextStyle(
+                                                                                fontWeight: FontWeight.bold,
+                                                                                fontSize: 17,
+                                                                                color: AppColors.text(sheetCtx),
                                                                               ),
-                                                                            )
-                                                                          : Center(
-                                                                              child: CowIcon(size: 20, color: AppColors.primary),
+                                                                              maxLines: 1,
+                                                                              overflow: TextOverflow.ellipsis,
                                                                             ),
-                                                                    ),
-                                                                  ),
-                                                                  const SizedBox(width: 10),
-                                                                  Expanded(
-                                                                    child: Column(
-                                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                                      children: [
-                                                                        Text(
-                                                                          cow.name.isNotEmpty ? cow.name : 'เบอร์หู ${cow.tagNumber}',
-                                                                          style: TextStyle(
-                                                                            fontSize: 14.5,
-                                                                            fontWeight: FontWeight.bold,
-                                                                            color: AppColors.text(sheetCtx),
                                                                           ),
-                                                                        ),
-                                                                        Text(
-                                                                          'เบอร์หู: ${cow.tagNumber.isNotEmpty ? cow.tagNumber : '-'} | สายพันธุ์: ${cow.breed.isNotEmpty ? cow.breed : '-'}',
-                                                                          style: TextStyle(
-                                                                            fontSize: 12,
-                                                                            color: AppColors.subText(sheetCtx),
+                                                                          const SizedBox(width: 8),
+                                                                          Container(
+                                                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                                                            decoration: BoxDecoration(
+                                                                              color: statusColor.withValues(alpha: 0.12),
+                                                                              borderRadius: BorderRadius.circular(6),
+                                                                            ),
+                                                                            child: Text(
+                                                                              cow.status.label,
+                                                                              style: TextStyle(
+                                                                                color: statusColor,
+                                                                                fontSize: 11,
+                                                                                fontWeight: FontWeight.bold,
+                                                                              ),
+                                                                            ),
                                                                           ),
-                                                                        ),
-                                                                      ],
-                                                                    ),
+                                                                        ],
+                                                                      ),
+                                                                      const SizedBox(height: 4),
+                                                                      Row(
+                                                                        children: [
+                                                                          Container(
+                                                                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                                                            decoration: BoxDecoration(
+                                                                              color: (cow.gender == 'M' ? Colors.blue : Colors.pink)
+                                                                                  .withValues(alpha: 0.12),
+                                                                              borderRadius: BorderRadius.circular(4),
+                                                                              border: Border.all(
+                                                                                color: (cow.gender == 'M' ? Colors.blue : Colors.pink)
+                                                                                    .withValues(alpha: 0.4),
+                                                                                width: 0.8,
+                                                                              ),
+                                                                            ),
+                                                                            child: Row(
+                                                                              mainAxisSize: MainAxisSize.min,
+                                                                              children: [
+                                                                                Icon(
+                                                                                  cow.gender == 'M'
+                                                                                      ? Icons.male_rounded
+                                                                                      : Icons.female_rounded,
+                                                                                  size: 14,
+                                                                                  color: cow.gender == 'M'
+                                                                                      ? Colors.blue[700]
+                                                                                      : Colors.pink[600],
+                                                                                ),
+                                                                                const SizedBox(width: 2),
+                                                                                Text(
+                                                                                  cow.gender == 'M' ? 'ผู้' : 'เมีย',
+                                                                                  style: TextStyle(
+                                                                                    fontSize: 11,
+                                                                                    fontWeight: FontWeight.bold,
+                                                                                    color: cow.gender == 'M'
+                                                                                        ? Colors.blue[700]
+                                                                                        : Colors.pink[600],
+                                                                                  ),
+                                                                                ),
+                                                                              ],
+                                                                            ),
+                                                                          ),
+                                                                          const SizedBox(width: 6),
+                                                                          Expanded(
+                                                                            child: Text(
+                                                                              'เบอร์วัว: ${cow.tagNumber} · ${cow.type.label}',
+                                                                              style: TextStyle(
+                                                                                color: AppColors.subText(sheetCtx),
+                                                                                fontSize: 13,
+                                                                              ),
+                                                                              maxLines: 1,
+                                                                              overflow: TextOverflow.ellipsis,
+                                                                            ),
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                    ],
                                                                   ),
-                                                                ],
-                                                              ),
+                                                                ),
+                                                              ],
                                                             ),
                                                           ),
                                                         );
                                                       },
                                                     ),
                                             ),
+
+                                            // Bottom Action Bar
                                             Container(
-                                              padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+                                              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
                                               decoration: BoxDecoration(
                                                 color: AppColors.cardBg(sheetCtx),
-                                                border: Border(top: BorderSide(color: AppColors.brd(sheetCtx))),
-                                              ),
-                                              child: SizedBox(
-                                                width: double.infinity,
-                                                child: ElevatedButton(
-                                                  style: ElevatedButton.styleFrom(
-                                                    backgroundColor: AppColors.primary,
-                                                    foregroundColor: Colors.white,
-                                                    padding: const EdgeInsets.symmetric(vertical: 12),
-                                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black.withValues(alpha: 0.06),
+                                                    blurRadius: 10,
+                                                    offset: const Offset(0, -4),
                                                   ),
-                                                  onPressed: () {
-                                                    Navigator.pop(sheetCtx, groupCowIds);
-                                                  },
-                                                  child: Text(
-                                                    'ยืนยันการเลือก (${groupCowIds.length} ตัว)',
-                                                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                                                ],
+                                              ),
+                                              child: SafeArea(
+                                                top: false,
+                                                child: SizedBox(
+                                                  height: 52,
+                                                  width: double.infinity,
+                                                  child: ElevatedButton.icon(
+                                                    onPressed: () {
+                                                      Navigator.pop(sheetCtx, groupCowIds);
+                                                    },
+                                                    icon: const Icon(Icons.check_circle_rounded, size: 22),
+                                                    label: Text(
+                                                      groupCowIds.isEmpty
+                                                          ? 'ยืนยันการเลือก (ไม่มีวัว)'
+                                                          : 'ยืนยันการเลือก (${groupCowIds.length} ตัว)',
+                                                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                                                    ),
+                                                    style: ElevatedButton.styleFrom(
+                                                      backgroundColor: AppColors.primary,
+                                                      foregroundColor: Colors.white,
+                                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                                    ),
                                                   ),
                                                 ),
                                               ),

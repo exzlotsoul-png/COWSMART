@@ -427,7 +427,7 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                           TextFormField(
                             controller: _tagController,
                             style: TextStyle(fontSize: 15.5, color: AppColors.text(context)),
-                            decoration: _buildInputDecoration('เบอร์วัว (Tag)', Icons.tag_rounded, hintText: 'เช่น kp-001'),
+                            decoration: _buildInputDecoration('เบอร์วัว', Icons.tag_rounded, hintText: 'เช่น kp-001'),
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
                                 return 'กรุณากรอกหมายเลข';

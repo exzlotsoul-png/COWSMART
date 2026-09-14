@@ -885,7 +885,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                     controller: searchController,
                     style: TextStyle(color: AppColors.text(context), fontSize: 14),
                     decoration: InputDecoration(
-                      hintText: 'ค้นหาชื่อ หรือ เบอร์หู...',
+                      hintText: 'ค้นหาชื่อ หรือ เบอร์วัว...',
                       hintStyle: TextStyle(color: AppColors.hint(context), fontSize: 14),
                       prefixIcon: const Icon(Icons.search, color: AppColors.primary, size: 20),
                       suffixIcon: searchQuery.isNotEmpty
