@@ -43,7 +43,8 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
 
     // Listen for farm changes
     ref.listen(farmProvider, (previous, next) {
-      if (next.currentFarm?.id != previous?.currentFarm?.id && next.currentFarm != null) {
+      if (next.currentFarm?.id != previous?.currentFarm?.id &&
+          next.currentFarm != null) {
         ref.read(cowProvider.notifier).fetchCows(next.currentFarm!.id);
       }
     });
@@ -186,7 +187,9 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: AppColors.isDark(context) ? 0.2 : 0.04),
+                          color: Colors.black.withValues(
+                            alpha: AppColors.isDark(context) ? 0.2 : 0.04,
+                          ),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -201,8 +204,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                       onChanged: (value) =>
                           ref.read(cowProvider.notifier).setSearchQuery(value),
                       decoration: InputDecoration(
-                        hintText:
-                            'ค้นหาด้วยชื่อหรือหมายเลขประจำตัว...',
+                        hintText: 'ค้นหาด้วยชื่อ หรือเบอร์วัว..',
                         hintStyle: const TextStyle(
                           fontSize: 15,
                           color: AppColors.textHint,
@@ -369,10 +371,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          CowIcon(
-                            size: 56,
-                            color: Colors.grey[350],
-                          ),
+                          CowIcon(size: 56, color: Colors.grey[350]),
                           const SizedBox(height: 12),
                           Text(
                             cowState.searchQuery?.isNotEmpty == true
@@ -445,228 +444,246 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.border,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'กรองรายการวัว',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.text(ctx),
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.border,
+                      borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                  TextButton(
-                    onPressed: () {
-                      setSheetState(() {
-                        tempStatus = null;
-                        tempType = null;
-                        tempGender = null;
-                      });
-                    },
-                    child: const Text(
-                      'ล้างทั้งหมด',
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'กรองรายการวัว',
                       style: TextStyle(
-                        color: AppColors.error,
-                        fontSize: 15,
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
+                        color: AppColors.text(ctx),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              Divider(color: AppColors.div(ctx)),
-              const SizedBox(height: 12),
-
-              // Status filter
-              Text(
-                'สถานะวัว',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.text(ctx),
-                  fontSize: 15,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: CowStatus.values.map((s) {
-                  final selected = tempStatus == s;
-                  return ChoiceChip(
-                    label: Text(s.label),
-                    selected: selected,
-                    onSelected: (v) =>
-                        setSheetState(() => tempStatus = v ? s : null),
-                    selectedColor: AppColors.primary.withValues(alpha: 0.15),
-                    backgroundColor: AppColors.surfAlt(ctx),
-                    side: BorderSide(color: selected ? AppColors.primary : AppColors.brd(ctx)),
-                    labelStyle: TextStyle(
-                      color: selected
-                          ? AppColors.primary
-                          : AppColors.text(ctx),
-                      fontSize: 14,
-                      fontWeight: selected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                    ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 20),
-
-              // Type filter
-              Text(
-                'ประเภทวัว',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.text(ctx),
-                  fontSize: 15,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: CowType.values.map((t) {
-                  final selected = tempType == t;
-                  return ChoiceChip(
-                    label: Text(t.label),
-                    selected: selected,
-                    onSelected: (v) =>
-                        setSheetState(() => tempType = v ? t : null),
-                    selectedColor: AppColors.secondary.withValues(alpha: 0.15),
-                    backgroundColor: AppColors.surfAlt(ctx),
-                    side: BorderSide(color: selected ? AppColors.secondary : AppColors.brd(ctx)),
-                    labelStyle: TextStyle(
-                      color: selected
-                          ? AppColors.secondary
-                          : AppColors.text(ctx),
-                      fontSize: 14,
-                      fontWeight: selected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                    ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 20),
-
-              // Gender filter
-              Text(
-                'เพศวัว',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.text(ctx),
-                  fontSize: 15,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                children: [
-                  ChoiceChip(
-                    label: const Text('เพศผู้'),
-                    selected: tempGender == 'M',
-                    onSelected: (v) =>
-                        setSheetState(() => tempGender = v ? 'M' : null),
-                    selectedColor: AppColors.info.withValues(alpha: 0.15),
-                    backgroundColor: AppColors.surfAlt(ctx),
-                    side: BorderSide(color: tempGender == 'M' ? AppColors.info : AppColors.brd(ctx)),
-                    labelStyle: TextStyle(
-                      color: tempGender == 'M'
-                          ? AppColors.info
-                          : AppColors.text(ctx),
-                      fontSize: 14,
-                      fontWeight: tempGender == 'M'
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                    ),
-                  ),
-                  ChoiceChip(
-                    label: const Text('เพศเมีย'),
-                    selected: tempGender == 'F',
-                    onSelected: (v) =>
-                        setSheetState(() => tempGender = v ? 'F' : null),
-                    selectedColor: AppColors.info.withValues(alpha: 0.15),
-                    backgroundColor: AppColors.surfAlt(ctx),
-                    side: BorderSide(color: tempGender == 'F' ? AppColors.info : AppColors.brd(ctx)),
-                    labelStyle: TextStyle(
-                      color: tempGender == 'F'
-                          ? AppColors.info
-                          : AppColors.text(ctx),
-                      fontSize: 14,
-                      fontWeight: tempGender == 'F'
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 28),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: const Text(
-                        'ยกเลิก',
-                        style: TextStyle(fontSize: 15),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
+                    TextButton(
                       onPressed: () {
-                        ref
-                            .read(cowProvider.notifier)
-                            .setFilter(
-                              filterStatus: tempStatus,
-                              filterType: tempType,
-                              filterGender: tempGender,
-                            );
-                        Navigator.pop(ctx);
+                        setSheetState(() {
+                          tempStatus = null;
+                          tempType = null;
+                          tempGender = null;
+                        });
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
                       child: const Text(
-                        'ใช้งานตัวกรอง',
+                        'ล้างทั้งหมด',
                         style: TextStyle(
+                          color: AppColors.error,
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
+                  ],
+                ),
+                Divider(color: AppColors.div(ctx)),
+                const SizedBox(height: 12),
+
+                // Status filter
+                Text(
+                  'สถานะวัว',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.text(ctx),
+                    fontSize: 15,
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: CowStatus.values.map((s) {
+                    final selected = tempStatus == s;
+                    return ChoiceChip(
+                      label: Text(s.label),
+                      selected: selected,
+                      onSelected: (v) =>
+                          setSheetState(() => tempStatus = v ? s : null),
+                      selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                      backgroundColor: AppColors.surfAlt(ctx),
+                      side: BorderSide(
+                        color: selected
+                            ? AppColors.primary
+                            : AppColors.brd(ctx),
+                      ),
+                      labelStyle: TextStyle(
+                        color: selected
+                            ? AppColors.primary
+                            : AppColors.text(ctx),
+                        fontSize: 14,
+                        fontWeight: selected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 20),
+
+                // Type filter
+                Text(
+                  'ประเภทวัว',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.text(ctx),
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: CowType.values.map((t) {
+                    final selected = tempType == t;
+                    return ChoiceChip(
+                      label: Text(t.label),
+                      selected: selected,
+                      onSelected: (v) =>
+                          setSheetState(() => tempType = v ? t : null),
+                      selectedColor: AppColors.secondary.withValues(
+                        alpha: 0.15,
+                      ),
+                      backgroundColor: AppColors.surfAlt(ctx),
+                      side: BorderSide(
+                        color: selected
+                            ? AppColors.secondary
+                            : AppColors.brd(ctx),
+                      ),
+                      labelStyle: TextStyle(
+                        color: selected
+                            ? AppColors.secondary
+                            : AppColors.text(ctx),
+                        fontSize: 14,
+                        fontWeight: selected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 20),
+
+                // Gender filter
+                Text(
+                  'เพศวัว',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.text(ctx),
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    ChoiceChip(
+                      label: const Text('เพศผู้'),
+                      selected: tempGender == 'M',
+                      onSelected: (v) =>
+                          setSheetState(() => tempGender = v ? 'M' : null),
+                      selectedColor: AppColors.info.withValues(alpha: 0.15),
+                      backgroundColor: AppColors.surfAlt(ctx),
+                      side: BorderSide(
+                        color: tempGender == 'M'
+                            ? AppColors.info
+                            : AppColors.brd(ctx),
+                      ),
+                      labelStyle: TextStyle(
+                        color: tempGender == 'M'
+                            ? AppColors.info
+                            : AppColors.text(ctx),
+                        fontSize: 14,
+                        fontWeight: tempGender == 'M'
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
+                    ChoiceChip(
+                      label: const Text('เพศเมีย'),
+                      selected: tempGender == 'F',
+                      onSelected: (v) =>
+                          setSheetState(() => tempGender = v ? 'F' : null),
+                      selectedColor: AppColors.info.withValues(alpha: 0.15),
+                      backgroundColor: AppColors.surfAlt(ctx),
+                      side: BorderSide(
+                        color: tempGender == 'F'
+                            ? AppColors.info
+                            : AppColors.brd(ctx),
+                      ),
+                      labelStyle: TextStyle(
+                        color: tempGender == 'F'
+                            ? AppColors.info
+                            : AppColors.text(ctx),
+                        fontSize: 14,
+                        fontWeight: tempGender == 'F'
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 28),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Text(
+                          'ยกเลิก',
+                          style: TextStyle(fontSize: 15),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          ref
+                              .read(cowProvider.notifier)
+                              .setFilter(
+                                filterStatus: tempStatus,
+                                filterType: tempType,
+                                filterGender: tempGender,
+                              );
+                          Navigator.pop(ctx);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Text(
+                          'ใช้งานตัวกรอง',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -679,7 +696,9 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
       decoration: BoxDecoration(
         color: AppColors.cardBg(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
+        border: Border.all(
+          color: AppColors.brd(context).withValues(alpha: 0.5),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
@@ -821,17 +840,23 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                               color: cow.gender == 'M'
                                   ? Colors.blue[700]
                                   : Colors.pink[600],
-                              bgColor: (cow.gender == 'M'
-                                      ? Colors.blue
-                                      : Colors.pink)
-                                  .withValues(alpha: 0.12),
-                              borderColor: (cow.gender == 'M'
-                                      ? Colors.blue
-                                      : Colors.pink)
-                                  .withValues(alpha: 0.35),
+                              bgColor:
+                                  (cow.gender == 'M'
+                                          ? Colors.blue
+                                          : Colors.pink)
+                                      .withValues(alpha: 0.12),
+                              borderColor:
+                                  (cow.gender == 'M'
+                                          ? Colors.blue
+                                          : Colors.pink)
+                                      .withValues(alpha: 0.35),
                             ),
                             const SizedBox(width: 6),
-                            _buildInfoChip(context, Icons.cake_outlined, cow.ageYearsOnly),
+                            _buildInfoChip(
+                              context,
+                              Icons.cake_outlined,
+                              cow.ageYearsOnly,
+                            ),
                             const SizedBox(width: 6),
                             _buildInfoChip(
                               context,
@@ -861,8 +886,14 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
     );
   }
 
-  Widget _buildInfoChip(BuildContext context, IconData icon, String label,
-      {Color? color, Color? bgColor, Color? borderColor}) {
+  Widget _buildInfoChip(
+    BuildContext context,
+    IconData icon,
+    String label, {
+    Color? color,
+    Color? bgColor,
+    Color? borderColor,
+  }) {
     final chipColor = color ?? AppColors.subText(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -870,7 +901,8 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
         color: bgColor ?? AppColors.surfAlt(context),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-            color: borderColor ?? AppColors.brd(context).withValues(alpha: 0.5)),
+          color: borderColor ?? AppColors.brd(context).withValues(alpha: 0.5),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

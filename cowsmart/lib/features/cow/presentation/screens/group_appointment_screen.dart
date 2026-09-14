@@ -12,6 +12,8 @@ import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
 import 'package:cowsmart/features/calendar/providers/appointment_type_provider.dart';
+import 'package:cowsmart/features/cow/domain/breed.dart';
+import 'package:cowsmart/features/cow/providers/breed_provider.dart';
 
 class GroupAppointmentScreen extends ConsumerStatefulWidget {
   const GroupAppointmentScreen({super.key});
@@ -194,6 +196,7 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
   Widget build(BuildContext context) {
     final cowState = ref.watch(cowProvider);
     final zoneState = ref.watch(zoneProvider);
+    final breeds = ref.watch(breedProvider);
 
     final availableCows = cowState.allCows.where((cow) {
       if (cow.status == CowStatus.deceased || cow.status == CowStatus.sold || cow.status == CowStatus.removed) {
@@ -272,7 +275,7 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
 
                 Expanded(
                   child: _currentStep == 1
-                      ? _buildStep1CowSelection(availableCows, zoneState.zones)
+                      ? _buildStep1CowSelection(availableCows, zoneState.zones, breeds)
                       : _buildStep2AppointmentForm(),
                 ),
               ],
@@ -386,7 +389,7 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
   }
 
   // ── STEP 1: COW SELECTION / WHOLE FARM ──
-  Widget _buildStep1CowSelection(List<Cow> availableCows, List<dynamic> zones) {
+  Widget _buildStep1CowSelection(List<Cow> availableCows, List<dynamic> zones, List<Breed> breeds) {
     final isAllSelected = availableCows.isNotEmpty && availableCows.every((c) => _selectedCowIds.contains(c.id));
 
     return Column(
@@ -557,7 +560,11 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
                       final isChecked = _selectedCowIds.contains(cow.id);
 
                       final genderDisplay = (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male') ? 'ผู้' : 'เมีย';
-                      final breedDisplay = cow.breed.isNotEmpty ? cow.breed : '-';
+                      final breedName = breeds.firstWhere(
+                        (b) => b.id == cow.breed,
+                        orElse: () => Breed(id: cow.breed, name: cow.breed.isNotEmpty ? cow.breed : '-'),
+                      ).name;
+                      final breedDisplay = breedName.isNotEmpty ? breedName : '-';
 
                       return Container(
                         margin: const EdgeInsets.only(bottom: 10),
@@ -685,56 +692,50 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
                                         ],
                                       ),
                                       const SizedBox(height: 5),
-                                      Row(
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                                            decoration: BoxDecoration(
-                                              color: (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male' ? Colors.blue : Colors.pink)
-                                                  .withValues(alpha: 0.12),
-                                              borderRadius: BorderRadius.circular(4),
-                                              border: Border.all(
-                                                color: (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male' ? Colors.blue : Colors.pink)
-                                                    .withValues(alpha: 0.4),
-                                                width: 0.8,
+                                      Text(
+                                        'สายพันธุ์: $breedDisplay',
+                                        style: TextStyle(fontSize: 13, color: AppColors.subText(context)),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 5),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                        decoration: BoxDecoration(
+                                          color: (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male' ? Colors.blue : Colors.pink)
+                                              .withValues(alpha: 0.12),
+                                          borderRadius: BorderRadius.circular(4),
+                                          border: Border.all(
+                                            color: (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male' ? Colors.blue : Colors.pink)
+                                                .withValues(alpha: 0.4),
+                                            width: 0.8,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male')
+                                                  ? Icons.male_rounded
+                                                  : Icons.female_rounded,
+                                              size: 14,
+                                              color: (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male')
+                                                  ? Colors.blue[700]
+                                                  : Colors.pink[600],
+                                            ),
+                                            const SizedBox(width: 2),
+                                            Text(
+                                              genderDisplay,
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.bold,
+                                                color: (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male')
+                                                    ? Colors.blue[700]
+                                                    : Colors.pink[600],
                                               ),
                                             ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(
-                                                  (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male')
-                                                      ? Icons.male_rounded
-                                                      : Icons.female_rounded,
-                                                  size: 14,
-                                                  color: (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male')
-                                                      ? Colors.blue[700]
-                                                      : Colors.pink[600],
-                                                ),
-                                                const SizedBox(width: 2),
-                                                Text(
-                                                  genderDisplay,
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male')
-                                                        ? Colors.blue[700]
-                                                        : Colors.pink[600],
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Expanded(
-                                            child: Text(
-                                              'สายพันธุ์: $breedDisplay',
-                                              style: TextStyle(fontSize: 13, color: AppColors.subText(context)),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     ],
                                   ),

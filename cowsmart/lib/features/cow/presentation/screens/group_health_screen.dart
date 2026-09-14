@@ -12,6 +12,8 @@ import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
 import 'package:cowsmart/features/health/providers/master_data_provider.dart';
+import 'package:cowsmart/features/cow/domain/breed.dart';
+import 'package:cowsmart/features/cow/providers/breed_provider.dart';
 
 class GroupHealthScreen extends ConsumerStatefulWidget {
   const GroupHealthScreen({super.key});
@@ -364,6 +366,7 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
   Widget build(BuildContext context) {
     final cowState = ref.watch(cowProvider);
     final zoneState = ref.watch(zoneProvider);
+    final breeds = ref.watch(breedProvider);
 
     final availableCows = cowState.allCows.where((cow) {
       if (cow.status == CowStatus.deceased || cow.status == CowStatus.sold || cow.status == CowStatus.removed) {
@@ -451,7 +454,7 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
 
                 Expanded(
                   child: _currentStep == 1
-                      ? _buildStep1CowSelection(availableCows, zoneState.zones)
+                      ? _buildStep1CowSelection(availableCows, zoneState.zones, breeds)
                       : _buildStep2RecordForm(),
                 ),
               ],
@@ -569,7 +572,7 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
   }
 
   // ── STEP 1: COW SELECTION ──
-  Widget _buildStep1CowSelection(List<Cow> availableCows, List<dynamic> zones) {
+  Widget _buildStep1CowSelection(List<Cow> availableCows, List<dynamic> zones, List<Breed> breeds) {
     final isAllSelected = availableCows.isNotEmpty && availableCows.every((c) => _selectedCowIds.contains(c.id));
 
     return Column(
@@ -705,7 +708,11 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                     final diseaseName = cow.latestDiseaseName;
 
                     final genderDisplay = (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male') ? 'ผู้' : 'เมีย';
-                    final breedDisplay = cow.breed.isNotEmpty ? cow.breed : '-';
+                    final breedName = breeds.firstWhere(
+                      (b) => b.id == cow.breed,
+                      orElse: () => Breed(id: cow.breed, name: cow.breed.isNotEmpty ? cow.breed : '-'),
+                    ).name;
+                    final breedDisplay = breedName.isNotEmpty ? breedName : '-';
 
                     final isDark = Theme.of(context).brightness == Brightness.dark;
 

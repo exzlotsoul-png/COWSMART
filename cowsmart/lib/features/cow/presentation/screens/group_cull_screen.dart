@@ -149,6 +149,7 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
   @override
   Widget build(BuildContext context) {
     final cowState = ref.watch(cowProvider);
+    final breeds = ref.watch(breedProvider);
 
     // Filter active cows by search query and cow type
     final activeCows = cowState.allCows.where((cow) {
@@ -513,7 +514,11 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                           }
 
                           final genderDisplay = (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male') ? 'ผู้' : 'เมีย';
-                          final breedDisplay = cow.breed.isNotEmpty ? cow.breed : '-';
+                          final breedName = breeds.firstWhere(
+                            (b) => b.id == cow.breed,
+                            orElse: () => Breed(id: cow.breed, name: cow.breed.isNotEmpty ? cow.breed : '-'),
+                          ).name;
+                          final breedDisplay = breedName.isNotEmpty ? breedName : '-';
 
                           return Container(
                             margin: const EdgeInsets.only(bottom: 10),
