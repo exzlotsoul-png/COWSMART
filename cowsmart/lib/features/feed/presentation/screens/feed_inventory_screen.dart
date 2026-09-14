@@ -264,32 +264,12 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
               ),
             ),
             const SizedBox(width: 4),
-            if (allItems.length > _initialHistoryLimit)
-              TextButton(
-                onPressed: () {
-                  setState(() => _showAllHistory = !_showAllHistory);
-                },
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: Text(
-                  _showAllHistory ? 'ย่อรายการ' : 'ดูทั้งหมด',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-            const SizedBox(width: 2),
             TextButton.icon(
               onPressed: () => context.push('/feed_history'),
               icon: const Icon(Icons.history_rounded, size: 18, color: AppColors.primary),
               label: const Text(
                 'ประวัติทั้งหมด',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.primary),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: AppColors.primary),
               ),
             ),
           ],
