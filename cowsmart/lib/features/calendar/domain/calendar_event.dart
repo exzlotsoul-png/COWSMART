@@ -9,6 +9,8 @@ class CalendarEvent {
   final String eventType; // 'general', 'health', 'breeding'
   final String? groupId;
   final int? cowCount;
+  final List<String> cowIds;
+  final List<String> groupApptIds;
 
   CalendarEvent({
     required this.id,
@@ -21,9 +23,23 @@ class CalendarEvent {
     this.eventType = 'general',
     this.groupId,
     this.cowCount,
+    this.cowIds = const [],
+    this.groupApptIds = const [],
   });
 
   factory CalendarEvent.fromJson(Map<String, dynamic> json) {
+    final rawCowIds = json['_cow_ids'];
+    List<String> parsedCowIds = [];
+    if (rawCowIds is List) {
+      parsedCowIds = rawCowIds.map((e) => e.toString()).toList();
+    }
+
+    final rawApptIds = json['_group_appt_ids'];
+    List<String> parsedApptIds = [];
+    if (rawApptIds is List) {
+      parsedApptIds = rawApptIds.map((e) => e.toString()).toList();
+    }
+
     return CalendarEvent(
       id: (json['calendar_event_id'] ?? json['id']).toString(),
       farmId: json['farm_id']?.toString() ?? '',
@@ -35,6 +51,8 @@ class CalendarEvent {
       eventType: json['event_type']?.toString() ?? 'general',
       groupId: json['_group_id']?.toString(),
       cowCount: json['_cow_count'] != null ? int.tryParse(json['_cow_count'].toString()) : null,
+      cowIds: parsedCowIds,
+      groupApptIds: parsedApptIds,
     );
   }
 
@@ -46,6 +64,7 @@ class CalendarEvent {
         'reminder_setting': reminderSetting,
         'cow_id': cowId,
         'event_type': eventType,
+        if (cowIds.isNotEmpty) 'cow_ids': cowIds,
       };
 
   /// Whether this event is a grouped health appointment
@@ -58,6 +77,7 @@ class CalendarEvent {
     String? reminderSetting,
     String? cowId,
     String? eventType,
+    List<String>? cowIds,
   }) {
     return CalendarEvent(
       id: id,
@@ -69,7 +89,9 @@ class CalendarEvent {
       cowId: cowId ?? this.cowId,
       eventType: eventType ?? this.eventType,
       groupId: groupId,
-      cowCount: cowCount,
+      cowCount: cowIds != null ? cowIds.length : cowCount,
+      cowIds: cowIds ?? this.cowIds,
+      groupApptIds: groupApptIds,
     );
   }
 }

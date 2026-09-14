@@ -72,11 +72,13 @@ class CalendarEventController extends Controller
                 $firstAppt = $groupAppts[0];
                 $allApptIds = [];
 
+                $cowIds = [];
                 foreach ($groupAppts as $appt) {
                     $cow = $this->findCow($appt->cow_id, $farmCows, $farmId);
                     if (!$cow) continue;
                     $cowName = $cow->name ?: ($cow->tag_number ?: $cow->cow_id);
                     $cowNames[] = $cowName;
+                    $cowIds[] = (string)($cow->id ?? $cow->cow_id);
                     $allApptIds[] = str_starts_with($appt->health_appointment_id, 'HA-')
                         ? $appt->health_appointment_id
                         : 'HA-' . $appt->health_appointment_id;
@@ -119,6 +121,7 @@ class CalendarEventController extends Controller
                     '_group_id' => $groupId,
                     '_group_appt_ids' => $allApptIds,
                     '_cow_count' => $cowCount,
+                    '_cow_ids' => array_values(array_unique($cowIds)),
                 ];
             }
 
@@ -262,6 +265,7 @@ class CalendarEventController extends Controller
                     'event_type' => 'health',
                     '_group_id' => $groupId,
                     '_cow_count' => $cowCount,
+                    '_cow_ids' => array_values(array_unique(array_map('strval', $cowIds))),
                 ]);
             }
         }
@@ -337,15 +341,66 @@ class CalendarEventController extends Controller
                 }
                 // Strip trailing count if passed back
                 $cleanDesc = preg_replace('/\s*\(\d+\s*ตัว\)$/u', '', $rawDesc);
+                $targetDatetime = $request->get('event_datetime', $appts[0]->appoint_datetime);
+                $targetReminder = $request->get('reminder_setting', $appts[0]->reminder_setting);
 
-                foreach ($appts as $appt) {
-                    $appt->update([
-                        'appoint_datetime' => $request->get('event_datetime', $appt->appoint_datetime),
-                        'description' => $cleanDesc,
-                        'reminder_setting' => $request->get('reminder_setting', $appt->reminder_setting),
-                    ]);
-                    HealthAppointmentController::syncNotificationForHealthAppt($appt);
+                // Handle cow_ids update if provided
+                if ($request->has('cow_ids') && is_array($request->get('cow_ids'))) {
+                    $newCowIds = array_unique(array_filter(array_map('strval', $request->get('cow_ids'))));
+
+                    // If all cows removed, delete the whole group appointment
+                    if (empty($newCowIds)) {
+                        return $this->destroy($id);
+                    }
+
+                    // Existing appointments mapped by cow_id
+                    $existingByCow = [];
+                    foreach ($appts as $appt) {
+                        $existingByCow[(string)$appt->cow_id] = $appt;
+                    }
+
+                    // Remove cows not in new list
+                    foreach ($existingByCow as $cowId => $appt) {
+                        if (!in_array((string)$cowId, $newCowIds, true)) {
+                            $realId = preg_replace('/^(HA-)+/', '', $appt->health_appointment_id);
+                            Notification::where('message', 'like', "%appt_{$realId}%")->delete();
+                            $appt->delete();
+                        }
+                    }
+
+                    // Add newly selected cows or update existing
+                    foreach ($newCowIds as $cowId) {
+                        if (isset($existingByCow[$cowId])) {
+                            $existingByCow[$cowId]->update([
+                                'appoint_datetime' => $targetDatetime,
+                                'description' => $cleanDesc,
+                                'reminder_setting' => $targetReminder,
+                            ]);
+                            HealthAppointmentController::syncNotificationForHealthAppt($existingByCow[$cowId]);
+                        } else {
+                            $newAppt = HealthAppointment::create([
+                                'cow_id' => $cowId,
+                                'appoint_datetime' => $targetDatetime,
+                                'description' => $cleanDesc,
+                                'reminder_setting' => $targetReminder,
+                                'status' => 0,
+                                'group_id' => $groupId,
+                            ]);
+                            HealthAppointmentController::syncNotificationForHealthAppt($newAppt);
+                        }
+                    }
+                } else {
+                    // Update existing records in group without altering cow membership
+                    foreach ($appts as $appt) {
+                        $appt->update([
+                            'appoint_datetime' => $targetDatetime,
+                            'description' => $cleanDesc,
+                            'reminder_setting' => $targetReminder,
+                        ]);
+                        HealthAppointmentController::syncNotificationForHealthAppt($appt);
+                    }
                 }
+
                 return $this->show($id);
             }
         }

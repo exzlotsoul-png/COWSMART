@@ -10,6 +10,7 @@ import 'package:cowsmart/core/utils/app_toast.dart';
 import 'package:cowsmart/features/calendar/domain/calendar_event.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
+import 'package:cowsmart/features/cow/domain/cow.dart';
 import '../../providers/calendar_provider.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
@@ -395,6 +396,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       selectedReminder = 'ตรงเวลาที่บันทึก';
     }
     String? titleError;
+    List<String> groupCowIds = List<String>.from(existing?.cowIds ?? []);
+    String groupCowSearch = '';
 
     showModalBottomSheet(
       context: context,
@@ -545,35 +548,345 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                         ),
                         const SizedBox(height: 12),
                         if (existing != null && existing.isGrouped)
-                          Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppColors.surf(context),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.brd(context)),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.groups_rounded, color: AppColors.primary, size: 22),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'นัดหมายแบบกลุ่ม (${existing.cowCount ?? 0} ตัว)',
-                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.text(context)),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        'การแก้ไขจะมีผลกับวัวทุกตัวในกลุ่มนี้',
-                                        style: TextStyle(fontSize: 12, color: AppColors.subText(context)),
-                                      ),
-                                    ],
+                          InkWell(
+                            onTap: () async {
+                              final availableCows = cows.where((c) {
+                                return c.status != CowStatus.deceased &&
+                                    c.status != CowStatus.sold &&
+                                    c.status != CowStatus.removed;
+                              }).toList();
+
+                              final updatedIds = await showModalBottomSheet<List<String>>(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (sheetCtx) {
+                                  return StatefulBuilder(
+                                    builder: (sheetCtx, setSheetState) {
+                                      final filteredCows = availableCows.where((c) {
+                                        if (groupCowSearch.isEmpty) return true;
+                                        final q = groupCowSearch.toLowerCase();
+                                        return c.name.toLowerCase().contains(q) ||
+                                            c.tagNumber.toLowerCase().contains(q);
+                                      }).toList();
+
+                                      final isAllSelected = filteredCows.isNotEmpty &&
+                                          filteredCows.every((c) => groupCowIds.contains(c.id));
+
+                                      return Container(
+                                        constraints: BoxConstraints(
+                                          maxHeight: MediaQuery.of(sheetCtx).size.height * 0.85,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.cardBg(sheetCtx),
+                                          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                                        ),
+                                        child: Column(
+                                          children: [
+                                            Center(
+                                              child: Container(
+                                                margin: const EdgeInsets.only(top: 12, bottom: 8),
+                                                width: 40,
+                                                height: 4,
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.border,
+                                                  borderRadius: BorderRadius.circular(2),
+                                                ),
+                                              ),
+                                            ),
+                                            Padding(
+                                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                                              child: Row(
+                                                children: [
+                                                  Container(
+                                                    padding: const EdgeInsets.all(8),
+                                                    decoration: BoxDecoration(
+                                                      color: AppColors.primary.withValues(alpha: 0.1),
+                                                      borderRadius: BorderRadius.circular(10),
+                                                    ),
+                                                    child: const Icon(Icons.groups_rounded, color: AppColors.primary, size: 22),
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  Expanded(
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        Text(
+                                                          'เลือกวัวในกลุ่มนัดหมาย',
+                                                          style: TextStyle(
+                                                            fontSize: 17,
+                                                            fontWeight: FontWeight.bold,
+                                                            color: AppColors.text(sheetCtx),
+                                                          ),
+                                                        ),
+                                                        Text(
+                                                          'เลือกแล้ว ${groupCowIds.length} ตัว',
+                                                          style: TextStyle(
+                                                            fontSize: 13,
+                                                            color: AppColors.primary,
+                                                            fontWeight: FontWeight.w600,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  IconButton(
+                                                    icon: const Icon(Icons.close, size: 20),
+                                                    onPressed: () => Navigator.pop(sheetCtx, groupCowIds),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Divider(height: 1, color: AppColors.div(sheetCtx)),
+                                            Padding(
+                                              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                                              child: Column(
+                                                children: [
+                                                  TextField(
+                                                    style: TextStyle(fontSize: 15, color: AppColors.text(sheetCtx)),
+                                                    decoration: InputDecoration(
+                                                      hintText: 'ค้นหาด้วยชื่อ หรือเบอร์หู...',
+                                                      hintStyle: TextStyle(fontSize: 14, color: AppColors.hint(sheetCtx)),
+                                                      prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary, size: 20),
+                                                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                                      border: OutlineInputBorder(
+                                                        borderRadius: BorderRadius.circular(12),
+                                                        borderSide: BorderSide(color: AppColors.brd(sheetCtx)),
+                                                      ),
+                                                      enabledBorder: OutlineInputBorder(
+                                                        borderRadius: BorderRadius.circular(12),
+                                                        borderSide: BorderSide(color: AppColors.brd(sheetCtx)),
+                                                      ),
+                                                      focusedBorder: OutlineInputBorder(
+                                                        borderRadius: BorderRadius.circular(12),
+                                                        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                                                      ),
+                                                    ),
+                                                    onChanged: (val) {
+                                                      setSheetState(() {
+                                                        groupCowSearch = val.trim();
+                                                      });
+                                                    },
+                                                  ),
+                                                  const SizedBox(height: 8),
+                                                  Row(
+                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                    children: [
+                                                      Text(
+                                                        'พบ ${filteredCows.length} ตัว',
+                                                        style: TextStyle(fontSize: 13, color: AppColors.subText(sheetCtx)),
+                                                      ),
+                                                      TextButton.icon(
+                                                        onPressed: () {
+                                                          setSheetState(() {
+                                                            if (isAllSelected) {
+                                                              for (final c in filteredCows) {
+                                                                groupCowIds.remove(c.id);
+                                                              }
+                                                            } else {
+                                                              for (final c in filteredCows) {
+                                                                if (!groupCowIds.contains(c.id)) {
+                                                                  groupCowIds.add(c.id);
+                                                                }
+                                                              }
+                                                            }
+                                                          });
+                                                        },
+                                                        icon: Icon(
+                                                          isAllSelected ? Icons.deselect : Icons.select_all,
+                                                          size: 18,
+                                                          color: AppColors.primary,
+                                                        ),
+                                                        label: Text(
+                                                          isAllSelected ? 'ยกเลิกทั้งหมด' : 'เลือกทั้งหมด',
+                                                          style: const TextStyle(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.bold),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Divider(height: 1, color: AppColors.div(sheetCtx)),
+                                            Expanded(
+                                              child: filteredCows.isEmpty
+                                                  ? Center(
+                                                      child: Text(
+                                                        'ไม่พบวัวที่ค้นหา',
+                                                        style: TextStyle(color: AppColors.subText(sheetCtx)),
+                                                      ),
+                                                    )
+                                                  : ListView.separated(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                                      itemCount: filteredCows.length,
+                                                      separatorBuilder: (_, __) => const SizedBox(height: 6),
+                                                      itemBuilder: (cCtx, idx) {
+                                                        final cow = filteredCows[idx];
+                                                        final isChecked = groupCowIds.contains(cow.id);
+                                                        return Material(
+                                                          color: isChecked
+                                                              ? AppColors.primary.withValues(alpha: 0.08)
+                                                              : AppColors.surf(sheetCtx),
+                                                          borderRadius: BorderRadius.circular(12),
+                                                          child: InkWell(
+                                                            borderRadius: BorderRadius.circular(12),
+                                                            onTap: () {
+                                                              setSheetState(() {
+                                                                if (isChecked) {
+                                                                  groupCowIds.remove(cow.id);
+                                                                } else {
+                                                                  groupCowIds.add(cow.id);
+                                                                }
+                                                              });
+                                                            },
+                                                            child: Padding(
+                                                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                                              child: Row(
+                                                                children: [
+                                                                  Checkbox(
+                                                                    value: isChecked,
+                                                                    activeColor: AppColors.primary,
+                                                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                                                                    onChanged: (val) {
+                                                                      setSheetState(() {
+                                                                        if (val == true) {
+                                                                          if (!groupCowIds.contains(cow.id)) groupCowIds.add(cow.id);
+                                                                        } else {
+                                                                          groupCowIds.remove(cow.id);
+                                                                        }
+                                                                      });
+                                                                    },
+                                                                  ),
+                                                                  CircleAvatar(
+                                                                    radius: 18,
+                                                                    backgroundColor: AppColors.primary.withValues(alpha: 0.12),
+                                                                    child: Text(
+                                                                      cow.tagNumber.isNotEmpty
+                                                                          ? cow.tagNumber.substring(0, cow.tagNumber.length > 3 ? 3 : cow.tagNumber.length)
+                                                                          : 'วัว',
+                                                                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primary),
+                                                                    ),
+                                                                  ),
+                                                                  const SizedBox(width: 10),
+                                                                  Expanded(
+                                                                    child: Column(
+                                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                                      children: [
+                                                                        Text(
+                                                                          cow.name.isNotEmpty ? cow.name : 'เบอร์หู ${cow.tagNumber}',
+                                                                          style: TextStyle(
+                                                                            fontSize: 14.5,
+                                                                            fontWeight: FontWeight.bold,
+                                                                            color: AppColors.text(sheetCtx),
+                                                                          ),
+                                                                        ),
+                                                                        Text(
+                                                                          'เบอร์หู: ${cow.tagNumber.isNotEmpty ? cow.tagNumber : '-'} | สายพันธุ์: ${cow.breed.isNotEmpty ? cow.breed : '-'}',
+                                                                          style: TextStyle(
+                                                                            fontSize: 12,
+                                                                            color: AppColors.subText(sheetCtx),
+                                                                          ),
+                                                                        ),
+                                                                      ],
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        );
+                                                      },
+                                                    ),
+                                            ),
+                                            Container(
+                                              padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.cardBg(sheetCtx),
+                                                border: Border(top: BorderSide(color: AppColors.brd(sheetCtx))),
+                                              ),
+                                              child: SizedBox(
+                                                width: double.infinity,
+                                                child: ElevatedButton(
+                                                  style: ElevatedButton.styleFrom(
+                                                    backgroundColor: AppColors.primary,
+                                                    foregroundColor: Colors.white,
+                                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                  ),
+                                                  onPressed: () {
+                                                    Navigator.pop(sheetCtx, groupCowIds);
+                                                  },
+                                                  child: Text(
+                                                    'ยืนยันการเลือก (${groupCowIds.length} ตัว)',
+                                                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              );
+
+                              if (updatedIds != null) {
+                                setDialogState(() {
+                                  groupCowIds = List<String>.from(updatedIds);
+                                });
+                              }
+                            },
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppColors.surf(context),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: AppColors.primary.withValues(alpha: 0.4)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.groups_rounded, color: AppColors.primary, size: 24),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text(
+                                              'นัดหมายแบบกลุ่ม (${groupCowIds.length} ตัว)',
+                                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.text(context)),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.primary.withValues(alpha: 0.12),
+                                                borderRadius: BorderRadius.circular(6),
+                                              ),
+                                              child: const Text(
+                                                'แตะเพื่อแก้ไขวัว',
+                                                style: TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.bold),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 3),
+                                        Text(
+                                          groupCowIds.isEmpty
+                                              ? 'ยังไม่ได้เลือกวัว (ระบบจะลบนัดหมายกลุ่มหากไม่มีวัว)'
+                                              : 'มีวัวอยู่ในกลุ่ม ${groupCowIds.length} ตัว แตะเพื่อเพิ่มหรือลดวัว',
+                                          style: TextStyle(fontSize: 12, color: AppColors.subText(context)),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
+                                  const Icon(Icons.chevron_right_rounded, color: AppColors.primary),
+                                ],
+                              ),
                             ),
                           ),
                         const SizedBox(height: 12),
@@ -658,6 +971,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                               : descCtrl.text.trim(),
                                           reminderSetting: selectedReminder,
                                           cowId: selectedCowId,
+                                          cowIds: existing.isGrouped ? groupCowIds : null,
                                         ));
                                   }
 
