@@ -253,9 +253,9 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                           ChoiceChip(
                             label: const Text('หญ้า', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                             selected: _selectedCategory == 'หญ้า',
-                            selectedColor: Colors.green,
+                            selectedColor: Colors.green[700]!,
                             backgroundColor: AppColors.surfAlt(context),
-                            side: BorderSide(color: _selectedCategory == 'หญ้า' ? Colors.green : AppColors.brd(context)),
+                            side: BorderSide(color: _selectedCategory == 'หญ้า' ? Colors.green[700]! : AppColors.brd(context)),
                             labelStyle: TextStyle(
                               color: _selectedCategory == 'หญ้า' ? Colors.white : AppColors.text(context),
                               fontWeight: FontWeight.bold,
@@ -268,9 +268,9 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                           ChoiceChip(
                             label: const Text('ข้น', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                             selected: _selectedCategory == 'ข้น',
-                            selectedColor: Colors.orange,
+                            selectedColor: Colors.orange[800]!,
                             backgroundColor: AppColors.surfAlt(context),
-                            side: BorderSide(color: _selectedCategory == 'ข้น' ? Colors.orange : AppColors.brd(context)),
+                            side: BorderSide(color: _selectedCategory == 'ข้น' ? Colors.orange[800]! : AppColors.brd(context)),
                             labelStyle: TextStyle(
                               color: _selectedCategory == 'ข้น' ? Colors.white : AppColors.text(context),
                               fontWeight: FontWeight.bold,
@@ -283,9 +283,9 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                           ChoiceChip(
                             label: const Text('เสริม', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                             selected: _selectedCategory == 'เสริม',
-                            selectedColor: Colors.blue,
+                            selectedColor: Colors.blue[700]!,
                             backgroundColor: AppColors.surfAlt(context),
-                            side: BorderSide(color: _selectedCategory == 'เสริม' ? Colors.blue : AppColors.brd(context)),
+                            side: BorderSide(color: _selectedCategory == 'เสริม' ? Colors.blue[700]! : AppColors.brd(context)),
                             labelStyle: TextStyle(
                               color: _selectedCategory == 'เสริม' ? Colors.white : AppColors.text(context),
                               fontWeight: FontWeight.bold,
@@ -1157,10 +1157,10 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                       child: ChoiceChip(
                         label: const Center(child: Text('หญ้า / อาหารหยาบ')),
                         selected: selectedCategory == 'grass',
-                        selectedColor: Colors.green,
+                        selectedColor: Colors.green[700]!,
                         backgroundColor: AppColors.surfAlt(context),
                         side: BorderSide(
-                          color: selectedCategory == 'grass' ? Colors.green : AppColors.brd(context),
+                          color: selectedCategory == 'grass' ? Colors.green[700]! : AppColors.brd(context),
                         ),
                         labelStyle: TextStyle(
                           color: selectedCategory == 'grass' ? Colors.white : AppColors.text(context),
@@ -1175,10 +1175,10 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                       child: ChoiceChip(
                         label: const Center(child: Text('อาหารข้น')),
                         selected: selectedCategory == 'concentrate',
-                        selectedColor: Colors.orange,
+                        selectedColor: Colors.orange[800]!,
                         backgroundColor: AppColors.surfAlt(context),
                         side: BorderSide(
-                          color: selectedCategory == 'concentrate' ? Colors.orange : AppColors.brd(context),
+                          color: selectedCategory == 'concentrate' ? Colors.orange[800]! : AppColors.brd(context),
                         ),
                         labelStyle: TextStyle(
                           color: selectedCategory == 'concentrate' ? Colors.white : AppColors.text(context),
@@ -1193,10 +1193,10 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                       child: ChoiceChip(
                         label: const Center(child: Text('อาหารเสริม')),
                         selected: selectedCategory == 'supplement',
-                        selectedColor: Colors.blue,
+                        selectedColor: Colors.blue[700]!,
                         backgroundColor: AppColors.surfAlt(context),
                         side: BorderSide(
-                          color: selectedCategory == 'supplement' ? Colors.blue : AppColors.brd(context),
+                          color: selectedCategory == 'supplement' ? Colors.blue[700]! : AppColors.brd(context),
                         ),
                         labelStyle: TextStyle(
                           color: selectedCategory == 'supplement' ? Colors.white : AppColors.text(context),
