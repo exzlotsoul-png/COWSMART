@@ -206,15 +206,11 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF2D5A43), Color(0xFF4A7C59)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: AppColors.primary,
                 borderRadius: BorderRadius.circular(14),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF2D5A43).withValues(alpha: 0.25),
+                    color: AppColors.primary.withValues(alpha: 0.25),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -227,13 +223,13 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
                     child: Icon(Icons.health_and_safety_rounded, color: Colors.white, size: 22),
                   ),
                   Positioned(
-                    bottom: 0,
-                    right: 0,
+                    bottom: -1,
+                    right: -1,
                     child: Container(
-                      width: 11,
-                      height: 11,
+                      width: 12,
+                      height: 12,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF10B981),
+                        color: const Color(0xFF4CAF50),
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 2),
                       ),
@@ -248,45 +244,22 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          'หมอวัว CowSmart',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.text(context),
-                            letterSpacing: -0.2,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF10B981).withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: const Text(
-                          'AI VET',
-                          style: TextStyle(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF059669),
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                    ],
+                  Text(
+                    'หมอวัว CowSmart',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.text(context),
+                      letterSpacing: -0.2,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
-                  const Text(
+                  Text(
                     'ผู้ช่วยวินิจฉัยและสัตวแพทย์ 24 ชม.',
                     style: TextStyle(
                       fontSize: 11.5,
-                      color: Color(0xFF059669),
+                      color: AppColors.primaryDark,
                       fontWeight: FontWeight.w500,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -353,11 +326,7 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF2D5A43), Color(0xFF386C52)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  color: AppColors.primary,
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(20),
                     topRight: Radius.circular(20),
@@ -366,7 +335,7 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF2D5A43).withValues(alpha: 0.22),
+                      color: AppColors.primary.withValues(alpha: 0.25),
                       blurRadius: 10,
                       offset: const Offset(0, 3),
                     ),
@@ -392,7 +361,7 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(color: AppColors.primary.withValues(alpha: 0.2), width: 1.5),
               ),
-              child: const Icon(Icons.person_rounded, size: 18, color: AppColors.primary),
+              child: const Icon(Icons.person_rounded, size: 18, color: Colors.white),
             ),
           ],
         ),
@@ -410,16 +379,12 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
             width: 34,
             height: 34,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFE8F5EE), Color(0xFFD1E8DA)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: AppColors.primary.withValues(alpha: 0.15),
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFF2D5A43).withValues(alpha: 0.15)),
+              border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
             ),
             child: const Center(
-              child: Icon(Icons.health_and_safety_rounded, color: Color(0xFF2D5A43), size: 19),
+              child: Icon(Icons.health_and_safety_rounded, color: AppColors.primary, size: 19),
             ),
           ),
           const SizedBox(width: 10),
@@ -471,12 +436,12 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF0FDF4),
+                              color: AppColors.primary.withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: const Color(0xFF86EFAC)),
+                              border: Border.all(color: AppColors.primary.withValues(alpha: 0.35)),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF10B981).withValues(alpha: 0.08),
+                                  color: AppColors.primary.withValues(alpha: 0.06),
                                   blurRadius: 4,
                                   offset: const Offset(0, 1),
                                 ),
@@ -485,18 +450,18 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.check_circle_outline_rounded, size: 14, color: Color(0xFF166534)),
+                                const Icon(Icons.check_circle_outline_rounded, size: 14, color: AppColors.primaryDark),
                                 const SizedBox(width: 6),
                                 Text(
                                   action.label,
                                   style: const TextStyle(
                                     fontSize: 12.5,
                                     fontWeight: FontWeight.w700,
-                                    color: Color(0xFF166534),
+                                    color: AppColors.primaryDark,
                                   ),
                                 ),
                                 const SizedBox(width: 6),
-                                const Icon(Icons.arrow_forward_ios_rounded, size: 10, color: Color(0xFF166534)),
+                                const Icon(Icons.arrow_forward_ios_rounded, size: 10, color: AppColors.primaryDark),
                               ],
                             ),
                           ),
@@ -650,25 +615,29 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Expanded(
-            child: Container(
-              constraints: const BoxConstraints(maxHeight: 120),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.surfAlt(context),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: AppColors.brd(context)),
-              ),
-              child: TextField(
-                controller: _textController,
-                style: TextStyle(fontSize: 14.5, color: AppColors.text(context)),
-                maxLines: null,
-                textInputAction: TextInputAction.send,
-                onSubmitted: _sendMessage,
-                decoration: InputDecoration(
-                  hintText: 'พิมพ์เล่าอาการ หรือถามคำถามที่นี่...',
-                  hintStyle: TextStyle(fontSize: 13.5, color: AppColors.hint(context)),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
+            child: TextField(
+              controller: _textController,
+              style: TextStyle(fontSize: 14.5, color: AppColors.text(context)),
+              maxLines: null,
+              textInputAction: TextInputAction.send,
+              onSubmitted: _sendMessage,
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: AppColors.surfAlt(context),
+                hintText: 'พิมพ์เล่าอาการ หรือถามคำถามที่นี่...',
+                hintStyle: TextStyle(fontSize: 13.5, color: AppColors.hint(context)),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide(color: AppColors.brd(context)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide(color: AppColors.brd(context)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
                 ),
               ),
             ),
@@ -678,15 +647,11 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF2D5A43), Color(0xFF3D7A5A)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: AppColors.primary,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF2D5A43).withValues(alpha: 0.35),
+                  color: AppColors.primary.withValues(alpha: 0.35),
                   blurRadius: 8,
                   offset: const Offset(0, 3),
                 ),
