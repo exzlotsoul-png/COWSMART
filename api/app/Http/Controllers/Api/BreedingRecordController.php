@@ -36,6 +36,11 @@ class BreedingRecordController extends Controller
     public function store(Request $request)
     {
         $data = $request->all();
+        // Auto-calculate expected calving date (~283 days) if mating_date is present and expected_calving is missing
+        if (!empty($data['mating_date']) && empty($data['expected_calving'])) {
+            $matingDt = Carbon::parse($data['mating_date']);
+            $data['expected_calving'] = $matingDt->addDays(283)->format('Y-m-d');
+        }
         $record = BreedingRecord::create($data);
         self::syncNotificationForBreedingRecord($record);
         return response()->json($record, 201);
@@ -49,7 +54,17 @@ class BreedingRecordController extends Controller
     public function update(Request $request, $id)
     {
         $record = BreedingRecord::findOrFail($id);
-        $record->update($request->all());
+        $data = $request->all();
+        // Auto-calculate expected calving date if mating_date changed or set, and expected_calving not explicitly set or empty
+        if (!empty($data['mating_date']) && empty($data['expected_calving']) && empty($record->expected_calving)) {
+            $matingDt = Carbon::parse($data['mating_date']);
+            $data['expected_calving'] = $matingDt->addDays(283)->format('Y-m-d');
+        }
+        // If pregnancy result is not pregnant or aborted, clear expected_calving
+        if (isset($data['pregnancy_result']) && in_array($data['pregnancy_result'], ['ไม่ท้อง', 'ไม่ตั้งท้อง', 'แท้ง', 'แท้งลูก'])) {
+            $data['expected_calving'] = null;
+        }
+        $record->update($data);
         self::syncNotificationForBreedingRecord($record);
         return response()->json($record);
     }

@@ -152,10 +152,19 @@ class CalendarEventController extends Controller
         // 3. Synthesize Expected Calvings into calendar events (only for cows in this farm)
         $breedingEvents = [];
         if (!empty($farmCowIds)) {
-            $records = BreedingRecord::whereNotNull('expected_calving')
-                ->where('expected_calving', '!=', '')
+            $records = BreedingRecord::where(function ($q) {
+                    $q->whereNotNull('expected_calving')->where('expected_calving', '!=', '')
+                      ->orWhere(function ($sub) {
+                          $sub->whereNotNull('mating_date')->where('mating_date', '!=', '');
+                      });
+                })
                 ->where(function ($q) {
                     $q->whereNull('calving_date')->orWhere('calving_date', '');
+                })
+                ->where(function ($q) {
+                    // Do not show for cows that did not get pregnant or had a miscarriage
+                    $q->whereNull('pregnancy_result')
+                      ->orWhereNotIn('pregnancy_result', ['ไม่ท้อง', 'ไม่ตั้งท้อง', 'แท้ง', 'แท้งลูก']);
                 })
                 ->whereIn('dam_id', $farmCowIds)
                 ->get();
@@ -164,19 +173,27 @@ class CalendarEventController extends Controller
                 $cow = $this->findCow($rec->dam_id, $farmCows, $farmId);
                 if (!$cow) continue; // Skip if cow doesn't belong to this farm
 
+                $calvingDate = $rec->expected_calving;
+                if (empty($calvingDate) && !empty($rec->mating_date)) {
+                    $calvingDate = Carbon::parse($rec->mating_date)->addDays(283)->format('Y-m-d');
+                }
+                if (empty($calvingDate)) continue;
+
                 $cowName = $cow->name ?: ($cow->tag_number ?: $cow->cow_id);
                 $sireInfo = $rec->sire_id ? " (พ่อพันธุ์: {$rec->sire_id})" : '';
-                $dt = Carbon::parse($rec->expected_calving)->setTime(8, 0)->toIso8601String();
+                $dt = Carbon::parse($calvingDate)->setTime(8, 0)->toIso8601String();
                 $calEventId = str_starts_with($rec->breeding_record_id, 'BR-')
                     ? $rec->breeding_record_id
                     : 'BR-' . $rec->breeding_record_id;
+
+                $statusNote = ($rec->pregnancy_result === 'ตั้งท้อง') ? ' (ตรวจยืนยันแล้ว)' : ' (คำนวณจากวันผสม)';
 
                 $breedingEvents[] = [
                     'calendar_event_id' => $calEventId,
                     'farm_id' => $farmId,
                     'title' => 'กำหนดวันคลอด: ' . $cowName,
                     'event_datetime' => $dt,
-                    'description' => 'คาดว่าจะคลอดลูกวัว' . $sireInfo,
+                    'description' => 'คาดว่าจะคลอดลูกวัว' . $sireInfo . $statusNote,
                     'reminder_setting' => $rec->reminder_setting ?: 'ก่อน 7 วัน',
                     'cow_id' => $cow->cow_id,
                     'event_type' => 'breeding',
@@ -309,11 +326,12 @@ class CalendarEventController extends Controller
                 $cow = Cow::find($rec->dam_id);
                 $cowName = $cow ? ($cow->name ?: ($cow->tag_number ?: $cow->cow_id)) : $rec->dam_id;
                 $sireInfo = $rec->sire_id ? " (พ่อพันธุ์: {$rec->sire_id})" : '';
+                $calvingDate = $rec->expected_calving ?: ($rec->mating_date ? Carbon::parse($rec->mating_date)->addDays(283)->format('Y-m-d') : null);
                 return response()->json([
                     'calendar_event_id' => str_starts_with($rec->breeding_record_id, 'BR-') ? $rec->breeding_record_id : 'BR-' . $rec->breeding_record_id,
                     'farm_id' => $rec->farm_id,
                     'title' => 'กำหนดวันคลอด: ' . $cowName,
-                    'event_datetime' => Carbon::parse($rec->expected_calving)->setTime(8, 0)->toIso8601String(),
+                    'event_datetime' => $calvingDate ? Carbon::parse($calvingDate)->setTime(8, 0)->toIso8601String() : null,
                     'description' => 'คาดว่าจะคลอดลูกวัว' . $sireInfo,
                     'reminder_setting' => $rec->reminder_setting ?: 'ก่อน 7 วัน',
                     'cow_id' => $rec->dam_id,

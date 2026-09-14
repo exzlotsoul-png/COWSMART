@@ -10,6 +10,8 @@ import 'package:cowsmart/core/widgets/cow_icon.dart';
 import 'package:cowsmart/core/utils/date_formatter.dart';
 import 'package:cowsmart/core/utils/app_toast.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cowsmart/features/calendar/providers/calendar_provider.dart';
+import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 
 // Provider to get male cows (bulls) for breeding
 final bullsProvider = Provider<List<Cow>>((ref) {
@@ -678,21 +680,28 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                     ),
                     onPressed: selectedBull == null
                         ? null
-                        : () {
+                        : () async {
+                            final estCalving = matingDate.add(const Duration(days: 283));
                             final record = BreedingRecord(
                               id: heatRecord.id,
                               damId: widget.cow.id,
                               sireId: selectedBull!.id,
                               heatDate: heatRecord.heatDate,
                               matingDate: matingDate,
+                              expectedCalving: estCalving,
                               calvingDate: null,
                               calvingResult: null,
                               calfId: heatRecord.calfId,
+                              reminderSetting: 'ก่อน 7 วัน',
                             );
-                            ref
+                            await ref
                                 .read(cowDetailProvider.notifier)
                                 .addBreedingRecord(record);
-                            Navigator.pop(ctx);
+                            final farmId = ref.read(farmProvider).currentFarm?.id;
+                            if (farmId != null && farmId.isNotEmpty) {
+                              ref.read(calendarProvider.notifier).fetchEvents(farmId);
+                            }
+                            if (ctx.mounted) Navigator.pop(ctx);
                           },
                     child: const Text(
                       'บันทึก',
@@ -1043,7 +1052,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                     ),
                     onPressed: result == null
                         ? null
-                        : () {
+                        : () async {
                             final record = BreedingRecord(
                               id: activeMating.id,
                               damId: widget.cow.id,
@@ -1060,7 +1069,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                               calfId: activeMating.calfId,
                               reminderSetting: selectedCalvingReminder,
                             );
-                            ref
+                            await ref
                                 .read(cowDetailProvider.notifier)
                                 .addBreedingRecord(record);
                             if (result == 'ตั้งท้อง') {
@@ -1080,7 +1089,11 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                                     CowStatus.normal,
                                   );
                             }
-                            Navigator.pop(ctx);
+                            final farmId = ref.read(farmProvider).currentFarm?.id;
+                            if (farmId != null && farmId.isNotEmpty) {
+                              ref.read(calendarProvider.notifier).fetchEvents(farmId);
+                            }
+                            if (ctx.mounted) Navigator.pop(ctx);
                           },
                     child: const Text(
                       'บันทึก',
@@ -1522,6 +1535,11 @@ class _BreedTabState extends ConsumerState<BreedTab> {
       ref
           .read(cowProvider.notifier)
           .updateCowStatus(widget.cow.id, CowStatus.recovering);
+
+      final farmId = ref.read(farmProvider).currentFarm?.id;
+      if (farmId != null && farmId.isNotEmpty) {
+        ref.read(calendarProvider.notifier).fetchEvents(farmId);
+      }
 
       if (result != null &&
           (result.contains('ปกติ') ||
@@ -2788,6 +2806,10 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                         .read(cowDetailProvider.notifier)
                         .deleteBreedingRecord(record.id);
                     ref.read(cowDetailProvider.notifier).fetchAllData(widget.cow.id);
+                    final farmId = ref.read(farmProvider).currentFarm?.id;
+                    if (farmId != null && farmId.isNotEmpty) {
+                      ref.read(calendarProvider.notifier).fetchEvents(farmId);
+                    }
                   },
                   child: const Text('ลบ'),
                 ),
