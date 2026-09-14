@@ -438,7 +438,7 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
                 TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    hintText: 'ค้นหาด้วยชื่อ หรือรหัสหูวัว...',
+                    hintText: 'ค้นหาด้วยชื่อ หรือเบอร์วัว...',
                     hintStyle: TextStyle(fontSize: 14.5, color: AppColors.hint(context)),
                     prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary, size: 22),
                     suffixIcon: _searchQuery.isNotEmpty
@@ -617,29 +617,124 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
                                         children: [
                                           Flexible(
                                             child: Text(
-                                              cow.name.isNotEmpty ? cow.name : cow.tagNumber,
+                                              cow.name.isNotEmpty ? cow.name : 'เบอร์วัว ${cow.tagNumber}',
                                               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.text(context)),
                                               overflow: TextOverflow.ellipsis,
                                             ),
                                           ),
                                           const SizedBox(width: 8),
                                           Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                             decoration: BoxDecoration(
                                               color: AppColors.primary.withValues(alpha: 0.1),
                                               borderRadius: BorderRadius.circular(6),
                                             ),
                                             child: Text(
                                               cow.tagNumber,
-                                              style: TextStyle(fontSize: 12.5, color: AppColors.text(context), fontWeight: FontWeight.bold),
+                                              style: TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.bold),
                                             ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Builder(
+                                            builder: (_) {
+                                              Color statusColor;
+                                              switch (cow.status) {
+                                                case CowStatus.normal:
+                                                  statusColor = AppColors.success;
+                                                  break;
+                                                case CowStatus.sick:
+                                                case CowStatus.deceased:
+                                                  statusColor = AppColors.error;
+                                                  break;
+                                                case CowStatus.injured:
+                                                  statusColor = const Color(0xFFD97706);
+                                                  break;
+                                                case CowStatus.estrous:
+                                                  statusColor = const Color(0xFFEC4899);
+                                                  break;
+                                                case CowStatus.pregnant:
+                                                  statusColor = const Color(0xFF9333EA);
+                                                  break;
+                                                case CowStatus.recovering:
+                                                  statusColor = const Color(0xFF2563EB);
+                                                  break;
+                                                case CowStatus.sold:
+                                                  statusColor = AppColors.textHint;
+                                                  break;
+                                                case CowStatus.removed:
+                                                  statusColor = AppColors.warning;
+                                                  break;
+                                              }
+                                              return Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: statusColor.withValues(alpha: 0.12),
+                                                  borderRadius: BorderRadius.circular(6),
+                                                ),
+                                                child: Text(
+                                                  cow.status.label,
+                                                  style: TextStyle(
+                                                    color: statusColor,
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              );
+                                            },
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'สายพันธุ์: $breedDisplay • เพศ: $genderDisplay',
-                                        style: TextStyle(fontSize: 13.5, color: AppColors.subText(context)),
+                                      const SizedBox(height: 5),
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                            decoration: BoxDecoration(
+                                              color: (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male' ? Colors.blue : Colors.pink)
+                                                  .withValues(alpha: 0.12),
+                                              borderRadius: BorderRadius.circular(4),
+                                              border: Border.all(
+                                                color: (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male' ? Colors.blue : Colors.pink)
+                                                    .withValues(alpha: 0.4),
+                                                width: 0.8,
+                                              ),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male')
+                                                      ? Icons.male_rounded
+                                                      : Icons.female_rounded,
+                                                  size: 14,
+                                                  color: (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male')
+                                                      ? Colors.blue[700]
+                                                      : Colors.pink[600],
+                                                ),
+                                                const SizedBox(width: 2),
+                                                Text(
+                                                  genderDisplay,
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male')
+                                                        ? Colors.blue[700]
+                                                        : Colors.pink[600],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Expanded(
+                                            child: Text(
+                                              'สายพันธุ์: $breedDisplay',
+                                              style: TextStyle(fontSize: 13, color: AppColors.subText(context)),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),

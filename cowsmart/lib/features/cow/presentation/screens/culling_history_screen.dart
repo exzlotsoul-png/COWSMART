@@ -140,7 +140,7 @@ class _CullingHistoryScreenState extends ConsumerState<CullingHistoryScreen> {
                 child: TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    hintText: 'ค้นหาด้วยชื่อ หรือรหัสหูวัว...',
+                    hintText: 'ค้นหาด้วยชื่อ หรือเบอร์วัว...',
                     hintStyle: TextStyle(fontSize: 14.5, color: AppColors.hint(context)),
                     prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary, size: 22),
                     suffixIcon: _searchQuery.isNotEmpty
