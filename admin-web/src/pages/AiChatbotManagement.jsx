@@ -572,7 +572,7 @@ const AiChatbotManagement = () => {
               <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div className="form-group">
-                    <label className="form-label">หมวดหมู่อาการหรือความรู้ *</label>
+                    <label className="form-label">หมวดหมู่ของคำถาม *</label>
                     <select
                       className="form-control"
                       value={formData.category}
@@ -597,7 +597,7 @@ const AiChatbotManagement = () => {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">หัวข้อคำถาม หรืออาการ *</label>
+                  <label className="form-label">หัวข้อคำถาม *</label>
                   <input
                     type="text"
                     className="form-control"
