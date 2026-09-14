@@ -2,16 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/cow_icon.dart';
-import '../../../cow/domain/cow.dart';
-import '../../../cow/providers/cow_provider.dart';
 import '../../data/ai_chat_repository.dart';
 import '../../domain/chat_message.dart';
 
 class AiVetChatScreen extends ConsumerStatefulWidget {
-  final String? initialCowId;
-
-  const AiVetChatScreen({super.key, this.initialCowId});
+  const AiVetChatScreen({super.key});
 
   @override
   ConsumerState<AiVetChatScreen> createState() => _AiVetChatScreenState();
@@ -24,7 +19,6 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
 
   bool _isLoading = false;
   List<SuggestedTopicCategory> _suggestedCategories = [];
-  Cow? _selectedCow;
 
   @override
   void initState() {
@@ -85,8 +79,6 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
       text: trimmed,
       isUser: true,
       timestamp: DateTime.now(),
-      cowName: _selectedCow?.name,
-      cowTag: _selectedCow?.tagNumber,
     );
 
     setState(() {
@@ -99,7 +91,7 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
       final repo = ref.read(aiChatRepositoryProvider);
       final response = await repo.consultAi(
         message: trimmed,
-        cowId: _selectedCow?.id,
+        cowId: null,
       );
 
       final aiText = response['ai_response'] ?? 'ขออภัยครับ ระบบไม่สามารถประมวลผลคำตอบได้ในขณะนี้';
@@ -197,99 +189,136 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cowState = ref.watch(cowProvider);
-    final allCows = cowState.allCows;
-
-    // Set initial cow if passed in widget
-    if (widget.initialCowId != null && _selectedCow == null && allCows.isNotEmpty) {
-      _selectedCow = allCows.firstWhere(
-        (c) => c.id == widget.initialCowId,
-        orElse: () => allCows.first,
-      );
-    }
-
     return Scaffold(
       backgroundColor: AppColors.bg(context),
       appBar: AppBar(
         backgroundColor: AppColors.cardBg(context),
-        elevation: 0.5,
+        elevation: 0,
+        scrolledUnderElevation: 1,
         titleSpacing: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: AppColors.text(context)),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: AppColors.text(context)),
           onPressed: () => context.pop(),
         ),
         title: Row(
           children: [
-            Stack(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.health_and_safety_rounded, color: AppColors.primary, size: 22),
-                  ),
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF2D5A43), Color(0xFF4A7C59)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF22C55E),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF2D5A43).withValues(alpha: 0.25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  const Center(
+                    child: Icon(Icons.health_and_safety_rounded, color: Colors.white, size: 22),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
+                      width: 11,
+                      height: 11,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'หมอวัว CowSmart',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.text(context),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          'หมอวัว CowSmart',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.text(context),
+                            letterSpacing: -0.2,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text(
+                          'AI VET',
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF059669),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const Text(
-                  'AI ผู้ช่วยสัตวแพทย์ 24 ชม.',
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    color: Color(0xFF16A34A),
-                    fontWeight: FontWeight.w600,
+                  const SizedBox(height: 2),
+                  const Text(
+                    'ผู้ช่วยวินิจฉัยและสัตวแพทย์ 24 ชม.',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: Color(0xFF059669),
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: AppColors.textSecondary),
-            tooltip: 'เริ่มสนทนาใหม่',
+            icon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: AppColors.surfAlt(context),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.restart_alt_rounded, size: 20, color: AppColors.subText(context)),
+            ),
+            tooltip: 'เริ่มการสนทนาใหม่',
             onPressed: _clearChat,
           ),
+          const SizedBox(width: 6),
         ],
       ),
       body: Column(
         children: [
-          // 1. Cow Selector Banner Card
-          _buildCowSelectorBar(allCows),
-
-          // 2. Chat Feed
+          // 1. Chat Feed
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
               itemCount: _messages.length + (_isLoading ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index == _messages.length && _isLoading) {
@@ -301,77 +330,12 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
             ),
           ),
 
-          // 3. Quick Suggested Topics Horizontal Bar
+          // 2. Quick Suggested Topics Horizontal Bar
           if (_suggestedCategories.isNotEmpty)
             _buildSuggestedChipsBar(),
 
-          // 4. Input Area
+          // 3. Input Area
           _buildInputBar(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCowSelectorBar(List<Cow> allCows) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.cardBg(context),
-        border: Border(bottom: BorderSide(color: AppColors.div(context))),
-      ),
-      child: Row(
-        children: [
-          const CowIcon(size: 18, color: AppColors.primary),
-          const SizedBox(width: 8),
-          Text(
-            'ปรึกษาสำหรับ:',
-            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: AppColors.subText(context)),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              decoration: BoxDecoration(
-                color: AppColors.surfAlt(context),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  isExpanded: true,
-                  dropdownColor: AppColors.cardBg(context),
-                  value: _selectedCow?.id,
-                  hint: Text('ถามทั่วไป / ไม่เจาะจงวัว', style: TextStyle(fontSize: 12.5, color: AppColors.hint(context))),
-                  icon: Icon(Icons.arrow_drop_down_rounded, color: AppColors.subText(context)),
-                  items: [
-                    DropdownMenuItem<String>(
-                      value: null,
-                      child: Text('ถามทั่วไป / ทั้งฟาร์ม', style: TextStyle(fontSize: 12.5, color: AppColors.text(context))),
-                    ),
-                    ...allCows.map(
-                      (cow) => DropdownMenuItem<String>(
-                        value: cow.id,
-                        child: Text(
-                          '${cow.tagNumber} - ${cow.name} (${cow.breed})',
-                          style: TextStyle(fontSize: 12.5, color: AppColors.text(context), fontWeight: FontWeight.w600),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),
-                  ],
-                  onChanged: (selectedId) {
-                    setState(() {
-                      if (selectedId == null) {
-                        _selectedCow = null;
-                      } else {
-                        _selectedCow = allCows.firstWhere((c) => c.id == selectedId);
-                      }
-                    });
-                  },
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -380,64 +344,55 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
   Widget _buildMessageItem(ChatMessage message) {
     if (message.isUser) {
       return Padding(
-        padding: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.only(bottom: 16),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Flexible(
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: AppColors.primary,
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF2D5A43), Color(0xFF386C52)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(18),
-                    topRight: Radius.circular(18),
-                    bottomLeft: Radius.circular(18),
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                    bottomLeft: Radius.circular(20),
                     bottomRight: Radius.circular(4),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.25),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
+                      color: const Color(0xFF2D5A43).withValues(alpha: 0.22),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    if (message.cowName != null) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          '${message.cowTag != null ? "[${message.cowTag}] " : ""}${message.cowName}',
-                          style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                    ],
-                    Text(
-                      message.text,
-                      style: const TextStyle(
-                        fontSize: 14.5,
-                        color: Colors.white,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  message.text,
+                  style: const TextStyle(
+                    fontSize: 14.5,
+                    color: Colors.white,
+                    height: 1.45,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
               ),
             ),
             const SizedBox(width: 8),
-            const CircleAvatar(
-              radius: 16,
-              backgroundColor: AppColors.primaryLight,
-              child: Icon(Icons.person, size: 18, color: AppColors.primaryDark),
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.2), width: 1.5),
+              ),
+              child: const Icon(Icons.person_rounded, size: 18, color: AppColors.primary),
             ),
           ],
         ),
@@ -446,20 +401,25 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
 
     // AI Doctor Message Bubble
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: 18),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 32,
-            height: 32,
+            width: 34,
+            height: 34,
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.12),
+              gradient: const LinearGradient(
+                colors: [Color(0xFFE8F5EE), Color(0xFFD1E8DA)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFF2D5A43).withValues(alpha: 0.15)),
             ),
             child: const Center(
-              child: Icon(Icons.health_and_safety_rounded, color: AppColors.primary, size: 18),
+              child: Icon(Icons.health_and_safety_rounded, color: Color(0xFF2D5A43), size: 19),
             ),
           ),
           const SizedBox(width: 10),
@@ -473,60 +433,72 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
                     color: AppColors.cardBg(context),
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(4),
-                      topRight: Radius.circular(18),
-                      bottomLeft: Radius.circular(18),
-                      bottomRight: Radius.circular(18),
+                      topRight: Radius.circular(20),
+                      bottomLeft: Radius.circular(20),
+                      bottomRight: Radius.circular(20),
                     ),
-                    border: Border.all(color: AppColors.brd(context)),
+                    border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.7)),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.03),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
                       ),
                     ],
                   ),
                   child: Text(
                     message.text,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 14.5,
                       color: AppColors.text(context),
-                      height: 1.5,
+                      height: 1.55,
                     ),
                   ),
                 ),
 
                 // Suggested Action Buttons (e.g. Create Appointment / Record Health)
                 if (message.actions != null && message.actions!.isNotEmpty) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
-                    runSpacing: 6,
+                    runSpacing: 8,
                     children: message.actions!.map((action) {
-                      return InkWell(
-                        onTap: () => _handleSuggestedAction(action),
-                        borderRadius: BorderRadius.circular(20),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF0FDF4),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: const Color(0xFF86EFAC)),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                action.label,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF166534),
+                      return Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () => _handleSuggestedAction(action),
+                          borderRadius: BorderRadius.circular(14),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF0FDF4),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: const Color(0xFF86EFAC)),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF10B981).withValues(alpha: 0.08),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1),
                                 ),
-                              ),
-                              const SizedBox(width: 4),
-                              const Icon(Icons.arrow_forward_ios_rounded, size: 10, color: Color(0xFF166534)),
-                            ],
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.check_circle_outline_rounded, size: 14, color: Color(0xFF166534)),
+                                const SizedBox(width: 6),
+                                Text(
+                                  action.label,
+                                  style: const TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF166534),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                const Icon(Icons.arrow_forward_ios_rounded, size: 10, color: Color(0xFF166534)),
+                              ],
+                            ),
                           ),
                         ),
                       );
@@ -548,36 +520,43 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 32,
-            height: 32,
+            width: 34,
+            height: 34,
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: const Center(
-              child: Icon(Icons.health_and_safety_rounded, color: AppColors.primary, size: 18),
+              child: Icon(Icons.health_and_safety_rounded, color: AppColors.primary, size: 19),
             ),
           ),
           const SizedBox(width: 10),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.cardBg(context),
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: AppColors.brd(context)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.02),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                SizedBox(
+                const SizedBox(
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Text(
                   'หมอวัวกำลังวิเคราะห์อาการ...',
-                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontStyle: FontStyle.italic),
+                  style: TextStyle(fontSize: 13.5, color: AppColors.subText(context), fontStyle: FontStyle.italic),
                 ),
               ],
             ),
@@ -588,53 +567,92 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
   }
 
   Widget _buildSuggestedChipsBar() {
+    final allItems = _suggestedCategories.expand((c) => c.items).toList();
+    if (allItems.isEmpty) return const SizedBox.shrink();
+
     return Container(
-      height: 46,
-      padding: const EdgeInsets.symmetric(vertical: 4),
       decoration: BoxDecoration(
         color: AppColors.cardBg(context),
-        border: Border(top: BorderSide(color: AppColors.div(context))),
+        border: Border(top: BorderSide(color: AppColors.div(context).withValues(alpha: 0.6))),
       ),
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        scrollDirection: Axis.horizontal,
-        itemCount: _suggestedCategories.expand((c) => c.items).length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final allItems = _suggestedCategories.expand((c) => c.items).toList();
-          final item = allItems[index];
-          return ActionChip(
-            label: Text(
-              item.title,
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.text(context)),
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+            child: Row(
+              children: [
+                Icon(Icons.tips_and_updates_outlined, size: 14, color: AppColors.subText(context)),
+                const SizedBox(width: 5),
+                Text(
+                  'หัวข้อคำถามพบบ่อย:',
+                  style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.subText(context)),
+                ),
+              ],
             ),
-            backgroundColor: AppColors.surfAlt(context),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: AppColors.brd(context))),
-            onPressed: () => _sendMessage(item.prompt),
-          );
-        },
+          ),
+          const SizedBox(height: 4),
+          SizedBox(
+            height: 38,
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              scrollDirection: Axis.horizontal,
+              itemCount: allItems.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final item = allItems[index];
+                return InkWell(
+                  onTap: () => _sendMessage(item.prompt),
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfAlt(context),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.brd(context)),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      item.title,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.text(context),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildInputBar() {
+    final bottomInset = MediaQuery.of(context).padding.bottom;
     return Container(
-      padding: EdgeInsets.fromLTRB(16, 8, 16, MediaQuery.of(context).padding.bottom + 8),
+      padding: EdgeInsets.fromLTRB(14, 10, 14, bottomInset > 0 ? bottomInset + 4 : 12),
       decoration: BoxDecoration(
         color: AppColors.cardBg(context),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, -3),
           ),
         ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Expanded(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
+              constraints: const BoxConstraints(maxHeight: 120),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               decoration: BoxDecoration(
                 color: AppColors.surfAlt(context),
                 borderRadius: BorderRadius.circular(24),
@@ -642,23 +660,37 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
               ),
               child: TextField(
                 controller: _textController,
-                style: TextStyle(color: AppColors.text(context)),
+                style: TextStyle(fontSize: 14.5, color: AppColors.text(context)),
+                maxLines: null,
                 textInputAction: TextInputAction.send,
                 onSubmitted: _sendMessage,
                 decoration: InputDecoration(
                   hintText: 'พิมพ์เล่าอาการ หรือถามคำถามที่นี่...',
                   hintStyle: TextStyle(fontSize: 13.5, color: AppColors.hint(context)),
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
                 ),
               ),
             ),
           ),
           const SizedBox(width: 8),
           Container(
-            decoration: const BoxDecoration(
-              color: AppColors.primary,
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF2D5A43), Color(0xFF3D7A5A)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF2D5A43).withValues(alpha: 0.35),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
             ),
             child: IconButton(
               icon: const Icon(Icons.send_rounded, color: Colors.white, size: 20),

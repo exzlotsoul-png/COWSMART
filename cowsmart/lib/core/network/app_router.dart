@@ -253,10 +253,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/ai_chat',
-        builder: (context, state) {
-          final cowId = state.extra as String?;
-          return AiVetChatScreen(initialCowId: cowId);
-        },
+        builder: (context, state) => const AiVetChatScreen(),
       ),
     ],
   );
