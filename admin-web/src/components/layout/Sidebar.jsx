@@ -16,11 +16,12 @@ import {
   CalendarCheck,
   TrendingUp,
   Bot,
-  Megaphone
+  Megaphone,
+  X
 } from 'lucide-react';
 import './layout.css';
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, onClose }) => {
   const menuSections = [
     {
       label: 'ภาพรวม',
@@ -60,13 +61,22 @@ const Sidebar = () => {
   ];
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
       <div className="sidebar-header">
-        <img src="/favicon.svg" alt="CowSmart Logo" className="sidebar-logo" />
-        <div className="sidebar-title">
-          <span>CowSmart</span>
-          <span className="sub-title">Admin</span>
+        <div className="sidebar-brand">
+          <img src="/favicon.svg" alt="CowSmart Logo" className="sidebar-logo" />
+          <div className="sidebar-title">
+            <span>CowSmart</span>
+            <span className="sub-title">Admin</span>
+          </div>
         </div>
+        <button 
+          className="sidebar-close-btn" 
+          onClick={onClose} 
+          aria-label="ปิดเมนู"
+        >
+          <X size={20} />
+        </button>
       </div>
       <nav className="sidebar-nav">
         {menuSections.map((section, idx) => (
@@ -76,6 +86,9 @@ const Sidebar = () => {
               <NavLink
                 key={item.path}
                 to={item.path}
+                onClick={() => {
+                  if (onClose) onClose();
+                }}
                 className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}
               >
                 {item.icon}

@@ -12,9 +12,30 @@
   margin-bottom: 28px;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1100px) {
   .summary-cards-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .summary-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .summary-card {
+    padding: 16px 18px;
+  }
+
+  .summary-info h3 {
+    font-size: 1.5rem;
+  }
+
+  .summary-icon {
+    width: 44px;
+    height: 44px;
   }
 }
 
@@ -269,5 +290,26 @@
 .legend-item-bottom:last-child {
   border-bottom: none;
   padding-bottom: 0;
+}
+
+@media (max-width: 640px) {
+  .db-card {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .db-card-title {
+    font-size: 0.95rem;
+    margin-bottom: 14px;
+  }
+
+  .donut-value {
+    font-size: 1.6rem;
+  }
+
+  .chart-legend, .chart-legend-bottom {
+    margin-top: 16px;
+    gap: 8px;
+  }
 }
 

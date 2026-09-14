@@ -1,5 +1,5 @@
-import React from 'react';
-import { Outlet, Navigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import { useAuth } from '../../contexts/AuthContext';
@@ -7,6 +7,13 @@ import './layout.css';
 
 const AdminLayout = () => {
   const { user, loading } = useAuth();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const location = useLocation();
+
+  // Close mobile sidebar on route change
+  React.useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [location.pathname]);
 
   if (loading) {
     return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>Loading...</div>;
@@ -20,9 +27,24 @@ const AdminLayout = () => {
 
   return (
     <div className="admin-layout">
-      <Sidebar />
+      {/* Mobile Drawer Backdrop Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="sidebar-backdrop" 
+          onClick={() => setIsSidebarOpen(false)} 
+          aria-hidden="true" 
+        />
+      )}
+      
+      <Sidebar 
+        isOpen={isSidebarOpen} 
+        onClose={() => setIsSidebarOpen(false)} 
+      />
+      
       <main className="main-content">
-        <Header />
+        <Header 
+          onToggleSidebar={() => setIsSidebarOpen(prev => !prev)} 
+        />
         <div className="page-container">
           <Outlet />
         </div>
