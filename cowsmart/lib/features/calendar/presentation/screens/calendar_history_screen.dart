@@ -118,13 +118,11 @@ class _CalendarHistoryScreenState extends ConsumerState<CalendarHistoryScreen> {
 
   Widget _buildSearchAndFilters(CalendarState calState) {
     final categories = [
-      {'key': 'all', 'label': 'ทั้งหมด', 'icon': Icons.apps, 'color': AppColors.primary},
-      {'key': 'general', 'label': 'กิจกรรมทั่วไป', 'icon': Icons.event_note, 'color': const Color(0xFF0284C7)},
-      {'key': 'health', 'label': 'นัดหมายสุขภาพ', 'icon': Icons.medical_services_outlined, 'color': const Color(0xFFDC2626)},
-      {'key': 'breeding', 'label': 'กำหนดคลอด', 'icon': Icons.favorite_outline, 'color': Colors.purple},
+      {'key': 'all', 'label': 'ทั้งหมด', 'icon': Icons.apps_rounded, 'color': AppColors.primary},
+      {'key': 'general', 'label': 'กิจกรรมทั่วไป', 'icon': Icons.event_note_rounded, 'color': const Color(0xFF0284C7)},
+      {'key': 'health', 'label': 'นัดหมายสุขภาพ', 'icon': Icons.medical_services_rounded, 'color': const Color(0xFFDC2626)},
+      {'key': 'breeding', 'label': 'กำหนดคลอด', 'icon': Icons.favorite_rounded, 'color': const Color(0xFF9333EA)},
     ];
-
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       color: AppColors.cardBg(context),
@@ -160,7 +158,7 @@ class _CalendarHistoryScreenState extends ConsumerState<CalendarHistoryScreen> {
               setState(() => _searchQuery = val.trim());
             },
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
 
           // Category Chips
           SingleChildScrollView(
@@ -168,38 +166,83 @@ class _CalendarHistoryScreenState extends ConsumerState<CalendarHistoryScreen> {
             child: Row(
               children: categories.map((cat) {
                 final isSelected = calState.selectedCategory == cat['key'];
-                final color = cat['color'] as Color?;
+                final color = cat['color'] as Color;
+
+                final int count = cat['key'] == 'all'
+                    ? calState.pastEvents.length
+                    : calState.pastEvents.where((e) => e.eventType == cat['key']).length;
+
                 return Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: ChoiceChip(
-                    showCheckmark: false,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    avatar: Icon(
-                      cat['icon'] as IconData,
-                      size: 16,
-                      color: isSelected ? Colors.white : (color ?? AppColors.primary),
-                    ),
-                    label: Text(
-                      cat['label'] as String,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                        color: isSelected ? Colors.white : AppColors.text(context),
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        ref.read(calendarProvider.notifier).setCategory(cat['key'] as String);
+                      },
+                      borderRadius: BorderRadius.circular(24),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeInOut,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7.5),
+                        decoration: BoxDecoration(
+                          color: isSelected ? color : AppColors.surfAlt(context),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: isSelected ? color : AppColors.brd(context).withValues(alpha: 0.8),
+                            width: isSelected ? 1.5 : 1,
+                          ),
+                          boxShadow: isSelected
+                              ? [
+                                  BoxShadow(
+                                    color: color.withValues(alpha: 0.35),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              cat['icon'] as IconData,
+                              size: 16,
+                              color: isSelected ? Colors.white : color,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              cat['label'] as String,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                color: isSelected ? Colors.white : AppColors.text(context),
+                              ),
+                            ),
+                            if (count > 0) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? Colors.white.withValues(alpha: 0.25)
+                                      : color.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  '$count',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: isSelected ? Colors.white : color,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
                       ),
                     ),
-                    selected: isSelected,
-                    selectedColor: color ?? AppColors.primary,
-                    backgroundColor: isDark
-                        ? (color ?? AppColors.primary).withValues(alpha: 0.25)
-                        : (color ?? AppColors.primary).withValues(alpha: 0.1),
-                    side: BorderSide(
-                      color: isSelected
-                          ? (color ?? AppColors.primary)
-                          : (color ?? AppColors.primary).withValues(alpha: isDark ? 0.5 : 0.3),
-                    ),
-                    onSelected: (_) {
-                      ref.read(calendarProvider.notifier).setCategory(cat['key'] as String);
-                    },
                   ),
                 );
               }).toList(),
@@ -514,22 +557,23 @@ class _HistoryEventCard extends ConsumerWidget {
     }
 
     return Card(
-      elevation: 0.5,
+      elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: AppColors.brd(context)),
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: AppColors.brd(context).withValues(alpha: 0.8)),
       ),
-      color: AppColors.surf(context),
+      color: AppColors.cardBg(context),
       child: ListTile(
         onTap: onTap,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         leading: Container(
           width: 52,
           height: 52,
           decoration: BoxDecoration(
-            color: typeColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
+            color: typeColor.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(13),
+            border: Border.all(color: typeColor.withValues(alpha: 0.25)),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

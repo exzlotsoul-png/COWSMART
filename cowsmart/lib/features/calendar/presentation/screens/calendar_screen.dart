@@ -106,7 +106,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         children: [
           _buildFilterChips(calState),
           _buildCalendar(calState),
-          const Divider(height: 1),
+          _buildDateHeader(selectedEvents),
           Expanded(
             child: calState.isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -119,77 +119,136 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   Widget _buildFilterChips(CalendarState calState) {
     final categories = [
-      {'key': 'all', 'label': 'ทั้งหมด', 'icon': Icons.apps, 'color': AppColors.primary},
-      {'key': 'general', 'label': 'กิจกรรมทั่วไป', 'icon': Icons.event_note, 'color': const Color(0xFF0284C7)},
-      {'key': 'health', 'label': 'นัดหมายสุขภาพ', 'icon': Icons.medical_services_outlined, 'color': const Color(0xFFDC2626)},
-      {'key': 'breeding', 'label': 'กำหนดคลอด', 'icon': Icons.favorite_outline, 'color': Colors.purple},
+      {'key': 'all', 'label': 'ทั้งหมด', 'icon': Icons.apps_rounded, 'color': AppColors.primary},
+      {'key': 'general', 'label': 'กิจกรรมทั่วไป', 'icon': Icons.event_note_rounded, 'color': const Color(0xFF0284C7)},
+      {'key': 'health', 'label': 'นัดหมายสุขภาพ', 'icon': Icons.medical_services_rounded, 'color': const Color(0xFFDC2626)},
+      {'key': 'breeding', 'label': 'กำหนดคลอด', 'icon': Icons.favorite_rounded, 'color': const Color(0xFF9333EA)},
     ];
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Container(
-      color: AppColors.cardBg(context),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: categories.map((cat) {
-                  final isSelected = calState.selectedCategory == cat['key'];
-                  final color = cat['color'] as Color?;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: ChoiceChip(
-                      showCheckmark: false,
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      avatar: Icon(
-                        cat['icon'] as IconData,
-                        size: 16,
-                        color: isSelected ? Colors.white : (color ?? AppColors.primary),
+      decoration: BoxDecoration(
+        color: AppColors.cardBg(context),
+        border: Border(
+          bottom: BorderSide(
+            color: AppColors.brd(context).withValues(alpha: 0.6),
+            width: 1,
+          ),
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 9),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        child: Row(
+          children: categories.map((cat) {
+            final isSelected = calState.selectedCategory == cat['key'];
+            final color = cat['color'] as Color;
+
+            // Count upcoming events for badge
+            final int count = cat['key'] == 'all'
+                ? calState.upcomingEvents.length
+                : calState.upcomingEvents.where((e) => e.eventType == cat['key']).length;
+
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    ref.read(calendarProvider.notifier).setCategory(cat['key'] as String);
+                  },
+                  borderRadius: BorderRadius.circular(24),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7.5),
+                    decoration: BoxDecoration(
+                      color: isSelected ? color : AppColors.surfAlt(context),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: isSelected ? color : AppColors.brd(context).withValues(alpha: 0.8),
+                        width: isSelected ? 1.5 : 1,
                       ),
-                      label: Text(
-                        cat['label'] as String,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                          color: isSelected ? Colors.white : AppColors.text(context),
-                        ),
-                      ),
-                      selected: isSelected,
-                      selectedColor: color ?? AppColors.primary,
-                      backgroundColor: isDark
-                          ? (color ?? AppColors.primary).withValues(alpha: 0.25)
-                          : (color ?? AppColors.primary).withValues(alpha: 0.1),
-                      side: BorderSide(
-                        color: isSelected
-                            ? (color ?? AppColors.primary)
-                            : (color ?? AppColors.primary).withValues(alpha: isDark ? 0.5 : 0.3),
-                      ),
-                      onSelected: (_) {
-                        ref.read(calendarProvider.notifier).setCategory(cat['key'] as String);
-                      },
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: color.withValues(alpha: 0.35),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ]
+                          : null,
                     ),
-                  );
-                }).toList(),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          cat['icon'] as IconData,
+                          size: 16,
+                          color: isSelected ? Colors.white : color,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          cat['label'] as String,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                            color: isSelected ? Colors.white : AppColors.text(context),
+                          ),
+                        ),
+                        if (count > 0) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? Colors.white.withValues(alpha: 0.25)
+                                  : color.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '$count',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: isSelected ? Colors.white : color,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ),
-          const SizedBox(width: 4),
-          Icon(
-            Icons.arrow_forward_ios_rounded,
-            size: 14,
-            color: AppColors.subText(context),
-          ),
-        ],
+            );
+          }).toList(),
+        ),
       ),
     );
   }
 
   Widget _buildCalendar(CalendarState calState) {
     return Container(
-      color: AppColors.surf(context),
+      margin: const EdgeInsets.fromLTRB(14, 10, 14, 6),
+      decoration: BoxDecoration(
+        color: AppColors.cardBg(context),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: AppColors.brd(context).withValues(alpha: 0.7),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(
+              alpha: AppColors.isDark(context) ? 0.25 : 0.04,
+            ),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.fromLTRB(6, 4, 6, 10),
       child: TableCalendar<CalendarEvent>(
         firstDay: DateTime(2020),
         lastDay: DateTime(2030),
@@ -199,6 +258,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         eventLoader: calState.eventsForDay,
         startingDayOfWeek: StartingDayOfWeek.monday,
         locale: 'th_TH',
+        availableCalendarFormats: const {
+          CalendarFormat.month: 'เดือน',
+          CalendarFormat.twoWeeks: '2 สัปดาห์',
+          CalendarFormat.week: 'สัปดาห์',
+        },
         onDaySelected: (selected, focused) {
           setState(() {
             _selectedDay = selected;
@@ -212,35 +276,77 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             _selectedDay = focused;
           });
         },
+        daysOfWeekStyle: DaysOfWeekStyle(
+          weekdayStyle: TextStyle(
+            color: AppColors.subText(context),
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+          ),
+          weekendStyle: const TextStyle(
+            color: AppColors.error,
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+          ),
+        ),
         calendarStyle: CalendarStyle(
           outsideDaysVisible: false,
-          selectedDecoration: const BoxDecoration(
+          selectedDecoration: BoxDecoration(
             color: AppColors.primary,
             shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.4),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           todayDecoration: BoxDecoration(
-            color: AppColors.primaryLight.withValues(alpha: 0.5),
+            color: AppColors.primary.withValues(alpha: 0.12),
             shape: BoxShape.circle,
+            border: Border.all(color: AppColors.primary, width: 1.5),
           ),
-          weekendTextStyle: const TextStyle(color: AppColors.error, fontSize: 15),
-          defaultTextStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+          todayTextStyle: const TextStyle(
+            color: AppColors.primary,
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+          ),
           selectedTextStyle: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
-            fontSize: 16,
+            fontSize: 15.5,
+          ),
+          weekendTextStyle: const TextStyle(
+            color: AppColors.error,
+            fontSize: 14.5,
+            fontWeight: FontWeight.w500,
+          ),
+          defaultTextStyle: TextStyle(
+            color: AppColors.text(context),
+            fontSize: 14.5,
+            fontWeight: FontWeight.w500,
           ),
         ),
-        headerStyle: const HeaderStyle(
+        headerStyle: HeaderStyle(
           formatButtonShowsNext: false,
           titleCentered: true,
-          titleTextStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
           formatButtonDecoration: BoxDecoration(
-            border: Border.fromBorderSide(
-              BorderSide(color: AppColors.primary),
+            color: AppColors.primary.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.35),
+              width: 1,
             ),
-            borderRadius: BorderRadius.all(Radius.circular(12)),
           ),
-          formatButtonTextStyle: TextStyle(color: AppColors.primary, fontSize: 13, fontWeight: FontWeight.bold),
+          formatButtonTextStyle: const TextStyle(
+            color: AppColors.primary,
+            fontSize: 12.5,
+            fontWeight: FontWeight.bold,
+          ),
+          formatButtonPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          leftChevronIcon: const Icon(Icons.chevron_left_rounded, color: AppColors.primary, size: 26),
+          rightChevronIcon: const Icon(Icons.chevron_right_rounded, color: AppColors.primary, size: 26),
+          headerPadding: const EdgeInsets.symmetric(vertical: 4),
         ),
         calendarBuilders: CalendarBuilders(
           headerTitleBuilder: (context, day) {
@@ -248,7 +354,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               child: Text(
                 AppDateUtils.formatThaiMonthYear(day),
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 17,
                   fontWeight: FontWeight.bold,
                   color: AppColors.text(context),
                 ),
@@ -257,6 +363,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           },
           markerBuilder: (context, date, events) {
             if (events.isEmpty) return const SizedBox();
+            final isSelected = isSameDay(_selectedDay, date);
             return Positioned(
               bottom: 4,
               child: Row(
@@ -264,14 +371,17 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 children: events.take(3).map((e) {
                   Color dotColor = const Color(0xFF0284C7);
                   if (e.eventType == 'health') dotColor = const Color(0xFFDC2626);
-                  if (e.eventType == 'breeding') dotColor = Colors.purple;
+                  if (e.eventType == 'breeding') dotColor = const Color(0xFF9333EA);
                   return Container(
                     margin: const EdgeInsets.symmetric(horizontal: 1.5),
-                    width: 7,
-                    height: 7,
+                    width: 6,
+                    height: 6,
                     decoration: BoxDecoration(
                       color: dotColor,
                       shape: BoxShape.circle,
+                      border: isSelected
+                          ? Border.all(color: Colors.white, width: 0.8)
+                          : null,
                     ),
                   );
                 }).toList(),
@@ -283,6 +393,93 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     );
   }
 
+  Widget _buildDateHeader(List<CalendarEvent> selectedEvents) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final selectedDate = DateTime(_selectedDay.year, _selectedDay.month, _selectedDay.day);
+    final isToday = selectedDate.isAtSameMomentAs(today);
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 7, 16, 7),
+      decoration: BoxDecoration(
+        color: AppColors.surfAlt(context),
+        border: Border(
+          top: BorderSide(color: AppColors.brd(context).withValues(alpha: 0.5)),
+          bottom: BorderSide(color: AppColors.brd(context).withValues(alpha: 0.5)),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              color: isToday ? AppColors.primary.withValues(alpha: 0.15) : AppColors.cardBg(context),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: isToday ? AppColors.primary.withValues(alpha: 0.3) : AppColors.brd(context).withValues(alpha: 0.6),
+              ),
+            ),
+            child: Icon(
+              isToday ? Icons.today_rounded : Icons.event_rounded,
+              size: 16,
+              color: isToday ? AppColors.primary : AppColors.subText(context),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            AppDateUtils.formatThaiDate(_selectedDay, useFullMonth: true),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: AppColors.text(context),
+            ),
+          ),
+          if (isToday) ...[
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Text(
+                'วันนี้',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 2.5),
+            decoration: BoxDecoration(
+              color: selectedEvents.isNotEmpty
+                  ? AppColors.primary.withValues(alpha: 0.12)
+                  : AppColors.cardBg(context),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: selectedEvents.isNotEmpty
+                    ? AppColors.primary.withValues(alpha: 0.3)
+                    : AppColors.brd(context).withValues(alpha: 0.6),
+              ),
+            ),
+            child: Text(
+              '${selectedEvents.length} รายการ',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: selectedEvents.isNotEmpty ? AppColors.primary : AppColors.subText(context),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildEventList(List<CalendarEvent> events) {
     if (events.isEmpty) {
       final now = DateTime.now();
@@ -290,41 +487,65 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       final isPastDay = DateTime(_selectedDay.year, _selectedDay.month, _selectedDay.day).isBefore(today);
 
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              isPastDay ? Icons.history_toggle_off_rounded : Icons.event_available,
-              size: 56,
-              color: AppColors.textHint,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              isPastDay
-                  ? 'วันที่เลือกเป็นวันที่ผ่านมาแล้ว'
-                  : 'ไม่มีกิจกรรมในหมวดนี้สำหรับวันนี้',
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              AppDateUtils.formatThaiDate(_selectedDay, useFullMonth: true),
-              style: const TextStyle(color: AppColors.textHint, fontSize: 14),
-            ),
-            if (isPastDay) ...[
-              const SizedBox(height: 14),
-              OutlinedButton.icon(
-                onPressed: () => context.push('/calendar_history'),
-                icon: const Icon(Icons.history_rounded, size: 18),
-                label: const Text('ดูประวัติกิจกรรมย้อนหลัง'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                  side: const BorderSide(color: AppColors.primary),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: AppColors.surfAlt(context),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppColors.brd(context).withValues(alpha: 0.8),
+                  ),
+                ),
+                child: Icon(
+                  isPastDay ? Icons.history_toggle_off_rounded : Icons.event_available_rounded,
+                  size: 32,
+                  color: AppColors.subText(context).withValues(alpha: 0.7),
                 ),
               ),
+              const SizedBox(height: 14),
+              Text(
+                isPastDay
+                    ? 'ไม่มีกิจกรรมในวันที่ผ่านมานี้'
+                    : 'ไม่มีกิจกรรมในหมวดนี้สำหรับวันนี้',
+                style: TextStyle(
+                  color: AppColors.text(context),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                isPastDay
+                    ? 'สามารถดูประวัติกิจกรรมย้อนหลังทั้งหมดได้'
+                    : 'แตะปุ่ม "เพิ่มกิจกรรม" เพื่อบันทึกนัดหมายใหม่',
+                style: TextStyle(
+                  color: AppColors.subText(context),
+                  fontSize: 13,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              if (isPastDay) ...[
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: () => context.push('/calendar_history'),
+                  icon: const Icon(Icons.history_rounded, size: 18),
+                  label: const Text('ดูประวัติกิจกรรมย้อนหลัง'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.primary),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       );
     }
@@ -1478,22 +1699,23 @@ class _EventCard extends ConsumerWidget {
     }
 
     return Card(
-      elevation: 1,
+      elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: typeColor.withValues(alpha: 0.3)),
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: AppColors.brd(context).withValues(alpha: 0.8)),
       ),
-      color: AppColors.surf(context),
+      color: AppColors.cardBg(context),
       child: ListTile(
         onTap: onTap,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         leading: Container(
           width: 52,
           height: 52,
           decoration: BoxDecoration(
             color: typeColor.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(13),
+            border: Border.all(color: typeColor.withValues(alpha: 0.25)),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
