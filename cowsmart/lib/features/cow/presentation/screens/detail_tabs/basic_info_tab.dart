@@ -166,7 +166,7 @@ class BasicInfoTab extends ConsumerWidget {
           _buildSectionCard(
             context,
             icon: Icons.monitor_heart_outlined,
-            iconColor: const Color(0xFF10B981),
+            iconColor: AppColors.primary,
             title: 'สถานะและความเป็นอยู่',
             children: [
               _buildModernInfoTile(
@@ -191,7 +191,7 @@ class BasicInfoTab extends ConsumerWidget {
                 value: latestWeight > 0
                     ? '฿${NumberFormat('#,##0').format(estimatedValue)}'
                     : '-',
-                valueColor: const Color(0xFF10B981),
+                valueColor: AppColors.primary,
               ),
               _buildModernInfoTile(
                 context,
