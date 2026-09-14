@@ -23,6 +23,8 @@ class FeedInventoryScreen extends ConsumerStatefulWidget {
 }
 
 class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
+  bool _isHistoryExpanded = true;
+
   @override
   void initState() {
     super.initState();
@@ -236,7 +238,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
           const SizedBox(height: 24),
         ],
 
-        // Feed List Header
+        // Feed List Header with Expand / Collapse
         Row(
           children: [
             Container(
@@ -249,15 +251,36 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: Text(
-                'ประวัติการให้อาหารล่าสุด',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 17,
-                  color: AppColors.text(context),
+              child: InkWell(
+                onTap: () => setState(() => _isHistoryExpanded = !_isHistoryExpanded),
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          'ประวัติการให้อาหารล่าสุด',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 17,
+                            color: AppColors.text(context),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        _isHistoryExpanded
+                            ? Icons.keyboard_arrow_up_rounded
+                            : Icons.keyboard_arrow_down_rounded,
+                        color: AppColors.subText(context),
+                        size: 22,
+                      ),
+                    ],
+                  ),
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
             ),
             const SizedBox(width: 4),
@@ -273,51 +296,58 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
         ),
         const SizedBox(height: 10),
 
-        if (allItems.isEmpty)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: AppColors.cardBg(context),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
-            ),
-            child: Column(
-              children: [
-                Icon(Icons.inventory_2_outlined, size: 52, color: Colors.grey[400]),
-                const SizedBox(height: 16),
-                Text(
-                  'ยังไม่มีบันทึกประวัติการให้อาหาร',
-                  style: TextStyle(color: AppColors.subText(context), fontSize: 15, fontWeight: FontWeight.w500),
+        AnimatedCrossFade(
+          firstChild: allItems.isEmpty
+              ? Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardBg(context),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(Icons.inventory_2_outlined, size: 52, color: Colors.grey[400]),
+                      const SizedBox(height: 16),
+                      Text(
+                        'ยังไม่มีบันทึกประวัติการให้อาหาร',
+                        style: TextStyle(color: AppColors.subText(context), fontSize: 15, fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                )
+              : Column(
+                  children: [
+                    ...allItems.take(5).map((item) => _buildFeedCard(context, item)),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: OutlinedButton.icon(
+                        onPressed: () => context.push('/feed_history'),
+                        icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                        label: Text(
+                          allItems.length > 5
+                              ? 'ดูประวัติทั้งหมด (${allItems.length} รายการ)'
+                              : 'ดูประวัติและการกรองทั้งหมด',
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                          side: BorderSide(color: AppColors.primary.withValues(alpha: 0.6), width: 1.5),
+                          backgroundColor: AppColors.primary.withValues(alpha: 0.04),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          )
-        else ...[
-          ...allItems.take(5).map((item) => _buildFeedCard(context, item)),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: OutlinedButton.icon(
-              onPressed: () => context.push('/feed_history'),
-              icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-              label: Text(
-                allItems.length > 5
-                    ? 'ดูประวัติทั้งหมด (${allItems.length} รายการ)'
-                    : 'ดูประวัติและการกรองทั้งหมด',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-              ),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                side: BorderSide(color: AppColors.primary.withValues(alpha: 0.6), width: 1.5),
-                backgroundColor: AppColors.primary.withValues(alpha: 0.04),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              ),
-            ),
-          ),
-          const SizedBox(height: 60), // Space for FAB
-        ],
+          secondChild: const SizedBox.shrink(),
+          crossFadeState: _isHistoryExpanded ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+          duration: const Duration(milliseconds: 250),
+        ),
+        const SizedBox(height: 60), // Space for FAB
       ],
     );
   }
