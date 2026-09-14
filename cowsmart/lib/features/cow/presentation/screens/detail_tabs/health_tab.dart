@@ -585,27 +585,6 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                if (_appointments.length > _initialAppointmentLimit) ...[
-                  const SizedBox(width: 4),
-                  TextButton(
-                    onPressed: () {
-                      setState(() => _showAllAppointments = !_showAllAppointments);
-                    },
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: Text(
-                      _showAllAppointments ? 'ย่อรายการ' : 'ขยายดู',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFFF57C00),
-                      ),
-                    ),
-                  ),
-                ],
                 if (_appointments.isNotEmpty) ...[
                   const SizedBox(width: 4),
                   TextButton.icon(
