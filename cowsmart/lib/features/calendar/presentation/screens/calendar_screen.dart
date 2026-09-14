@@ -408,16 +408,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(ctx).viewInsets.bottom,
           ),
-          child: Container(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(ctx).size.height * 0.85,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.cardBg(context),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+          child: Material(
+            color: AppColors.cardBg(context),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            clipBehavior: Clip.antiAlias,
+            child: Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(ctx).size.height * 0.85,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
               children: [
                 // Drag handle
                 Center(
@@ -757,14 +757,25 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                                                       });
                                                                     },
                                                                   ),
-                                                                  CircleAvatar(
-                                                                    radius: 18,
-                                                                    backgroundColor: AppColors.primary.withValues(alpha: 0.12),
-                                                                    child: Text(
-                                                                      cow.tagNumber.isNotEmpty
-                                                                          ? cow.tagNumber.substring(0, cow.tagNumber.length > 3 ? 3 : cow.tagNumber.length)
-                                                                          : 'วัว',
-                                                                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primary),
+                                                                  ClipRRect(
+                                                                    borderRadius: BorderRadius.circular(8),
+                                                                    child: Container(
+                                                                      width: 40,
+                                                                      height: 40,
+                                                                      color: AppColors.surfAlt(sheetCtx),
+                                                                      child: (cow.imageFullUrl != null || cow.imageUrl != null)
+                                                                          ? Image.network(
+                                                                              cow.imageFullUrl ?? cow.imageUrl!,
+                                                                              width: 40,
+                                                                              height: 40,
+                                                                              fit: BoxFit.cover,
+                                                                              errorBuilder: (_, __, ___) => Center(
+                                                                                child: CowIcon(size: 20, color: AppColors.primary),
+                                                                              ),
+                                                                            )
+                                                                          : Center(
+                                                                              child: CowIcon(size: 20, color: AppColors.primary),
+                                                                            ),
                                                                     ),
                                                                   ),
                                                                   const SizedBox(width: 10),
@@ -854,13 +865,15 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Row(
+                                        Wrap(
+                                          crossAxisAlignment: WrapCrossAlignment.center,
+                                          spacing: 6,
+                                          runSpacing: 4,
                                           children: [
                                             Text(
                                               'นัดหมายแบบกลุ่ม (${groupCowIds.length} ตัว)',
-                                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.text(context)),
+                                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: AppColors.text(context)),
                                             ),
-                                            const SizedBox(width: 8),
                                             Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                               decoration: BoxDecoration(
@@ -869,7 +882,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                               ),
                                               child: const Text(
                                                 'แตะเพื่อแก้ไขวัว',
-                                                style: TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.bold),
+                                                style: TextStyle(fontSize: 10.5, color: AppColors.primary, fontWeight: FontWeight.bold),
                                               ),
                                             ),
                                           ],
@@ -1000,6 +1013,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 ),
               ],
             ),
+          ),
           ),
         ),
       ),
