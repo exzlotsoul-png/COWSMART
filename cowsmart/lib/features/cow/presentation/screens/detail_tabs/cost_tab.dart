@@ -633,7 +633,7 @@ class _CostTabState extends ConsumerState<CostTab> with AutomaticKeepAliveClient
     final typeLabels = {
       'CT01': 'ตรวจสุขภาพทั่วไป',
       'CT02': 'ฉีดวัคซีน',
-      'CT03': 'รักษาโรค',
+      'CT03': 'ให้ยารักษา',
       'CT04': 'ถ่ายพยาธิ',
     };
 
@@ -642,11 +642,11 @@ class _CostTabState extends ConsumerState<CostTab> with AutomaticKeepAliveClient
         case 'CT02':
           return const Color(0xFF0284C7); // ฟ้าครามสดใส (วัคซีน)
         case 'CT03':
-          return const Color(0xFFDC2626); // แดง (รักษาโรค)
+          return AppColors.error; // แดงอิฐนุ่มนวล (ให้ยารักษา)
         case 'CT04':
           return const Color(0xFFD97706); // ส้มอำพัน (ถ่ายพยาธิ)
         default:
-          return const Color(0xFF16A34A); // เขียว (ตรวจสุขภาพทั่วไป)
+          return AppColors.primary; // เขียวหลักของแอป (ตรวจสุขภาพทั่วไป)
       }
     }
 

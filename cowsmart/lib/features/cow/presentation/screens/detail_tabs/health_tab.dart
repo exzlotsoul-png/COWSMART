@@ -1433,10 +1433,10 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                 Container(width: 1, height: 40, color: Colors.white24),
                 Expanded(
                   child: _buildStatItem(
-                    'รักษาโรค',
+                    'ให้ยารักษา',
                     treatCount.toString(),
                     Icons.medical_services,
-                    color: const Color(0xFFFF6B6B), // Coral red
+                    color: AppColors.error,
                   ),
                 ),
               ],
@@ -1489,7 +1489,7 @@ class _HealthTabState extends ConsumerState<HealthTab> {
     final typeLabels = {
       'CT01': 'ตรวจสุขภาพทั่วไป',
       'CT02': 'ฉีดวัคซีน',
-      'CT03': 'รักษาโรค',
+      'CT03': 'ให้ยารักษา',
       'CT04': 'ถ่ายพยาธิ',
     };
 
@@ -1498,7 +1498,7 @@ class _HealthTabState extends ConsumerState<HealthTab> {
         case 'CT02':
           return const Color(0xFF0284C7); // ฟ้าครามสดใส (วัคซีน)
         case 'CT03':
-          return const Color(0xFFDC2626); // แดง (รักษาโรค)
+          return AppColors.error; // แดงอิฐนุ่มนวล ไม่จัดจ้าน (ให้ยารักษา)
         case 'CT04':
           return const Color(0xFFD97706); // ส้มอำพัน (ถ่ายพยาธิ)
         default:
@@ -1531,7 +1531,7 @@ class _HealthTabState extends ConsumerState<HealthTab> {
         statusBgColor = AppColors.primary;
       } else if (record.status == 'sick') {
         statusText = 'ป่วย';
-        statusBgColor = const Color(0xFFDC2626);
+        statusBgColor = AppColors.error;
       } else if (record.status == 'injured') {
         statusText = 'บาดเจ็บ';
         statusBgColor = const Color(0xFFD97706);
@@ -1750,7 +1750,7 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                                   Expanded(
                                     child: ElevatedButton(
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.red,
+                                        backgroundColor: AppColors.error,
                                         foregroundColor: Colors.white,
                                         padding: const EdgeInsets.symmetric(vertical: 12),
                                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -1785,9 +1785,9 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                         value: 'delete',
                         child: Row(
                           children: [
-                            Icon(Icons.delete, color: Colors.red, size: 20),
+                            Icon(Icons.delete_outline_rounded, color: AppColors.error, size: 20),
                             SizedBox(width: 8),
-                            Text('ลบประวัติ', style: TextStyle(color: Colors.red)),
+                            Text('ลบประวัติ', style: TextStyle(color: AppColors.error)),
                           ],
                         ),
                       ),

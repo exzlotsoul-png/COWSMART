@@ -248,7 +248,7 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
     final typeLabels = {
       'CT01': 'ตรวจสุขภาพทั่วไป',
       'CT02': 'ฉีดวัคซีน',
-      'CT03': 'รักษาโรค',
+      'CT03': 'ให้ยารักษา',
       'CT04': 'ถ่ายพยาธิ',
     };
 
