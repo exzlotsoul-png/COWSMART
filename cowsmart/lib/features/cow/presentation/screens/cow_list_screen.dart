@@ -6,6 +6,8 @@ import 'package:cowsmart/core/widgets/cow_icon.dart';
 import 'package:cowsmart/core/utils/app_toast.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
+import 'package:cowsmart/features/cow/domain/breed.dart';
+import 'package:cowsmart/features/cow/providers/breed_provider.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 
 class CowListScreen extends ConsumerStatefulWidget {
@@ -39,6 +41,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
   Widget build(BuildContext context) {
     final cowState = ref.watch(cowProvider);
     final displayedCows = ref.watch(activeCowsProvider);
+    final breeds = ref.watch(breedProvider);
     final currentFarm = ref.watch(farmProvider).currentFarm;
 
     // Listen for farm changes
@@ -392,7 +395,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                       final cow = displayedCows[index];
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
-                        child: _buildCowCard(context, cow),
+                        child: _buildCowCard(context, cow, breeds),
                       );
                     }, childCount: displayedCows.length),
                   ),
@@ -690,7 +693,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
     );
   }
 
-  Widget _buildCowCard(BuildContext context, Cow cow) {
+  Widget _buildCowCard(BuildContext context, Cow cow, List<Breed> breeds) {
     final isDark = AppColors.isDark(context);
     return Container(
       decoration: BoxDecoration(
@@ -809,17 +812,27 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              '${cow.breed} • ${cow.displayTypeName}',
-                              style: TextStyle(
-                                color: AppColors.subText(context),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                          Builder(
+                            builder: (context) {
+                              final breedName = breeds.firstWhere(
+                                (b) => b.id == cow.breed,
+                                orElse: () => Breed(id: cow.breed, name: cow.breed.isNotEmpty ? cow.breed : '-'),
+                              ).name;
+                              final breedDisplay = breedName.isNotEmpty ? breedName : '-';
+
+                              return Expanded(
+                                child: Text(
+                                  '$breedDisplay • ${cow.displayTypeName}',
+                                  style: TextStyle(
+                                    color: AppColors.subText(context),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),
