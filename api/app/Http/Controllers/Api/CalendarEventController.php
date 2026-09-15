@@ -131,7 +131,11 @@ class CalendarEventController extends Controller
                 if (!$cow) continue;
 
                 $cowName = $cow->name ?: ($cow->tag_number ?: $cow->cow_id);
-                $dt = Carbon::parse($appt->appoint_datetime)->timezone('Asia/Bangkok')->toIso8601String();
+                try {
+                    $dt = Carbon::parse($appt->appoint_datetime)->timezone('Asia/Bangkok')->toIso8601String();
+                } catch (\Exception $e) {
+                    continue;
+                }
                 $calEventId = str_starts_with($appt->health_appointment_id, 'HA-')
                     ? $appt->health_appointment_id
                     : 'HA-' . $appt->health_appointment_id;
@@ -159,7 +163,9 @@ class CalendarEventController extends Controller
                       });
                 })
                 ->where(function ($q) {
-                    $q->whereNull('calving_date')->orWhere('calving_date', '');
+                    $q->whereNull('calving_date')
+                      ->orWhere('calving_date', '')
+                      ->orWhere('calving_date', 'like', '0000-00-00%');
                 })
                 ->where(function ($q) {
                     // Do not show for cows that did not get pregnant or had a miscarriage
@@ -176,14 +182,24 @@ class CalendarEventController extends Controller
 
                 $calvingDate = $rec->expected_calving;
                 if (empty($calvingDate) && !empty($rec->mating_date)) {
-                    $calvingDate = Carbon::parse($rec->mating_date)->addDays(283)->format('Y-m-d');
+                    try {
+                        $calvingDate = Carbon::parse($rec->mating_date)->addDays(283)->format('Y-m-d');
+                    } catch (\Exception $e) {
+                        $calvingDate = null;
+                    }
                 }
                 if (empty($calvingDate)) continue;
 
                 $cowName = $cow->name ?: ($cow->tag_number ?: $cow->cow_id);
                 $cowId = $cow->cow_id ?: $rec->dam_id;
                 $sireInfo = $rec->sire_id ? " (พ่อพันธุ์: {$rec->sire_id})" : '';
-                $dt = Carbon::parse($calvingDate)->setTime(8, 0)->toIso8601String();
+                
+                try {
+                    $dt = Carbon::parse($calvingDate)->setTime(8, 0)->toIso8601String();
+                } catch (\Exception $e) {
+                    continue; // Skip invalid dates
+                }
+                
                 $calEventId = str_starts_with($rec->breeding_record_id, 'BR-')
                     ? $rec->breeding_record_id
                     : 'BR-' . $rec->breeding_record_id;
