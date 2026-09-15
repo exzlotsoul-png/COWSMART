@@ -157,15 +157,11 @@ class CalendarEventController extends Controller
         $breedingEvents = [];
         if (!empty($farmCowIds)) {
             $records = BreedingRecord::where(function ($q) {
-                    $q->whereNotNull('expected_calving')->where('expected_calving', '!=', '')
-                      ->orWhere(function ($sub) {
-                          $sub->whereNotNull('mating_date')->where('mating_date', '!=', '');
-                      });
+                    $q->whereNotNull('expected_calving')
+                      ->orWhereNotNull('mating_date');
                 })
                 ->where(function ($q) {
-                    $q->whereNull('calving_date')
-                      ->orWhere('calving_date', '')
-                      ->orWhere('calving_date', 'like', '0000-00-00%');
+                    $q->whereNull('calving_date');
                 })
                 ->where(function ($q) {
                     // Do not show for cows that did not get pregnant or had a miscarriage
