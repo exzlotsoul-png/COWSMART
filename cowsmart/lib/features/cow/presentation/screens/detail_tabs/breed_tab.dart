@@ -1089,11 +1089,19 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                                     CowStatus.normal,
                                   );
                             }
-                            final farmId = ref.read(farmProvider).currentFarm?.id;
-                            if (farmId != null && farmId.isNotEmpty) {
-                              ref.read(calendarProvider.notifier).fetchEvents(farmId);
+                            final currentFarmId = ref.read(farmProvider).currentFarm?.id;
+                            final farmId = (currentFarmId != null && currentFarmId.isNotEmpty) 
+                                ? currentFarmId 
+                                : widget.cow.farmId;
+                                
+                            if (farmId.isNotEmpty) {
+                              await ref.read(calendarProvider.notifier).fetchEvents(farmId);
                             }
-                            if (ctx.mounted) Navigator.pop(ctx);
+                            
+                            if (ctx.mounted) {
+                              AppFeedback.showSuccess(ctx, 'บันทึกตรวจท้องและกำหนดวันคลอดลงปฏิทินเรียบร้อย');
+                              Navigator.pop(ctx);
+                            }
                           },
                     child: const Text(
                       'บันทึก',

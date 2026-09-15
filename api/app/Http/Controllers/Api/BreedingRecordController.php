@@ -90,12 +90,14 @@ class BreedingRecordController extends Controller
             return;
         }
 
-        $cow = Cow::find($record->dam_id) ?? Cow::where('cow_id', $record->dam_id)->orWhere('tag_number', $record->dam_id)->first();
-        if (!$cow) {
-            return;
-        }
-
-        $cowName = $cow->name ?: ($cow->tag_number ?: $cow->cow_id);
+        $searchVal = trim((string)$record->dam_id);
+        $cow = Cow::find($searchVal) ?? Cow::where('id', $searchVal)
+            ->orWhere('cow_id', $searchVal)
+            ->orWhere('tag_number', $searchVal)
+            ->orWhere('name', $searchVal)
+            ->first();
+            
+        $cowName = $cow ? ($cow->name ?: ($cow->tag_number ?: $cow->cow_id)) : (string)$record->dam_id;
 
         $userEmail = null;
         if ($cow->farm_id) {

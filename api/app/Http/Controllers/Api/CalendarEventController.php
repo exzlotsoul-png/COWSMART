@@ -171,7 +171,6 @@ class CalendarEventController extends Controller
 
             foreach ($records as $rec) {
                 $cow = $this->findCow($rec->dam_id, $farmCows, $farmId);
-                if (!$cow) continue; // Skip if cow doesn't belong to this farm
 
                 $calvingDate = $rec->expected_calving;
                 if (empty($calvingDate) && !empty($rec->mating_date)) {
@@ -179,7 +178,8 @@ class CalendarEventController extends Controller
                 }
                 if (empty($calvingDate)) continue;
 
-                $cowName = $cow->name ?: ($cow->tag_number ?: $cow->cow_id);
+                $cowName = $cow ? ($cow->name ?: ($cow->tag_number ?: $cow->cow_id)) : (string)$rec->dam_id;
+                $cowId = $cow ? $cow->cow_id : (string)$rec->dam_id;
                 $sireInfo = $rec->sire_id ? " (พ่อพันธุ์: {$rec->sire_id})" : '';
                 $dt = Carbon::parse($calvingDate)->setTime(8, 0)->toIso8601String();
                 $calEventId = str_starts_with($rec->breeding_record_id, 'BR-')
@@ -195,7 +195,7 @@ class CalendarEventController extends Controller
                     'event_datetime' => $dt,
                     'description' => 'คาดว่าจะคลอดลูกวัว' . $sireInfo . $statusNote,
                     'reminder_setting' => $rec->reminder_setting ?: 'ก่อน 7 วัน',
-                    'cow_id' => $cow->cow_id,
+                    'cow_id' => $cowId,
                     'event_type' => 'breeding',
                 ];
             }
@@ -215,8 +215,13 @@ class CalendarEventController extends Controller
             return null;
         }
 
-        $cow = $farmCows->first(function ($c) use ($cowIdOrTag) {
-            return $c->cow_id === $cowIdOrTag || $c->tag_number === $cowIdOrTag || $c->name === $cowIdOrTag;
+        $searchVal = trim((string)$cowIdOrTag);
+
+        $cow = $farmCows->first(function ($c) use ($searchVal) {
+            return trim((string)$c->id) === $searchVal 
+                || trim((string)$c->cow_id) === $searchVal 
+                || trim((string)$c->tag_number) === $searchVal 
+                || trim((string)$c->name) === $searchVal;
         });
 
         if ($cow) {
@@ -224,10 +229,11 @@ class CalendarEventController extends Controller
         }
 
         return Cow::where('farm_id', $farmId)
-            ->where(function ($q) use ($cowIdOrTag) {
-                $q->where('cow_id', $cowIdOrTag)
-                    ->orWhere('tag_number', $cowIdOrTag)
-                    ->orWhere('name', $cowIdOrTag);
+            ->where(function ($q) use ($searchVal) {
+                $q->where('id', $searchVal)
+                    ->orWhere('cow_id', $searchVal)
+                    ->orWhere('tag_number', $searchVal)
+                    ->orWhere('name', $searchVal);
             })->first();
     }
 
