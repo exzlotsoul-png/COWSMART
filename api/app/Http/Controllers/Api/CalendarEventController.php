@@ -166,11 +166,13 @@ class CalendarEventController extends Controller
                     $q->whereNull('pregnancy_result')
                       ->orWhereNotIn('pregnancy_result', ['ไม่ท้อง', 'ไม่ตั้งท้อง', 'แท้ง', 'แท้งลูก']);
                 })
-                ->whereIn('dam_id', $farmCowIds)
                 ->get();
 
             foreach ($records as $rec) {
                 $cow = $this->findCow($rec->dam_id, $farmCows, $farmId);
+                
+                // If cow is not found in this farm, skip to avoid showing other farm's events
+                if (!$cow) continue;
 
                 $calvingDate = $rec->expected_calving;
                 if (empty($calvingDate) && !empty($rec->mating_date)) {
@@ -178,8 +180,8 @@ class CalendarEventController extends Controller
                 }
                 if (empty($calvingDate)) continue;
 
-                $cowName = $cow ? ($cow->name ?: ($cow->tag_number ?: $cow->cow_id)) : (string)$rec->dam_id;
-                $cowId = $cow ? $cow->cow_id : (string)$rec->dam_id;
+                $cowName = $cow->name ?: ($cow->tag_number ?: $cow->cow_id);
+                $cowId = $cow->cow_id ?: $rec->dam_id;
                 $sireInfo = $rec->sire_id ? " (พ่อพันธุ์: {$rec->sire_id})" : '';
                 $dt = Carbon::parse($calvingDate)->setTime(8, 0)->toIso8601String();
                 $calEventId = str_starts_with($rec->breeding_record_id, 'BR-')
