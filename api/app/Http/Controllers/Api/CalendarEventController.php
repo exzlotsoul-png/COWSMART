@@ -175,10 +175,11 @@ class CalendarEventController extends Controller
                 ->get();
 
             foreach ($records as $rec) {
-                $cow = $this->findCow($rec->dam_id, $farmCows, $farmId);
-                
-                // If cow is not found in this farm, skip to avoid showing other farm's events
-                if (!$cow) continue;
+                try {
+                    $cow = $this->findCow($rec->dam_id, $farmCows, $farmId);
+                    
+                    // If cow is not found in this farm, skip to avoid showing other farm's events
+                    if (!$cow) continue;
 
                 $calvingDate = $rec->expected_calving;
                 if (empty($calvingDate) && !empty($rec->mating_date)) {
@@ -200,9 +201,10 @@ class CalendarEventController extends Controller
                     continue; // Skip invalid dates
                 }
                 
-                $calEventId = str_starts_with($rec->breeding_record_id, 'BR-')
-                    ? $rec->breeding_record_id
-                    : 'BR-' . $rec->breeding_record_id;
+                $recId = (string) $rec->breeding_record_id;
+                $calEventId = str_starts_with($recId, 'BR-')
+                    ? $recId
+                    : 'BR-' . $recId;
 
                 $statusNote = ($rec->pregnancy_result === 'ตั้งท้อง') ? ' (ตรวจยืนยันแล้ว)' : ' (คำนวณจากวันผสม)';
 
@@ -216,6 +218,9 @@ class CalendarEventController extends Controller
                     'cow_id' => $cowId,
                     'event_type' => 'breeding',
                 ];
+                } catch (\Exception $e) {
+                    continue; // Skip any malformed record
+                }
             }
         }
 
@@ -233,13 +238,13 @@ class CalendarEventController extends Controller
             return null;
         }
 
-        $searchVal = trim((string)$cowIdOrTag);
+        $searchVal = strtolower(trim((string)$cowIdOrTag));
 
         $cow = $farmCows->first(function ($c) use ($searchVal) {
-            return trim((string)$c->id) === $searchVal 
-                || trim((string)$c->cow_id) === $searchVal 
-                || trim((string)$c->tag_number) === $searchVal 
-                || trim((string)$c->name) === $searchVal;
+            return strtolower(trim((string)$c->id)) === $searchVal 
+                || strtolower(trim((string)$c->cow_id)) === $searchVal 
+                || strtolower(trim((string)$c->tag_number)) === $searchVal 
+                || strtolower(trim((string)$c->name)) === $searchVal;
         });
 
         if ($cow) {
