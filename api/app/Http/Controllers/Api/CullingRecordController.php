@@ -7,6 +7,8 @@ use App\Models\CullingRecord;
 use App\Models\Cow;
 use App\Models\Farm;
 use App\Models\FinancialRecord;
+use App\Models\HealthAppointment;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -51,8 +53,14 @@ class CullingRecordController extends Controller
                     // Normalize cull_date: parse ISO 8601 / any format → MySQL datetime
                     $rData['cull_date'] = Carbon::parse($rData['cull_date'])->format('Y-m-d H:i:s');
 
+                    if (empty($rData['culling_record_id'])) {
+                        unset($rData['culling_record_id']);
+                    }
+                    $createData = $rData;
+                    unset($createData['delete_appointments'], $createData['cow']);
+
                     // Create culling record
-                    $record = CullingRecord::create($rData);
+                    $record = CullingRecord::create($createData);
                     $createdRecords[] = $record;
 
                     // Update cow status and clear zone_id
@@ -97,6 +105,12 @@ class CullingRecordController extends Controller
                             'notes' => "ระบบบันทึกรายรับอัตโนมัติจากการคัดทิ้งขายวัว: " . ($rData['note'] ?? ''),
                         ]);
                     }
+
+                    // If delete_appointments is requested, clean up appointments for this cow
+                    $shouldDeleteAppts = filter_var($rData['delete_appointments'] ?? $request->input('delete_appointments', false), FILTER_VALIDATE_BOOLEAN);
+                    if ($shouldDeleteAppts) {
+                        $this->removeCowAppointments($cow);
+                    }
                 }
                 return response()->json($createdRecords, 201);
             });
@@ -111,9 +125,14 @@ class CullingRecordController extends Controller
 
         return DB::transaction(function () use ($request) {
             $data = $request->all();
+            if (empty($data['culling_record_id'])) {
+                unset($data['culling_record_id']);
+            }
+            $createData = $data;
+            unset($createData['delete_appointments'], $createData['cow']);
 
             // Create culling record
-            $record = CullingRecord::create($data);
+            $record = CullingRecord::create($createData);
 
             // Update cow status and clear zone_id
             $cow = Cow::findOrFail($request->cow_id);
@@ -158,8 +177,37 @@ class CullingRecordController extends Controller
                 ]);
             }
 
+            // If delete_appointments is requested, clean up appointments for this cow
+            if ($request->boolean('delete_appointments')) {
+                $this->removeCowAppointments($cow);
+            }
+
             return response()->json($record, 201);
         });
+    }
+
+    /**
+     * Remove appointments for a specific cow:
+     * - If single-cow appointment: delete completely and clear related notification.
+     * - If group appointment (with group_id): delete this cow's record in the group.
+     *   If this was the only cow left in the group, the group is now gone.
+     */
+    private function removeCowAppointments(Cow $cow)
+    {
+        $identifiers = array_unique(array_filter([
+            (string)$cow->id,
+            (string)$cow->cow_id,
+            (string)$cow->tag_number,
+            (string)$cow->name,
+        ]));
+
+        $appts = HealthAppointment::whereIn('cow_id', $identifiers)->get();
+
+        foreach ($appts as $appt) {
+            $realId = preg_replace('/^(HA-)+/', '', $appt->health_appointment_id);
+            Notification::where('message', 'like', "%appt_{$realId}%")->delete();
+            $appt->delete();
+        }
     }
 
     public function show($id)
