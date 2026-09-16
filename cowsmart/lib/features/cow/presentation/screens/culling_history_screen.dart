@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:cowsmart/core/network/api_client.dart';
 import 'package:cowsmart/core/theme/app_colors.dart';
 import 'package:cowsmart/core/utils/date_formatter.dart';
+import 'package:cowsmart/core/utils/app_toast.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
@@ -523,6 +524,18 @@ class _CullingCard extends ConsumerWidget {
                     Navigator.pop(ctx);
                     await ref.read(cowProvider.notifier).restoreCulledCow(record.id, displayCow);
                     ref.invalidate(_cullingHistoryProvider);
+
+                    final state = ref.read(cowProvider);
+                    if (state.errorMessage == null) {
+                      final cowName = displayCow.name.isNotEmpty ? displayCow.name : displayCow.tagNumber;
+                      AppFeedback.showSuccess(
+                        null,
+                        'ดึงวัว "$cowName" กลับคืนเข้าฝูงเรียบร้อยแล้ว',
+                        title: 'ดึงคืนสำเร็จ',
+                      );
+                    } else {
+                      AppFeedback.showError(null, state.errorMessage!);
+                    }
                   },
                   child: const Text('ยืนยันดึงกลับ'),
                 ),

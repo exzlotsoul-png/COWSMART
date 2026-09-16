@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
 class AppFeedback {
+  /// Global scaffold messenger key so SnackBars persist across navigation/route changes
+  static final GlobalKey<ScaffoldMessengerState> messengerKey = GlobalKey<ScaffoldMessengerState>();
+
   /// Shows a success notification banner (green tint, check icon, smooth floating banner)
   static void showSuccess(
-    BuildContext context,
+    BuildContext? context,
     String message, {
     String title = 'บันทึกสำเร็จ',
   }) {
@@ -19,7 +22,7 @@ class AppFeedback {
 
   /// Shows an error / validation failure notification banner (red tint, error icon)
   static void showError(
-    BuildContext context,
+    BuildContext? context,
     String message, {
     String title = 'ข้อผิดพลาด',
   }) {
@@ -35,7 +38,7 @@ class AppFeedback {
 
   /// Shows a warning notification banner (amber/orange tint, warning icon)
   static void showWarning(
-    BuildContext context,
+    BuildContext? context,
     String message, {
     String title = 'แจ้งเตือน',
   }) {
@@ -51,7 +54,7 @@ class AppFeedback {
 
   /// Shows an info notification banner (blue tint, info icon)
   static void showInfo(
-    BuildContext context,
+    BuildContext? context,
     String message, {
     String title = 'แจ้งเพื่อทราบ',
   }) {
@@ -66,14 +69,14 @@ class AppFeedback {
   }
 
   static void _showSnackBar(
-    BuildContext context, {
+    BuildContext? context, {
     required String message,
     required String title,
     required IconData icon,
     required Color backgroundColor,
     required Color textColor,
   }) {
-    final messenger = ScaffoldMessenger.maybeOf(context);
+    final messenger = messengerKey.currentState ?? (context != null ? ScaffoldMessenger.maybeOf(context) : null);
     if (messenger == null) return;
 
     messenger.hideCurrentSnackBar();
@@ -81,11 +84,11 @@ class AppFeedback {
       SnackBar(
         elevation: 6,
         behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         backgroundColor: backgroundColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        duration: const Duration(seconds: 3),
+        duration: const Duration(seconds: 4),
         content: Row(
           children: [
             Container(

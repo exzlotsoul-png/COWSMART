@@ -8,6 +8,7 @@ import 'core/constants/app_constants.dart';
 import 'core/network/app_router.dart';
 
 import 'package:cowsmart/core/services/local_notification_service.dart';
+import 'core/utils/app_toast.dart';
 import 'core/utils/thai_date_localization.dart';
 import 'features/settings/providers/app_settings_provider.dart';
 
@@ -36,6 +37,7 @@ class MyApp extends ConsumerWidget {
     final settings = ref.watch(appSettingsProvider);
 
     return MaterialApp.router(
+      scaffoldMessengerKey: AppFeedback.messengerKey,
       title: AppConstants.appName,
       builder: (context, child) {
         return MediaQuery(
