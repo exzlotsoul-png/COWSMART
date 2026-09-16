@@ -14,6 +14,7 @@ import 'package:cowsmart/features/cow/domain/breed.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/market/providers/market_price_provider.dart';
+import 'package:cowsmart/core/network/api_client.dart';
 
 enum CullType {
   sold('ขาย', Icons.monetization_on_outlined, Colors.green),
@@ -80,6 +81,97 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
         break;
     }
 
+    // Check if this cow has any active appointments
+    bool shouldDeleteAppts = false;
+    try {
+      final api = ref.read(apiClientProvider);
+      final res = await api.get('/health_appointments', query: {'cow_id': widget.cow.id});
+      if (res.data is List && (res.data as List).isNotEmpty) {
+        final appts = res.data as List;
+        final count = appts.length;
+        final hasGroup = appts.any((a) => a['group_id'] != null && a['group_id'].toString().isNotEmpty);
+
+        if (mounted) {
+          final confirmed = await showDialog<bool>(
+            context: context,
+            barrierDismissible: false,
+            builder: (ctx) => AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.event_busy_rounded, color: AppColors.warning, size: 24),
+                  ),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Text(
+                      'การนัดหมายที่เกี่ยวข้อง',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    ),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'วัวตัวนี้ (${widget.cow.name.isNotEmpty ? widget.cow.name : widget.cow.tagNumber}) มีการนัดหมายที่ยังไม่แล้วเสร็จอยู่ $count รายการ',
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'คุณต้องการลบนัดหมายที่เกี่ยวข้องกับวัวตัวนี้ด้วยหรือไม่?\n'
+                    '• หากเป็นนัดหมายเฉพาะตัวนี้: ระบบจะลบการนัดหมายทิ้งทันที\n'
+                    '${hasGroup ? '• หากเป็นนัดหมายแบบกลุ่ม: ระบบจะนำแค่วัวตัวนี้ออกจากกลุ่มนัดหมายเท่านั้น\n' : ''}'
+                    '(หากเลือก "ไม่ลบ" นัดหมายจะยังคงอยู่)',
+                    style: TextStyle(fontSize: 13, color: AppColors.subText(ctx), height: 1.4),
+                  ),
+                ],
+              ),
+              actions: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text('คงนัดหมายไว้'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.error,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: const Text('ลบนัดหมาย', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+          shouldDeleteAppts = confirmed ?? false;
+        }
+      }
+    } catch (_) {
+      // If fetching appointments check fails, proceed normally without deleting appointments
+    }
+
     final record = CullingRecord(
       id: '',
       cowId: widget.cow.id,
@@ -87,6 +179,7 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
       status: statusValue,
       price: double.tryParse(_priceController.text) ?? 0.0,
       note: _noteController.text,
+      deleteAppointments: shouldDeleteAppts,
     );
 
     await ref.read(cowProvider.notifier).cullCow(record);

@@ -14,6 +14,7 @@ import 'package:cowsmart/features/cow/domain/breed.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/market/providers/market_price_provider.dart';
+import 'package:cowsmart/core/network/api_client.dart';
 
 enum CullType {
   sold('ขาย', Icons.monetization_on_rounded, AppColors.success),
@@ -87,6 +88,106 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
           break;
       }
 
+      // Check if any of the selected cows have active appointments
+      bool shouldDeleteAppts = false;
+      try {
+        final api = ref.read(apiClientProvider);
+        int totalAppts = 0;
+        int cowsWithAppts = 0;
+        bool hasGroupAppts = false;
+
+        for (final cowId in _selectedCowIds) {
+          final res = await api.get('/health_appointments', query: {'cow_id': cowId});
+          if (res.data is List && (res.data as List).isNotEmpty) {
+            final appts = res.data as List;
+            totalAppts += appts.length;
+            cowsWithAppts++;
+            if (appts.any((a) => a['group_id'] != null && a['group_id'].toString().isNotEmpty)) {
+              hasGroupAppts = true;
+            }
+          }
+        }
+
+        if (totalAppts > 0 && mounted) {
+          final confirmed = await showDialog<bool>(
+            context: context,
+            barrierDismissible: false,
+            builder: (ctx) => AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.event_busy_rounded, color: AppColors.warning, size: 24),
+                  ),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Text(
+                      'การนัดหมายที่เกี่ยวข้อง',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    ),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'พบวัว $cowsWithAppts ตัว ในกลุ่มที่เลือก มีการนัดหมายที่ยังไม่แล้วเสร็จรวม $totalAppts รายการ',
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'คุณต้องการลบนัดหมายที่เกี่ยวข้องกับวัวเหล่านี้ด้วยหรือไม่?\n'
+                    '• หากเป็นนัดหมายเฉพาะตัว: ระบบจะลบการนัดหมายทิ้งทันที\n'
+                    '${hasGroupAppts ? '• หากเป็นนัดหมายแบบกลุ่ม: ระบบจะนำวัวที่ถูกคัดออกจากกลุ่มนัดหมายเท่านั้น\n' : ''}'
+                    '(หากเลือก "ไม่ลบ" นัดหมายจะยังคงอยู่)',
+                    style: TextStyle(fontSize: 13, color: AppColors.subText(ctx), height: 1.4),
+                  ),
+                ],
+              ),
+              actions: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text('คงนัดหมายไว้'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.error,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: const Text('ลบนัดหมาย', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+          shouldDeleteAppts = confirmed ?? false;
+        }
+      } catch (_) {
+        // If check fails, proceed normally
+      }
+
       final records = _selectedCowIds.map((cowId) {
         final priceText = _priceControllers[cowId]?.text ?? '0.0';
         return CullingRecord(
@@ -96,6 +197,7 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
           status: statusValue,
           price: double.tryParse(priceText) ?? 0.0,
           note: _noteController.text,
+          deleteAppointments: shouldDeleteAppts,
         );
       }).toList();
 

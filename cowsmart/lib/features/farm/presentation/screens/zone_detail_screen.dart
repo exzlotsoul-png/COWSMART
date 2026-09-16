@@ -5,7 +5,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/cow_icon.dart';
 import 'package:cowsmart/features/farm/domain/zone.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
+import 'package:cowsmart/features/cow/domain/breed.dart';
 import 'package:cowsmart/features/cow/providers/cow_provider.dart';
+import 'package:cowsmart/features/cow/providers/breed_provider.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
 import 'package:cowsmart/core/utils/app_toast.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
@@ -30,6 +32,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
       if (currentFarm != null) {
         ref.read(cowProvider.notifier).fetchCows(currentFarm.id);
       }
+      ref.read(breedProvider.notifier).fetchBreeds();
     });
   }
 
@@ -73,6 +76,15 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
       case CowStatus.removed:
         return AppColors.warning;
     }
+  }
+
+  String _getBreedName(String breedId, List<Breed> breeds) {
+    if (breedId.isEmpty || breedId == 'Unknown') return '-';
+    final found = breeds.firstWhere(
+      (b) => b.id == breedId,
+      orElse: () => Breed(id: breedId, name: breedId),
+    );
+    return found.name.isNotEmpty ? found.name : breedId;
   }
 
   Future<void> _removeCowFromZone(Cow cow) async {
@@ -192,6 +204,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
       return;
     }
 
+    final breeds = ref.read(breedProvider);
     final allZonesMap = {for (final z in ref.read(zoneProvider).zones) z.id: z.name};
     final selectedCows = <Cow>{};
     bool showOnlyUnassigned = false;
@@ -631,7 +644,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                                                 const SizedBox(width: 6),
                                                 Expanded(
                                                   child: Text(
-                                                    'เบอร์วัว: ${cow.tagNumber} · ${cow.type.label}',
+                                                    'เบอร์วัว: ${cow.tagNumber} · ${_getBreedName(cow.breed, breeds)} · ${cow.displayTypeName}',
                                                     style: TextStyle(
                                                       color: AppColors.subText(context),
                                                       fontSize: 13,
@@ -717,6 +730,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
   Widget build(BuildContext context) {
     final cowsInZone = _cowsInZone;
     final cowState = ref.watch(cowProvider);
+    final breeds = ref.watch(breedProvider);
 
     return Scaffold(
       backgroundColor: AppColors.bg(context),
@@ -970,7 +984,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                   return Padding(
                     padding:
                         const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                    child: _buildCowCard(context, cow),
+                    child: _buildCowCard(context, cow, breeds),
                   );
                 },
                 childCount: cowsInZone.length,
@@ -996,8 +1010,9 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
     );
   }
 
-  Widget _buildCowCard(BuildContext context, Cow cow) {
+  Widget _buildCowCard(BuildContext context, Cow cow, List<Breed> breeds) {
     final statusColor = _getStatusColor(cow);
+    final breedName = _getBreedName(cow.breed, breeds);
 
     return InkWell(
       onTap: () => context.push('/cow_detail', extra: cow),
@@ -1097,8 +1112,9 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                             : Colors.pink[600],
                       ),
                       _buildInfoChip(context, 'เบอร์วัว: ${cow.tagNumber}'),
-                      _buildInfoChip(context, cow.type.label),
-                      _buildInfoChip(context, cow.breed),
+                      _buildInfoChip(context, cow.displayTypeName),
+                      if (breedName != '-')
+                        _buildInfoChip(context, breedName),
                     ],
                   ),
                 ],

@@ -265,13 +265,13 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       {
         'key': 'all',
         'label': 'ทั้งหมด',
-        'icon': Icons.apps,
+        'icon': Icons.apps_rounded,
         'color': AppColors.primary,
       },
       {
         'key': 'unread',
         'label': 'ยังไม่อ่าน',
-        'icon': Icons.mark_email_unread_outlined,
+        'icon': Icons.mark_email_unread_rounded,
         'color': AppColors.error,
       },
       {
@@ -281,63 +281,108 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         'color': const Color(0xFFD97706),
       },
       {
-        'key': 'calving',
-        'label': 'กำหนดคลอด',
-        'icon': Icons.favorite_outline,
-        'color': const Color(0xFF9333EA),
+        'key': 'calendar',
+        'label': 'กิจกรรมทั่วไป',
+        'icon': Icons.event_note_rounded,
+        'color': const Color(0xFF0284C7),
       },
       {
         'key': 'health',
-        'label': 'สุขภาพ / นัดหมาย',
-        'icon': Icons.medical_services_outlined,
+        'label': 'นัดหมายสุขภาพ',
+        'icon': Icons.medical_services_rounded,
         'color': const Color(0xFFDC2626),
       },
       {
-        'key': 'calendar',
-        'label': 'กิจกรรมปฏิทิน',
-        'icon': Icons.calendar_month_outlined,
-        'color': const Color(0xFF0284C7),
+        'key': 'calving',
+        'label': 'กำหนดคลอด',
+        'icon': Icons.favorite_rounded,
+        'color': const Color(0xFF9333EA),
       },
     ];
 
     return Container(
-      color: AppColors.surf(context),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.cardBg(context),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
           children: filterCategories.map((cat) {
             final isSelected = _selectedFilter == cat['key'];
             final color = cat['color'] as Color;
             return Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: ChoiceChip(
-                showCheckmark: false,
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                avatar: Icon(
-                  cat['icon'] as IconData,
-                  size: 16,
-                  color: isSelected ? Colors.white : color,
-                ),
-                label: Text(
-                  cat['label'] as String,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                    color: isSelected ? Colors.white : AppColors.text(context),
+              padding: const EdgeInsets.only(right: 8, bottom: 4, top: 2),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOutCubic,
+                decoration: BoxDecoration(
+                  color: isSelected ? color : AppColors.surfAlt(context),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: color.withValues(alpha: 0.25),
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
+                          )
+                        ]
+                      : [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 3,
+                            offset: const Offset(0, 1),
+                          )
+                        ],
+                  border: Border.all(
+                    color: isSelected ? color : AppColors.brd(context).withValues(alpha: 0.4),
+                    width: isSelected ? 0 : 1,
                   ),
                 ),
-                selected: isSelected,
-                selectedColor: color,
-                backgroundColor: color.withValues(alpha: 0.08),
-                side: BorderSide(
-                  color: isSelected ? color : color.withValues(alpha: 0.25),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      setState(() {
+                        _selectedFilter = cat['key'] as String;
+                      });
+                    },
+                    borderRadius: BorderRadius.circular(24),
+                    splashColor: isSelected ? Colors.white.withValues(alpha: 0.2) : color.withValues(alpha: 0.1),
+                    highlightColor: isSelected ? Colors.white.withValues(alpha: 0.1) : color.withValues(alpha: 0.05),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            cat['icon'] as IconData,
+                            size: 15,
+                            color: isSelected ? Colors.white : color.withValues(alpha: 0.85),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            cat['label'] as String,
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                              color: isSelected ? Colors.white : AppColors.text(context),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-                onSelected: (_) {
-                  setState(() {
-                    _selectedFilter = cat['key'] as String;
-                  });
-                },
               ),
             );
           }).toList(),

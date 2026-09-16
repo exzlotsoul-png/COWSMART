@@ -4,6 +4,7 @@ import '../domain/cow.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
 import 'package:cowsmart/features/farm/providers/zone_provider.dart';
 import 'package:cowsmart/features/finance/providers/finance_provider.dart';
+import 'package:cowsmart/features/calendar/providers/calendar_provider.dart';
 import '../domain/culling_record.dart';
 
 class CowState {
@@ -253,6 +254,7 @@ class CowNotifier extends Notifier<CowState> {
       if (currentFarm != null) {
         ref.read(financeProvider.notifier).fetchTransactions(currentFarm.id);
         ref.read(zoneProvider.notifier).fetchZones(currentFarm.id);
+        ref.read(calendarProvider.notifier).fetchEvents(currentFarm.id);
       }
     } catch (e) {
       print('[ERROR] บันทึกการคัดทิ้งไม่สำเร็จ: $e');
@@ -282,6 +284,7 @@ class CowNotifier extends Notifier<CowState> {
       if (currentFarm != null) {
         ref.read(financeProvider.notifier).fetchTransactions(currentFarm.id);
         ref.read(zoneProvider.notifier).fetchZones(currentFarm.id);
+        ref.read(calendarProvider.notifier).fetchEvents(currentFarm.id);
       }
     } catch (e) {
       print('[ERROR] กู้คืนวัวไม่สำเร็จ: $e');
@@ -313,6 +316,7 @@ class CowNotifier extends Notifier<CowState> {
       if (currentFarm != null) {
         ref.read(financeProvider.notifier).fetchTransactions(currentFarm.id);
         ref.read(zoneProvider.notifier).fetchZones(currentFarm.id);
+        ref.read(calendarProvider.notifier).fetchEvents(currentFarm.id);
       }
     } catch (e) {
       print('[ERROR] บันทึกการคัดทิ้งแบบกลุ่มไม่สำเร็จ: $e');

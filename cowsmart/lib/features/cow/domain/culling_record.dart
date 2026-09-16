@@ -8,6 +8,7 @@ class CullingRecord {
   final double price;
   final String note;
   final Cow? cow; // Nested cow object from backend index eager loading
+  final bool deleteAppointments;
 
   CullingRecord({
     required this.id,
@@ -17,6 +18,7 @@ class CullingRecord {
     this.price = 0.0,
     this.note = '',
     this.cow,
+    this.deleteAppointments = false,
   });
 
   String get statusLabel {
@@ -41,12 +43,13 @@ class CullingRecord {
       price: double.tryParse(json['price']?.toString() ?? '0') ?? 0.0,
       note: json['note']?.toString() ?? '',
       cow: json['cow'] != null ? Cow.fromJson(json['cow']) : null,
+      deleteAppointments: json['delete_appointments'] == true || json['delete_appointments'] == 1 || json['delete_appointments'] == '1',
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'culling_record_id': id,
+      if (id.isNotEmpty) 'culling_record_id': id,
       'cow_id': cowId,
       // Format as MySQL-compatible datetime (not ISO 8601 with milliseconds)
       'cull_date': '${cullDate.year.toString().padLeft(4, '0')}-'
@@ -58,6 +61,7 @@ class CullingRecord {
       'status': status,
       'price': price,
       'note': note,
+      'delete_appointments': deleteAppointments,
       if (cow != null) 'cow': cow!.toJson(),
     };
   }

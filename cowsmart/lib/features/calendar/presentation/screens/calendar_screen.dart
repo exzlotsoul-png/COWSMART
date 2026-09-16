@@ -136,7 +136,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           ),
         ],
       ),
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
@@ -150,60 +150,77 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 : calState.upcomingEvents.where((e) => e.eventType == cat['key']).length;
 
             return Padding(
-              padding: const EdgeInsets.only(right: 12),
+              padding: const EdgeInsets.only(right: 8, bottom: 4, top: 2),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
+                duration: const Duration(milliseconds: 300),
                 curve: Curves.easeOutCubic,
-                child: Material(
+                decoration: BoxDecoration(
                   color: isSelected ? color : AppColors.surfAlt(context),
-                  borderRadius: BorderRadius.circular(16),
-                  elevation: isSelected ? 4 : 0,
-                  shadowColor: color.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: color.withValues(alpha: 0.25),
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
+                          )
+                        ]
+                      : [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 3,
+                            offset: const Offset(0, 1),
+                          )
+                        ],
+                  border: Border.all(
+                    color: isSelected ? color : AppColors.brd(context).withValues(alpha: 0.4),
+                    width: isSelected ? 0 : 1,
+                  ),
+                ),
+                child: Material(
+                  color: Colors.transparent,
                   child: InkWell(
                     onTap: () => ref.read(calendarProvider.notifier).setCategory(cat['key'] as String),
-                    borderRadius: BorderRadius.circular(16),
-                    splashColor: Colors.white.withValues(alpha: 0.2),
-                    highlightColor: Colors.white.withValues(alpha: 0.1),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isSelected ? Colors.transparent : AppColors.brd(context).withValues(alpha: 0.5),
-                          width: 1,
-                        ),
-                      ),
+                    borderRadius: BorderRadius.circular(24),
+                    splashColor: isSelected ? Colors.white.withValues(alpha: 0.2) : color.withValues(alpha: 0.1),
+                    highlightColor: isSelected ? Colors.white.withValues(alpha: 0.1) : color.withValues(alpha: 0.05),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
                             cat['icon'] as IconData,
-                            size: 18,
-                            color: isSelected ? Colors.white : color.withValues(alpha: 0.8),
+                            size: 15,
+                            color: isSelected ? Colors.white : color.withValues(alpha: 0.85),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 6),
                           Text(
                             cat['label'] as String,
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 12.5,
                               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                               color: isSelected ? Colors.white : AppColors.text(context),
                             ),
                           ),
                           if (count > 0) ...[
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            const SizedBox(width: 6),
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
                                 color: isSelected
                                     ? Colors.white.withValues(alpha: 0.25)
-                                    : color.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(12),
+                                    : color.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(10),
+                                border: isSelected
+                                    ? null
+                                    : Border.all(color: color.withValues(alpha: 0.2)),
                               ),
                               child: Text(
-                                '$count',
+                                count.toString(),
                                 style: TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                   color: isSelected ? Colors.white : color,
                                 ),

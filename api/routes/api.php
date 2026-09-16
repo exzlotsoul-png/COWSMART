@@ -59,6 +59,18 @@ Route::get('/test-db', function () {
     }
 });
 
+Route::get('/debug-calendar', function (\Illuminate\Http\Request $request) {
+    $farmId = $request->query('farm_id');
+    $farmCows = \App\Models\Cow::where('farm_id', $farmId)->get();
+    
+    $records = \App\Models\BreedingRecord::all();
+    
+    return response()->json([
+        'cows' => $farmCows,
+        'records' => $records,
+    ]);
+});
+
 // Serve storage files with CORS headers (for Flutter web)
 Route::get('/storage/{path}', function ($path) {
     $fullPath = storage_path('app/public/' . $path);
