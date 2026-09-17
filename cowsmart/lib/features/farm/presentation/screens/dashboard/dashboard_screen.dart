@@ -273,37 +273,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   greetingIcon = Icons.dark_mode_rounded;
                   iconColor = const Color(0xFF8B5CF6);
                 }
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                return Row(
                   children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            greetingText,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textSecondary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                    Icon(greetingIcon, size: 22, color: iconColor),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        greetingText,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.text(context),
                         ),
-                        const SizedBox(width: 4),
-                        Icon(greetingIcon, size: 15, color: iconColor),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      userName,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.text(context),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 );
