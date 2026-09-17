@@ -260,123 +260,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           ),
         ],
       ),
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(6, 2, 4, 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Month-Year Picker Pill Button
-                InkWell(
-                  onTap: () => _showMonthYearPicker(context),
-                  borderRadius: BorderRadius.circular(20),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.25),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          AppDateUtils.formatThaiMonthYear(_focusedDay),
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                        const SizedBox(width: 2),
-                        const Icon(
-                          Icons.arrow_drop_down_rounded,
-                          color: AppColors.primary,
-                          size: 22,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                // Right controls: Prev, Format, Next
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Format Toggle Button
-                    InkWell(
-                      onTap: () {
-                        setState(() {
-                          if (_calendarFormat == CalendarFormat.month) {
-                            _calendarFormat = CalendarFormat.twoWeeks;
-                          } else if (_calendarFormat == CalendarFormat.twoWeeks) {
-                            _calendarFormat = CalendarFormat.week;
-                          } else {
-                            _calendarFormat = CalendarFormat.month;
-                          }
-                        });
-                      },
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: AppColors.primary.withValues(alpha: 0.35),
-                            width: 1,
-                          ),
-                        ),
-                        child: Text(
-                          _calendarFormat == CalendarFormat.month
-                              ? 'เดือน'
-                              : _calendarFormat == CalendarFormat.twoWeeks
-                                  ? '2 สัปดาห์'
-                                  : 'สัปดาห์',
-                          style: const TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    // Prev button
-                    IconButton(
-                      icon: const Icon(Icons.chevron_left_rounded, color: AppColors.primary, size: 24),
-                      visualDensity: VisualDensity.compact,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                      onPressed: () {
-                        setState(() {
-                          _focusedDay = DateTime(_focusedDay.year, _focusedDay.month - 1, 1);
-                        });
-                      },
-                    ),
-                    // Next button
-                    IconButton(
-                      icon: const Icon(Icons.chevron_right_rounded, color: AppColors.primary, size: 24),
-                      visualDensity: VisualDensity.compact,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                      onPressed: () {
-                        setState(() {
-                          _focusedDay = DateTime(_focusedDay.year, _focusedDay.month + 1, 1);
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          TableCalendar<CalendarEvent>(
+      padding: const EdgeInsets.fromLTRB(6, 4, 6, 10),
+      child: TableCalendar<CalendarEvent>(
         firstDay: DateTime(2020),
         lastDay: DateTime(2030),
         focusedDay: _focusedDay,
@@ -454,8 +339,71 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             fontWeight: FontWeight.w500,
           ),
         ),
-        headerVisible: false,
+        headerStyle: HeaderStyle(
+          formatButtonShowsNext: false,
+          titleCentered: false,
+          formatButtonDecoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.35),
+              width: 1,
+            ),
+          ),
+          formatButtonTextStyle: const TextStyle(
+            color: AppColors.primary,
+            fontSize: 11.5,
+            fontWeight: FontWeight.bold,
+          ),
+          formatButtonPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          leftChevronIcon: const Icon(Icons.chevron_left_rounded, color: AppColors.primary, size: 22),
+          rightChevronIcon: const Icon(Icons.chevron_right_rounded, color: AppColors.primary, size: 22),
+          leftChevronPadding: const EdgeInsets.all(4),
+          rightChevronPadding: const EdgeInsets.all(4),
+          leftChevronMargin: EdgeInsets.zero,
+          rightChevronMargin: EdgeInsets.zero,
+          headerPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+        ),
         calendarBuilders: CalendarBuilders(
+          headerTitleBuilder: (context, day) {
+            return Align(
+              alignment: Alignment.centerLeft,
+              child: InkWell(
+                onTap: () => _showMonthYearPicker(context),
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.25),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        AppDateUtils.formatThaiMonthYear(day),
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      const Icon(
+                        Icons.arrow_drop_down_rounded,
+                        color: AppColors.primary,
+                        size: 22,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
           markerBuilder: (context, date, events) {
             if (events.isEmpty) return const SizedBox();
             final isSelected = isSameDay(_selectedDay, date);
@@ -485,9 +433,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           },
         ),
       ),
-    ],
-  ),
-);
+    );
   }
 
   void _showMonthYearPicker(BuildContext context) {
