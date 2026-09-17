@@ -2351,8 +2351,11 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: Container(
-        constraints: BoxConstraints(
+      child: Stack(
+        alignment: Alignment.bottomCenter,
+        children: [
+          Container(
+            constraints: BoxConstraints(
           maxHeight: MediaQuery.of(context).size.height * 0.90,
         ),
         decoration: BoxDecoration(
@@ -3382,6 +3385,20 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
       ),
     ],
   ),
+),
+if (isUploading)
+  Positioned.fill(
+    child: Container(
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.3),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: const Center(
+        child: CircularProgressIndicator(color: Colors.white),
+      ),
+    ),
+  ),
+],
 ),
 );
   }

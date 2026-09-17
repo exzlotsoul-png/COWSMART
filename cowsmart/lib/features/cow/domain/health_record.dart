@@ -104,6 +104,14 @@ class HealthRecord {
       if (val is List) {
         return val.map((e) => e.toString()).toList();
       }
+      if (val is String && val.isNotEmpty) {
+        try {
+          final decoded = jsonDecode(val);
+          if (decoded is List) {
+            return decoded.map((e) => e.toString()).toList();
+          }
+        } catch (_) {}
+      }
       return [];
     }
 
