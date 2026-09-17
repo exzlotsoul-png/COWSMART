@@ -945,20 +945,38 @@ const MarketPrices = () => {
                         ตรงตามข้อความ "(รายงาน ณ วันที่ ...)" มุมบนขวาของรูปภาพ ({extractedData.report_date_text || '17 สิงหาคม 2569'})
                       </span>
                     </div>
-                    <input
-                      type="date"
-                      value={extractedData.effective_date || extractedData.items[0]?.effective_date || ''}
-                      onChange={(e) => handleBatchDateChange(e.target.value)}
-                      style={{
-                        padding: '6px 12px',
+                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                      <div style={{
+                        padding: '6px 32px 6px 12px',
                         borderRadius: '6px',
                         border: '1px solid var(--border-color)',
                         fontSize: '0.85rem',
                         fontWeight: '600',
                         color: 'var(--text-main)',
-                        backgroundColor: '#fff'
-                      }}
-                    />
+                        backgroundColor: '#fff',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        minWidth: '130px'
+                      }}>
+                        <span>{formatThaiDate(extractedData.effective_date || extractedData.items[0]?.effective_date || '')}</span>
+                        <Calendar size={15} style={{ color: 'var(--text-muted)', position: 'absolute', right: '10px' }} />
+                      </div>
+                      <input
+                        type="date"
+                        value={extractedData.effective_date || extractedData.items[0]?.effective_date || ''}
+                        onChange={(e) => handleBatchDateChange(e.target.value)}
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          height: '100%',
+                          opacity: 0,
+                          cursor: 'pointer'
+                        }}
+                      />
+                    </div>
                   </div>
 
                   <div style={{ maxHeight: '220px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
