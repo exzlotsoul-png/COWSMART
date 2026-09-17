@@ -1585,7 +1585,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                           ),
                         const SizedBox(height: 12),
                         DropdownButtonFormField<String>(
-                          value: selectedReminder,
+                          initialValue: selectedReminder,
                           isExpanded: true,
                           dropdownColor: AppColors.cardBg(context),
                           style: TextStyle(fontSize: 15, color: AppColors.text(context)),
@@ -1669,7 +1669,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                         ));
                                   }
 
-                                  if (mounted) {
+                                  if (context.mounted) {
                                     if (ok) {
                                       AppFeedback.showSuccess(context, 'บันทึกกิจกรรมและการแจ้งเตือนแล้ว');
                                     } else {
@@ -1728,7 +1728,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   final ok = await ref
                       .read(calendarProvider.notifier)
                       .deleteEvent(event.id);
-                  if (mounted) {
+                  if (context.mounted) {
                     if (ok) {
                       AppFeedback.showSuccess(context, 'ลบการนัดหมายและการแจ้งเตือนแล้ว');
                     } else {
