@@ -352,13 +352,17 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           ),
           formatButtonTextStyle: const TextStyle(
             color: AppColors.primary,
-            fontSize: 12.5,
+            fontSize: 11.5,
             fontWeight: FontWeight.bold,
           ),
-          formatButtonPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          leftChevronIcon: const Icon(Icons.chevron_left_rounded, color: AppColors.primary, size: 26),
-          rightChevronIcon: const Icon(Icons.chevron_right_rounded, color: AppColors.primary, size: 26),
-          headerPadding: const EdgeInsets.symmetric(vertical: 4),
+          formatButtonPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          leftChevronIcon: const Icon(Icons.chevron_left_rounded, color: AppColors.primary, size: 22),
+          rightChevronIcon: const Icon(Icons.chevron_right_rounded, color: AppColors.primary, size: 22),
+          leftChevronPadding: const EdgeInsets.all(4),
+          rightChevronPadding: const EdgeInsets.all(4),
+          leftChevronMargin: EdgeInsets.zero,
+          rightChevronMargin: EdgeInsets.zero,
+          headerPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
         ),
         calendarBuilders: CalendarBuilders(
           headerTitleBuilder: (context, day) {
@@ -366,7 +370,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               onTap: () => _showMonthYearPicker(context),
               borderRadius: BorderRadius.circular(20),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(20),
@@ -381,16 +385,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     Text(
                       AppDateUtils.formatThaiMonthYear(day),
                       style: const TextStyle(
-                        fontSize: 16.5,
+                        fontSize: 14.5,
                         fontWeight: FontWeight.bold,
                         color: AppColors.primary,
                       ),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: 2),
                     const Icon(
                       Icons.arrow_drop_down_rounded,
                       color: AppColors.primary,
-                      size: 22,
+                      size: 20,
                     ),
                   ],
                 ),
