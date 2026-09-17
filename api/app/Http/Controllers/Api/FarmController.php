@@ -61,9 +61,13 @@ class FarmController extends Controller
                     
         $data = $request->all();
         if (array_key_exists('image_url', $data) && $farm->image_url !== $data['image_url'] && $farm->image_url) {
-            $oldPath = preg_match('/storage\/(.+)$/', $farm->image_url, $m) ? $m[1] : ltrim($farm->image_url, '/');
-            if ($oldPath && !\Illuminate\Support\Str::startsWith($oldPath, 'http') && \Illuminate\Support\Facades\Storage::disk('public')->exists($oldPath)) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPath);
+            if (str_contains($farm->image_url, 'cloudinary.com')) {
+                app(\App\Services\CloudinaryService::class)->delete($farm->image_url);
+            } else {
+                $oldPath = preg_match('/storage\/(.+)$/', $farm->image_url, $m) ? $m[1] : ltrim($farm->image_url, '/');
+                if ($oldPath && !\Illuminate\Support\Str::startsWith($oldPath, 'http') && \Illuminate\Support\Facades\Storage::disk('public')->exists($oldPath)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPath);
+                }
             }
         }
 
@@ -84,9 +88,13 @@ class FarmController extends Controller
             $cowIds = [];
             foreach ($cows as $c) {
                 if ($c->image_url) {
-                    $cPath = preg_match('/storage\/(.+)$/', $c->image_url, $m) ? $m[1] : ltrim($c->image_url, '/');
-                    if ($cPath && !\Illuminate\Support\Str::startsWith($cPath, 'http') && \Illuminate\Support\Facades\Storage::disk('public')->exists($cPath)) {
-                        \Illuminate\Support\Facades\Storage::disk('public')->delete($cPath);
+                    if (str_contains($c->image_url, 'cloudinary.com')) {
+                        app(\App\Services\CloudinaryService::class)->delete($c->image_url);
+                    } else {
+                        $cPath = preg_match('/storage\/(.+)$/', $c->image_url, $m) ? $m[1] : ltrim($c->image_url, '/');
+                        if ($cPath && !\Illuminate\Support\Str::startsWith($cPath, 'http') && \Illuminate\Support\Facades\Storage::disk('public')->exists($cPath)) {
+                            \Illuminate\Support\Facades\Storage::disk('public')->delete($cPath);
+                        }
                     }
                 }
                 if ($c->id) $cowIds[] = (string)$c->id;

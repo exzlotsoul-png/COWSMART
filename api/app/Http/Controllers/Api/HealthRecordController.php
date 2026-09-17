@@ -253,9 +253,15 @@ class HealthRecordController extends Controller
 
             // Delete images that are no longer present in the updated list
             foreach ($oldImgs as $oldImg) {
-                $oldPath = preg_match('/storage\/(.+)$/', $oldImg, $m) ? $m[1] : ltrim($oldImg, '/');
-                if ($oldPath && !in_array($oldPath, $newImgs) && !str_starts_with($oldPath, 'http')) {
-                    Storage::disk('public')->delete($oldPath);
+                if (!in_array($oldImg, $newImgs)) {
+                    if (str_contains($oldImg, 'cloudinary.com')) {
+                        app(\App\Services\CloudinaryService::class)->delete($oldImg);
+                    } else {
+                        $oldPath = preg_match('/storage\/(.+)$/', $oldImg, $m) ? $m[1] : ltrim($oldImg, '/');
+                        if ($oldPath && !str_starts_with($oldPath, 'http')) {
+                            \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPath);
+                        }
+                    }
                 }
             }
 
@@ -279,13 +285,18 @@ class HealthRecordController extends Controller
         if ($record && $record->images) {
             $imgs = is_string($record->images) ? (json_decode($record->images, true) ?? []) : (is_array($record->images) ? $record->images : []);
             foreach ($imgs as $img) {
+                if (str_contains($img, 'cloudinary.com')) {
+                    app(\App\Services\CloudinaryService::class)->delete($img);
+                    continue;
+                }
+                
                 if (preg_match('/storage\/(.+)$/', $img, $matches)) {
                     $path = $matches[1];
                 } else {
                     $path = ltrim($img, '/');
                 }
                 if ($path && !str_starts_with($path, 'http')) {
-                    Storage::disk('public')->delete($path);
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($path);
                 }
             }
         }

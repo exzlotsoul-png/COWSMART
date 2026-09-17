@@ -16,6 +16,12 @@ class CowController extends Controller
     {
         if (empty($imageUrl))
             return;
+
+        if (str_contains($imageUrl, 'cloudinary.com')) {
+            app(\App\Services\CloudinaryService::class)->delete($imageUrl);
+            return;
+        }
+
         $path = $imageUrl;
         if (preg_match('/storage\/(.+)$/', $path, $matches)) {
             $path = $matches[1];
@@ -24,8 +30,8 @@ class CowController extends Controller
             $path = preg_replace('/^storage\//', '', $path);
         }
 
-        if ($path && !str_starts_with($path, 'http') && Storage::disk('public')->exists($path)) {
-            Storage::disk('public')->delete($path);
+        if ($path && !str_starts_with($path, 'http') && \Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($path);
         }
     }
 
