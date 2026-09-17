@@ -497,7 +497,7 @@ const MarketPrices = () => {
               }}
             >
               <Sparkles size={16} style={{ color: '#16a34a' }} />
-              อัปโหลดรูปรายงานปศุสัตว์ (OCR)
+              อัปโหลดรูปรายงานปศุสัตว์
             </button>
 
             <button
@@ -809,7 +809,7 @@ const MarketPrices = () => {
             <div className="modal-header">
               <h3 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Sparkles size={20} style={{ color: '#16a34a' }} />
-                อัปโหลดรูปภาพรายงานราคาปศุสัตว์ (Smart OCR)
+                อัปโหลดรูปภาพรายงานราคาปศุสัตว์
               </h3>
               <button className="modal-close" onClick={() => setIsImageModalOpen(false)}>&times;</button>
             </div>
@@ -939,7 +939,7 @@ const MarketPrices = () => {
                   }}>
                     <div>
                       <label style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-main)', display: 'block' }}>
-                        📅 วันที่ของราคา (Effective Date):
+                        วันที่ของราคา (Effective Date):
                       </label>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                         ตรงตามข้อความ "(รายงาน ณ วันที่ ...)" มุมบนขวาของรูปภาพ ({extractedData.report_date_text || '17 สิงหาคม 2569'})
