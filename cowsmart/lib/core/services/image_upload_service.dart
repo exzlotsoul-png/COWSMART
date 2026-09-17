@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 import 'package:cowsmart/core/network/api_client.dart';
 import 'package:cowsmart/features/auth/providers/auth_provider.dart';
@@ -20,9 +21,6 @@ class ImageUploadService {
     try {
       return await _picker.pickImage(
         source: ImageSource.gallery,
-        maxWidth: 1024,
-        maxHeight: 1024,
-        imageQuality: 70,
       );
     } catch (e) {
       debugPrint('❌ Error picking from gallery: $e');
@@ -35,9 +33,6 @@ class ImageUploadService {
     try {
       return await _picker.pickImage(
         source: ImageSource.camera,
-        maxWidth: 1024,
-        maxHeight: 1024,
-        imageQuality: 70,
       );
     } catch (e) {
       debugPrint('❌ Error picking from camera: $e');
@@ -61,7 +56,23 @@ class ImageUploadService {
     }
 
     // Build multipart form data
-    final bytes = await imageFile.readAsBytes();
+    var bytes = await imageFile.readAsBytes();
+    
+    // Compress image to avoid slow upload and PHP limits
+    if (!kIsWeb) {
+      try {
+        final compressedBytes = await FlutterImageCompress.compressWithList(
+          bytes,
+          minWidth: 1024,
+          minHeight: 1024,
+          quality: 70,
+        );
+        bytes = compressedBytes;
+      } catch (e) {
+        debugPrint('❌ Image compression failed: $e');
+      }
+    }
+
     final filename = imageFile.name.isNotEmpty && imageFile.name.contains('.') 
         ? imageFile.name 
         : 'image_${DateTime.now().millisecondsSinceEpoch}.jpg';

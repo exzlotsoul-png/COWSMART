@@ -3385,19 +3385,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
       ),
     ],
   ),
-),
-if (isUploading)
-  Positioned.fill(
-    child: Container(
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.3),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: const Center(
-        child: CircularProgressIndicator(color: Colors.white),
-      ),
-    ),
-  ),
+)
 ],
 ),
 );
