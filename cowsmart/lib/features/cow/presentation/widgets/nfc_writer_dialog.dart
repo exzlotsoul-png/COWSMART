@@ -146,11 +146,22 @@ class _NfcWriterDialogState extends State<NfcWriterDialog> with SingleTickerProv
                       color: _isSuccess ? AppColors.success.withOpacity(0.1) : AppColors.primaryLight.withOpacity(0.2),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
-                      _isSuccess ? Icons.check_circle_outline : Icons.nfc_rounded,
-                      size: 40,
-                      color: _isSuccess ? AppColors.success : AppColors.primary,
-                    ),
+                    child: _isSuccess 
+                        ? const Icon(
+                            Icons.check_circle_outline,
+                            size: 40,
+                            color: AppColors.success,
+                          )
+                        : const Center(
+                            child: Text(
+                              'NFC',
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
                   ),
                 ],
               ),

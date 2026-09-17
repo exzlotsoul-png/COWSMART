@@ -365,10 +365,24 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
-                          children: const [
-                            Icon(Icons.nfc_rounded, color: Colors.orangeAccent, size: 18),
-                            SizedBox(width: 6),
-                            Flexible(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.orangeAccent,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                'NFC',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            const Flexible(
                               child: Text(
                                 'ระบบ NFC พร้อมทำงาน (แตะเพื่อเปิดโหมดแตะ)',
                                 style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
@@ -391,7 +405,21 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
                         Expanded(
                           child: ElevatedButton.icon(
                             onPressed: _openNfcReaderDialog,
-                            icon: const Icon(Icons.contactless_rounded, size: 20),
+                            icon: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text(
+                                'NFC',
+                                style: TextStyle(
+                                  color: Colors.orange,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
                             label: const Text(
                               'แตะเหรียญ NFC',
                               style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),

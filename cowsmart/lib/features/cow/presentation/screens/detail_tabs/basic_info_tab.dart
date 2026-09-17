@@ -334,10 +334,10 @@ class BasicInfoTab extends ConsumerWidget {
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
-            fontSize: 16.5,
+            fontSize: 15.5,
           ),
           textAlign: TextAlign.center,
-          maxLines: 1,
+          maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 2),

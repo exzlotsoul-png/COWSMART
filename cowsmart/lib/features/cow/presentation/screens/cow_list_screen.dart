@@ -773,45 +773,63 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 8),
                           _buildStatusBadge(cow.status),
                         ],
                       ),
                       const SizedBox(height: 6),
 
-                      // Tag Number & Breed Details
+                      // Tag & Gender Row
                       Row(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.nfc_rounded,
-                                  size: 14,
+                          if (cow.tagNumber.isNotEmpty) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                cow.tagNumber,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
                                   color: AppColors.primary,
                                 ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  cow.tagNumber,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
+                            const SizedBox(width: 8),
+                          ],
+                          _buildInfoChip(
+                            context,
+                            cow.gender == 'M'
+                                ? Icons.male_rounded
+                                : Icons.female_rounded,
+                            cow.gender == 'M' ? 'ผู้' : 'เมีย',
+                            color: cow.gender == 'M'
+                                ? Colors.blue[700]
+                                : Colors.pink[600],
+                            bgColor:
+                                (cow.gender == 'M'
+                                        ? Colors.blue
+                                        : Colors.pink)
+                                    .withValues(alpha: 0.12),
+                            borderColor:
+                                (cow.gender == 'M'
+                                        ? Colors.blue
+                                        : Colors.pink)
+                                    .withValues(alpha: 0.35),
                           ),
-                          const SizedBox(width: 8),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+
+                      // Breed Details
+                      Row(
+                        children: [
                           Builder(
                             builder: (context) {
                               final breedName = breeds.firstWhere(
@@ -844,27 +862,6 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                         physics: const BouncingScrollPhysics(),
                         child: Row(
                           children: [
-                            _buildInfoChip(
-                              context,
-                              cow.gender == 'M'
-                                  ? Icons.male_rounded
-                                  : Icons.female_rounded,
-                              cow.gender == 'M' ? 'ผู้' : 'เมีย',
-                              color: cow.gender == 'M'
-                                  ? Colors.blue[700]
-                                  : Colors.pink[600],
-                              bgColor:
-                                  (cow.gender == 'M'
-                                          ? Colors.blue
-                                          : Colors.pink)
-                                      .withValues(alpha: 0.12),
-                              borderColor:
-                                  (cow.gender == 'M'
-                                          ? Colors.blue
-                                          : Colors.pink)
-                                      .withValues(alpha: 0.35),
-                            ),
-                            const SizedBox(width: 6),
                             _buildInfoChip(
                               context,
                               Icons.cake_outlined,

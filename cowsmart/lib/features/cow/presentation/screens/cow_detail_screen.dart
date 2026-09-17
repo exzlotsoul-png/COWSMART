@@ -96,7 +96,21 @@ class _CowDetailScreenState extends ConsumerState<CowDetailScreen> {
                       ],
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.nfc_rounded, size: 22, color: Colors.white),
+                      icon: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'NFC',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
                       onPressed: () {
                         showDialog(
                           context: context,

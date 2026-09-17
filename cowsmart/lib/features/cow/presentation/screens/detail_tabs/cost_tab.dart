@@ -926,18 +926,19 @@ class _CostTabState extends ConsumerState<CostTab> with AutomaticKeepAliveClient
     String displayDate = AppDateUtils.formatDynamicDate(rawDate);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isDark ? AppColors.darkBorder : Colors.grey[200]!,
+          color: Colors.green.withValues(alpha: 0.35),
+          width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
       ),

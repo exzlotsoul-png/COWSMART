@@ -106,10 +106,15 @@ class _NfcReaderDialogState extends State<NfcReaderDialog>
                       color: Colors.orange.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(
-                      Icons.nfc_rounded,
-                      color: Colors.orange,
-                      size: 24,
+                    child: const Center(
+                      child: Text(
+                        'NFC',
+                        style: TextStyle(
+                          color: Colors.orange,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -151,63 +156,76 @@ class _NfcReaderDialogState extends State<NfcReaderDialog>
                 child: AnimatedBuilder(
                   animation: _pulseController,
                   builder: (context, child) {
-                    return Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // Pulse rings
-                        if (!_isSuccess) ...[
-                          Container(
-                            width: 110 + (_pulseController.value * 25),
-                            height: 110 + (_pulseController.value * 25),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.orange.withValues(
-                                alpha: 0.2 * (1 - _pulseController.value),
+                    return SizedBox(
+                        width: 140,
+                        height: 140,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            // Pulse rings
+                            if (!_isSuccess) ...[
+                              Container(
+                                width: 110 + (_pulseController.value * 25),
+                                height: 110 + (_pulseController.value * 25),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.orange.withValues(
+                                    alpha: 0.2 * (1 - _pulseController.value),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                          Container(
-                            width: 90 + (_pulseController.value * 15),
-                            height: 90 + (_pulseController.value * 15),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.orange.withValues(
-                                alpha: 0.3 * (1 - _pulseController.value),
-                              ),
-                            ),
-                          ),
-                        ],
-                        // Main Icon Container
-                        Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: _isSuccess
-                                ? AppColors.success
-                                : Colors.orange.shade800,
-                            boxShadow: [
-                              BoxShadow(
-                                color:
-                                    (_isSuccess
-                                            ? AppColors.success
-                                            : Colors.orange)
-                                        .withValues(alpha: 0.4),
-                                blurRadius: 15,
-                                spreadRadius: 2,
+                              Container(
+                                width: 90 + (_pulseController.value * 15),
+                                height: 90 + (_pulseController.value * 15),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.orange.withValues(
+                                    alpha: 0.3 * (1 - _pulseController.value),
+                                  ),
+                                ),
                               ),
                             ],
-                          ),
-                          child: Icon(
-                            _isSuccess
-                                ? Icons.check_rounded
-                                : Icons.contactless_rounded,
-                            size: 42,
-                            color: Colors.white,
-                          ),
+                            // Main Icon Container
+                            Container(
+                              width: 80,
+                              height: 80,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: _isSuccess
+                                    ? AppColors.success
+                                    : Colors.orange.shade800,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color:
+                                        (_isSuccess
+                                                ? AppColors.success
+                                                : Colors.orange)
+                                            .withValues(alpha: 0.4),
+                                    blurRadius: 15,
+                                    spreadRadius: 2,
+                                  ),
+                                ],
+                              ),
+                              child: _isSuccess
+                                  ? const Icon(
+                                      Icons.check_rounded,
+                                      size: 42,
+                                      color: Colors.white,
+                                    )
+                                  : const Center(
+                                      child: Text(
+                                        'NFC',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      ),
+                                    ),
+                            ),
+                          ],
                         ),
-                      ],
-                    );
+                      );
                   },
                 ),
               ),

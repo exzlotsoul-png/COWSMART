@@ -8,6 +8,18 @@ import api from '../lib/axios';
 import Pagination from '../components/layout/Pagination';
 import { useToast } from '../contexts/ToastContext';
 
+const formatThaiDate = (dateString) => {
+  if (!dateString) return '-';
+  try {
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return dateString;
+    const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+    return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear() + 543}`;
+  } catch(e) {
+    return dateString;
+  }
+};
+
 const MarketPrices = () => {
   const { showToast } = useToast();
   const [prices, setPrices] = useState([]);
@@ -972,7 +984,7 @@ const MarketPrices = () => {
                                 fontSize: '0.75rem',
                                 fontWeight: '600'
                               }}>
-                                {item.effective_date}
+                                {formatThaiDate(item.effective_date)}
                               </span>
                             </td>
                             <td>
