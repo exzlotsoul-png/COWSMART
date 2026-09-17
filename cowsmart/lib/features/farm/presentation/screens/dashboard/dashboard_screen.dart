@@ -251,10 +251,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           Expanded(
             child: Builder(
               builder: (context) {
-                final user = ref.watch(authProvider).user;
-                final userName = user != null
-                    ? '${user['first_name'] ?? ''}'
-                    : 'ผู้ใช้งาน';
                 final hour = DateTime.now().hour;
                 final String greetingText;
                 final IconData greetingIcon;

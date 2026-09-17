@@ -362,13 +362,37 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         ),
         calendarBuilders: CalendarBuilders(
           headerTitleBuilder: (context, day) {
-            return Center(
-              child: Text(
-                AppDateUtils.formatThaiMonthYear(day),
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.text(context),
+            return InkWell(
+              onTap: () => _showMonthYearPicker(context),
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.25),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      AppDateUtils.formatThaiMonthYear(day),
+                      style: const TextStyle(
+                        fontSize: 16.5,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.arrow_drop_down_rounded,
+                      color: AppColors.primary,
+                      size: 22,
+                    ),
+                  ],
                 ),
               ),
             );
@@ -402,6 +426,283 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           },
         ),
       ),
+    );
+  }
+
+  void _showMonthYearPicker(BuildContext context) {
+    int tempYear = _focusedDay.year;
+    int tempMonth = _focusedDay.month;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final isDark = AppColors.isDark(context);
+            return Container(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkSurface : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 20,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Handle bar
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppColors.brd(context).withValues(alpha: 0.8),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Header title
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              Icons.calendar_month_rounded,
+                              color: AppColors.primary,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            'เลือกเดือนและปี',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.text(context),
+                            ),
+                          ),
+                        ],
+                      ),
+                      TextButton.icon(
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        ),
+                        icon: const Icon(Icons.today_rounded, size: 16),
+                        label: const Text('เดือนนี้', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        onPressed: () {
+                          final now = DateTime.now();
+                          setModalState(() {
+                            tempYear = now.year;
+                            tempMonth = now.month;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Year selector with left/right arrows
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfAlt(context),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: AppColors.brd(context).withValues(alpha: 0.6),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.chevron_left_rounded, color: AppColors.primary, size: 28),
+                          onPressed: tempYear > 2020
+                              ? () => setModalState(() => tempYear--)
+                              : null,
+                          tooltip: 'ปีก่อนหน้า',
+                        ),
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'พ.ศ. ${tempYear + 543}',
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.text(context),
+                              ),
+                            ),
+                            Text(
+                              'ค.ศ. $tempYear',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppColors.subText(context),
+                              ),
+                            ),
+                          ],
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.chevron_right_rounded, color: AppColors.primary, size: 28),
+                          onPressed: tempYear < 2030
+                              ? () => setModalState(() => tempYear++)
+                              : null,
+                          tooltip: 'ปีถัดไป',
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+
+                  // 12 Months Grid (3 columns x 4 rows)
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                      childAspectRatio: 2.2,
+                    ),
+                    itemCount: 12,
+                    itemBuilder: (context, index) {
+                      final monthNum = index + 1;
+                      final isSelected = (monthNum == tempMonth);
+                      final isCurrentMonth = (monthNum == DateTime.now().month && tempYear == DateTime.now().year);
+
+                      return InkWell(
+                        onTap: () {
+                          setModalState(() {
+                            tempMonth = monthNum;
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? AppColors.primary
+                                : (isCurrentMonth
+                                    ? AppColors.primary.withValues(alpha: 0.1)
+                                    : AppColors.cardBg(context)),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : (isCurrentMonth
+                                      ? AppColors.primary.withValues(alpha: 0.5)
+                                      : AppColors.brd(context).withValues(alpha: 0.6)),
+                              width: isSelected || isCurrentMonth ? 1.5 : 1,
+                            ),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: AppColors.primary.withValues(alpha: 0.35),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            AppDateUtils.thaiMonthsFull[index],
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: isSelected || isCurrentMonth ? FontWeight.bold : FontWeight.w500,
+                              color: isSelected
+                                  ? Colors.white
+                                  : (isCurrentMonth
+                                      ? AppColors.primary
+                                      : AppColors.text(context)),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Actions button
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            side: BorderSide(color: AppColors.brd(context)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            'ยกเลิก',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.subText(context),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            final targetDay = DateTime(
+                              tempYear,
+                              tempMonth,
+                              1,
+                            );
+                            setState(() {
+                              _focusedDay = targetDay;
+                              _selectedDay = targetDay;
+                            });
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'ดูปฏิทินเดือนนี้',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
