@@ -77,6 +77,12 @@ class ImageUploadService {
         ? imageFile.name 
         : 'image_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
+    // File size check (2MB limit to prevent server 422 error)
+    final double fileSizeMB = bytes.length / (1024 * 1024);
+    if (fileSizeMB > 2.0) {
+      throw Exception('รูปภาพมีขนาดใหญ่เกินไป (${fileSizeMB.toStringAsFixed(2)}MB) \nระบบรองรับไม่เกิน 2MB กรุณาเลือกรูปอื่นหรือถ่ายรูปใหม่ครับ');
+    }
+
     final formData = FormData.fromMap({
       'type': type,
       'entity_id': entityId,

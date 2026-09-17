@@ -13,6 +13,9 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
+# Increase PHP upload limits
+RUN echo "upload_max_filesize = 20M\npost_max_size = 20M" > /usr/local/etc/php/conf.d/uploads.ini
+
 # Enable Apache mod_rewrite for Laravel routing
 RUN a2enmod rewrite
 
