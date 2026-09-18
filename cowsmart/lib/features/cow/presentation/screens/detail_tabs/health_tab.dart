@@ -2454,29 +2454,38 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
             if (currentStep == 1) ...[
-              ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-                leading: Icon(Icons.calendar_today, size: 22, color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary),
-                title: Text('วันที่', style: TextStyle(fontSize: 16, color: AppColors.text(context))),
-                subtitle: Text(
-                  DateFormat('dd/MM/yyyy').format(selectedDate),
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.text(context),
-                  ),
-                ),
+              InkWell(
                 onTap: () async {
                   final picked = await showDatePicker(
                     context: context,
                     initialDate: selectedDate,
                     firstDate: DateTime(2020),
                     lastDate: DateTime.now(),
+                    helpText: 'เลือกวันที่',
+                    cancelText: 'ยกเลิก',
+                    confirmText: 'ตกลง',
                   );
                   if (picked != null) setState(() => selectedDate = picked);
                 },
+                borderRadius: BorderRadius.circular(12),
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: 'วันที่ดำเนินการ',
+                    labelStyle: TextStyle(fontSize: 15),
+                    prefixIcon: Icon(Icons.calendar_today_rounded, size: 22),
+                    suffixIcon: Icon(Icons.edit_calendar_rounded, size: 20, color: AppColors.primary),
+                  ),
+                  child: Text(
+                    AppDateUtils.formatThaiDate(selectedDate, useFullMonth: true),
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.text(context),
+                    ),
+                  ),
+                ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 value: checkupTypes.any((type) => type['id'] == selectedType)
                     ? selectedType

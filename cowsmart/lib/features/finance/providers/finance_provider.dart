@@ -146,23 +146,34 @@ class FinanceNotifier extends Notifier<FinanceState> {
     try {
       print('[FETCH] กำลังดึงข้อมูลธุรกรรมและค่าใช้จ่ายของฟาร์ม $farmId...');
 
-      // Fetch financial records
-      final response = await _api.get(
-        '/financial_records',
-        query: {'farm_id': farmId},
-      );
-      final List<dynamic> data = response.data;
+      // Fetch all data concurrently to reduce loading time
+      final results = await Future.wait([
+        _api.get('/financial_records', query: {'farm_id': farmId}),
+        _api.get('/feed_inventories', query: {'farm_id': farmId}).catchError((e) {
+          print('[WARN] ไม่สามารถดึงข้อมูลคลังอาหารมารวมในบัญชีได้: $e');
+          return null;
+        }),
+        _api.get('/culling_records', query: {'farm_id': farmId}).catchError((e) {
+          print('[WARN] ไม่สามารถดึงข้อมูลการขายวัวมารวมในบัญชีได้: $e');
+          return null;
+        }),
+        _api.get('/cows', query: {'farm_id': farmId}).catchError((e) {
+          print('[WARN] ไม่สามารถดึงข้อมูลต้นทุนการซื้อวัวมารวมในบัญชีได้: $e');
+          return null;
+        }),
+      ]);
+
+      // 1. Process Financial Records
+      final response = results[0];
+      final List<dynamic> data = response?.data ?? [];
       final List<FinancialTransaction> manualTransactions = data
           .map((json) => FinancialTransaction.fromJson(json))
           .toList();
 
-      // Also fetch feed items / purchases and convert to financial transactions
+      // 2. Process Feed Inventories
       final List<FinancialTransaction> feedTransactions = [];
-      try {
-        final feedRes = await _api.get(
-          '/feed_inventories',
-          query: {'farm_id': farmId},
-        );
+      final feedRes = results[1];
+      if (feedRes != null) {
         final List<dynamic> feedData = feedRes.data;
         for (var fJson in feedData) {
           final feedItem = FeedItem.fromJson(fJson);
@@ -181,16 +192,11 @@ class FinanceNotifier extends Notifier<FinanceState> {
             );
           }
         }
-      } catch (e) {
-        print('[WARN] ไม่สามารถดึงข้อมูลคลังอาหารมารวมในบัญชีได้: $e');
       }
 
-      // Also fetch culling records (sold cows) and merge with financial transactions
-      try {
-        final cullRes = await _api.get(
-          '/culling_records',
-          query: {'farm_id': farmId},
-        );
+      // 3. Process Culling Records
+      final cullRes = results[2];
+      if (cullRes != null) {
         final List<dynamic> cullData = cullRes.data;
         for (var cJson in cullData) {
           final record = CullingRecord.fromJson(cJson);
@@ -201,7 +207,6 @@ class FinanceNotifier extends Notifier<FinanceState> {
 
             final formattedTitle = 'ขายวัว $cowName';
 
-            // Check if manualTransactions already has a transaction for this sale (by ID or same date/amount)
             final existingIndex = manualTransactions.indexWhere((t) {
               if (t.id == record.id || t.id == 'cull_${record.id}') return true;
               final isSameDate = t.date.year == record.cullDate.year &&
@@ -213,7 +218,6 @@ class FinanceNotifier extends Notifier<FinanceState> {
             });
 
             if (existingIndex != -1) {
-              // Update title to prefer cow's name (e.g. "ขายวัว นำโชค")
               manualTransactions[existingIndex] = FinancialTransaction(
                 id: manualTransactions[existingIndex].id,
                 farmId: manualTransactions[existingIndex].farmId,
@@ -242,16 +246,11 @@ class FinanceNotifier extends Notifier<FinanceState> {
             }
           }
         }
-      } catch (e) {
-        print('[WARN] ไม่สามารถดึงข้อมูลการขายวัวมารวมในบัญชีได้: $e');
       }
 
-      // Also fetch cows with purchase_price > 0 and include as expense transactions
-      try {
-        final cowRes = await _api.get(
-          '/cows',
-          query: {'farm_id': farmId},
-        );
+      // 4. Process Cows (Purchase Price)
+      final cowRes = results[3];
+      if (cowRes != null) {
         final List<dynamic> cowData = cowRes.data;
         for (var cJson in cowData) {
           final cow = Cow.fromJson(cJson);
@@ -262,7 +261,6 @@ class FinanceNotifier extends Notifier<FinanceState> {
             final formattedTitle = 'ซื้อวัว $cowName';
             final cowDate = cow.entryDate ?? cow.birthDate;
 
-            // Check if manualTransactions already has this purchase transaction
             final existingIndex = manualTransactions.indexWhere((t) {
               if (t.id == 'cow_buy_${cow.id}' || t.relatedCowId == cow.id) return true;
               final isSameDate = t.date.year == cowDate.year &&
@@ -302,8 +300,6 @@ class FinanceNotifier extends Notifier<FinanceState> {
             }
           }
         }
-      } catch (e) {
-        print('[WARN] ไม่สามารถดึงข้อมูลต้นทุนการซื้อวัวมารวมในบัญชีได้: $e');
       }
 
       final allTx = [...manualTransactions, ...feedTransactions];
