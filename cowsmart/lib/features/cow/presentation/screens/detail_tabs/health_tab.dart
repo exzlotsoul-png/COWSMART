@@ -1795,9 +1795,11 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                       if (record.items.isNotEmpty) ...[
                         ...record.items.map((item) {
                           String amtStr = '';
-                          if (item.amount != null && item.amount! > 0) {
-                            final a = item.amount!;
-                            amtStr = ' (${a % 1 == 0 ? a.toInt() : a} ${item.unitAbbreviation ?? item.unitName ?? ''})'.trimRight();
+                          final actualAmount = item.amount ?? record.amount;
+                          if (actualAmount != null && actualAmount > 0) {
+                            final a = actualAmount;
+                            final unitStr = item.unitAbbreviation ?? item.unitName ?? record.unitAbbreviation ?? record.unitName ?? '';
+                            amtStr = ' (${a % 1 == 0 ? a.toInt() : a} $unitStr)'.trimRight();
                           }
                           String costStr = '';
                           if (item.cost != null && item.cost! > 0) {

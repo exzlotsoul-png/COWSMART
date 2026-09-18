@@ -247,8 +247,53 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
 
       // ── MODE 1: EQUAL RATE PER COW (เท่ากันทุกตัว ไม่หาร) ──
       if (_selectedType == 'CT01' || _costAllocationMode == 'equal') {
-        final defaultAmount = double.tryParse(_amountController.text.trim());
-        final costPerCow = double.tryParse(_costController.text.trim());
+        final costPerCow = _selectedType == 'CT01' ? double.tryParse(_costController.text.trim()) : null;
+
+        final List<Map<String, dynamic>> mode1ItemsPayload = [];
+        double totalMode1Cost = 0.0;
+        double totalMode1Amt = 0.0;
+        
+        final List<String> targetItemIds = _selectedType == 'CT02'
+            ? _selectedVaccineIds.toList()
+            : _selectedMedicineIds.toList();
+
+        if (_selectedType != 'CT01') {
+          for (final itemId in targetItemIds) {
+            final amt = double.tryParse(_getCowItemAmountController('MODE1', itemId).text.trim());
+            final cost = double.tryParse(_getCowItemCostController('MODE1', itemId).text.trim());
+            final unit = _cowItemUnitIds['MODE1_$itemId'] ?? _selectedUnitId;
+
+            String itemName;
+            if (itemId == 'other') {
+              itemName = _selectedType == 'CT02'
+                  ? _customVaccineController.text.trim()
+                  : _customMedicineController.text.trim();
+              if (itemName.isEmpty) itemName = 'อื่นๆ';
+            } else {
+              if (_selectedType == 'CT02') {
+                final match = masterData.vaccines.where((v) => v.id == itemId).toList();
+                itemName = match.isNotEmpty ? match.first.name : itemId;
+              } else {
+                final match = masterData.medicines.where((m) => m.id == itemId).toList();
+                itemName = match.isNotEmpty ? match.first.name : itemId;
+              }
+            }
+
+            mode1ItemsPayload.add({
+              'item_type': _selectedType == 'CT02' ? 'vaccine' : 'medicine',
+              'item_id': itemId,
+              'item_name': itemName,
+              'amount': amt,
+              'unit_id': unit,
+              'cost': cost,
+            });
+
+            if (cost != null) totalMode1Cost += cost;
+            if (amt != null) totalMode1Amt += amt;
+          }
+        } else {
+          mode1ItemsPayload.addAll(baseItemsPayload);
+        }
 
         for (final cowId in _selectedCowIds) {
           final Map<String, dynamic> itemData = {
@@ -262,10 +307,10 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
             'vac_ids': _selectedVaccineIds.isNotEmpty ? _selectedVaccineIds.toList() : null,
             'med_id': primaryMedId,
             'med_ids': _selectedMedicineIds.isNotEmpty ? _selectedMedicineIds.toList() : null,
-            'items_json': baseItemsPayload.isNotEmpty ? baseItemsPayload : null,
-            'amount': defaultAmount,
+            'items_json': mode1ItemsPayload.isNotEmpty ? mode1ItemsPayload : null,
+            'amount': _selectedType == 'CT01' ? null : (totalMode1Amt > 0 ? totalMode1Amt : null),
             'unit_id': _selectedUnitId,
-            'cost': costPerCow,
+            'cost': _selectedType == 'CT01' ? costPerCow : (totalMode1Cost > 0 ? totalMode1Cost : null),
             'note': noteText.isNotEmpty ? noteText : null,
             'admin_name': _adminController.text.trim().isNotEmpty ? _adminController.text.trim() : null,
           };
@@ -916,6 +961,132 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
     );
   }
 
+  Widget _buildItemInputForm(String cowId, String itemId, dynamic masterData) {
+    String itemName;
+    String? itemCategory;
+    if (itemId == 'other') {
+      itemName = _selectedType == 'CT02'
+          ? (_customVaccineController.text.trim().isNotEmpty ? _customVaccineController.text.trim() : 'อื่นๆ (ระบุเอง)')
+          : (_customMedicineController.text.trim().isNotEmpty ? _customMedicineController.text.trim() : 'อื่นๆ (ระบุเอง)');
+    } else {
+      if (_selectedType == 'CT02') {
+        final match = masterData.vaccines.where((v) => v.id == itemId).toList();
+        itemName = match.isNotEmpty ? match.first.name : itemId;
+        itemCategory = match.isNotEmpty ? match.first.category : null;
+      } else {
+        final match = masterData.medicines.where((m) => m.id == itemId).toList();
+        itemName = match.isNotEmpty ? match.first.name : itemId;
+        itemCategory = match.isNotEmpty ? match.first.category : null;
+      }
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: AppColors.cardBg(context),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.brd(context)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Icon(
+                  _selectedType == 'CT02' ? Icons.vaccines_outlined : Icons.medication_outlined,
+                  size: 16,
+                  color: _selectedType == 'CT02' ? AppColors.info : const Color(0xFFD97706),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      itemName,
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.text(context)),
+                    ),
+                    if (itemCategory != null && itemCategory.isNotEmpty)
+                      Text(
+                        'หมวดหมู่: $itemCategory',
+                        style: TextStyle(fontSize: 11, color: AppColors.subText(context)),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: TextFormField(
+                  controller: _getCowItemAmountController(cowId, itemId),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  style: TextStyle(color: AppColors.text(context), fontSize: 14),
+                  decoration: InputDecoration(
+                    labelText: 'ปริมาณยาที่ใช้',
+                    hintText: 'เช่น 1.5',
+                    hintStyle: TextStyle(color: AppColors.hint(context)),
+                    filled: true,
+                    fillColor: AppColors.surfAlt(context),
+                    isDense: true,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 2,
+                child: DropdownButtonFormField<String>(
+                  isExpanded: true,
+                  dropdownColor: AppColors.cardBg(context),
+                  initialValue: _cowItemUnitIds['${cowId}_$itemId'] ?? _selectedUnitId,
+                  style: TextStyle(color: AppColors.text(context), fontSize: 14),
+                  decoration: InputDecoration(
+                    labelText: 'หน่วย',
+                    filled: true,
+                    fillColor: AppColors.surfAlt(context),
+                    isDense: true,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  items: masterData.units
+                      .map<DropdownMenuItem<String>>((u) => DropdownMenuItem<String>(value: u.id, child: Text(u.name, overflow: TextOverflow.ellipsis)))
+                      .toList(),
+                  onChanged: (val) {
+                    setState(() => _cowItemUnitIds['${cowId}_$itemId'] = val);
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _getCowItemCostController(cowId, itemId),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            style: TextStyle(color: AppColors.text(context), fontSize: 14),
+            decoration: InputDecoration(
+              labelText: 'ราคาเฉพาะรายการนี้ (บาท)',
+              hintText: 'เช่น 150',
+              hintStyle: TextStyle(color: AppColors.hint(context)),
+              prefixIcon: const Icon(Icons.attach_money_rounded, size: 16, color: AppColors.secondaryDark),
+              filled: true,
+              fillColor: AppColors.surfAlt(context),
+              isDense: true,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ── STEP 2: RECORD FORM ──
   Widget _buildStep2RecordForm() {
     final masterData = ref.watch(masterDataProvider);
@@ -1180,60 +1351,70 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
             // ── MODE 1 OR CT01 INPUTS ──
             if (_selectedType == 'CT01' || _costAllocationMode == 'equal') ...[
               if (_selectedType != 'CT01') ...[
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _amountController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        style: TextStyle(fontSize: 15, color: AppColors.text(context)),
-                        decoration: InputDecoration(
-                          labelText: 'ปริมาณยาที่ใช้ (ต่อตัว)',
-                          hintText: 'เช่น 2',
-                          filled: true,
-                          fillColor: AppColors.surfAlt(context),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
+                if (targetItemIds.isEmpty)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardBg(context),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppColors.brd(context)),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        dropdownColor: AppColors.cardBg(context),
-                        initialValue: _selectedUnitId,
-                        style: TextStyle(fontSize: 15, color: AppColors.text(context)),
-                        decoration: InputDecoration(
-                          labelText: 'หน่วย',
-                          filled: true,
-                          fillColor: AppColors.surfAlt(context),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        items: masterData.units
-                            .map((u) => DropdownMenuItem(value: u.id, child: Text(u.name, overflow: TextOverflow.ellipsis)))
-                            .toList(),
-                        onChanged: (val) => setState(() => _selectedUnitId = val),
-                      ),
+                    child: Text('กรุณาเลือกวัคซีน/ยารักษาด้านบนก่อน', style: TextStyle(color: AppColors.hint(context))),
+                  )
+                else
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
                     ),
-                  ],
-                ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.equalizer_rounded, color: AppColors.primary, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'ระบุปริมาณและราคาสำหรับแต่ละรายการ',
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.primaryDark),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'ข้อมูลนี้จะถูกบันทึกให้วัวทุกตัวเท่ากันหมด',
+                          style: TextStyle(fontSize: 12, color: AppColors.subText(context)),
+                        ),
+                        const SizedBox(height: 8),
+                        ...targetItemIds.map((itemId) => _buildItemInputForm('MODE1', itemId, masterData)),
+                      ],
+                    ),
+                  ),
                 const SizedBox(height: 14),
               ],
 
-              TextFormField(
-                controller: _costController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                style: TextStyle(fontSize: 15, color: AppColors.text(context)),
-                decoration: InputDecoration(
-                  labelText: _selectedType == 'CT01' ? 'ค่าตรวจสุขภาพต่อตัว (บาท)' : 'ค่าใช้จ่ายต่อตัว (บาท)',
-                  hintText: 'บันทึกราคานี้ให้กับวัวทั้ง ${_selectedCowIds.length} ตัวเท่ากันหมด (ไม่หาร)',
-                  filled: true,
-                  fillColor: AppColors.surfAlt(context),
-                  prefixIcon: const Icon(Icons.attach_money_rounded, color: AppColors.primary),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              if (_selectedType == 'CT01') ...[
+                TextFormField(
+                  controller: _costController,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  style: TextStyle(fontSize: 15, color: AppColors.text(context)),
+                  decoration: InputDecoration(
+                    labelText: 'ค่าตรวจสุขภาพต่อตัว (บาท)',
+                    hintText: 'บันทึกราคานี้ให้กับวัวทั้ง ${_selectedCowIds.length} ตัวเท่ากันหมด',
+                    filled: true,
+                    fillColor: AppColors.surfAlt(context),
+                    prefixIcon: const Icon(Icons.attach_money_rounded, color: AppColors.primary),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 14),
+                const SizedBox(height: 14),
+              ],
             ],
 
             // ── MODE 2 INPUTS: PER-COW CUSTOM WITH EXPANDABLE CARDS & PER-ITEM INPUTS ──
@@ -1381,131 +1562,7 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                                   children: [
                                     const Divider(height: 1),
                                     const SizedBox(height: 8),
-                                    ...targetItemIds.map((itemId) {
-                                      String itemName;
-                                      String? itemCategory;
-                                      if (itemId == 'other') {
-                                        itemName = _selectedType == 'CT02'
-                                            ? (_customVaccineController.text.trim().isNotEmpty ? _customVaccineController.text.trim() : 'อื่นๆ (ระบุเอง)')
-                                            : (_customMedicineController.text.trim().isNotEmpty ? _customMedicineController.text.trim() : 'อื่นๆ (ระบุเอง)');
-                                      } else {
-                                        if (_selectedType == 'CT02') {
-                                          final match = masterData.vaccines.where((v) => v.id == itemId).toList();
-                                          itemName = match.isNotEmpty ? match.first.name : itemId;
-                                          itemCategory = match.isNotEmpty ? match.first.category : null;
-                                        } else {
-                                          final match = masterData.medicines.where((m) => m.id == itemId).toList();
-                                          itemName = match.isNotEmpty ? match.first.name : itemId;
-                                          itemCategory = match.isNotEmpty ? match.first.category : null;
-                                        }
-                                      }
-
-                                      return Container(
-                                        margin: const EdgeInsets.only(top: 8),
-                                        padding: const EdgeInsets.all(10),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.cardBg(context),
-                                          borderRadius: BorderRadius.circular(10),
-                                          border: Border.all(color: AppColors.brd(context)),
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Padding(
-                                                  padding: const EdgeInsets.only(top: 2),
-                                                  child: Icon(
-                                                    _selectedType == 'CT02' ? Icons.vaccines_outlined : Icons.medication_outlined,
-                                                    size: 16,
-                                                    color: _selectedType == 'CT02' ? AppColors.info : const Color(0xFFD97706),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 6),
-                                                Expanded(
-                                                  child: Column(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                    children: [
-                                                      Text(
-                                                        itemName,
-                                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.text(context)),
-                                                      ),
-                                                      if (itemCategory != null && itemCategory.isNotEmpty)
-                                                        Text(
-                                                          'หมวดหมู่: $itemCategory',
-                                                          style: TextStyle(fontSize: 11, color: AppColors.subText(context)),
-                                                        ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 8),
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  flex: 2,
-                                                  child: TextFormField(
-                                                    controller: _getCowItemAmountController(cow.id, itemId),
-                                                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                                    style: TextStyle(color: AppColors.text(context), fontSize: 14),
-                                                    decoration: InputDecoration(
-                                                      labelText: 'ปริมาณยาที่ใช้',
-                                                      hintText: 'เช่น 1.5',
-                                                      hintStyle: TextStyle(color: AppColors.hint(context)),
-                                                      filled: true,
-                                                      fillColor: AppColors.surfAlt(context),
-                                                      isDense: true,
-                                                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Expanded(
-                                                  flex: 2,
-                                                  child: DropdownButtonFormField<String>(
-                                                    isExpanded: true,
-                                                    dropdownColor: AppColors.cardBg(context),
-                                                    initialValue: _cowItemUnitIds['${cow.id}_$itemId'] ?? _selectedUnitId,
-                                                    style: TextStyle(color: AppColors.text(context), fontSize: 14),
-                                                    decoration: InputDecoration(
-                                                      labelText: 'หน่วย',
-                                                      filled: true,
-                                                      fillColor: AppColors.surfAlt(context),
-                                                      isDense: true,
-                                                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                                                    ),
-                                                    items: masterData.units
-                                                        .map((u) => DropdownMenuItem(value: u.id, child: Text(u.name, overflow: TextOverflow.ellipsis)))
-                                                        .toList(),
-                                                    onChanged: (val) {
-                                                      setState(() => _cowItemUnitIds['${cow.id}_$itemId'] = val);
-                                                    },
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 8),
-                                            TextFormField(
-                                              controller: _getCowItemCostController(cow.id, itemId),
-                                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                              style: TextStyle(color: AppColors.text(context), fontSize: 14),
-                                              decoration: InputDecoration(
-                                                labelText: 'ราคาเฉพาะรายการนี้ (บาท)',
-                                                hintText: 'เช่น 150',
-                                                hintStyle: TextStyle(color: AppColors.hint(context)),
-                                                prefixIcon: const Icon(Icons.attach_money_rounded, size: 16, color: AppColors.secondaryDark),
-                                                filled: true,
-                                                fillColor: AppColors.surfAlt(context),
-                                                isDense: true,
-                                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    }),
+                                    ...targetItemIds.map((itemId) => _buildItemInputForm(cow.id, itemId, masterData)),
                                   ],
                                 ),
                               ),

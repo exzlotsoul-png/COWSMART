@@ -38,8 +38,9 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
     _messages.add(
       ChatMessage(
         id: 'welcome',
-        text: 'สวัสดีครับ! ผมคือ **หมอวัว CowSmart** ผู้ช่วยสัตวแพทย์ประจำฟาร์มของคุณ\n\n'
-            'ท่านสามารถพิมพ์เล่าอาการของวัว หรือเลือกแตะ **"หัวข้ออาการพบบ่อย"** ด้านล่างเพื่อขอคำแนะนำเบื้องต้น การปฐมพยาบาล และการดูแลรักษาได้ทันทีครับ',
+        text:
+            'สวัสดีครับ! ผมคือ **หมอวัว CowSmart** ผู้ช่วยสัตวแพทย์ประจำฟาร์มของคุณ\n\n'
+            'ท่านสามารถพิมพ์เล่าอาการของวัว หรือเลือกแตะ **"คำถามด่วน"** ด้านล่างเพื่อขอคำแนะนำเบื้องต้น การปฐมพยาบาล และการดูแลรักษาได้ทันทีครับ',
         isUser: false,
         timestamp: DateTime.now(),
       ),
@@ -89,18 +90,19 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
 
     try {
       final repo = ref.read(aiChatRepositoryProvider);
-      final response = await repo.consultAi(
-        message: trimmed,
-        cowId: null,
-      );
+      final response = await repo.consultAi(message: trimmed, cowId: null);
 
-      final aiText = response['ai_response'] ?? 'ขออภัยครับ ระบบไม่สามารถประมวลผลคำตอบได้ในขณะนี้';
+      final aiText =
+          response['ai_response'] ??
+          'ขออภัยครับ ระบบไม่สามารถประมวลผลคำตอบได้ในขณะนี้';
       final actionsList = (response['suggested_actions'] as List<dynamic>?)
           ?.map((a) => SuggestedAction.fromJson(a))
           .toList();
 
       final botMsg = ChatMessage(
-        id: response['chat_id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        id:
+            response['chat_id'] ??
+            DateTime.now().millisecondsSinceEpoch.toString(),
         text: aiText,
         isUser: false,
         timestamp: DateTime.now(),
@@ -120,7 +122,8 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
           _messages.add(
             ChatMessage(
               id: 'err_${DateTime.now().millisecondsSinceEpoch}',
-              text: 'เกิดข้อผิดพลาดในการเชื่อมต่อ: $e\nกรุณาลองใหม่อีกครั้งครับ',
+              text:
+                  'เกิดข้อผิดพลาดในการเชื่อมต่อ: $e\nกรุณาลองใหม่อีกครั้งครับ',
               isUser: false,
               timestamp: DateTime.now(),
             ),
@@ -145,8 +148,13 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: const Text('ล้างประวัติการสนทนา', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: const Text('ต้องการเริ่มการสนทนาใหม่และล้างข้อความทั้งหมดใช่หรือไม่?'),
+        title: const Text(
+          'ล้างประวัติการสนทนา',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          'ต้องการเริ่มการสนทนาใหม่และล้างข้อความทั้งหมดใช่หรือไม่?',
+        ),
         actions: [
           Row(
             children: [
@@ -155,9 +163,14 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
                   onPressed: () => Navigator.pop(ctx),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
-                  child: const Text('ยกเลิก', style: TextStyle(color: AppColors.textSecondary)),
+                  child: const Text(
+                    'ยกเลิก',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
@@ -174,7 +187,9 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                     elevation: 0,
                   ),
                   child: const Text('เริ่มใหม่'),
@@ -197,7 +212,11 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
         scrolledUnderElevation: 1,
         titleSpacing: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: AppColors.text(context)),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 20,
+            color: AppColors.text(context),
+          ),
           onPressed: () => context.pop(),
         ),
         title: Row(
@@ -220,7 +239,11 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
                 clipBehavior: Clip.none,
                 children: [
                   const Center(
-                    child: Icon(Icons.health_and_safety_rounded, color: Colors.white, size: 22),
+                    child: Icon(
+                      Icons.health_and_safety_rounded,
+                      color: Colors.white,
+                      size: 22,
+                    ),
                   ),
                   Positioned(
                     bottom: -1,
@@ -277,7 +300,11 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
                 color: AppColors.surfAlt(context),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.restart_alt_rounded, size: 20, color: AppColors.subText(context)),
+              child: Icon(
+                Icons.restart_alt_rounded,
+                size: 20,
+                color: AppColors.subText(context),
+              ),
             ),
             tooltip: 'เริ่มการสนทนาใหม่',
             onPressed: _clearChat,
@@ -304,8 +331,7 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
           ),
 
           // 2. Quick Suggested Topics Horizontal Bar
-          if (_suggestedCategories.isNotEmpty)
-            _buildSuggestedChipsBar(),
+          if (_suggestedCategories.isNotEmpty) _buildSuggestedChipsBar(),
 
           // 3. Input Area
           _buildInputBar(),
@@ -324,7 +350,10 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
           children: [
             Flexible(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primary,
                   borderRadius: const BorderRadius.only(
@@ -359,9 +388,16 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
               decoration: BoxDecoration(
                 color: AppColors.primaryLight,
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.2), width: 1.5),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                  width: 1.5,
+                ),
               ),
-              child: const Icon(Icons.person_rounded, size: 18, color: Colors.white),
+              child: const Icon(
+                Icons.person_rounded,
+                size: 18,
+                color: Colors.white,
+              ),
             ),
           ],
         ),
@@ -381,10 +417,16 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(alpha: 0.15),
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.25),
+              ),
             ),
             child: const Center(
-              child: Icon(Icons.health_and_safety_rounded, color: AppColors.primary, size: 19),
+              child: Icon(
+                Icons.health_and_safety_rounded,
+                color: AppColors.primary,
+                size: 19,
+              ),
             ),
           ),
           const SizedBox(width: 10),
@@ -393,7 +435,10 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.cardBg(context),
                     borderRadius: const BorderRadius.only(
@@ -402,7 +447,9 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
                       bottomLeft: Radius.circular(20),
                       bottomRight: Radius.circular(20),
                     ),
-                    border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.7)),
+                    border: Border.all(
+                      color: AppColors.brd(context).withValues(alpha: 0.7),
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.03),
@@ -434,14 +481,23 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
                           onTap: () => _handleSuggestedAction(action),
                           borderRadius: BorderRadius.circular(14),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.primary.withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: AppColors.primary.withValues(alpha: 0.35)),
+                              border: Border.all(
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.35,
+                                ),
+                              ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.primary.withValues(alpha: 0.06),
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.06,
+                                  ),
                                   blurRadius: 4,
                                   offset: const Offset(0, 1),
                                 ),
@@ -450,7 +506,11 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.check_circle_outline_rounded, size: 14, color: AppColors.primaryDark),
+                                const Icon(
+                                  Icons.check_circle_outline_rounded,
+                                  size: 14,
+                                  color: AppColors.primaryDark,
+                                ),
                                 const SizedBox(width: 6),
                                 Text(
                                   action.label,
@@ -461,7 +521,11 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
                                   ),
                                 ),
                                 const SizedBox(width: 6),
-                                const Icon(Icons.arrow_forward_ios_rounded, size: 10, color: AppColors.primaryDark),
+                                const Icon(
+                                  Icons.arrow_forward_ios_rounded,
+                                  size: 10,
+                                  color: AppColors.primaryDark,
+                                ),
                               ],
                             ),
                           ),
@@ -492,7 +556,11 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
               shape: BoxShape.circle,
             ),
             child: const Center(
-              child: Icon(Icons.health_and_safety_rounded, color: AppColors.primary, size: 19),
+              child: Icon(
+                Icons.health_and_safety_rounded,
+                color: AppColors.primary,
+                size: 19,
+              ),
             ),
           ),
           const SizedBox(width: 10),
@@ -516,12 +584,19 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
                 const SizedBox(
                   width: 16,
                   height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.primary,
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Text(
                   'หมอวัวกำลังวิเคราะห์อาการ...',
-                  style: TextStyle(fontSize: 13.5, color: AppColors.subText(context), fontStyle: FontStyle.italic),
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    color: AppColors.subText(context),
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
               ],
             ),
@@ -538,7 +613,9 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.cardBg(context),
-        border: Border(top: BorderSide(color: AppColors.div(context).withValues(alpha: 0.6))),
+        border: Border(
+          top: BorderSide(color: AppColors.div(context).withValues(alpha: 0.6)),
+        ),
       ),
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
@@ -549,11 +626,19 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
             child: Row(
               children: [
-                Icon(Icons.tips_and_updates_outlined, size: 14, color: AppColors.subText(context)),
+                Icon(
+                  Icons.tips_and_updates_outlined,
+                  size: 14,
+                  color: AppColors.subText(context),
+                ),
                 const SizedBox(width: 5),
                 Text(
-                  'หัวข้อคำถามพบบ่อย:',
-                  style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.subText(context)),
+                  'คำถามด่วน:',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.subText(context),
+                  ),
                 ),
               ],
             ),
@@ -572,7 +657,10 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
                   onTap: () => _sendMessage(item.prompt),
                   borderRadius: BorderRadius.circular(20),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.surfAlt(context),
                       borderRadius: BorderRadius.circular(20),
@@ -600,7 +688,12 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
   Widget _buildInputBar() {
     final bottomInset = MediaQuery.of(context).padding.bottom;
     return Container(
-      padding: EdgeInsets.fromLTRB(14, 10, 14, bottomInset > 0 ? bottomInset + 4 : 12),
+      padding: EdgeInsets.fromLTRB(
+        14,
+        10,
+        14,
+        bottomInset > 0 ? bottomInset + 4 : 12,
+      ),
       decoration: BoxDecoration(
         color: AppColors.cardBg(context),
         boxShadow: [
@@ -625,8 +718,14 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
                 filled: true,
                 fillColor: AppColors.surfAlt(context),
                 hintText: 'พิมพ์เล่าอาการ หรือถามคำถามที่นี่...',
-                hintStyle: TextStyle(fontSize: 13.5, color: AppColors.hint(context)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                hintStyle: TextStyle(
+                  fontSize: 13.5,
+                  color: AppColors.hint(context),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
                   borderSide: BorderSide(color: AppColors.brd(context)),
@@ -637,7 +736,10 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
-                  borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                  borderSide: const BorderSide(
+                    color: AppColors.primary,
+                    width: 1.5,
+                  ),
                 ),
               ),
             ),
@@ -658,7 +760,11 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
               ],
             ),
             child: IconButton(
-              icon: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+              icon: const Icon(
+                Icons.send_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
               onPressed: () => _sendMessage(_textController.text),
             ),
           ),
