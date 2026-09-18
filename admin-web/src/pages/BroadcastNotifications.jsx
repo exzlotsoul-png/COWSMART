@@ -210,7 +210,7 @@ const BroadcastNotifications = () => {
                 ระบบส่งประกาศ & แจ้งเตือนแอดมิน
               </h2>
               <p style={{ margin: '4px 0 0 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                สร้างและกระจายข้อความแจ้งเตือนถึงผู้ใช้งานแอปพลิเคชัน CowSmart ทุกคนพร้อมกันแบบ Real-time
+                สร้างและกระจายข้อความแจ้งเตือนถึงผู้ใช้งานแอปพลิเคชัน COWSMART ทุกคนพร้อมกันแบบ Real-time
               </p>
             </div>
           </div>

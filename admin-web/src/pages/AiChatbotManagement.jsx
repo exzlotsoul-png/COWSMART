@@ -261,7 +261,7 @@ const AiChatbotManagement = () => {
         <div className="summary-card">
           <div className="summary-info">
             <p>ระบบค้นหา & AI Fallback</p>
-            <h3 style={{ fontSize: '1.4rem' }}>DB + Gemini</h3>
+            <h3 style={{ fontSize: '1.4rem' }}>DB + Gemini API</h3>
           </div>
           <div className="summary-icon orange-icon">
             <Bot size={24} />
@@ -278,7 +278,7 @@ const AiChatbotManagement = () => {
               จัดการคำถามด่วน AI ผู้ช่วยหมอ
             </h2>
             <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-              กำหนดคำถามด่วน คำค้นหา และแนวทางการรักษาจากสัตวแพทย์เพื่อให้ AI ตอบคำถามได้อย่างถูกต้อง
+              กำหนดคำถามด่วน คำค้นหา และแนวทางการรักษาเพื่อให้ AI ตอบคำถามได้อย่างถูกต้อง
             </p>
           </div>
 
@@ -316,7 +316,7 @@ const AiChatbotManagement = () => {
             borderRadius: '12px'
           }}>
             <h4 style={{ margin: '0 0 10px 0', fontSize: '0.95rem', color: '#166534', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Sparkles size={16} /> ทดสอบการประมวลผลของ AIchatbotController
+              <Sparkles size={16} /> ทดสอบการประมวลผลของ AI
             </h4>
             <form onSubmit={handleTestConsult} style={{ display: 'flex', gap: '10px', marginBottom: '12px' }}>
               <input

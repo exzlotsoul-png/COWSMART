@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Users, Tractor, PawPrint, Baby, AlertCircle, Lightbulb, MessageSquare, RefreshCw } from 'lucide-react';
+import { Users, Tractor, PawPrint, Baby, AlertCircle, Lightbulb, MessageSquare, RefreshCw, Eye, Calendar, User, Tag, Clock, CheckCircle } from 'lucide-react';
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip
 } from 'recharts';
@@ -32,6 +32,26 @@ const Dashboard = () => {
   const [diseaseYear, setDiseaseYear] = useState(currentYearBE);
   const [healthMonth, setHealthMonth] = useState(currentMonthName);
   const [healthYear, setHealthYear] = useState(currentYearBE);
+  const [selectedReportDetail, setSelectedReportDetail] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  const formatImageUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    return `https://cowsmart-api.onrender.com/api/storage/${url.replace(/^\/?storage\//, '')}`;
+  };
+
+  const handleResolve = async (id, currentStatus) => {
+    const isResolved = currentStatus === 1 || currentStatus === '1' || currentStatus === 'resolved';
+    const newStatus = isResolved ? 0 : 1;
+    try {
+      await api.put(`/issue-reports/${id}`, { status: newStatus });
+      setSelectedReportDetail(prev => ({ ...prev, status: newStatus }));
+      fetchDashboardData();
+    } catch (error) {
+      console.error('Error changing status:', error);
+    }
+  };
 
   const fetchDashboardData = useCallback(async (isInitial = false) => {
     if (isInitial) {
@@ -271,6 +291,7 @@ const Dashboard = () => {
                     <th>ผู้รายงาน</th>
                     <th>ประเภท</th>
                     <th>รายละเอียด</th>
+                    <th style={{ textAlign: 'center' }}>จัดการ</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -306,12 +327,22 @@ const Dashboard = () => {
                             <div style={{ fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{report.topic || 'ไม่มีหัวข้อ'}</div>
                             <div style={{ fontSize: '0.75rem', color: '#9ca3af', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{report.description}</div>
                           </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <button
+                              className="action-btn"
+                              onClick={() => setSelectedReportDetail(report)}
+                              title="ดูรายงาน"
+                              style={{ color: '#2563eb', border: 'none', background: 'none', cursor: 'pointer' }}
+                            >
+                              <Eye size={16} />
+                            </button>
+                          </td>
                         </tr>
                       );
                     })
                   ) : (
                     <tr>
-                      <td colSpan="4" style={{ textAlign: 'center', padding: '20px' }}>ไม่มีรายงานล่าสุด</td>
+                      <td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>ไม่มีรายงานล่าสุด</td>
                     </tr>
                   )}
                 </tbody>
@@ -525,6 +556,137 @@ const Dashboard = () => {
 
         </div>
       </div>
+      {/* ── MODAL: REPORT DETAIL (ดูรายละเอียดรายงาน) ── */}
+      {selectedReportDetail && (
+        <div className="modal-overlay" onClick={() => setSelectedReportDetail(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '640px', width: '90%', backgroundColor: '#fff', borderRadius: '12px', padding: '24px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0', paddingBottom: '16px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <MessageSquare size={20} color="var(--primary-color)" />
+                <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#1e293b' }}>รายละเอียดรายงานการใช้งาน</h3>
+                <span style={{ backgroundColor: 'var(--primary-light)', color: 'var(--primary-color)', padding: '2px 8px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: '700' }}>
+                  {selectedReportDetail.id || selectedReportDetail.report_id}
+                </span>
+              </div>
+              <button onClick={() => setSelectedReportDetail(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#64748b' }}>&times;</button>
+            </div>
+
+            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', backgroundColor: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                <div>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
+                    <Calendar size={13} /> วันที่และเวลาที่แจ้ง
+                  </span>
+                  <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '0.9rem' }}>
+                    {selectedReportDetail.created_at ? (
+                      `${new Date(selectedReportDetail.created_at).toLocaleDateString('th-TH')} เวลา ${new Date(selectedReportDetail.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}`
+                    ) : '-'}
+                  </div>
+                </div>
+
+                <div>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
+                    <User size={13} /> ผู้ใช้งาน (อีเมล)
+                  </span>
+                  <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {selectedReportDetail.email || selectedReportDetail.user_id || '-'}
+                  </div>
+                </div>
+
+                <div>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
+                    <Tag size={13} /> หัวข้อปัญหา
+                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span style={{ fontWeight: '600', color: 'var(--primary-color)', fontSize: '0.9rem' }}>
+                      {selectedReportDetail.topic || selectedReportDetail.issue_type || '-'}
+                    </span>
+                    {(() => {
+                      const mTag = getIssueTag(selectedReportDetail.topic || selectedReportDetail.issue_type);
+                      return (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '600', backgroundColor: mTag.bg, color: mTag.color }}>
+                          {mTag.icon} {mTag.label}
+                        </span>
+                      );
+                    })()}
+                  </div>
+                </div>
+
+                <div>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
+                    <Clock size={13} /> สถานะดำเนินการ
+                  </span>
+                  <div>
+                    {selectedReportDetail.status === 1 || selectedReportDetail.status === '1' || selectedReportDetail.status === 'resolved' ? (
+                      <span style={{ backgroundColor: 'var(--primary-light)', color: 'var(--primary-color)', padding: '3px 8px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '700' }}>
+                        แก้ไขแล้ว
+                      </span>
+                    ) : (
+                      <span style={{ backgroundColor: '#fee2e2', color: '#991b1b', padding: '3px 8px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '700' }}>
+                        รอดำเนินการ
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#334155', display: 'block', marginBottom: '6px' }}>รายละเอียดปัญหา / ข้อเสนอแนะ:</label>
+                <div style={{ backgroundColor: '#fff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '12px 14px', fontSize: '0.9rem', lineHeight: '1.6', color: '#1e293b', whiteSpace: 'pre-wrap', minHeight: '80px' }}>
+                  {selectedReportDetail.description || 'ไม่มีรายละเอียดเพิ่มเติม'}
+                </div>
+              </div>
+
+              {selectedReportDetail.image_url && (
+                <div>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#334155', display: 'block', marginBottom: '6px' }}>รูปภาพประกอบรายงาน:</label>
+                  <div style={{ textAlign: 'center', backgroundColor: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                    <img 
+                      src={formatImageUrl(selectedReportDetail.image_url)} 
+                      alt="Report Attachment" 
+                      onClick={() => setSelectedImage(formatImageUrl(selectedReportDetail.image_url))}
+                      style={{ maxWidth: '100%', maxHeight: '260px', borderRadius: '8px', cursor: 'pointer', objectFit: 'contain' }} 
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px' }}>
+              <div>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => handleResolve(selectedReportDetail.id || selectedReportDetail.report_id, selectedReportDetail.status)}
+                  style={{
+                    backgroundColor: (selectedReportDetail.status === 1 || selectedReportDetail.status === '1' || selectedReportDetail.status === 'resolved') ? '#f3f4f6' : '#10b981',
+                    color: (selectedReportDetail.status === 1 || selectedReportDetail.status === '1' || selectedReportDetail.status === 'resolved') ? '#374151' : '#fff',
+                    border: '1px solid ' + ((selectedReportDetail.status === 1 || selectedReportDetail.status === '1' || selectedReportDetail.status === 'resolved') ? '#d1d5db' : '#10b981'),
+                    display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600'
+                  }}
+                >
+                  <CheckCircle size={16} />
+                  {(selectedReportDetail.status === 1 || selectedReportDetail.status === '1' || selectedReportDetail.status === 'resolved') ? 'เปลี่ยนเป็นรอดำเนินการ' : 'ทำเครื่องหมายว่าแก้ไขแล้ว'}
+                </button>
+              </div>
+
+              <button type="button" onClick={() => setSelectedReportDetail(null)} style={{ padding: '8px 16px', backgroundColor: '#e2e8f0', color: '#334155', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}>
+                ปิด
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL: FULL IMAGE (ดูรูปใหญ่) ── */}
+      {selectedImage && (
+        <div className="modal-overlay" onClick={() => setSelectedImage(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
+          <div style={{ position: 'relative', maxWidth: '90%', maxHeight: '90%' }}>
+            <button className="modal-close" onClick={() => setSelectedImage(null)} style={{ position: 'absolute', top: '-40px', right: '-40px', background: 'none', border: 'none', color: '#fff', fontSize: '2rem', cursor: 'pointer' }}>&times;</button>
+            <img src={selectedImage} alt="Full screen attachment" style={{ maxWidth: '100%', maxHeight: '90vh', objectFit: 'contain', borderRadius: '8px' }} onClick={(e) => e.stopPropagation()} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
