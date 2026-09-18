@@ -16,8 +16,11 @@ class MarketPriceScreen extends ConsumerStatefulWidget {
 
 class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
   String _selectedCategory = 'โคพันธุ์ลูกผสม ขนาดกลาง';
-  String _selectedYear = '2569'; // Default to latest year (2569)
-  String _selectedMonth = '08'; // Default to latest month (08 - สิงหาคม)
+  final String _chartYear = '2569'; // ล็อกปีล่าสุดเป็น พ.ศ. 2569
+  String _selectedYear = '2569';
+  String _selectedMonth = '08';
+  String _chartStartMonth = '01'; // เริ่มต้น มกราคม
+  String _chartEndMonth = '12';   // สิ้นสุด ธันวาคม
   int? _selectedPointIndex;
 
   final List<Map<String, String>> _thaiMonths = const [
@@ -33,15 +36,9 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
     {'value': '10', 'name': 'ตุลาคม'},
     {'value': '11', 'name': 'พฤศจิกายน'},
     {'value': '12', 'name': 'ธันวาคม'},
-    {'value': 'all', 'name': 'ทุกเดือน'},
   ];
 
-  final List<Map<String, String>> _availableYears = const [
-    {'value': '2569', 'name': '2569'},
-    {'value': '2568', 'name': '2568'},
-    {'value': '2567', 'name': '2567'},
-    {'value': 'all', 'name': 'ทุกปี'},
-  ];
+
 
   @override
   void initState() {
@@ -61,8 +58,9 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
 
   void _loadChartHistory() {
     ref.read(marketPriceProvider.notifier).fetchHistory(
-          year: _selectedYear,
-          month: _selectedMonth,
+          year: _chartYear,
+          startMonth: _chartStartMonth,
+          endMonth: _chartEndMonth,
         );
   }
 
@@ -535,9 +533,9 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
           ),
           const SizedBox(height: 14),
 
-          // Row 2: 📅 แถบเลือกช่วงเวลาในกราฟ (Time Selector Bar for Chart)
+          // Row 2: 📅 แถบเลือกช่วงเวลาในกราฟ (เดือนเริ่มต้น - เดือนสิ้นสุด ในปีล่าสุด)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
               color: AppColors.surfAlt(context),
               borderRadius: BorderRadius.circular(12),
@@ -546,74 +544,118 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
             child: Row(
               children: [
                 const Icon(Icons.calendar_month_outlined, color: AppColors.primary, size: 18),
-                const SizedBox(width: 8),
-                Text(
-                  'ช่วงเวลา:',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.subText(context),
+                const SizedBox(width: 6),
+                // ป้ายแสดงปีล่าสุด (เช่น ปี 2569)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                ),
-                const SizedBox(width: 8),
-                // Year Filter
-                Expanded(
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _selectedYear,
-                      dropdownColor: AppColors.cardBg(context),
-                      isDense: true,
-                      style: TextStyle(
-                        color: AppColors.text(context),
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      items: _availableYears.map((y) {
-                        return DropdownMenuItem<String>(
-                          value: y['value'],
-                          child: Text('ปี ${y['name']}'),
-                        );
-                      }).toList(),
-                      onChanged: (val) {
-                        if (val != null) {
-                          setState(() {
-                            _selectedYear = val;
-                            _selectedPointIndex = null;
-                          });
-                          _loadChartHistory();
-                        }
-                      },
+                  child: Text(
+                    'ปี $_chartYear',
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
-                // Month Filter
+                // Start Month Dropdown
                 Expanded(
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _selectedMonth,
-                      dropdownColor: AppColors.cardBg(context),
-                      isDense: true,
-                      style: TextStyle(
-                        color: AppColors.text(context),
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardBg(context),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.6)),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: _chartStartMonth,
+                        dropdownColor: AppColors.cardBg(context),
+                        isDense: true,
+                        isExpanded: true,
+                        icon: const Icon(Icons.arrow_drop_down, size: 18),
+                        style: TextStyle(
+                          color: AppColors.text(context),
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        items: _thaiMonths.map((m) {
+                          return DropdownMenuItem<String>(
+                            value: m['value'],
+                            child: Text(
+                              m['name']!,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null) {
+                            setState(() {
+                              _chartStartMonth = val;
+                              _selectedPointIndex = null;
+                            });
+                            _loadChartHistory();
+                          }
+                        },
                       ),
-                      items: _thaiMonths.map((m) {
-                        return DropdownMenuItem<String>(
-                          value: m['value'],
-                          child: Text(m['name']!),
-                        );
-                      }).toList(),
-                      onChanged: (val) {
-                        if (val != null) {
-                          setState(() {
-                            _selectedMonth = val;
-                            _selectedPointIndex = null;
-                          });
-                          _loadChartHistory();
-                        }
-                      },
+                    ),
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 6),
+                  child: Text(
+                    'ถึง',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF64748B),
+                    ),
+                  ),
+                ),
+                // End Month Dropdown
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardBg(context),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.6)),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: _chartEndMonth,
+                        dropdownColor: AppColors.cardBg(context),
+                        isDense: true,
+                        isExpanded: true,
+                        icon: const Icon(Icons.arrow_drop_down, size: 18),
+                        style: TextStyle(
+                          color: AppColors.text(context),
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        items: _thaiMonths.map((m) {
+                          return DropdownMenuItem<String>(
+                            value: m['value'],
+                            child: Text(
+                              m['name']!,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null) {
+                            setState(() {
+                              _chartEndMonth = val;
+                              _selectedPointIndex = null;
+                            });
+                            _loadChartHistory();
+                          }
+                        },
+                      ),
                     ),
                   ),
                 ),

@@ -224,6 +224,8 @@ class MarketPriceNotifier extends Notifier<MarketPriceState> {
     int? days,
     String? year,
     String? month,
+    String? startMonth,
+    String? endMonth,
   }) async {
     try {
       final Map<String, dynamic> queryParams = {'animal_type': animalType};
@@ -233,7 +235,13 @@ class MarketPriceNotifier extends Notifier<MarketPriceState> {
       if (year != null && year != 'all') {
         queryParams['year'] = year;
       }
-      if (month != null && month != 'all') {
+      if (startMonth != null && startMonth != 'all') {
+        queryParams['start_month'] = startMonth;
+      }
+      if (endMonth != null && endMonth != 'all') {
+        queryParams['end_month'] = endMonth;
+      }
+      if (month != null && month != 'all' && (startMonth == null || startMonth == 'all')) {
         queryParams['month'] = month;
       }
 

@@ -325,17 +325,37 @@ EOT;
 
         $query = MarketPrice::where('animal_type', $animalType);
 
+        $startMonth = $request->query('start_month');
+        $endMonth = $request->query('end_month');
+
         if ($year && $year !== 'all') {
             $yearAd = is_numeric($year) && (int)$year > 2400 ? (int)$year - 543 : (int)$year;
             $query->whereYear('effective_date', $yearAd);
         }
 
-        if ($month && $month !== 'all') {
+        if ($startMonth && $startMonth !== 'all' && $endMonth && $endMonth !== 'all') {
+            $sMonth = (int)$startMonth;
+            $eMonth = (int)$endMonth;
+            if ($sMonth <= $eMonth) {
+                $query->whereMonth('effective_date', '>=', $sMonth)
+                      ->whereMonth('effective_date', '<=', $eMonth);
+            } else {
+                // If user selected reverse range e.g. from 10 to 02
+                $query->where(function ($q) use ($sMonth, $eMonth) {
+                    $q->whereMonth('effective_date', '>=', $sMonth)
+                      ->orWhereMonth('effective_date', '<=', $eMonth);
+                });
+            }
+        } elseif ($month && $month !== 'all') {
             $monthNum = (int)$month;
             $query->whereMonth('effective_date', $monthNum);
+        } elseif ($startMonth && $startMonth !== 'all') {
+            $query->whereMonth('effective_date', '>=', (int)$startMonth);
+        } elseif ($endMonth && $endMonth !== 'all') {
+            $query->whereMonth('effective_date', '<=', (int)$endMonth);
         }
 
-        if ($days && is_numeric($days) && (int)$days > 0 && (!$year || $year === 'all') && (!$month || $month === 'all')) {
+        if ($days && is_numeric($days) && (int)$days > 0 && (!$year || $year === 'all') && (!$month || $month === 'all') && (!$startMonth || $startMonth === 'all')) {
             $startDate = Carbon::today()->subDays((int)$days)->format('Y-m-d');
             $query->where('effective_date', '>=', $startDate);
         }
