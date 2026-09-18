@@ -501,7 +501,7 @@ const AiChatbotManagement = () => {
                         {item.prompt}
                       </div>
                     </td>
-                    <td style={{ textAlign: 'center' }}>
+                    <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
                       <button
                         onClick={() => handleToggleActive(item)}
                         style={{
