@@ -21,6 +21,9 @@ class ImageUploadService {
     try {
       return await _picker.pickImage(
         source: ImageSource.gallery,
+        imageQuality: 70,
+        maxWidth: 1200,
+        maxHeight: 1200,
       );
     } catch (e) {
       debugPrint('❌ Error picking from gallery: $e');
@@ -33,6 +36,9 @@ class ImageUploadService {
     try {
       return await _picker.pickImage(
         source: ImageSource.camera,
+        imageQuality: 70,
+        maxWidth: 1200,
+        maxHeight: 1200,
       );
     } catch (e) {
       debugPrint('❌ Error picking from camera: $e');

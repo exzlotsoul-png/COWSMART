@@ -178,26 +178,40 @@ class _ImagePickerWidgetState extends ConsumerState<ImagePickerWidget> {
     );
   }
 
+  bool _isPickingImage = false;
+
   /// Pick image and show preview (no upload yet)
   Future<void> _pickImage({required bool fromCamera}) async {
-    final uploadService = ref.read(imageUploadServiceProvider);
+    setState(() {
+      _isPickingImage = true;
+    });
 
-    final XFile? pickedFile = fromCamera
-        ? await uploadService.pickImageFromCamera()
-        : await uploadService.pickImageFromGallery();
+    try {
+      final uploadService = ref.read(imageUploadServiceProvider);
 
-    if (pickedFile == null) return;
+      final XFile? pickedFile = fromCamera
+          ? await uploadService.pickImageFromCamera()
+          : await uploadService.pickImageFromGallery();
 
-    final bytes = await pickedFile.readAsBytes();
+      if (pickedFile == null) return;
 
-    if (mounted) {
-      setState(() {
-        _pendingFile = pickedFile;
-        _pendingBytes = bytes;
-      });
+      final bytes = await pickedFile.readAsBytes();
 
-      // Notify parent about the picked file
-      widget.onImagePicked?.call(pickedFile);
+      if (mounted) {
+        setState(() {
+          _pendingFile = pickedFile;
+          _pendingBytes = bytes;
+        });
+
+        // Notify parent about the picked file
+        widget.onImagePicked?.call(pickedFile);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isPickingImage = false;
+        });
+      }
     }
   }
 
@@ -336,7 +350,7 @@ class _ImagePickerWidgetState extends ConsumerState<ImagePickerWidget> {
               ),
 
               // Loading overlay
-              if (_isUploading)
+              if (_isUploading || _isPickingImage)
                 Container(
                   width: widget.size,
                   height: widget.size,
@@ -354,7 +368,7 @@ class _ImagePickerWidgetState extends ConsumerState<ImagePickerWidget> {
                 ),
 
               // Camera button overlay
-              if (widget.enabled && !_isUploading && !_hasPendingImage)
+              if (widget.enabled && !_isUploading && !_isPickingImage && !_hasPendingImage)
                 Positioned(
                   bottom: 0,
                   right: 0,

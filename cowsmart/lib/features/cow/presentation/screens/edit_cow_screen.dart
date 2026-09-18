@@ -113,6 +113,20 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
       return;
     }
 
+    // Validate image size before saving
+    if (_pendingImageFile != null) {
+      try {
+        final bytes = await _pendingImageFile!.length();
+        final mb = bytes / (1024 * 1024);
+        if (mb > 2.0) {
+          AppFeedback.showError(context, 'ขนาดไฟล์รูปภาพใหญ่เกินไป (จำกัดสูงสุด 2MB) กรุณาเลือกรูปใหม่ที่มีขนาดเล็กลง');
+          return;
+        }
+      } catch (e) {
+        debugPrint('Error checking image size: $e');
+      }
+    }
+
     setState(() => _isSaving = true);
 
     try {

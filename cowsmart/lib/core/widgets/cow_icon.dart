@@ -9,12 +9,14 @@ class CowIcon extends StatelessWidget {
   final double? size;
   final Color? color;
   final bool fullLogo;
+  final bool isOutlined;
 
   const CowIcon({
     super.key,
     this.size,
     this.color,
     this.fullLogo = false,
+    this.isOutlined = false,
   });
 
   @override
@@ -36,7 +38,10 @@ class CowIcon extends StatelessWidget {
       height: effectiveSize,
       child: CustomPaint(
         size: Size(effectiveSize, effectiveSize),
-        painter: _CowHeadIconPainter(color: effectiveColor),
+        painter: _CowHeadIconPainter(
+          color: effectiveColor,
+          isOutlined: isOutlined,
+        ),
       ),
     );
   }
@@ -44,13 +49,13 @@ class CowIcon extends StatelessWidget {
 
 class _CowHeadIconPainter extends CustomPainter {
   final Color color;
+  final bool isOutlined;
 
-  _CowHeadIconPainter({required this.color});
+  _CowHeadIconPainter({required this.color, this.isOutlined = false});
 
   @override
   void paint(Canvas canvas, Size size) {
     final double iconSize = min(size.width, size.height);
-    // Scale factor adjusted to give standard icon padding matching Material Design icons (24dp bounding box)
     final double scale = iconSize / 440.0;
 
     canvas.save();
@@ -63,39 +68,33 @@ class _CowHeadIconPainter extends CustomPainter {
 
     final paint = Paint()
       ..color = color
-      ..style = PaintingStyle.fill;
+      ..style = isOutlined ? PaintingStyle.stroke : PaintingStyle.fill
+      ..strokeWidth = isOutlined ? 28.0 : 0.0
+      ..strokeJoin = StrokeJoin.round
+      ..strokeCap = StrokeCap.round;
 
-    // 1. Left Horn
     final leftHorn = Path()
       ..moveTo(140, 180)
       ..cubicTo(110, 130, 160, 100, 190, 140)
       ..cubicTo(170, 150, 150, 165, 140, 180)
       ..close();
-    canvas.drawPath(leftHorn, paint);
 
-    // 2. Right Horn
     final rightHorn = Path()
       ..moveTo(372, 180)
       ..cubicTo(402, 130, 352, 100, 322, 140)
       ..cubicTo(342, 150, 362, 165, 372, 180)
       ..close();
-    canvas.drawPath(rightHorn, paint);
 
-    // 3. Left Ear
     final leftEar = Path()
       ..moveTo(150, 205)
       ..cubicTo(90, 205, 90, 250, 155, 240)
       ..close();
-    canvas.drawPath(leftEar, paint);
 
-    // 4. Right Ear
     final rightEar = Path()
       ..moveTo(362, 205)
       ..cubicTo(422, 205, 422, 250, 357, 240)
       ..close();
-    canvas.drawPath(rightEar, paint);
 
-    // 5. Head Base
     final headBase = Path()
       ..moveTo(170, 170)
       ..lineTo(342, 170)
@@ -103,43 +102,69 @@ class _CowHeadIconPainter extends CustomPainter {
       ..lineTo(182, 320)
       ..cubicTo(152, 270, 152, 210, 170, 170)
       ..close();
-    canvas.drawPath(headBase, paint);
 
-    // 6. Snout / Muzzle
     final snoutRRect = RRect.fromRectAndRadius(
       const Rect.fromLTWH(180, 285, 152, 115),
       const Radius.circular(45),
     );
-    canvas.drawRRect(snoutRRect, paint);
 
-    // Cutouts using BlendMode.clear to reveal the background
-    final clearFill = Paint()
-      ..blendMode = BlendMode.clear
-      ..style = PaintingStyle.fill;
+    if (isOutlined) {
+      Path full = Path.combine(PathOperation.union, leftHorn, rightHorn);
+      full = Path.combine(PathOperation.union, full, leftEar);
+      full = Path.combine(PathOperation.union, full, rightEar);
+      full = Path.combine(PathOperation.union, full, headBase);
+      full = Path.combine(PathOperation.union, full, Path()..addRRect(snoutRRect));
+      
+      canvas.drawPath(full, paint);
+      
+      final sepPaint = Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 20.0
+        ..strokeCap = StrokeCap.round;
+      
+      canvas.drawPath(Path()..moveTo(180, 290)..quadraticBezierTo(256, 275, 332, 290), sepPaint);
 
-    // 7. Gap line separating snout top from head
-    final cutStroke = Paint()
-      ..blendMode = BlendMode.clear
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 10;
-    canvas.drawRRect(snoutRRect, cutStroke);
+      final eyePaint = Paint()..color = color..style = PaintingStyle.fill;
+      canvas.drawCircle(const Offset(215, 225), 15, eyePaint);
+      canvas.drawCircle(const Offset(297, 225), 15, eyePaint);
 
-    // 8. Eyes cutouts
-    canvas.drawOval(
-      Rect.fromCenter(center: const Offset(215, 225), width: 22, height: 30),
-      clearFill,
-    );
-    canvas.drawOval(
-      Rect.fromCenter(center: const Offset(297, 225), width: 22, height: 30),
-      clearFill,
-    );
+      canvas.drawCircle(const Offset(215, 345), 12, eyePaint);
+      canvas.drawCircle(const Offset(297, 345), 12, eyePaint);
+    } else {
+      canvas.drawPath(leftHorn, paint);
+      canvas.drawPath(rightHorn, paint);
+      canvas.drawPath(leftEar, paint);
+      canvas.drawPath(rightEar, paint);
+      canvas.drawPath(headBase, paint);
+      canvas.drawRRect(snoutRRect, paint);
 
-    // 9. Nostrils cutouts
-    canvas.drawCircle(const Offset(215, 345), 13, clearFill);
-    canvas.drawCircle(const Offset(297, 345), 13, clearFill);
+      final clearFill = Paint()
+        ..blendMode = BlendMode.clear
+        ..style = PaintingStyle.fill;
 
-    canvas.restore(); // restore layer
-    canvas.restore(); // restore transform
+      final cutStroke = Paint()
+        ..blendMode = BlendMode.clear
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 10;
+
+      canvas.drawRRect(snoutRRect, cutStroke);
+
+      canvas.drawOval(
+        Rect.fromCenter(center: const Offset(215, 225), width: 22, height: 30),
+        clearFill,
+      );
+      canvas.drawOval(
+        Rect.fromCenter(center: const Offset(297, 225), width: 22, height: 30),
+        clearFill,
+      );
+
+      canvas.drawCircle(const Offset(215, 345), 13, clearFill);
+      canvas.drawCircle(const Offset(297, 345), 13, clearFill);
+    }
+
+    canvas.restore();
+    canvas.restore();
   }
 
   @override

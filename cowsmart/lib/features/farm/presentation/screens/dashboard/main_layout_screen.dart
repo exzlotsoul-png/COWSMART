@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -32,7 +33,9 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen>
     // Polling แจ้งเตือนแบบ background เป็นระยะ เพื่ออัปเดต badge โดยไม่รบกวนหน้าจอ
     _notificationTimer = Timer.periodic(const Duration(seconds: 60), (_) {
       if (mounted) {
-        ref.read(notificationProvider.notifier).fetchNotifications(showLoading: false);
+        ref
+            .read(notificationProvider.notifier)
+            .fetchNotifications(showLoading: false);
       }
     });
   }
@@ -66,10 +69,7 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen>
           ).animate(animation);
           return FadeTransition(
             opacity: animation,
-            child: SlideTransition(
-              position: slideIn,
-              child: child,
-            ),
+            child: SlideTransition(position: slideIn, child: child),
           );
         },
         child: KeyedSubtree(
@@ -98,25 +98,25 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen>
         },
         backgroundColor: AppColors.surf(context),
         indicatorColor: AppColors.primaryLight.withValues(alpha: 0.3),
-        destinations: const [
-          NavigationDestination(
+        destinations: [
+          const NavigationDestination(
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home),
             label: 'หน้าหลัก',
           ),
-          NavigationDestination(
-            icon: CowIcon(),
+          const NavigationDestination(
+            icon: CowIcon(isOutlined: true),
             selectedIcon: CowIcon(),
             label: 'รายชื่อวัว',
           ),
-          NavigationDestination(
-            icon: Icon(Icons.grass_outlined),
-            selectedIcon: Icon(Icons.grass),
+          const NavigationDestination(
+            icon: Icon(Symbols.wheat),
+            selectedIcon: Icon(Symbols.wheat, fill: 1.0),
             label: 'อาหาร',
           ),
-          NavigationDestination(
-            icon: Icon(Icons.account_circle_outlined),
-            selectedIcon: Icon(Icons.account_circle),
+          const NavigationDestination(
+            icon: Icon(Symbols.person),
+            selectedIcon: Icon(Symbols.person, fill: 1.0),
             label: 'บัญชี',
           ),
         ],
@@ -124,4 +124,3 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen>
     );
   }
 }
-
