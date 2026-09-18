@@ -1,1 +1,0 @@
-echo App\Models\Farm::first()-; 
