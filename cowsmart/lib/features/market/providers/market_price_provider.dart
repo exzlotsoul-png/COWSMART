@@ -45,15 +45,17 @@ class MarketPriceState {
   double get nabcCentralPrice {
     try {
       final match = allPrices.firstWhere(
-        (p) => (p.category != null && p.category!.contains('โคพันธุ์ลูกผสม')) ||
-               (p.source != null && p.source!.contains('NABC')),
+        (p) =>
+            (p.category != null && p.category!.contains('โคพันธุ์ลูกผสม')) ||
+            (p.source != null && p.source!.contains('NABC')),
       );
       if (match.pricePerKg > 0) return match.pricePerKg;
     } catch (_) {
       try {
         final match = byCategory.firstWhere(
-          (p) => (p.category != null && p.category!.contains('โคพันธุ์ลูกผสม')) ||
-                 (p.source != null && p.source!.contains('NABC')),
+          (p) =>
+              (p.category != null && p.category!.contains('โคพันธุ์ลูกผสม')) ||
+              (p.source != null && p.source!.contains('NABC')),
         );
         if (match.pricePerKg > 0) return match.pricePerKg;
       } catch (_) {}
@@ -102,7 +104,9 @@ class MarketPriceState {
         final p = getPriceForCategory('พื้นเมืองไทย (>250');
         if (p != null) return p;
       } else {
-        final p = getPriceForCategory('พื้นเมืองไทย (≤250') ?? getPriceForCategory('พื้นเมืองไทย (<=250');
+        final p =
+            getPriceForCategory('พื้นเมืองไทย (≤250') ??
+            getPriceForCategory('พื้นเมืองไทย (<=250');
         if (p != null) return p;
       }
     }
@@ -134,7 +138,10 @@ class MarketPriceState {
   /// คำนวณมูลค่ารวมของวัว (น้ำหนักตัว × ราคาต่อ กก. ตามตลาด)
   double calculateEstimatedValue({String? breedName, double weight = 0.0}) {
     if (weight <= 0) return 0.0;
-    final pricePerKg = calculatePricePerKg(breedName: breedName, weight: weight);
+    final pricePerKg = calculatePricePerKg(
+      breedName: breedName,
+      weight: weight,
+    );
     return weight * pricePerKg;
   }
 }
@@ -153,6 +160,8 @@ class MarketPriceNotifier extends Notifier<MarketPriceState> {
     String animalType = 'cattle',
     String? year,
     String? month,
+    String? startMonth,
+    String? endMonth,
   }) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
@@ -164,10 +173,7 @@ class MarketPriceNotifier extends Notifier<MarketPriceState> {
         queryParams['month'] = month;
       }
 
-      final response = await _api.get(
-        '/market_prices',
-        query: queryParams,
-      );
+      final response = await _api.get('/market_prices', query: queryParams);
       final data = response.data as Map<String, dynamic>;
 
       final latest = data['latest'] != null
@@ -190,7 +196,12 @@ class MarketPriceNotifier extends Notifier<MarketPriceState> {
       );
 
       // Fetch history in background for charts
-      fetchHistory(animalType: animalType, year: year ?? '2569', month: month ?? '08');
+      fetchHistory(
+        animalType: animalType,
+        year: year ?? '2569',
+        startMonth: startMonth ?? '01',
+        endMonth: endMonth ?? '12',
+      );
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
@@ -241,7 +252,9 @@ class MarketPriceNotifier extends Notifier<MarketPriceState> {
       if (endMonth != null && endMonth != 'all') {
         queryParams['end_month'] = endMonth;
       }
-      if (month != null && month != 'all' && (startMonth == null || startMonth == 'all')) {
+      if (month != null &&
+          month != 'all' &&
+          (startMonth == null || startMonth == 'all')) {
         queryParams['month'] = month;
       }
 
@@ -260,7 +273,9 @@ class MarketPriceNotifier extends Notifier<MarketPriceState> {
           if (parsedHistory.containsKey(normKey)) {
             parsedHistory[normKey]!.addAll(items);
             // Sort merged items by date
-            parsedHistory[normKey]!.sort((a, b) => a.effectiveDate.compareTo(b.effectiveDate));
+            parsedHistory[normKey]!.sort(
+              (a, b) => a.effectiveDate.compareTo(b.effectiveDate),
+            );
           } else {
             parsedHistory[normKey] = items;
           }
@@ -281,14 +296,17 @@ class MarketPriceNotifier extends Notifier<MarketPriceState> {
   }) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
-      await _api.post('/market_prices', data: {
-        'animal_type': animalType,
-        'category': category,
-        'price_per_kg': pricePerKg,
-        'effective_date': effectiveDate.toIso8601String().split('T')[0],
-        'source': source,
-        'note': note,
-      });
+      await _api.post(
+        '/market_prices',
+        data: {
+          'animal_type': animalType,
+          'category': category,
+          'price_per_kg': pricePerKg,
+          'effective_date': effectiveDate.toIso8601String().split('T')[0],
+          'source': source,
+          'note': note,
+        },
+      );
       await fetchLatest(animalType: animalType);
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
@@ -299,5 +317,5 @@ class MarketPriceNotifier extends Notifier<MarketPriceState> {
 
 final marketPriceProvider =
     NotifierProvider<MarketPriceNotifier, MarketPriceState>(() {
-  return MarketPriceNotifier();
-});
+      return MarketPriceNotifier();
+    });

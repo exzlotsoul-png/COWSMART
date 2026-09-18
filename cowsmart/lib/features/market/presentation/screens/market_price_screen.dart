@@ -52,8 +52,9 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
     ref.read(marketPriceProvider.notifier).fetchLatest(
           year: _selectedYear,
           month: _selectedMonth,
+          startMonth: _chartStartMonth,
+          endMonth: _chartEndMonth,
         );
-    _loadChartHistory();
   }
 
   void _loadChartHistory() {
