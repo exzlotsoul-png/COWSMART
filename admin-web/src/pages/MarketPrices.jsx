@@ -815,9 +815,13 @@ const MarketPrices = () => {
             </div>
 
             <div className="modal-body" style={{ padding: '20px 24px' }}>
-              <p style={{ margin: '0 0 16px 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              <p style={{ margin: '0 0 12px 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                 ลากรูปภาพอินโฟกราฟิกรายงานราคาของกรมปศุสัตว์มาวาง ระบบจะอ่านตัวเลขราคาของแต่ละสายพันธุ์ลงตารางให้อัตโนมัติ
               </p>
+
+              <div style={{ padding: '10px 12px', backgroundColor: '#eff6ff', borderRadius: '8px', border: '1px solid #bfdbfe', marginBottom: '16px', fontSize: '0.8rem', color: '#1e3a8a' }}>
+                <b>📢 หมายเหตุ:</b> ราคาวัวและควายในรายงานจะอัปเดตใหม่เป็นรายเดือน <b>(ประมาณวันที่ 16 ของเดือน)</b> ส่วนหมู/ไก่จะอัปเดตรายสัปดาห์
+              </div>
 
               {/* Dropzone Area */}
               <div
@@ -1218,6 +1222,16 @@ const MarketPrices = () => {
                   </span>
                   <p style={{ margin: 0, fontSize: '0.88rem', color: '#78350f', lineHeight: '1.5' }}>
                     {viewingPrice.note ? viewingPrice.note : 'ไม่มีข้อมูลรายละเอียดเพิ่มเติม'}
+                  </p>
+                </div>
+
+                {/* 📢 Department Cow Update Note */}
+                <div style={{ backgroundColor: '#eff6ff', padding: '12px 16px', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
+                  <span style={{ fontSize: '0.78rem', fontWeight: '700', color: '#1e40af', display: 'block', marginBottom: '4px' }}>
+                    📢 หมายเหตุการอัปเดต:
+                  </span>
+                  <p style={{ margin: 0, fontSize: '0.82rem', color: '#1e3a8a', lineHeight: '1.5' }}>
+                    ข้อมูลราคาวัวและกระบืออ้างอิงจากกรมปศุสัตว์ จะมีการอัปเดตตัวเลขใหม่ <b>เป็นรายเดือน ทุกๆ วันที่ 16 ของเดือน</b>
                   </p>
                 </div>
               </div>
