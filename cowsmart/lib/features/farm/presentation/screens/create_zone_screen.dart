@@ -25,6 +25,11 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
   String? _zoneNameError;
   bool _isLoading = false;
 
+  bool get _hasChanges =>
+      _zones.any((z) => z.id == 'NEW') ||
+      _zonesToDelete.isNotEmpty ||
+      _zonesToEdit.isNotEmpty;
+
   @override
   void initState() {
     super.initState();
@@ -536,23 +541,38 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
-                onPressed: _isLoading ? null : _saveAllChanges,
+                onPressed: (_isLoading || !_hasChanges) ? null : _saveAllChanges,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
+                  disabledBackgroundColor: AppColors.isDark(context)
+                      ? Colors.white.withValues(alpha: 0.12)
+                      : Colors.grey[350],
+                  disabledForegroundColor: AppColors.isDark(context)
+                      ? Colors.white.withValues(alpha: 0.35)
+                      : Colors.grey[600],
+                  elevation: _hasChanges ? 2 : 0,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.check_circle_rounded, size: 20),
-                    SizedBox(width: 8),
+                    Icon(
+                      Icons.check_circle_rounded,
+                      size: 20,
+                      color: _hasChanges ? Colors.white : Colors.grey[600],
+                    ),
+                    const SizedBox(width: 8),
                     Text(
                       'บันทึกการเปลี่ยนแปลงทั้งหมด',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: _hasChanges ? Colors.white : Colors.grey[600],
+                      ),
                     ),
                   ],
                 ),

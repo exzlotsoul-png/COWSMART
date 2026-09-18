@@ -817,57 +817,52 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                                                 ],
                                               ),
                                               const SizedBox(height: 5),
-                                              Row(
-                                                children: [
-                                                  Container(
-                                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                                                    decoration: BoxDecoration(
-                                                      color: (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male' ? Colors.blue : Colors.pink)
-                                                          .withValues(alpha: 0.12),
-                                                      borderRadius: BorderRadius.circular(4),
-                                                      border: Border.all(
-                                                        color: (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male' ? Colors.blue : Colors.pink)
-                                                            .withValues(alpha: 0.4),
-                                                        width: 0.8,
+                                              Text(
+                                                'สายพันธุ์: ' + breedDisplay + (cow.latestWeight > 0 ? ' • ' + cow.latestWeight.toStringAsFixed(0) + ' กก.' : ''),
+                                                style: const TextStyle(
+                                                    fontSize: 13,
+                                                    color: AppColors.textSecondary),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              const SizedBox(height: 5),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                                decoration: BoxDecoration(
+                                                  color: (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male' ? Colors.blue : Colors.pink)
+                                                      .withValues(alpha: 0.12),
+                                                  borderRadius: BorderRadius.circular(4),
+                                                  border: Border.all(
+                                                    color: (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male' ? Colors.blue : Colors.pink)
+                                                        .withValues(alpha: 0.4),
+                                                    width: 0.8,
+                                                  ),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    Icon(
+                                                      (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male')
+                                                          ? Icons.male_rounded
+                                                          : Icons.female_rounded,
+                                                      size: 14,
+                                                      color: (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male')
+                                                          ? Colors.blue[700]
+                                                          : Colors.pink[600],
+                                                    ),
+                                                    const SizedBox(width: 2),
+                                                    Text(
+                                                      genderDisplay,
+                                                      style: TextStyle(
+                                                        fontSize: 11,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male')
+                                                            ? Colors.blue[700]
+                                                            : Colors.pink[600],
                                                       ),
                                                     ),
-                                                    child: Row(
-                                                      mainAxisSize: MainAxisSize.min,
-                                                      children: [
-                                                        Icon(
-                                                          (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male')
-                                                              ? Icons.male_rounded
-                                                              : Icons.female_rounded,
-                                                          size: 14,
-                                                          color: (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male')
-                                                              ? Colors.blue[700]
-                                                              : Colors.pink[600],
-                                                        ),
-                                                        const SizedBox(width: 2),
-                                                        Text(
-                                                          genderDisplay,
-                                                          style: TextStyle(
-                                                            fontSize: 11,
-                                                            fontWeight: FontWeight.bold,
-                                                            color: (cow.gender == 'M' || cow.gender == 'ผู้' || cow.gender == 'male')
-                                                                ? Colors.blue[700]
-                                                                : Colors.pink[600],
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 6),
-                                                  Expanded(
-                                                    child: Text(
-                                                      'สายพันธุ์: ' + breedDisplay + (cow.latestWeight > 0 ? ' • ' + cow.latestWeight.toStringAsFixed(0) + ' กก.' : ''),
-                                                      style: const TextStyle(
-                                                          fontSize: 13,
-                                                          color: AppColors.textSecondary),
-                                                      overflow: TextOverflow.ellipsis,
-                                                    ),
-                                                  ),
-                                                ],
+                                                  ],
+                                                ),
                                               ),
                                             ],
                                           ),

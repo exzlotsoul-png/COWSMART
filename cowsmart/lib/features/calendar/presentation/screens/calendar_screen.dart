@@ -366,42 +366,93 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         ),
         calendarBuilders: CalendarBuilders(
           headerTitleBuilder: (context, day) {
-            return Align(
-              alignment: Alignment.centerLeft,
-              child: InkWell(
-                onTap: () => _showMonthYearPicker(context),
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.25),
-                      width: 1,
+            final now = DateTime.now();
+            final isCurrentMonth = day.year == now.year && day.month == now.month;
+
+            return Row(
+              children: [
+                // Month & Year Picker Button
+                InkWell(
+                  onTap: () => _showMonthYearPicker(context),
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.25),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          AppDateUtils.formatThaiMonthYear(day),
+                          style: const TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 3),
+                        const Icon(
+                          Icons.arrow_drop_down_rounded,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
+                      ],
                     ),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        AppDateUtils.formatThaiMonthYear(day),
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
+                ),
+                const Spacer(),
+                // Today button shortcut pushed close to the right format button
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      _focusedDay = DateTime.now();
+                      _selectedDay = DateTime.now();
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4.5),
+                    decoration: BoxDecoration(
+                      color: isCurrentMonth
+                          ? AppColors.primary.withValues(alpha: 0.07)
+                          : AppColors.primary.withValues(alpha: 0.16),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(
+                          alpha: isCurrentMonth ? 0.25 : 0.45,
+                        ),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.today_rounded,
+                          size: 13,
                           color: AppColors.primary,
                         ),
-                      ),
-                      const SizedBox(width: 2),
-                      const Icon(
-                        Icons.arrow_drop_down_rounded,
-                        color: AppColors.primary,
-                        size: 22,
-                      ),
-                    ],
+                        const SizedBox(width: 3),
+                        const Text(
+                          'วันนี้',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
+                const SizedBox(width: 6),
+              ],
             );
           },
           markerBuilder: (context, date, events) {
