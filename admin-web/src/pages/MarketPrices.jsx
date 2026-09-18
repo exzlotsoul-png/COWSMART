@@ -820,7 +820,7 @@ const MarketPrices = () => {
               </p>
 
               <div style={{ padding: '10px 12px', backgroundColor: '#eff6ff', borderRadius: '8px', border: '1px solid #bfdbfe', marginBottom: '16px', fontSize: '0.8rem', color: '#1e3a8a' }}>
-                <b>📢 หมายเหตุ:</b> ราคาวัวและควายในรายงานจะอัปเดตใหม่เป็นรายเดือน <b>(ประมาณวันที่ 16 ของเดือน)</b> ส่วนหมู/ไก่จะอัปเดตรายสัปดาห์
+                <b>หมายเหตุ:</b> ราคาวัวในรายงานจะอัปเดตใหม่เป็นรายเดือน <b>(ประมาณวันที่ 16 ของทุกเดือน)</b>
               </div>
 
               {/* Dropzone Area */}

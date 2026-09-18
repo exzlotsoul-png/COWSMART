@@ -168,13 +168,13 @@ class MarketPriceController extends Controller
 ตอบเฉพาะ JSON เท่านั้น
 EOT;
 
-        $models = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.7-flash'];
+        $models = ['gemini-1.5-flash', 'gemini-2.0-flash'];
         $aiParsed = null;
         $lastError = null;
 
         foreach ($models as $model) {
             try {
-                $response = Http::timeout(35)->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$geminiApiKey}", [
+                $response = Http::timeout(60)->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$geminiApiKey}", [
                     'contents' => [
                         [
                             'role' => 'user',
