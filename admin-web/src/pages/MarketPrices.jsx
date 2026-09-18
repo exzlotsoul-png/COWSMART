@@ -946,7 +946,7 @@ const MarketPrices = () => {
                         วันที่ของราคา (Effective Date):
                       </label>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                        ตรงตามข้อความ "(รายงาน ณ วันที่ ...)" มุมบนขวาของรูปภาพ ({extractedData.report_date_text || '17 สิงหาคม 2569'})
+                        อิงตามวันที่ในคอลัมน์ราคาโคเนื้อล่าสุด ({extractedData.report_date_text ? `ราคา ณ วันที่ ${extractedData.report_date_text}` : 'ราคา ณ วันที่ล่าสุด'})
                       </span>
                     </div>
                     <div style={{ position: 'relative', display: 'inline-block' }}>
