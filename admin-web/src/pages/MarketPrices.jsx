@@ -946,7 +946,7 @@ const MarketPrices = () => {
                         วันที่ของราคา (Effective Date):
                       </label>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                        อิงตามวันที่ในคอลัมน์ราคาโคเนื้อล่าสุด ({extractedData.report_date_text ? `ราคา ณ วันที่ ${extractedData.report_date_text}` : 'ราคา ณ วันที่ล่าสุด'})
+                        อิงตามวันที่ในคอลัมน์ราคาโคเนื้อล่าสุด ({extractedData.report_date_text ? `${extractedData.report_date_text}` : 'ราคา ณ วันที่ล่าสุด'})
                       </span>
                     </div>
                     <div style={{ position: 'relative', display: 'inline-block' }}>
@@ -1225,13 +1225,13 @@ const MarketPrices = () => {
                   </p>
                 </div>
 
-                {/* 📢 Department Cow Update Note */}
+                {/* Department Cow Update Note */}
                 <div style={{ backgroundColor: '#eff6ff', padding: '12px 16px', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
                   <span style={{ fontSize: '0.78rem', fontWeight: '700', color: '#1e40af', display: 'block', marginBottom: '4px' }}>
-                    📢 หมายเหตุการอัปเดต:
+                    หมายเหตุการอัปเดต:
                   </span>
                   <p style={{ margin: 0, fontSize: '0.82rem', color: '#1e3a8a', lineHeight: '1.5' }}>
-                    ข้อมูลราคาวัวและกระบืออ้างอิงจากกรมปศุสัตว์ จะมีการอัปเดตตัวเลขใหม่ <b>เป็นรายเดือน ทุกๆ วันที่ 16 ของเดือน</b>
+                    ข้อมูลราคาวัวอ้างอิงจากกรมปศุสัตว์ จะมีการอัปเดตตัวเลขใหม่ <b>เป็นรายเดือน ทุกๆ วันที่ 16 ของเดือน</b>
                   </p>
                 </div>
               </div>
