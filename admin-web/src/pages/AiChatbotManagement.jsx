@@ -635,7 +635,7 @@ const AiChatbotManagement = () => {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">คำตอบ หรือคำแนะนำการรักษาของสัตวแพทย์ *</label>
+                  <label className="form-label">คำตอบและคำแนะนำ *</label>
                   <textarea
                     className="form-control"
                     rows="7"
@@ -647,28 +647,7 @@ const AiChatbotManagement = () => {
                   ></textarea>
                 </div>
 
-                {/* Suggested Actions Selector */}
-                <div className="form-group">
-                  <label className="form-label">ปุ่ม Action แนะนำใต้คำตอบ:</label>
-                  <div style={{ display: 'flex', gap: '16px', marginTop: '6px' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.85rem' }}>
-                      <input
-                        type="checkbox"
-                        checked={formData.suggested_actions?.includes('create_appointment')}
-                        onChange={() => toggleActionCheckbox('create_appointment')}
-                      />
-                      <span>สร้างนัดหมายตรวจสุขภาพ</span>
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.85rem' }}>
-                      <input
-                        type="checkbox"
-                        checked={formData.suggested_actions?.includes('record_health')}
-                        onChange={() => toggleActionCheckbox('record_health')}
-                      />
-                      <span>บันทึกประวัติการรักษา</span>
-                    </label>
-                  </div>
-                </div>
+
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                   <input
