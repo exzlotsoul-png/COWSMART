@@ -95,9 +95,7 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
       final aiText =
           response['ai_response'] ??
           'ขออภัยครับ ระบบไม่สามารถประมวลผลคำตอบได้ในขณะนี้';
-      final actionsList = (response['suggested_actions'] as List<dynamic>?)
-          ?.map((a) => SuggestedAction.fromJson(a))
-          .toList();
+
 
       final botMsg = ChatMessage(
         id:
@@ -106,7 +104,6 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
         text: aiText,
         isUser: false,
         timestamp: DateTime.now(),
-        actions: actionsList,
       );
 
       if (mounted) {

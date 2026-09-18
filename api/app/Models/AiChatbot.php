@@ -17,13 +17,11 @@ class AiChatbot extends Model
         'keywords',
         'prompt',
         'answer',
-        'suggested_actions',
         'is_active',
         'sort_order',
     ];
 
     protected $casts = [
-        'suggested_actions' => 'array',
         'is_active' => 'boolean',
         'sort_order' => 'integer',
     ];

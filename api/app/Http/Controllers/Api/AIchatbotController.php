@@ -62,7 +62,7 @@ class AIchatbotController extends Controller
             'keywords' => 'nullable|string',
             'prompt' => 'required|string',
             'answer' => 'required|string',
-            'suggested_actions' => 'nullable|array',
+            'sort_order' => 'integer',
             'is_active' => 'boolean',
             'sort_order' => 'integer',
         ]);
@@ -101,7 +101,7 @@ class AIchatbotController extends Controller
             'keywords' => 'nullable|string',
             'prompt' => 'sometimes|required|string',
             'answer' => 'sometimes|required|string',
-            'suggested_actions' => 'nullable|array',
+            'sort_order' => 'integer',
             'is_active' => 'boolean',
             'sort_order' => 'integer',
         ]);
@@ -221,19 +221,6 @@ class AIchatbotController extends Controller
         if ($matchedKnowledge) {
             $cowPrefix = $cowInfo ? "สำหรับ {$cowInfo['name']} (พันธุ์ {$cowInfo['breed']})\n\n" : "";
             $aiResponse = $cowPrefix . $matchedKnowledge->answer;
-            if (!empty($matchedKnowledge->suggested_actions)) {
-                $actionList = [];
-                foreach ($matchedKnowledge->suggested_actions as $actKey) {
-                    if ($actKey === 'create_appointment') {
-                        $actionList[] = ['action' => 'create_appointment', 'label' => 'สร้างนัดหมายตรวจสุขภาพ'];
-                    } elseif ($actKey === 'record_health') {
-                        $actionList[] = ['action' => 'record_health', 'label' => 'บันทึกการรักษา'];
-                    }
-                }
-                if (!empty($actionList)) {
-                    $suggestedActions = $actionList;
-                }
-            }
         }
 
         // 2. Fallback to Gemini API if configured
@@ -261,7 +248,7 @@ class AIchatbotController extends Controller
             'ai_response' => $aiResponse,
             'cow' => $cowInfo,
             'timestamp' => Carbon::now()->toISOString(),
-            'suggested_actions' => $suggestedActions,
+            'timestamp' => Carbon::now()->toISOString(),
         ]);
     }
 
