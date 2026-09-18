@@ -155,7 +155,8 @@ class MarketPriceController extends Controller
 ให้อ่านและสกัดข้อมูลราคาของหมวด 'โคเนื้อและกระบือ':
 1. ตรวจสอบหัวตารางของหมวด 'โคเนื้อและกระบือ' ในส่วนของคอลัมน์ราคาตัวเลขล่าสุด (คอลัมน์ที่ 2 ของตารางย่อยโคเนื้อ เช่น 'ราคา ณ วันที่ 16 ส.ค. 69' หรือ 'ราคา ณ วันที่ 16 พ.ค. 69')
 2. ให้นำวันที่ของคอลัมน์ดังกล่าวมาใช้เป็น effective_date (แปลงปี พ.ศ. เป็น ค.ศ. เช่น '16 ส.ค. 69' -> '2026-08-16', '16 พ.ค. 69' -> '2026-05-16')
-3. สกัดตัวเลขราคาของแต่ละสายพันธุ์จากคอลัมน์ล่าสุดนั้น
+3. สกัดตัวเลขราคาเฉพาะ 'โคเนื้อ / วัว' เท่านั้น (เช่น ลูกผสมยุโรป, ลูกผสมบราห์มัน, พื้นเมืองไทย) 
+*** สำคัญมาก: ไม่ต้องเอา 'กระบือ' หรือ 'กระบือเนื้อ' มาโดยเด็ดขาด ให้ตัดออก ไม่ต้องรวมเข้ามาในรายการ ***
 ตัวอย่างรูปแบบ JSON:
 {
   "is_dld_report": true,
@@ -241,8 +242,15 @@ EOT;
         if (!empty($aiParsed['cattle_prices']) && is_array($aiParsed['cattle_prices'])) {
             foreach ($aiParsed['cattle_prices'] as $item) {
                 if (empty($item['category']) || !isset($item['price_per_kg'])) continue;
+                
+                // Exclude buffalo/กระบือ strictly
+                $cat = trim($item['category']);
+                if (mb_strpos($cat, 'กระบือ') !== false) {
+                    continue;
+                }
+
                 $extractedItems[] = [
-                    'category' => $item['category'],
+                    'category' => $cat,
                     'price_per_kg' => floatval($item['price_per_kg']),
                     'effective_date' => $effectiveDate,
                     'source' => 'กรมปศุสัตว์ (กลุ่มเศรษฐกิจการปศุสัตว์)',
