@@ -30,6 +30,19 @@ class BreedTab extends ConsumerStatefulWidget {
 }
 
 class _BreedTabState extends ConsumerState<BreedTab> {
+  String _formatSireDisplay(BreedingRecord record, List<Cow> allCows) {
+    if (record.matingMethod == 'ai') {
+      final baseStr = '(ผสมเทียม) ';
+      if (record.sireId != null) {
+        return baseStr + _formatCowDisplayById(record.sireId, allCows);
+      } else if (record.aiSireName != null && record.aiSireName!.isNotEmpty) {
+        return baseStr + record.aiSireName!;
+      }
+      return baseStr + 'ไม่ระบุ';
+    } else {
+      return '(ผสมปกติ) ' + _formatCowDisplayById(record.sireId, allCows);
+    }
+  }
   String _formatCowDisplayById(String? id, List<Cow> allCows) {
     if (id == null || id.isEmpty || id == '-') return '-';
     final ids = id
@@ -488,12 +501,18 @@ class _BreedTabState extends ConsumerState<BreedTab> {
 
     final heatRecord = activeHeat;
 
-    Cow? selectedBull;
+    String? selectedBullId;
     if (heatRecord.sireId != null &&
         bulls.any((b) => b.id == heatRecord.sireId)) {
-      selectedBull = bulls.firstWhere((b) => b.id == heatRecord.sireId);
+      selectedBullId = heatRecord.sireId;
+    }
+    // If it was previously set as OTHER (aiSireName is not null but sireId is null)
+    if (heatRecord.sireId == null && heatRecord.aiSireName != null && heatRecord.aiSireName!.isNotEmpty) {
+      selectedBullId = 'OTHER';
     }
     DateTime matingDate = heatRecord.matingDate ?? DateTime.now();
+    String selectedMatingMethod = heatRecord.matingMethod ?? 'natural';
+    TextEditingController aiSireNameController = TextEditingController(text: heatRecord.aiSireName ?? '');
 
     showDialog(
       context: context,
@@ -555,35 +574,89 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                     ],
                   ),
                 ),
+                // Mating Method Selection
+                const Text(
+                  'วิธีผสมพันธุ์',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment(
+                      value: 'natural',
+                      label: Text('ผสมปกติ', style: TextStyle(fontWeight: FontWeight.bold)),
+                      icon: Icon(Icons.favorite, size: 18),
+                    ),
+                    ButtonSegment(
+                      value: 'ai',
+                      label: Text('ผสมเทียม', style: TextStyle(fontWeight: FontWeight.bold)),
+                      icon: Icon(Icons.science, size: 18),
+                    ),
+                  ],
+                  selected: {selectedMatingMethod},
+                  onSelectionChanged: (Set<String> selection) {
+                    setDialogState(() {
+                      selectedMatingMethod = selection.first;
+                    });
+                  },
+                ),
                 const SizedBox(height: 16),
 
                 // Select Bull Dropdown
-                DropdownButtonFormField<Cow>(
-                  initialValue: selectedBull,
+                DropdownButtonFormField<String>(
+                  value: selectedBullId,
                   isExpanded: true,
                   style: TextStyle(fontSize: 15, color: AppColors.text(ctx)),
-                  decoration: const InputDecoration(
-                    labelText: 'เลือกพ่อพันธุ์ *',
-                    labelStyle: TextStyle(fontSize: 14),
-                    prefixIcon: Icon(Icons.male, color: Colors.blue),
+                  decoration: InputDecoration(
+                    labelText: selectedMatingMethod == 'ai' ? 'เลือกพ่อพันธุ์ (น้ำเชื้อ) *' : 'เลือกพ่อพันธุ์ *',
+                    labelStyle: const TextStyle(fontSize: 14),
+                    prefixIcon: const Icon(Icons.male, color: Colors.blue),
                   ),
-                  items: bulls
-                      .map(
-                        (b) => DropdownMenuItem(
-                          value: b,
-                          child: Text(
-                            '${b.name} (${b.tagNumber.isNotEmpty ? b.tagNumber : b.id})',
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: AppColors.text(ctx),
-                            ),
-                            overflow: TextOverflow.ellipsis,
+                  items: [
+                    ...bulls.map(
+                      (b) => DropdownMenuItem<String>(
+                        value: b.id,
+                        child: Text(
+                          '${b.name} (${b.tagNumber.isNotEmpty ? b.tagNumber : b.id})',
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: AppColors.text(ctx),
                           ),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      )
-                      .toList(),
-                  onChanged: (v) => setDialogState(() => selectedBull = v),
+                      ),
+                    ),
+                    if (selectedMatingMethod == 'ai')
+                      DropdownMenuItem<String>(
+                        value: 'OTHER',
+                        child: Text(
+                          'อื่นๆ (ระบุชื่อ/หลอดน้ำเชื้อ)',
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: AppColors.text(ctx),
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                  ],
+                  onChanged: (v) => setDialogState(() => selectedBullId = v),
                 ),
+                if (selectedBullId == 'OTHER') ...[
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: aiSireNameController,
+                    style: TextStyle(fontSize: 15, color: AppColors.text(ctx)),
+                    decoration: const InputDecoration(
+                      labelText: 'ระบุชื่อพ่อพันธุ์ / รหัสหลอดน้ำเชื้อ *',
+                      prefixIcon: Icon(Icons.edit, color: Colors.blue),
+                    ),
+                    onChanged: (v) => setDialogState(() {}),
+                  ),
+                ],
                 const SizedBox(height: 16),
 
                 // Mating Date Picker
@@ -678,14 +751,14 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                           ? AppColors.darkBackground
                           : Colors.white,
                     ),
-                    onPressed: selectedBull == null
+                    onPressed: (selectedBullId == null || (selectedBullId == 'OTHER' && aiSireNameController.text.trim().isEmpty))
                         ? null
                         : () async {
                             final estCalving = matingDate.add(const Duration(days: 283));
                             final record = BreedingRecord(
                               id: heatRecord.id,
                               damId: widget.cow.id,
-                              sireId: selectedBull!.id,
+                              sireId: selectedBullId == 'OTHER' ? null : selectedBullId,
                               heatDate: heatRecord.heatDate,
                               matingDate: matingDate,
                               expectedCalving: estCalving,
@@ -693,6 +766,8 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                               calvingResult: null,
                               calfId: heatRecord.calfId,
                               reminderSetting: 'ก่อน 7 วัน',
+                              matingMethod: selectedMatingMethod,
+                              aiSireName: selectedBullId == 'OTHER' ? aiSireNameController.text.trim() : null,
                             );
                             await ref
                                 .read(cowDetailProvider.notifier)
@@ -806,7 +881,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'ผสมกับ: ${_formatCowDisplayById(activeMating.sireId, allCows)}',
+                              'ผสมกับ: ${_formatSireDisplay(activeMating, allCows)}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 15,
@@ -3130,7 +3205,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                 ],
               ),
             ),
-          if (record.sireId != null)
+          if (record.sireId != null || (record.aiSireName != null && record.aiSireName!.isNotEmpty))
             Padding(
               padding: const EdgeInsets.only(bottom: 5),
               child: Row(
@@ -3139,7 +3214,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'พ่อพันธุ์: ${_formatCowDisplayById(record.sireId, allCows)}',
+                      'พ่อพันธุ์: ${_formatSireDisplay(record, allCows)}',
                       style: TextStyle(
                         fontSize: 13.5,
                         color: AppColors.text(context),

@@ -12,6 +12,10 @@ class BreedingRecord {
   final String? calvingResult;
   final String? calfId;
   final String? reminderSetting;
+  
+  // AI fields
+  final String? matingMethod;
+  final String? aiSireName;
 
   BreedingRecord({
     required this.id,
@@ -26,6 +30,8 @@ class BreedingRecord {
     this.calvingResult,
     this.calfId,
     this.reminderSetting,
+    this.matingMethod,
+    this.aiSireName,
   });
 
   factory BreedingRecord.fromJson(Map<String, dynamic> json) {
@@ -52,6 +58,8 @@ class BreedingRecord {
       calvingResult: json['calving_result'],
       calfId: json['calf_id']?.toString(),
       reminderSetting: json['reminder_setting'],
+      matingMethod: json['mating_method'],
+      aiSireName: json['ai_sire_name'],
     );
   }
 
@@ -69,6 +77,8 @@ class BreedingRecord {
       'calving_result': calvingResult,
       'calf_id': calfId,
       'reminder_setting': reminderSetting,
+      'mating_method': matingMethod,
+      'ai_sire_name': aiSireName,
     };
   }
 }
