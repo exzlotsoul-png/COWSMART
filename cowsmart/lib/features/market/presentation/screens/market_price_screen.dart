@@ -943,16 +943,27 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
   }
 
   String? _getPriceForCategory(MarketPriceState state, String keyword) {
+    // กำจัดช่องว่างและสัญลักษณ์เพื่อให้จับคู่หมวดหมู่ได้แน่นอน ไม่พลาดเรื่องเว้นวรรค
+    final cleanKw = keyword
+        .replaceAll('<=', '≤')
+        .replaceAll(' ', '')
+        .trim();
+
+    bool matches(String? cat) {
+      if (cat == null) return false;
+      final cleanCat = cat
+          .replaceAll('<=', '≤')
+          .replaceAll(' ', '')
+          .trim();
+      return cleanCat.contains(cleanKw);
+    }
+
     try {
-      final match = state.allPrices.firstWhere(
-        (p) => p.category != null && p.category!.contains(keyword),
-      );
+      final match = state.allPrices.firstWhere((p) => matches(p.category));
       return match.pricePerKg > 0 ? match.pricePerKg.toStringAsFixed(2) : null;
     } catch (_) {
       try {
-        final match = state.byCategory.firstWhere(
-          (p) => p.category != null && p.category!.contains(keyword),
-        );
+        final match = state.byCategory.firstWhere((p) => matches(p.category));
         return match.pricePerKg > 0 ? match.pricePerKg.toStringAsFixed(2) : null;
       } catch (_) {
         return null;

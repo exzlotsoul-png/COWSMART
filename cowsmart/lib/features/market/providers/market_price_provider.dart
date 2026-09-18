@@ -65,16 +65,26 @@ class MarketPriceState {
 
   /// ดึงราคาตามชื่อหมวดหมู่ (เช่น 'ลูกผสมบราห์มัน (>400')
   double? getPriceForCategory(String keyword) {
+    final cleanKw = keyword
+        .replaceAll('<=', '≤')
+        .replaceAll(' ', '')
+        .trim();
+
+    bool matches(String? cat) {
+      if (cat == null) return false;
+      final cleanCat = cat
+          .replaceAll('<=', '≤')
+          .replaceAll(' ', '')
+          .trim();
+      return cleanCat.contains(cleanKw);
+    }
+
     try {
-      final match = allPrices.firstWhere(
-        (p) => p.category != null && p.category!.contains(keyword),
-      );
+      final match = allPrices.firstWhere((p) => matches(p.category));
       return match.pricePerKg > 0 ? match.pricePerKg : null;
     } catch (_) {
       try {
-        final match = byCategory.firstWhere(
-          (p) => p.category != null && p.category!.contains(keyword),
-        );
+        final match = byCategory.firstWhere((p) => matches(p.category));
         return match.pricePerKg > 0 ? match.pricePerKg : null;
       } catch (_) {
         return null;
