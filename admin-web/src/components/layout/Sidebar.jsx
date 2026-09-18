@@ -66,7 +66,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         <div className="sidebar-brand">
           <img src="/favicon.svg" alt="CowSmart Logo" className="sidebar-logo" />
           <div className="sidebar-title">
-            <span>CowSmart</span>
+            <span>COWSMART</span>
             <span className="sub-title">Admin</span>
           </div>
         </div>
