@@ -255,7 +255,15 @@ class MarketPriceNotifier extends Notifier<MarketPriceState> {
       final Map<String, List<MarketPrice>> parsedHistory = {};
       rawHistory.forEach((key, list) {
         if (list is List) {
-          parsedHistory[key] = list.map((j) => MarketPrice.fromJson(j)).toList();
+          final normKey = MarketPrice.normalizeCategory(key);
+          final items = list.map((j) => MarketPrice.fromJson(j)).toList();
+          if (parsedHistory.containsKey(normKey)) {
+            parsedHistory[normKey]!.addAll(items);
+            // Sort merged items by date
+            parsedHistory[normKey]!.sort((a, b) => a.effectiveDate.compareTo(b.effectiveDate));
+          } else {
+            parsedHistory[normKey] = items;
+          }
         }
       });
 

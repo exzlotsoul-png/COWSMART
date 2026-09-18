@@ -12,6 +12,33 @@ use Carbon\Carbon;
 
 class MarketPriceController extends Controller
 {
+    /**
+     * มาตรฐานชื่อหมวดหมู่/สายพันธุ์ และพิกัดน้ำหนัก
+     * แก้ไขปัญหาเว้นวรรคไม่ตรงกัน เช่น (> 250 - 400 กก.) กับ (>250 - 400 กก.) หรือ (<= 250) กับ (≤ 250)
+     */
+    public static function normalizeCategory(?string $category): string
+    {
+        if (empty($category)) return '';
+        $cat = trim($category);
+
+        // แปลง <= ให้เป็น ≤
+        $cat = str_replace('<=', '≤', $cat);
+
+        // จัดการเว้นวรรคหลังเครื่องหมาย > และ ≤ ให้เป็น (> 250 และ (≤ 250 เสมอ
+        $cat = preg_replace('/\(\s*>\s*/u', '(> ', $cat);
+        $cat = preg_replace('/\(\s*≤\s*/u', '(≤ ', $cat);
+
+        // จัดการเว้นวรรครอบเครื่องหมายขีดคั่นพิกัดน้ำหนัก เช่น 250-400 หรือ 250 - 400 ให้เป็น 250 - 400
+        $cat = preg_replace('/(\d+)\s*-\s*(\d+)/u', '$1 - $2', $cat);
+
+        // เว้นวรรคหน้า กก.) ให้เรียบร้อย
+        $cat = preg_replace('/\s*กก\.?\s*\)/u', ' กก.)', $cat);
+
+        // ตัดช่องว่างซ้ำซ้อน
+        $cat = preg_replace('/\s+/u', ' ', $cat);
+
+        return trim($cat);
+    }
     public function index(Request $request)
     {
         $animalType = $request->query('animal_type', 'cattle');
@@ -54,10 +81,20 @@ class MarketPriceController extends Controller
 
         $allRecords = $query->orderByDesc('effective_date')->orderByDesc('id')->get();
 
+        // Standardize category on output records
+        $allRecords->transform(function ($item) {
+            $item->category = self::normalizeCategory($item->category);
+            return $item;
+        });
+
         // Latest price per category for summary cards
         $latestByCategory = MarketPrice::where('animal_type', $animalType)
             ->orderByDesc('effective_date')
             ->get()
+            ->map(function ($item) {
+                $item->category = self::normalizeCategory($item->category);
+                return $item;
+            })
             ->unique('category')
             ->values();
 
@@ -249,6 +286,8 @@ EOT;
                     continue;
                 }
 
+                $cat = self::normalizeCategory($cat);
+
                 $extractedItems[] = [
                     'category' => $cat,
                     'price_per_kg' => floatval($item['price_per_kg']),
@@ -292,10 +331,12 @@ EOT;
         $savedCount = 0;
 
         foreach ($items as $item) {
+            $normalizedCategory = self::normalizeCategory($item['category']);
+
             MarketPrice::updateOrCreate(
                 [
                     'animal_type' => 'cattle',
-                    'category' => $item['category'],
+                    'category' => $normalizedCategory,
                     'effective_date' => $item['effective_date'],
                 ],
                 [
@@ -361,7 +402,11 @@ EOT;
         }
 
         $history = $query->orderBy('effective_date', 'asc')->get();
-        $grouped = $history->groupBy('category');
+        
+        // Group by normalized category to prevent duplicate series on charts
+        $grouped = $history->groupBy(function ($item) {
+            return self::normalizeCategory($item->category);
+        });
 
         return response()->json([
             'days' => $days,
@@ -383,6 +428,9 @@ EOT;
         if (empty($data['animal_type'])) {
             $data['animal_type'] = 'cattle';
         }
+        if (!empty($data['category'])) {
+            $data['category'] = self::normalizeCategory($data['category']);
+        }
 
         $price = MarketPrice::create($data);
         return response()->json($price, 201);
@@ -396,7 +444,11 @@ EOT;
     public function update(Request $request, $id)
     {
         $price = MarketPrice::findOrFail($id);
-        $price->update($request->all());
+        $data = $request->all();
+        if (!empty($data['category'])) {
+            $data['category'] = self::normalizeCategory($data['category']);
+        }
+        $price->update($data);
         return response()->json($price);
     }
 
