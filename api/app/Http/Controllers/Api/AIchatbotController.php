@@ -337,7 +337,7 @@ class AIchatbotController extends Controller
             }
 
             // Verified active high-speed models
-            $models = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.7-flash', 'gemini-flash-latest'];
+            $models = ['gemini-flash-lite-latest', 'gemini-3.1-flash-lite', 'gemini-3-flash-preview'];
 
             foreach ($models as $model) {
                 $response = Http::timeout(20)->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}", [

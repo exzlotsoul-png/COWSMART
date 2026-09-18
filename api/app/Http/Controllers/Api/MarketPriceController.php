@@ -168,7 +168,7 @@ class MarketPriceController extends Controller
 ตอบเฉพาะ JSON เท่านั้น
 EOT;
 
-        $models = ['gemini-1.5-flash', 'gemini-2.0-flash'];
+        $models = ['gemini-flash-lite-latest', 'gemini-3.1-flash-lite', 'gemini-3-flash-preview'];
         $aiParsed = null;
         $lastError = null;
 
