@@ -55,6 +55,7 @@ class Cow {
 
   final String? typeId;
   final String? customTypeName;
+  final String? aiSireName;
 
   Cow({
     required this.id,
@@ -77,6 +78,7 @@ class Cow {
     this.imageUrl,
     this.imageFullUrl,
     this.latestDiseaseName,
+    this.aiSireName,
   });
 
   factory Cow.fromJson(Map<String, dynamic> json) {
@@ -104,6 +106,7 @@ class Cow {
       imageUrl: json['image_url'],
       imageFullUrl: json['image_full_url'],
       latestDiseaseName: json['latest_disease_name']?.toString() ?? json['disease_name']?.toString(),
+      aiSireName: json['ai_sire_name']?.toString(),
     );
   }
 
@@ -125,6 +128,7 @@ class Cow {
       'image_url': imageUrl,
       'sire_id': (fatherId == null || fatherId!.isEmpty) ? null : fatherId,
       'dam_id': (motherId == null || motherId!.isEmpty) ? null : motherId,
+      'ai_sire_name': aiSireName,
     };
   }
 
@@ -210,6 +214,7 @@ class Cow {
     String? imageUrl,
     String? imageFullUrl,
     String? latestDiseaseName,
+    String? aiSireName,
   }) {
     return Cow(
       id: id ?? this.id,
@@ -231,6 +236,7 @@ class Cow {
       imageUrl: imageUrl ?? this.imageUrl,
       imageFullUrl: imageFullUrl ?? this.imageFullUrl,
       latestDiseaseName: latestDiseaseName ?? this.latestDiseaseName,
+      aiSireName: aiSireName ?? this.aiSireName,
     );
   }
 }

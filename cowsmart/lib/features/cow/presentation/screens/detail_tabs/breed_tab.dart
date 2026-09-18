@@ -40,7 +40,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
       }
       return baseStr + 'ไม่ระบุ';
     } else {
-      return '(ผสมปกติ) ' + _formatCowDisplayById(record.sireId, allCows);
+      return _formatCowDisplayById(record.sireId, allCows);
     }
   }
   String _formatCowDisplayById(String? id, List<Cow> allCows) {
@@ -452,6 +452,14 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                         calvingDate: existingRecord?.calvingDate,
                         calvingResult: existingRecord?.calvingResult,
                         calfId: existingRecord?.calfId,
+                        sireId: existingRecord?.sireId,
+                        matingDate: existingRecord?.matingDate,
+                        checkDate: existingRecord?.checkDate,
+                        pregnancyResult: existingRecord?.pregnancyResult,
+                        expectedCalving: existingRecord?.expectedCalving,
+                        reminderSetting: existingRecord?.reminderSetting,
+                        matingMethod: existingRecord?.matingMethod,
+                        aiSireName: existingRecord?.aiSireName,
                       );
                       ref
                           .read(cowDetailProvider.notifier)
@@ -510,8 +518,11 @@ class _BreedTabState extends ConsumerState<BreedTab> {
     if (heatRecord.sireId == null && heatRecord.aiSireName != null && heatRecord.aiSireName!.isNotEmpty) {
       selectedBullId = 'OTHER';
     }
-    DateTime matingDate = heatRecord.matingDate ?? DateTime.now();
     String selectedMatingMethod = heatRecord.matingMethod ?? 'natural';
+    if (selectedBullId == 'OTHER') {
+      selectedMatingMethod = 'ai';
+    }
+    DateTime matingDate = heatRecord.matingDate ?? DateTime.now();
     TextEditingController aiSireNameController = TextEditingController(text: heatRecord.aiSireName ?? '');
 
     showDialog(
@@ -600,6 +611,9 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                   onSelectionChanged: (Set<String> selection) {
                     setDialogState(() {
                       selectedMatingMethod = selection.first;
+                      if (selectedMatingMethod == 'natural' && selectedBullId == 'OTHER') {
+                        selectedBullId = null;
+                      }
                     });
                   },
                 ),
@@ -761,11 +775,13 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                               sireId: selectedBullId == 'OTHER' ? null : selectedBullId,
                               heatDate: heatRecord.heatDate,
                               matingDate: matingDate,
+                              checkDate: existingRecord?.checkDate,
+                              pregnancyResult: existingRecord?.pregnancyResult,
                               expectedCalving: estCalving,
-                              calvingDate: null,
-                              calvingResult: null,
-                              calfId: heatRecord.calfId,
-                              reminderSetting: 'ก่อน 7 วัน',
+                              calvingDate: existingRecord?.calvingDate,
+                              calvingResult: existingRecord?.calvingResult,
+                              calfId: existingRecord?.calfId ?? heatRecord.calfId,
+                              reminderSetting: existingRecord?.reminderSetting ?? 'ก่อน 7 วัน',
                               matingMethod: selectedMatingMethod,
                               aiSireName: selectedBullId == 'OTHER' ? aiSireNameController.text.trim() : null,
                             );
@@ -1143,6 +1159,8 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                               calvingResult: null,
                               calfId: activeMating.calfId,
                               reminderSetting: selectedCalvingReminder,
+                              matingMethod: activeMating.matingMethod,
+                              aiSireName: activeMating.aiSireName,
                             );
                             await ref
                                 .read(cowDetailProvider.notifier)
@@ -1586,6 +1604,9 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                               calvingDate: calvingDate,
                               calvingResult: finalResultStr,
                               calfId: activePregnancy.calfId,
+                              reminderSetting: activePregnancy.reminderSetting,
+                              matingMethod: activePregnancy.matingMethod,
+                              aiSireName: activePregnancy.aiSireName,
                             );
                             Navigator.pop(ctx, {
                               'record': record,
@@ -1831,7 +1852,9 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                                             '/add_cow',
                                             extra: {
                                               'mother_id': widget.cow.id,
-                                              'father_id': record.sireId,
+                                              'father_id': (record.matingMethod == 'ai' && (record.sireId == null || record.sireId!.isEmpty))
+                                                  ? '(ผสมเทียม) ${record.aiSireName ?? ''}'.trim()
+                                                  : record.sireId,
                                               'breed_id': widget.cow.breed,
                                               'birth_date':
                                                   record.calvingDate ??
@@ -1974,7 +1997,9 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                               '/add_cow',
                               extra: {
                                 'mother_id': widget.cow.id,
-                                'father_id': record.sireId,
+                                'father_id': (record.matingMethod == 'ai' && (record.sireId == null || record.sireId!.isEmpty))
+                                    ? '(ผสมเทียม) ${record.aiSireName ?? ''}'.trim()
+                                    : record.sireId,
                                 'breed_id': widget.cow.breed,
                                 'birth_date':
                                     record.calvingDate ?? DateTime.now(),
@@ -2743,7 +2768,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                if (sireCow != null) ...[
+                if (sireCow != null || (current.aiSireName != null && current.aiSireName!.isNotEmpty)) ...[
                   Row(
                     children: [
                       Container(
@@ -2759,8 +2784,8 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                         ),
                         child: ClipOval(
                           child:
-                              sireCow.imageUrl != null &&
-                                  sireCow.imageUrl!.isNotEmpty
+                              (sireCow?.imageUrl != null &&
+                                  sireCow!.imageUrl!.isNotEmpty)
                               ? Image.network(
                                   sireCow.imageUrl!.startsWith('http')
                                       ? sireCow.imageUrl!.replaceAll(
@@ -2787,22 +2812,13 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              sireCow.name,
+                              _formatSireDisplay(current, allCows).replaceFirst('พ่อพันธุ์: ', ''), // In case _formatSireDisplay has 'พ่อพันธุ์: ' but it doesn't.
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                fontSize: 17,
+                                fontSize: 16,
                                 color: AppColors.text(context),
                               ),
                             ),
-                            const SizedBox(height: 2),
-                            if (sireCow.tagNumber.isNotEmpty)
-                              Text(
-                                'แท็ก/NFC: ${sireCow.tagNumber}',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: AppColors.subText(context),
-                                ),
-                              ),
                           ],
                         ),
                       ),

@@ -174,6 +174,8 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
       final initialWeight = double.tryParse(_weightController.text) ?? 0.0;
       final purchasePrice = double.tryParse(_purchasePriceController.text) ?? 0.0;
 
+      final bool isAiSire = _selectedFatherId != null && _selectedFatherId!.startsWith('(ผสมเทียม)');
+
       final newCow = Cow(
         id: '',
         farmId: currentFarm.id,
@@ -189,8 +191,9 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
         latestWeight: initialWeight,
         purchasePrice: purchasePrice,
         status: _selectedStatus,
-        fatherId: _selectedFatherId,
+        fatherId: isAiSire ? null : _selectedFatherId,
         motherId: _selectedMotherId,
+        aiSireName: isAiSire ? _selectedFatherId : null,
       );
 
       await ref.read(cowProvider.notifier).addCow(newCow);
@@ -809,7 +812,8 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                             builder: (context) {
                               final bool isFatherInList = cowState.allCows
                                   .any((c) => c.gender == 'M' && c.id == _selectedFatherId);
-                              final String? safeFatherValue = isFatherInList ? _selectedFatherId : null;
+                              final bool hasCustomFather = !isFatherInList && _selectedFatherId != null && _selectedFatherId!.isNotEmpty;
+                              final String? safeFatherValue = (isFatherInList || hasCustomFather) ? _selectedFatherId : null;
 
                               return DropdownButtonFormField<String?>(
                                 value: safeFatherValue,
@@ -818,6 +822,15 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                                 style: TextStyle(color: AppColors.text(context), fontSize: 15.5),
                                 decoration: _buildInputDecoration('พ่อพันธุ์ (Sire)', Icons.male_rounded),
                                 items: [
+                                  if (hasCustomFather)
+                                    DropdownMenuItem<String?>(
+                                      value: _selectedFatherId,
+                                      child: Text(
+                                        _selectedFatherId!,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 15.5),
+                                      ),
+                                    ),
                                   const DropdownMenuItem<String?>(
                                     value: null,
                                     child: Text('ไม่ระบุพ่อพันธุ์', overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 15.5)),

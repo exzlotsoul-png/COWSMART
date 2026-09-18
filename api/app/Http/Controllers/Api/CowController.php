@@ -88,6 +88,12 @@ class CowController extends Controller
         }
         unset($data['type']);
 
+        // Handle AI Sire Name logic
+        if (isset($data['sire_id']) && str_starts_with($data['sire_id'], '(ผสมเทียม)')) {
+            $data['ai_sire_name'] = $data['sire_id'];
+            $data['sire_id'] = null;
+        }
+
         // Sanitize foreign keys
         foreach (['zone_id', 'sire_id', 'dam_id', 'breed_id'] as $fk) {
             if (array_key_exists($fk, $data)) {
@@ -215,6 +221,12 @@ class CowController extends Controller
         // Check if image_url is changing or deleted
         if (array_key_exists('image_url', $data) && $cow->image_url !== $data['image_url']) {
             $this->deleteStorageFile($cow->image_url);
+        }
+
+        // Handle AI Sire Name logic
+        if (isset($data['sire_id']) && str_starts_with($data['sire_id'], '(ผสมเทียม)')) {
+            $data['ai_sire_name'] = $data['sire_id'];
+            $data['sire_id'] = null;
         }
 
         // Sanitize foreign keys: convert empty strings or non-existent FKs to null

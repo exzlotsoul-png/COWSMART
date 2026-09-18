@@ -215,7 +215,9 @@ class BasicInfoTab extends ConsumerWidget {
                 context,
                 icon: Icons.male_rounded,
                 label: 'พ่อกำเนิด (Sire)',
-                value: formatCowNameWithBreed(cow.fatherId),
+                value: cow.aiSireName != null && cow.aiSireName!.isNotEmpty 
+                    ? cow.aiSireName 
+                    : formatCowNameWithBreed(cow.fatherId),
                 valueColor: Colors.blue[700],
               ),
               _buildModernInfoTile(
