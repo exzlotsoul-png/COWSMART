@@ -1,13 +1,17 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' show BuildContext;
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:cowsmart/core/widgets/pdf_export_sheet.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
 import 'package:cowsmart/features/cow/domain/breed.dart';
 import 'package:cowsmart/features/farm/domain/farm.dart';
+import 'package:cowsmart/features/farm/services/farm_pdf_export_service.dart';
 
 class GroupQrPdfExportService {
   /// Generates printable PDF catalog containing QR codes for selected cows
@@ -15,6 +19,7 @@ class GroupQrPdfExportService {
     required Farm farm,
     required List<Cow> cows,
     required List<Breed> breeds,
+    BuildContext? context,
   }) async {
     final pdfBytes = await generateGroupQrPdf(
       farm: farm,
@@ -62,7 +67,18 @@ class GroupQrPdfExportService {
       }
     }
 
-    // 2. Safe Printing preview / print sheet
+    // 2. Mobile-friendly export sheet (Share / Save / Print)
+    if (context != null && context.mounted) {
+      await PdfExportSheet.show(
+        context: context,
+        pdfBytes: pdfBytes,
+        fileName: fileName,
+        title: 'ป้าย QR Code ประจำตัววัว (PDF)',
+      );
+      return;
+    }
+
+    // 3. Safe Printing preview / print sheet fallback
     try {
       await Printing.layoutPdf(
         onLayout: (PdfPageFormat format) async => pdfBytes,
@@ -88,14 +104,28 @@ class GroupQrPdfExportService {
   }) async {
     final doc = pw.Document();
 
-    final thaiFont = await PdfGoogleFonts.sarabunRegular();
-    final thaiFontBold = await PdfGoogleFonts.sarabunBold();
-    final thaiFontItalic = await PdfGoogleFonts.sarabunItalic();
+    pw.Font thaiFont;
+    pw.Font thaiFontBold;
+    try {
+      final regData = await rootBundle.load('assets/fonts/Prompt-Regular.ttf');
+      final boldData = await rootBundle.load('assets/fonts/Prompt-Bold.ttf');
+      thaiFont = ThaiPromptTtfFont(regData);
+      thaiFontBold = ThaiPromptTtfFont(boldData);
+    } catch (_) {
+      try {
+        final reg = await PdfGoogleFonts.promptRegular();
+        final bold = await PdfGoogleFonts.promptBold();
+        thaiFont = reg is pw.TtfFont ? ThaiPromptTtfFont(reg.data) : reg;
+        thaiFontBold = bold is pw.TtfFont ? ThaiPromptTtfFont(bold.data) : bold;
+      } catch (_) {
+        thaiFont = await PdfGoogleFonts.sarabunRegular();
+        thaiFontBold = await PdfGoogleFonts.sarabunBold();
+      }
+    }
 
     final theme = pw.ThemeData.withFont(
       base: thaiFont,
       bold: thaiFontBold,
-      italic: thaiFontItalic,
     );
 
     final primaryColor = PdfColor.fromHex('#334A2E');
@@ -127,7 +157,7 @@ class GroupQrPdfExportService {
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
                     pw.Text(
-                      'ป้าย QR Code ประจำตัววัว (COWSMART)',
+                      FarmPdfExportService.shapeThai('ป้าย QR Code ประจำตัววัว (COWSMART)'),
                       style: pw.TextStyle(
                         fontSize: 18,
                         fontWeight: pw.FontWeight.bold,
@@ -136,7 +166,7 @@ class GroupQrPdfExportService {
                     ),
                     pw.SizedBox(height: 2),
                     pw.Text(
-                      'ฟาร์ม: ${farm.name} • จำนวนที่พิมพ์: ${cows.length} ตัว',
+                      FarmPdfExportService.shapeThai('ฟาร์ม: ${farm.name} • จำนวนที่พิมพ์: ${cows.length} ตัว'),
                       style: pw.TextStyle(
                         fontSize: 11,
                         color: PdfColors.grey700,
@@ -145,7 +175,7 @@ class GroupQrPdfExportService {
                   ],
                 ),
                 pw.Text(
-                  'พิมพ์เมื่อ: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())} น.',
+                  FarmPdfExportService.shapeThai('พิมพ์เมื่อ: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())} น.'),
                   style: const pw.TextStyle(
                     fontSize: 9,
                     color: PdfColors.grey600,
@@ -160,7 +190,7 @@ class GroupQrPdfExportService {
             margin: const pw.EdgeInsets.only(top: 12),
             alignment: pw.Alignment.centerRight,
             child: pw.Text(
-              'หน้า ${context.pageNumber} / ${context.pagesCount}',
+              FarmPdfExportService.shapeThai('หน้า ${context.pageNumber} / ${context.pagesCount}'),
               style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey500),
             ),
           );
@@ -224,7 +254,7 @@ class GroupQrPdfExportService {
                                 borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
                               ),
                               child: pw.Text(
-                                cow.tagNumber.isNotEmpty ? cow.tagNumber : 'ไม่มีเบอร์',
+                                FarmPdfExportService.shapeThai(cow.tagNumber.isNotEmpty ? cow.tagNumber : 'ไม่มีเบอร์'),
                                 style: pw.TextStyle(
                                   fontSize: 13,
                                   fontWeight: pw.FontWeight.bold,
@@ -234,7 +264,7 @@ class GroupQrPdfExportService {
                             ),
                             pw.SizedBox(height: 4),
                             pw.Text(
-                              cow.name.isNotEmpty ? cow.name : 'ไม่ระบุชื่อ',
+                              FarmPdfExportService.shapeThai(cow.name.isNotEmpty ? cow.name : 'ไม่ระบุชื่อ'),
                               style: pw.TextStyle(
                                 fontSize: 13,
                                 fontWeight: pw.FontWeight.bold,
@@ -245,7 +275,7 @@ class GroupQrPdfExportService {
                             ),
                             pw.SizedBox(height: 2),
                             pw.Text(
-                              'สายพันธุ์: $breedName',
+                              FarmPdfExportService.shapeThai('สายพันธุ์: $breedName'),
                               style: const pw.TextStyle(
                                 fontSize: 9.5,
                                 color: PdfColors.grey800,
@@ -253,7 +283,7 @@ class GroupQrPdfExportService {
                               maxLines: 1,
                             ),
                             pw.Text(
-                              'เพศ: ${cow.gender == 'M' ? 'ผู้' : 'เมีย'} • ประเภท: ${cow.displayTypeName}',
+                              FarmPdfExportService.shapeThai('เพศ: ${cow.gender == 'M' ? 'ผู้' : 'เมีย'} • ประเภท: ${cow.displayTypeName}'),
                               style: const pw.TextStyle(
                                 fontSize: 9.5,
                                 color: PdfColors.grey700,
@@ -262,7 +292,7 @@ class GroupQrPdfExportService {
                             ),
                             pw.SizedBox(height: 4),
                             pw.Text(
-                              'สแกนดูประวัติผ่านแอป',
+                              FarmPdfExportService.shapeThai('สแกนดูประวัติผ่านแอป'),
                               style: pw.TextStyle(
                                 fontSize: 8,
                                 color: primaryColor,

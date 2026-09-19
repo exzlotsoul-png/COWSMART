@@ -1,12 +1,14 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' show BuildContext;
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
+import 'package:cowsmart/core/widgets/pdf_export_sheet.dart';
 import 'package:cowsmart/features/farm/domain/farm.dart';
 import 'package:cowsmart/features/farm/domain/zone.dart';
 import 'package:cowsmart/features/cow/domain/cow.dart';
@@ -29,6 +31,46 @@ const String cowSmartLogoSvg = '''
 </svg>
 ''';
 
+/// Custom TtfFont wrapper that dynamically binds standard Thai PUA Unicode codes
+/// (U+F700..U+F71A) to Prompt's small/narrow glyph indices at runtime.
+class ThaiPromptTtfFont extends pw.TtfFont {
+  ThaiPromptTtfFont(super.data, {super.protect});
+
+  static const Map<int, int> _promptPuaMap = {
+    0xF70A: 721, // uni0E48.small (Mai Ek level 2)
+    0xF70B: 723, // uni0E49.small (Mai Tho level 2)
+    0xF70C: 726, // uni0E4A.small (Mai Tri level 2)
+    0xF70D: 729, // uni0E4B.small (Mai Chattawa level 2)
+    0xF70E: 731, // uni0E4C.small (Thanthakhat level 2)
+    0xF705: 755, // uni0E48.narrow (Mai Ek shifted left)
+    0xF706: 724, // uni0E49.narrow (Mai Tho shifted left)
+    0xF707: 727, // uni0E4A.narrow (Mai Tri shifted left)
+    0xF708: 756, // uni0E4B.narrow (Mai Chattawa shifted left)
+    0xF709: 732, // uni0E4C.narrow (Thanthakhat shifted left)
+    0xF710: 719, // uni0E31.narrow (Mai Han-Akat shifted left)
+    0xF701: 737, // uni0E34.narrow (Sara I shifted left)
+    0xF702: 739, // uni0E35.narrow (Sara Ii shifted left)
+    0xF703: 741, // uni0E36.narrow (Sara Ue shifted left)
+    0xF704: 743, // uni0E37.narrow (Sara Uee shifted left)
+    0xF700: 734, // uni0E47.narrow (Mai Tai Khu shifted left)
+    0xF718: 752, // uni0E38.small (Sara U below descender)
+    0xF719: 754, // uni0E39.small (Sara Uu below descender)
+    0xF71A: 750, // uni0E3A.small (Phinthu below descender)
+    0xF70F: 757, // uni0E4D.narrow (Nikhahit shifted left)
+  };
+
+  @override
+  PdfFont buildFont(PdfDocument pdfDocument) {
+    final pdfFont = super.buildFont(pdfDocument);
+    if (pdfFont is PdfTtfFont) {
+      for (final entry in _promptPuaMap.entries) {
+        pdfFont.font.charToGlyphIndexMap[entry.key] = entry.value;
+      }
+    }
+    return pdfFont;
+  }
+}
+
 class FarmPdfExportService {
   /// Generates and opens Print / Save dialog for Farm Overview PDF Report
   static Future<void> exportFarmOverviewReport({
@@ -41,6 +83,7 @@ class FarmPdfExportService {
     double totalExpense = 0.0,
     double netBalance = 0.0,
     String? issuedBy,
+    BuildContext? context,
   }) async {
     final pdfBytes = await generateFarmOverviewPdf(
       farm: farm,
@@ -54,10 +97,12 @@ class FarmPdfExportService {
       issuedBy: issuedBy,
     );
 
-    final fileName = 'รายงานสรุป_${farm.name.replaceAll(' ', '_')}_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.pdf';
+    final fileName =
+        'รายงานสรุปภาพรวมฟาร์ม_${farm.name.replaceAll(' ', '_')}_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.pdf';
 
-    // 1. Direct file save & auto-open for Desktop (Windows / macOS / Linux) using pure Dart
-    if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+    // 1. Direct file save & auto-open for Desktop (Windows / macOS / Linux)
+    if (!kIsWeb &&
+        (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
       try {
         String targetPath = '';
         if (Platform.isWindows) {
@@ -72,7 +117,9 @@ class FarmPdfExportService {
 
         if (targetPath.isEmpty) {
           try {
-            final dir = await getDownloadsDirectory() ?? await getApplicationDocumentsDirectory();
+            final dir =
+                await getDownloadsDirectory() ??
+                await getApplicationDocumentsDirectory();
             targetPath = '${dir.path}/$fileName';
           } catch (_) {
             targetPath = fileName;
@@ -94,7 +141,18 @@ class FarmPdfExportService {
       }
     }
 
-    // 2. Safe Printing preview with graceful fallback
+    // 2. Mobile-friendly export sheet (Share / Save to device / Print)
+    if (context != null && context.mounted) {
+      await PdfExportSheet.show(
+        context: context,
+        pdfBytes: pdfBytes,
+        fileName: fileName,
+        title: 'รายงานสรุปภาพรวมฟาร์ม (PDF)',
+      );
+      return;
+    }
+
+    // 3. Safe Printing preview with graceful fallback when no context
     try {
       await Printing.layoutPdf(
         onLayout: (PdfPageFormat format) async => pdfBytes,
@@ -102,7 +160,6 @@ class FarmPdfExportService {
       );
     } catch (e) {
       debugPrint('Printing.layoutPdf fallback: $e');
-      // If on mobile and Printing failed, try saving to temp/documents
       if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
         try {
           final dir = await getApplicationDocumentsDirectory();
@@ -127,15 +184,30 @@ class FarmPdfExportService {
   }) async {
     final doc = pw.Document();
 
-    // Load Google Fonts Sarabun for Thai language support
-    final thaiFont = await PdfGoogleFonts.sarabunRegular();
-    final thaiFontBold = await PdfGoogleFonts.sarabunBold();
-    final thaiFontItalic = await PdfGoogleFonts.sarabunItalic();
+    // Load Thai Font (Prompt from assets if available, fallback to Google Fonts)
+    pw.Font thaiFont;
+    pw.Font thaiFontBold;
+    try {
+      final regData = await rootBundle.load('assets/fonts/Prompt-Regular.ttf');
+      final boldData = await rootBundle.load('assets/fonts/Prompt-Bold.ttf');
+      thaiFont = ThaiPromptTtfFont(regData);
+      thaiFontBold = ThaiPromptTtfFont(boldData);
+    } catch (_) {
+      try {
+        final reg = await PdfGoogleFonts.promptRegular();
+        final bold = await PdfGoogleFonts.promptBold();
+        thaiFont = reg is pw.TtfFont ? ThaiPromptTtfFont(reg.data) : reg;
+        thaiFontBold = bold is pw.TtfFont ? ThaiPromptTtfFont(bold.data) : bold;
+      } catch (_) {
+        thaiFont = await PdfGoogleFonts.sarabunRegular();
+        thaiFontBold = await PdfGoogleFonts.sarabunBold();
+      }
+    }
 
     final theme = pw.ThemeData.withFont(
       base: thaiFont,
       bold: thaiFontBold,
-      italic: thaiFontItalic,
+      italic: thaiFont,
     );
 
     // Styling Palette
@@ -152,7 +224,8 @@ class FarmPdfExportService {
     // Thai Date Formatter
     final now = DateTime.now();
     final thaiYear = now.year + 543;
-    final formattedDate = '${now.day} ${_getThaiMonth(now.month)} $thaiYear  ${DateFormat('HH:mm').format(now)} น.';
+    final formattedDate =
+        '${now.day} ${_getThaiMonth(now.month)} $thaiYear  ${DateFormat('HH:mm').format(now)} น.';
 
     // Calculate Herd Stats
     final totalCows = cows.length;
@@ -202,7 +275,8 @@ class FarmPdfExportService {
       // Status check
       if (cow.status == CowStatus.sick || cow.status == CowStatus.injured) {
         sickCount++;
-      } else if (cow.status == CowStatus.pregnant || cow.status == CowStatus.estrous) {
+      } else if (cow.status == CowStatus.pregnant ||
+          cow.status == CowStatus.estrous) {
         pregnantCount++;
       } else if (cow.status == CowStatus.normal) {
         normalCount++;
@@ -247,7 +321,10 @@ class FarmPdfExportService {
                               pw.Row(
                                 children: [
                                   pw.Container(
-                                    padding: const pw.EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                    padding: const pw.EdgeInsets.symmetric(
+                                      horizontal: 7,
+                                      vertical: 3,
+                                    ),
                                     decoration: pw.BoxDecoration(
                                       color: primaryColor,
                                       borderRadius: pw.BorderRadius.circular(4),
@@ -263,7 +340,7 @@ class FarmPdfExportService {
                                   ),
                                   pw.SizedBox(width: 8),
                                   pw.Text(
-                                    'รายงานสรุปภาพรวมฟาร์ม',
+                                    shapeThai('รายงานสรุปภาพรวมฟาร์ม'),
                                     style: pw.TextStyle(
                                       fontSize: 17,
                                       fontWeight: pw.FontWeight.bold,
@@ -274,7 +351,7 @@ class FarmPdfExportService {
                               ),
                               pw.SizedBox(height: 3),
                               pw.Text(
-                                'ฟาร์ม: ${farm.name} (รหัส: ${farm.id})',
+                                shapeThai('ฟาร์ม: ${farm.name}'),
                                 style: pw.TextStyle(
                                   fontSize: 11.5,
                                   fontWeight: pw.FontWeight.bold,
@@ -291,16 +368,24 @@ class FarmPdfExportService {
                     crossAxisAlignment: pw.CrossAxisAlignment.end,
                     children: [
                       pw.Text(
-                        'วันที่พิมพ์: $formattedDate',
-                        style: pw.TextStyle(fontSize: 9.5, color: textMutedColor),
+                        shapeThai('วันที่พิมพ์: $formattedDate'),
+                        style: pw.TextStyle(
+                          fontSize: 9.5,
+                          color: textMutedColor,
+                        ),
                       ),
                       if (issuedBy != null && issuedBy.isNotEmpty)
                         pw.Text(
-                          'ผู้จัดทำ: $issuedBy',
-                          style: pw.TextStyle(fontSize: 9.5, color: textMutedColor),
+                          shapeThai('ผู้จัดทำ: $issuedBy'),
+                          style: pw.TextStyle(
+                            fontSize: 9.5,
+                            color: textMutedColor,
+                          ),
                         ),
                       pw.Text(
-                        'หน้า ${context.pageNumber} จาก ${context.pagesCount}',
+                        shapeThai(
+                          'หน้า ${context.pageNumber} จาก ${context.pagesCount}',
+                        ),
                         style: pw.TextStyle(fontSize: 9, color: textMutedColor),
                       ),
                     ],
@@ -330,13 +415,16 @@ class FarmPdfExportService {
                       ),
                       pw.SizedBox(width: 5),
                       pw.Text(
-                        'COWSMART — ระบบบริหารจัดการฟาร์มโคอัจฉริยะ',
-                        style: pw.TextStyle(fontSize: 8.5, color: textMutedColor),
+                        shapeThai('COWSMART — ระบบบริหารจัดการฟาร์มโคอัจฉริยะ'),
+                        style: pw.TextStyle(
+                          fontSize: 8.5,
+                          color: textMutedColor,
+                        ),
                       ),
                     ],
                   ),
                   pw.Text(
-                    'เอกสารสรุปภาพรวมฟาร์มอย่างเป็นทางการ',
+                    shapeThai('เอกสารสรุปภาพรวมฟาร์มอย่างเป็นทางการ'),
                     style: pw.TextStyle(fontSize: 8.5, color: textMutedColor),
                   ),
                 ],
@@ -348,7 +436,7 @@ class FarmPdfExportService {
           return [
             // ── Section 1: Executive Summary Cards ──
             pw.Text(
-              '1. สรุปภาพรวมทรัพยากรและสินทรัพย์ฟาร์ม (Executive Summary)',
+              shapeThai('1. สรุปภาพรวมทรัพยากรและสินทรัพย์ฟาร์ม'),
               style: pw.TextStyle(
                 fontSize: 13,
                 fontWeight: pw.FontWeight.bold,
@@ -373,7 +461,7 @@ class FarmPdfExportService {
                 pw.Expanded(
                   child: _buildSummaryCard(
                     title: 'มูลค่าประเมินฝูงวัวรวม',
-                    value: '${numberFormat.format(totalHerdAssetValue)} บาท',
+                    value: _formatPrice(totalHerdAssetValue),
                     subValue: 'อิงราคาตลาดกลาง DLD/สศก.',
                     bgColor: cardBgColor,
                     borderColor: borderColor,
@@ -384,8 +472,9 @@ class FarmPdfExportService {
                 pw.Expanded(
                   child: _buildSummaryCard(
                     title: 'ผลกำไรสุทธิฟาร์ม',
-                    value: '${numberFormat.format(netBalance)} บาท',
-                    subValue: 'รายรับ ${numberFormat.format(totalIncome)} บาท | รายจ่าย ${numberFormat.format(totalExpense)} บาท',
+                    value: _formatPrice(netBalance),
+                    subValue:
+                        'รายรับ ${_formatPrice(totalIncome)} | รายจ่าย ${_formatPrice(totalExpense)}',
                     bgColor: cardBgColor,
                     borderColor: borderColor,
                     textColor: netBalance >= 0 ? greenColor : redColor,
@@ -406,7 +495,7 @@ class FarmPdfExportService {
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       pw.Text(
-                        '2. สัดส่วนและมูลค่าแยกตามสายพันธุ์ (Breeds)',
+                        shapeThai('2. สัดส่วนและมูลค่าแยกตามสายพันธุ์'),
                         style: pw.TextStyle(
                           fontSize: 12,
                           fontWeight: pw.FontWeight.bold,
@@ -415,26 +504,61 @@ class FarmPdfExportService {
                       ),
                       pw.SizedBox(height: 6),
                       pw.Table(
-                        border: pw.TableBorder.all(color: borderColor, width: 0.6),
+                        border: pw.TableBorder.all(
+                          color: borderColor,
+                          width: 0.6,
+                        ),
+                        columnWidths: const {
+                          0: pw.FlexColumnWidth(1.4),
+                          1: pw.FixedColumnWidth(48),
+                          2: pw.FixedColumnWidth(48),
+                          3: pw.FixedColumnWidth(76),
+                        },
                         children: [
                           pw.TableRow(
                             decoration: pw.BoxDecoration(color: headerBgColor),
                             children: [
-                              _tableHeaderCell('สายพันธุ์'),
-                              _tableHeaderCell('จำนวน (ตัว)', align: pw.TextAlign.center),
-                              _tableHeaderCell('สัดส่วน (%)', align: pw.TextAlign.center),
-                              _tableHeaderCell('มูลค่าประเมิน (บาท)', align: pw.TextAlign.right),
+                              _tableHeaderCell('สายพันธุ์', font: thaiFontBold),
+                              _tableHeaderCell(
+                                'จำนวน (ตัว)',
+                                font: thaiFontBold,
+                                align: pw.TextAlign.center,
+                              ),
+                              _tableHeaderCell(
+                                'สัดส่วน (%)',
+                                font: thaiFontBold,
+                                align: pw.TextAlign.center,
+                              ),
+                              _tableHeaderCell(
+                                'มูลค่าประเมิน (บาท)',
+                                font: thaiFontBold,
+                                align: pw.TextAlign.right,
+                              ),
                             ],
                           ),
                           ...breedCountMap.entries.map((e) {
-                            final pct = totalCows > 0 ? (e.value / totalCows * 100).toStringAsFixed(1) : '0';
+                            final pct = totalCows > 0
+                                ? (e.value / totalCows * 100).toStringAsFixed(1)
+                                : '0';
                             final val = breedValueMap[e.key] ?? 0.0;
                             return pw.TableRow(
                               children: [
-                                _tableBodyCell(e.key),
-                                _tableBodyCell(numberFormat.format(e.value), align: pw.TextAlign.center),
-                                _tableBodyCell('$pct%', align: pw.TextAlign.center),
-                                _tableBodyCell('${numberFormat.format(val)} บาท', align: pw.TextAlign.right),
+                                _tableBodyCell(e.key, font: thaiFont),
+                                _tableBodyCell(
+                                  numberFormat.format(e.value),
+                                  font: thaiFont,
+                                  align: pw.TextAlign.center,
+                                ),
+                                _tableBodyCell(
+                                  '$pct%',
+                                  font: thaiFont,
+                                  align: pw.TextAlign.center,
+                                ),
+                                _tableBodyCell(
+                                  _formatPrice(val),
+                                  font: thaiFont,
+                                  align: pw.TextAlign.right,
+                                ),
                               ],
                             );
                           }),
@@ -452,7 +576,7 @@ class FarmPdfExportService {
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       pw.Text(
-                        '3. สถานะสุขภาพและการกระจายในฟาร์ม',
+                        shapeThai('3. สถานะสุขภาพและการกระจายในฟาร์ม'),
                         style: pw.TextStyle(
                           fontSize: 12,
                           fontWeight: pw.FontWeight.bold,
@@ -461,36 +585,115 @@ class FarmPdfExportService {
                       ),
                       pw.SizedBox(height: 6),
                       pw.Table(
-                        border: pw.TableBorder.all(color: borderColor, width: 0.6),
+                        border: pw.TableBorder.all(
+                          color: borderColor,
+                          width: 0.6,
+                        ),
+                        columnWidths: const {
+                          0: pw.FlexColumnWidth(1.5),
+                          1: pw.FixedColumnWidth(44),
+                          2: pw.FixedColumnWidth(44),
+                        },
                         children: [
                           pw.TableRow(
                             decoration: pw.BoxDecoration(color: headerBgColor),
                             children: [
-                              _tableHeaderCell('หมวดหมู่ / สถานะ'),
-                              _tableHeaderCell('จำนวน (ตัว)', align: pw.TextAlign.center),
-                              _tableHeaderCell('สัดส่วน', align: pw.TextAlign.right),
+                              _tableHeaderCell(
+                                'หมวดหมู่ / สถานะ',
+                                font: thaiFontBold,
+                              ),
+                              _tableHeaderCell(
+                                'จำนวน (ตัว)',
+                                font: thaiFontBold,
+                                align: pw.TextAlign.center,
+                              ),
+                              _tableHeaderCell(
+                                'สัดส่วน',
+                                font: thaiFontBold,
+                                align: pw.TextAlign.right,
+                              ),
                             ],
                           ),
-                          pw.TableRow(children: [
-                            _tableBodyCell('สุขภาพปกติ (Normal)'),
-                            _tableBodyCell('$normalCount', align: pw.TextAlign.center),
-                            _tableBodyCell(totalCows > 0 ? '${(normalCount / totalCows * 100).toStringAsFixed(0)}%' : '0%', align: pw.TextAlign.right),
-                          ]),
-                          pw.TableRow(children: [
-                            _tableBodyCell('ป่วย / บาดเจ็บ (Sick/Injured)'),
-                            _tableBodyCell('$sickCount', align: pw.TextAlign.center),
-                            _tableBodyCell(totalCows > 0 ? '${(sickCount / totalCows * 100).toStringAsFixed(0)}%' : '0%', align: pw.TextAlign.right),
-                          ]),
-                          pw.TableRow(children: [
-                            _tableBodyCell('ตั้งท้อง / เป็นสัด (Pregnant)'),
-                            _tableBodyCell('$pregnantCount', align: pw.TextAlign.center),
-                            _tableBodyCell(totalCows > 0 ? '${(pregnantCount / totalCows * 100).toStringAsFixed(0)}%' : '0%', align: pw.TextAlign.right),
-                          ]),
-                          pw.TableRow(children: [
-                            _tableBodyCell('สถานะอื่นๆ / พักฟื้น (Other)'),
-                            _tableBodyCell('$otherStatusCount', align: pw.TextAlign.center),
-                            _tableBodyCell(totalCows > 0 ? '${(otherStatusCount / totalCows * 100).toStringAsFixed(0)}%' : '0%', align: pw.TextAlign.right),
-                          ]),
+                          pw.TableRow(
+                            children: [
+                              _tableBodyCell(
+                                'สุขภาพปกติ (Normal)',
+                                font: thaiFont,
+                              ),
+                              _tableBodyCell(
+                                '$normalCount',
+                                font: thaiFont,
+                                align: pw.TextAlign.center,
+                              ),
+                              _tableBodyCell(
+                                totalCows > 0
+                                    ? '${(normalCount / totalCows * 100).toStringAsFixed(0)}%'
+                                    : '0%',
+                                font: thaiFont,
+                                align: pw.TextAlign.right,
+                              ),
+                            ],
+                          ),
+                          pw.TableRow(
+                            children: [
+                              _tableBodyCell(
+                                'ป่วย / บาดเจ็บ (Sick/Injured)',
+                                font: thaiFont,
+                              ),
+                              _tableBodyCell(
+                                '$sickCount',
+                                font: thaiFont,
+                                align: pw.TextAlign.center,
+                              ),
+                              _tableBodyCell(
+                                totalCows > 0
+                                    ? '${(sickCount / totalCows * 100).toStringAsFixed(0)}%'
+                                    : '0%',
+                                font: thaiFont,
+                                align: pw.TextAlign.right,
+                              ),
+                            ],
+                          ),
+                          pw.TableRow(
+                            children: [
+                              _tableBodyCell(
+                                'ตั้งท้อง / เป็นสัด (Pregnant)',
+                                font: thaiFont,
+                              ),
+                              _tableBodyCell(
+                                '$pregnantCount',
+                                font: thaiFont,
+                                align: pw.TextAlign.center,
+                              ),
+                              _tableBodyCell(
+                                totalCows > 0
+                                    ? '${(pregnantCount / totalCows * 100).toStringAsFixed(0)}%'
+                                    : '0%',
+                                font: thaiFont,
+                                align: pw.TextAlign.right,
+                              ),
+                            ],
+                          ),
+                          pw.TableRow(
+                            children: [
+                              _tableBodyCell(
+                                'สถานะอื่นๆ / พักฟื้น (Other)',
+                                font: thaiFont,
+                              ),
+                              _tableBodyCell(
+                                '$otherStatusCount',
+                                font: thaiFont,
+                                align: pw.TextAlign.center,
+                              ),
+                              _tableBodyCell(
+                                totalCows > 0
+                                    ? '${(otherStatusCount / totalCows * 100).toStringAsFixed(0)}%'
+                                    : '0%',
+                                font: thaiFont,
+                                align: pw.TextAlign.right,
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ],
@@ -502,7 +705,7 @@ class FarmPdfExportService {
 
             // ── Section 3: Detailed Cattle Roster Table ──
             pw.Text(
-              '4. บัญชีรายชื่อและมูลค่าประเมินวัวในฟาร์ม (Cattle Inventory Roster)',
+              shapeThai('4. รายชื่อวัวและมูลค่าประเมินในฟาร์ม'),
               style: pw.TextStyle(
                 fontSize: 13,
                 fontWeight: pw.FontWeight.bold,
@@ -513,19 +716,52 @@ class FarmPdfExportService {
 
             pw.Table(
               border: pw.TableBorder.all(color: borderColor, width: 0.6),
+              columnWidths: const {
+                0: pw.FixedColumnWidth(18), // #
+                1: pw.FixedColumnWidth(52), // เบอร์หู (Tag)
+                2: pw.FixedColumnWidth(55), // ชื่อวัว
+                3: pw.FixedColumnWidth(48), // ประเภทวัว (NEW)
+                4: pw.FlexColumnWidth(1.2), // สายพันธุ์
+                5: pw.FixedColumnWidth(24), // เพศ
+                6: pw.FixedColumnWidth(52), // น้ำหนัก (กก.)
+                7: pw.FlexColumnWidth(1.1), // โซน/คอก
+                8: pw.FixedColumnWidth(44), // สถานะ
+                9: pw.FixedColumnWidth(74), // ราคาประเมิน (บาท)
+              },
               children: [
                 pw.TableRow(
                   decoration: pw.BoxDecoration(color: headerBgColor),
                   children: [
-                    _tableHeaderCell('#', align: pw.TextAlign.center),
-                    _tableHeaderCell('เบอร์หู (Tag)'),
-                    _tableHeaderCell('ชื่อวัว'),
-                    _tableHeaderCell('สายพันธุ์'),
-                    _tableHeaderCell('เพศ', align: pw.TextAlign.center),
-                    _tableHeaderCell('น้ำหนัก (กก.)', align: pw.TextAlign.right),
-                    _tableHeaderCell('โซน/คอก'),
-                    _tableHeaderCell('สถานะ', align: pw.TextAlign.center),
-                    _tableHeaderCell('ราคาประเมิน (บาท)', align: pw.TextAlign.right),
+                    _tableHeaderCell(
+                      '#',
+                      font: thaiFontBold,
+                      align: pw.TextAlign.center,
+                    ),
+                    _tableHeaderCell('เบอร์หู (Tag)', font: thaiFontBold),
+                    _tableHeaderCell('ชื่อวัว', font: thaiFontBold),
+                    _tableHeaderCell('ประเภทวัว', font: thaiFontBold),
+                    _tableHeaderCell('สายพันธุ์', font: thaiFontBold),
+                    _tableHeaderCell(
+                      'เพศ',
+                      font: thaiFontBold,
+                      align: pw.TextAlign.center,
+                    ),
+                    _tableHeaderCell(
+                      'น้ำหนัก (กก.)',
+                      font: thaiFontBold,
+                      align: pw.TextAlign.right,
+                    ),
+                    _tableHeaderCell('โซน/คอก', font: thaiFontBold),
+                    _tableHeaderCell(
+                      'สถานะ',
+                      font: thaiFontBold,
+                      align: pw.TextAlign.center,
+                    ),
+                    _tableHeaderCell(
+                      'ราคาประเมิน (บาท)',
+                      font: thaiFontBold,
+                      align: pw.TextAlign.right,
+                    ),
                   ],
                 ),
                 ...List.generate(cows.length, (idx) {
@@ -537,20 +773,50 @@ class FarmPdfExportService {
                     weight: cow.latestWeight,
                   );
                   final isEven = idx % 2 == 0;
-                  final isMale = cow.gender.toUpperCase() == 'M' || cow.gender.toLowerCase() == 'male';
+                  final isMale =
+                      cow.gender.toUpperCase() == 'M' ||
+                      cow.gender.toLowerCase() == 'male';
 
                   return pw.TableRow(
-                    decoration: isEven ? null : pw.BoxDecoration(color: PdfColor.fromHex('#FBFDFB')),
+                    decoration: isEven
+                        ? null
+                        : pw.BoxDecoration(color: PdfColor.fromHex('#FBFDFB')),
                     children: [
-                      _tableBodyCell('${idx + 1}', align: pw.TextAlign.center),
-                      _tableBodyCell(cow.tagNumber.isNotEmpty ? cow.tagNumber : cow.id, isBold: true),
-                      _tableBodyCell(cow.name),
-                      _tableBodyCell(bName),
-                      _tableBodyCell(isMale ? 'ผู้' : 'เมีย', align: pw.TextAlign.center),
-                      _tableBodyCell(cow.latestWeight > 0 ? cow.latestWeight.toStringAsFixed(0) : '-', align: pw.TextAlign.right),
-                      _tableBodyCell(zName),
-                      _tableBodyCell(cow.status.label, align: pw.TextAlign.center),
-                      _tableBodyCell(estVal > 0 ? '${numberFormat.format(estVal)} บาท' : '-', align: pw.TextAlign.right, isBold: true),
+                      _tableBodyCell(
+                        '${idx + 1}',
+                        font: thaiFont,
+                        align: pw.TextAlign.center,
+                      ),
+                      _tableBodyCell(
+                        cow.tagNumber.isNotEmpty ? cow.tagNumber : cow.id,
+                        font: thaiFontBold,
+                        isBold: true,
+                      ),
+                      _tableBodyCell(cow.name, font: thaiFont),
+                      _tableBodyCell(cow.displayTypeName, font: thaiFont),
+                      _tableBodyCell(bName, font: thaiFont),
+                      _tableBodyCell(
+                        isMale ? 'ผู้' : 'เมีย',
+                        font: thaiFont,
+                        align: pw.TextAlign.center,
+                      ),
+                      _tableBodyCell(
+                        _formatWeight(cow.latestWeight),
+                        font: thaiFont,
+                        align: pw.TextAlign.right,
+                      ),
+                      _tableBodyCell(zName, font: thaiFont),
+                      _tableBodyCell(
+                        cow.status.label,
+                        font: thaiFont,
+                        align: pw.TextAlign.center,
+                      ),
+                      _tableBodyCell(
+                        estVal > 0 ? _formatPrice(estVal) : '-',
+                        font: thaiFontBold,
+                        align: pw.TextAlign.right,
+                        isBold: true,
+                      ),
                     ],
                   );
                 }),
@@ -560,7 +826,10 @@ class FarmPdfExportService {
 
             // Summary Bottom Note
             pw.Container(
-              padding: const pw.EdgeInsets.all(10),
+              padding: const pw.EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 8,
+              ),
               decoration: pw.BoxDecoration(
                 color: cardBgColor,
                 borderRadius: pw.BorderRadius.circular(6),
@@ -569,13 +838,28 @@ class FarmPdfExportService {
               child: pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text(
-                    '* มูลค่าประเมินคำนวณจากน้ำหนักตัวคูณราคาตลาดกลาง ณ วันที่ออกรายงาน (กรมปศุสัตว์ / สศก.)',
-                    style: pw.TextStyle(fontSize: 8.5, color: textMutedColor, fontStyle: pw.FontStyle.italic),
+                  pw.Expanded(
+                    child: pw.Text(
+                      shapeThai(
+                        '* มูลค่าประเมินคำนวณจากน้ำหนักตัวคูณราคาตลาดกลาง ณ วันที่ออกรายงาน (กรมปศุสัตว์ / สศก.)',
+                      ),
+                      style: pw.TextStyle(
+                        fontSize: 8,
+                        color: textMutedColor,
+                        fontStyle: pw.FontStyle.italic,
+                      ),
+                    ),
                   ),
+                  pw.SizedBox(width: 12),
                   pw.Text(
-                    'รวมมูลค่าวัวทั้งฟาร์ม: ${numberFormat.format(totalHerdAssetValue)} บาท',
-                    style: pw.TextStyle(fontSize: 10.5, fontWeight: pw.FontWeight.bold, color: primaryColor),
+                    shapeThai(
+                      'รวมมูลค่าวัวทั้งฟาร์ม: ${_formatPrice(totalHerdAssetValue)}',
+                    ),
+                    style: pw.TextStyle(
+                      fontSize: 10,
+                      fontWeight: pw.FontWeight.bold,
+                      color: primaryColor,
+                    ),
                   ),
                 ],
               ),
@@ -591,6 +875,142 @@ class FarmPdfExportService {
   // ────────────────────────────────────────────────────────
   //  UI Building Helpers
   // ────────────────────────────────────────────────────────
+  static String _formatWeight(double weight) {
+    if (weight <= 0) return '-';
+    return NumberFormat('#,##0.0').format(weight);
+  }
+
+  static String _formatPrice(double price) {
+    if (price == 0) return '0 บาท';
+    return '${NumberFormat('#,##0').format(price)} บาท';
+  }
+
+  /// Shapes Thai Unicode text to use Thai PUA glyphs (level-2 elevated tone marks and narrow ascender-shifted glyphs)
+  static String shapeThai(String text) {
+    if (text.isEmpty) return text;
+
+    const upperVowels = {
+      0x0E31,
+      0x0E34,
+      0x0E35,
+      0x0E36,
+      0x0E37,
+      0x0E47,
+      0x0E4D,
+    };
+    const toneMarks = {0x0E48, 0x0E49, 0x0E4A, 0x0E4B, 0x0E4C};
+    const ascenderConsonants = {
+      0x0E1B,
+      0x0E1C,
+      0x0E1D,
+      0x0E1F,
+      0x0E2C,
+    }; // ป ผ ฝ ฟ ฬ
+    const descenderConsonants = {0x0E0E, 0x0E0F}; // ฎ ฏ
+    const lowerVowels = {0x0E38, 0x0E39, 0x0E3A}; // ุ ู ฺ
+
+    // Tone mark -> small (level 2, above upper vowel e.g. ตั้ง, ซื้อ, อื่น, ทั้ง)
+    const toneToSmall = {
+      0x0E48: 0xF70A, // Mai Ek small
+      0x0E49: 0xF70B, // Mai Tho small
+      0x0E4A: 0xF70C, // Mai Tri small
+      0x0E4B: 0xF70D, // Mai Chattawa small
+      0x0E4C: 0xF70E, // Thanthakhat small
+    };
+
+    // Tone mark -> narrow (shifted left, after ascender consonant e.g. ป่วย, ผู้)
+    const toneToNarrow = {
+      0x0E48: 0xF705, // Mai Ek narrow
+      0x0E49: 0xF706, // Mai Tho narrow
+      0x0E4A: 0xF707, // Mai Tri narrow
+      0x0E4B: 0xF708, // Mai Chattawa narrow
+      0x0E4C: 0xF709, // Thanthakhat narrow
+    };
+
+    // Upper vowel -> narrow (shifted left, after ascender consonant e.g. ปี่, ฝึ)
+    const vowelToNarrow = {
+      0x0E47: 0xF700, // Mai Tai Khu narrow
+      0x0E34: 0xF701, // Sara I narrow
+      0x0E35: 0xF702, // Sara Ii narrow
+      0x0E36: 0xF703, // Sara Ue narrow
+      0x0E37: 0xF704, // Sara Uee narrow
+      0x0E4D: 0xF70F, // Nikhahit narrow
+      0x0E31: 0xF710, // Mai Han-Akat narrow
+    };
+
+    // Lower vowel -> small (shifted down, below descender consonant)
+    const lowerToSmall = {
+      0x0E38: 0xF718, // Sara U small
+      0x0E39: 0xF719, // Sara Uu small
+      0x0E3A: 0xF71A, // Phinthu small
+    };
+
+    final runes = text.runes.toList();
+    final result = <int>[];
+
+    for (int i = 0; i < runes.length; i++) {
+      final c = runes[i];
+
+      // 1. Tone mark following upper vowel (Consonant + Upper Vowel + Tone Mark)
+      if (toneMarks.contains(c) &&
+          i > 0 &&
+          upperVowels.contains(runes[i - 1])) {
+        result.add(toneToSmall[c] ?? c);
+        continue;
+      }
+
+      // 2. Tone mark directly on ascender consonant (e.g. ป่วย, ผู้)
+      if (toneMarks.contains(c) &&
+          i > 0 &&
+          ascenderConsonants.contains(runes[i - 1])) {
+        result.add(toneToNarrow[c] ?? c);
+        continue;
+      }
+
+      // 3. Upper vowel on ascender consonant (e.g. ปิ, ปั)
+      if (upperVowels.contains(c) &&
+          i > 0 &&
+          ascenderConsonants.contains(runes[i - 1])) {
+        result.add(vowelToNarrow[c] ?? c);
+        continue;
+      }
+
+      // 4. Lower vowel below descender consonant (e.g. ฎุ, ฏู)
+      if (lowerVowels.contains(c) &&
+          i > 0 &&
+          descenderConsonants.contains(runes[i - 1])) {
+        result.add(lowerToSmall[c] ?? c);
+        continue;
+      }
+
+      result.add(c);
+    }
+
+    return String.fromCharCodes(result);
+  }
+
+  static pw.Widget _buildThaiText(
+    String text, {
+    required pw.Font font,
+    double fontSize = 8,
+    PdfColor? color,
+    bool isBold = false,
+    pw.TextAlign align = pw.TextAlign.left,
+    int? maxLines,
+  }) {
+    return pw.Text(
+      shapeThai(text),
+      style: pw.TextStyle(
+        font: font,
+        fontSize: fontSize,
+        color: color ?? PdfColor.fromHex('#1E2A1B'),
+        fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal,
+      ),
+      textAlign: align,
+      maxLines: maxLines,
+    );
+  }
+
   static pw.Widget _buildSummaryCard({
     required String title,
     required String value,
@@ -610,58 +1030,69 @@ class FarmPdfExportService {
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.Text(
-            title,
-            style: pw.TextStyle(fontSize: 9.5, color: PdfColor.fromHex('#6A7B66'), fontWeight: pw.FontWeight.bold),
+            shapeThai(title),
+            style: pw.TextStyle(
+              fontSize: 9.5,
+              color: PdfColor.fromHex('#6A7B66'),
+              fontWeight: pw.FontWeight.bold,
+            ),
           ),
           pw.SizedBox(height: 4),
           pw.Text(
-            value,
+            shapeThai(value),
             style: pw.TextStyle(
-              fontSize: 15,
+              fontSize: 13.5,
               fontWeight: pw.FontWeight.bold,
               color: textColor,
             ),
           ),
           pw.SizedBox(height: 2),
           pw.Text(
-            subValue,
-            style: pw.TextStyle(fontSize: 7.5, color: PdfColor.fromHex('#8A9986')),
+            shapeThai(subValue),
+            style: pw.TextStyle(
+              fontSize: 7.5,
+              color: PdfColor.fromHex('#8A9986'),
+            ),
           ),
         ],
       ),
     );
   }
 
-  static pw.Widget _tableHeaderCell(String text, {pw.TextAlign align = pw.TextAlign.left}) {
+  static pw.Widget _tableHeaderCell(
+    String text, {
+    required pw.Font font,
+    pw.TextAlign align = pw.TextAlign.left,
+  }) {
     return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-      child: pw.Text(
+      padding: const pw.EdgeInsets.symmetric(horizontal: 3.5, vertical: 3.5),
+      child: _buildThaiText(
         text,
-        textAlign: align,
-        style: pw.TextStyle(
-          fontSize: 9,
-          fontWeight: pw.FontWeight.bold,
-          color: PdfColor.fromHex('#263821'),
-        ),
+        font: font,
+        fontSize: 7.5,
+        isBold: true,
+        align: align,
+        color: PdfColor.fromHex('#263821'),
       ),
     );
   }
 
   static pw.Widget _tableBodyCell(
     String text, {
+    required pw.Font font,
     pw.TextAlign align = pw.TextAlign.left,
     bool isBold = false,
+    PdfColor? color,
   }) {
     return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 4.5),
-      child: pw.Text(
+      padding: const pw.EdgeInsets.symmetric(horizontal: 3.5, vertical: 3.5),
+      child: _buildThaiText(
         text,
-        textAlign: align,
-        style: pw.TextStyle(
-          fontSize: 8.5,
-          fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal,
-          color: PdfColor.fromHex('#1E2A1B'),
-        ),
+        font: font,
+        fontSize: 7,
+        isBold: isBold,
+        align: align,
+        color: color ?? PdfColor.fromHex('#1E2A1B'),
       ),
     );
   }
@@ -680,7 +1111,7 @@ class FarmPdfExportService {
       'กันยายน',
       'ตุลาคม',
       'พฤศจิกายน',
-      'ธันวาคม'
+      'ธันวาคม',
     ];
     if (month >= 1 && month <= 12) return months[month];
     return '';

@@ -2142,6 +2142,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           .fold(0.0, (sum, t) => sum + t.amount);
       final netBalance = totalIncome - totalExpense;
 
+      // Close loading dialog before opening export sheet / preview
+      if (mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+
       await FarmPdfExportService.exportFarmOverviewReport(
         farm: currentFarm,
         cows: cows,
@@ -2152,18 +2157,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         totalExpense: totalExpense,
         netBalance: netBalance,
         issuedBy: userName,
+        context: context,
       );
-
-      if (mounted) {
-        AppFeedback.showSuccess(context, 'ส่งออกรายงาน PDF เรียบร้อยแล้ว');
-      }
     } catch (e) {
-      if (mounted) {
-        AppFeedback.showError(context, 'เกิดข้อผิดพลาดในการสร้าง PDF: $e');
-      }
-    } finally {
       if (mounted && Navigator.canPop(context)) {
         Navigator.pop(context);
+      }
+      if (mounted) {
+        AppFeedback.showError(context, 'เกิดข้อผิดพลาดในการสร้าง PDF: $e');
       }
     }
   }

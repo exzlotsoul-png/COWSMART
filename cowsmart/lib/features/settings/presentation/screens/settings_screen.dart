@@ -222,6 +222,11 @@ class SettingsScreen extends ConsumerWidget {
           .fold(0.0, (sum, t) => sum + t.amount);
       final netBalance = totalIncome - totalExpense;
 
+      // Close loading dialog before opening export sheet / preview
+      if (context.mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+
       await FarmPdfExportService.exportFarmOverviewReport(
         farm: currentFarm,
         cows: cows,
@@ -232,18 +237,14 @@ class SettingsScreen extends ConsumerWidget {
         totalExpense: totalExpense,
         netBalance: netBalance,
         issuedBy: userName,
+        context: context,
       );
-
-      if (context.mounted) {
-        AppFeedback.showSuccess(context, 'ส่งออกรายงาน PDF เรียบร้อยแล้ว');
-      }
     } catch (e) {
-      if (context.mounted) {
-        AppFeedback.showError(context, 'เกิดข้อผิดพลาดในการสร้าง PDF: $e');
-      }
-    } finally {
       if (context.mounted && Navigator.canPop(context)) {
         Navigator.pop(context);
+      }
+      if (context.mounted) {
+        AppFeedback.showError(context, 'เกิดข้อผิดพลาดในการสร้าง PDF: $e');
       }
     }
   }

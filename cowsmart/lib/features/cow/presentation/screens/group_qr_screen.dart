@@ -60,16 +60,13 @@ class _GroupQrScreenState extends ConsumerState<GroupQrScreen> {
     setState(() => _isExporting = true);
     try {
       final breeds = ref.read(breedProvider);
-      await GroupQrPdfExportService.exportGroupQrPdf(
-        farm: currentFarm,
-        cows: selectedCows,
-        breeds: breeds,
-      );
-
       if (mounted) {
-        AppFeedback.showSuccess(
-          context,
-          'สร้างไฟล์เอกสาร QR Code สำหรับพิมพ์ (${selectedCows.length} ตัว) เรียบร้อยแล้ว',
+        setState(() => _isExporting = false);
+        await GroupQrPdfExportService.exportGroupQrPdf(
+          farm: currentFarm,
+          cows: selectedCows,
+          breeds: breeds,
+          context: context,
         );
       }
     } catch (e) {
@@ -77,7 +74,7 @@ class _GroupQrScreenState extends ConsumerState<GroupQrScreen> {
         AppFeedback.showError(context, 'เกิดข้อผิดพลาดในการสร้างเอกสาร: $e');
       }
     } finally {
-      if (mounted) {
+      if (mounted && _isExporting) {
         setState(() => _isExporting = false);
       }
     }
