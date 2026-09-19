@@ -19,6 +19,7 @@ class CowListScreen extends ConsumerStatefulWidget {
 
 class _CowListScreenState extends ConsumerState<CowListScreen> {
   final _searchController = TextEditingController();
+  bool _sortNewToOld = true;
 
   @override
   void initState() {
@@ -40,7 +41,11 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
   @override
   Widget build(BuildContext context) {
     final cowState = ref.watch(cowProvider);
-    final displayedCows = ref.watch(activeCowsProvider);
+    var displayedCows = List<Cow>.from(ref.watch(activeCowsProvider));
+    if (!_sortNewToOld) {
+      displayedCows = displayedCows.reversed.toList();
+    }
+    
     final breeds = ref.watch(breedProvider);
     final currentFarm = ref.watch(farmProvider).currentFarm;
 
@@ -342,12 +347,48 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        'พบวัวทั้งหมด ${displayedCows.length} ตัว',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: AppColors.text(context),
-                          fontWeight: FontWeight.bold,
+                      Expanded(
+                        child: Text(
+                          'พบวัวทั้งหมด ${displayedCows.length} ตัว',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: AppColors.text(context),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () {
+                          setState(() {
+                            _sortNewToOld = !_sortNewToOld;
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _sortNewToOld ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
+                                size: 16,
+                                color: AppColors.primary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _sortNewToOld ? 'เก่าไปใหม่' : 'ใหม่ไปเก่า',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],

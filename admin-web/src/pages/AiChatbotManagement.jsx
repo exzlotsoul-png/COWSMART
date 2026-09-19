@@ -3,7 +3,7 @@ import {
   Bot, Plus, Edit, Trash2, Search, Filter, CheckCircle2,
   AlertCircle, Sparkles, MessageSquare, BookOpen, Check, X,
   ArrowUpDown, RefreshCw, Send, Eye, ShieldCheck, AlertTriangle,
-  Database, Smartphone, Stethoscope
+  Database, Smartphone, Stethoscope, ToggleRight, ToggleLeft
 } from 'lucide-react';
 import api from '../lib/axios';
 import { useToast } from '../contexts/ToastContext';
@@ -503,6 +503,7 @@ const AiChatbotManagement = () => {
                     </td>
                     <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
                       <button
+                        className="action-btn"
                         onClick={() => handleToggleActive(item)}
                         style={{
                           border: 'none',
@@ -511,21 +512,11 @@ const AiChatbotManagement = () => {
                           padding: '4px',
                           display: 'inline-flex',
                           alignItems: 'center',
-                          gap: '4px',
-                          fontSize: '0.75rem',
-                          fontWeight: '600',
-                          color: item.is_active ? '#16a34a' : '#94a3b8'
+                          color: item.is_active ? 'var(--primary-color)' : '#9ca3af'
                         }}
+                        title={item.is_active ? "ปิดใช้งาน" : "เปิดใช้งาน"}
                       >
-                        {item.is_active ? (
-                          <span style={{ backgroundColor: 'var(--primary-light)', color: 'var(--primary-color)', padding: '3px 10px', borderRadius: '12px', fontWeight: '700' }}>
-                            เปิดใช้
-                          </span>
-                        ) : (
-                          <span style={{ backgroundColor: '#f1f5f9', color: '#64748b', padding: '3px 10px', borderRadius: '12px', fontWeight: '600' }}>
-                            ปิด
-                          </span>
-                        )}
+                        {item.is_active ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
                       </button>
                     </td>
                     <td style={{ textAlign: 'center' }}>

@@ -314,7 +314,7 @@ const Dashboard = () => {
                               </div>
                               <div>
                                 <div style={{ fontWeight: '500' }}>{report.first_name ? `${report.first_name} ${report.last_name || ''}` : report.email}</div>
-                                <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>ID: {report.id}</div>
+                                <div style={{ fontSize: '0.75rem', color: '#000000' }}>ID: {report.id}</div>
                               </div>
                             </div>
                           </td>
@@ -325,7 +325,7 @@ const Dashboard = () => {
                           </td>
                           <td style={{ maxWidth: '200px' }}>
                             <div style={{ fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{report.topic || 'ไม่มีหัวข้อ'}</div>
-                            <div style={{ fontSize: '0.75rem', color: '#9ca3af', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{report.description}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#000000', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{report.description}</div>
                           </td>
                           <td style={{ textAlign: 'center' }}>
                             <button
