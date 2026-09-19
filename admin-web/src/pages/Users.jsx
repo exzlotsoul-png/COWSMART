@@ -49,7 +49,7 @@ const Users = () => {
   const handleRoleChange = async (email, newRole, userName = '') => {
     try {
       await api.put(`/users/${email}`, { role: newRole });
-      showToast(`เปลี่ยนบทบาทของ "${userName || email}" เป็น ${newRole === 'admin' ? 'แอดมิน' : 'ผู้ใช้'} เรียบร้อยแล้ว`, "success");
+      showToast(`เปลี่ยนบทบาทของ "${userName || email}" เป็น ${newRole === '1' ? 'แอดมิน' : 'ผู้ใช้'} เรียบร้อยแล้ว`, "success");
       fetchUsers();
     } catch (error) {
       console.error("Error updating user role:", error);
@@ -60,8 +60,8 @@ const Users = () => {
   // Pagination calculations
   const filteredAndSorted = users
     .filter(item => {
-      const isAdmin = item.role === 1 || item.role === '1' || item.role === 'admin';
-      const roleText = isAdmin ? 'แอดมิน admin' : 'ผู้ใช้ user';
+      const isAdmin = item.role === 1 || item.role === '1';
+      const roleText = isAdmin ? 'แอดมิน admin 1' : 'ผู้ใช้ user 0';
 
       const matchSearch = 
         (item.first_name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -160,7 +160,7 @@ const Users = () => {
                 <tbody>
                   {currentUsers.length > 0 ? (
                     currentUsers.map((user) => {
-                      const isAdmin = user.role === 1 || user.role === '1' || user.role === 'admin';
+                      const isAdmin = user.role === 1 || user.role === '1';
                       const isMe = currentUser?.email === user.email;
                       const displayName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email;
 
@@ -185,7 +185,7 @@ const Users = () => {
                               </span>
                             ) : (
                               <select
-                                value={isAdmin ? 'admin' : 'user'}
+                                value={isAdmin ? '1' : '0'}
                                 onChange={(e) => handleRoleChange(user.email, e.target.value, displayName)}
                                 style={{
                                   padding: '4px 8px',
@@ -199,8 +199,8 @@ const Users = () => {
                                   outline: 'none',
                                 }}
                               >
-                                <option value="user">ผู้ใช้ (User)</option>
-                                <option value="admin">แอดมิน (Admin)</option>
+                                <option value="0">ผู้ใช้ (User)</option>
+                                <option value="1">แอดมิน (Admin)</option>
                               </select>
                             )}
                           </td>

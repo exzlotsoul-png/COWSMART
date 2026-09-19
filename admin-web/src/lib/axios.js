@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-export const API_BASE_URL = 'https://cowsmart-api.onrender.com/api';
-export const STORAGE_BASE_URL = 'https://cowsmart-api.onrender.com/api/storage';
+export const API_BASE_URL = 'https://cowsmart-api.onrender.com/api'; //http://127.0.0.1:8000/api
+export const STORAGE_BASE_URL = 'https://cowsmart-api.onrender.com/api/storage'; //http://127.0.0.1:8000/api/storage
 
 const api = axios.create({
   baseURL: API_BASE_URL,
