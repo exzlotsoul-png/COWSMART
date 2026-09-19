@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 
 class AIchatbotController extends Controller
@@ -56,15 +57,24 @@ class AIchatbotController extends Controller
      */
     public function store(Request $request)
     {
+        if (!$request->filled('sort_order') || (int)$request->sort_order <= 0) {
+            $maxOrder = (int) AiChatbot::max('sort_order');
+            $request->merge(['sort_order' => $maxOrder + 1]);
+        }
+
         $validated = $request->validate([
             'category' => 'required|string|max:100',
             'title' => 'required|string|max:255',
             'keywords' => 'nullable|string',
             'prompt' => 'required|string',
             'answer' => 'required|string',
-            'sort_order' => 'integer',
+            'sort_order' => 'required|integer|min:1|unique:ai_chatbot,sort_order',
             'is_active' => 'boolean',
-            'sort_order' => 'integer',
+        ], [
+            'sort_order.required' => 'กรุณาระบุลำดับการแสดงผล',
+            'sort_order.integer' => 'ลำดับการแสดงผลต้องเป็นตัวเลขจำนวนเต็ม',
+            'sort_order.min' => 'ลำดับการแสดงผลต้องมีค่าตั้งแต่ 1 ขึ้นไป',
+            'sort_order.unique' => 'ลำดับที่ระบุถูกใช้งานแล้ว กรุณาระบุลำดับที่ไม่ซ้ำกัน',
         ]);
 
         $item = AiChatbot::create($validated);
@@ -101,9 +111,19 @@ class AIchatbotController extends Controller
             'keywords' => 'nullable|string',
             'prompt' => 'sometimes|required|string',
             'answer' => 'sometimes|required|string',
-            'sort_order' => 'integer',
+            'sort_order' => [
+                'sometimes',
+                'required',
+                'integer',
+                'min:1',
+                Rule::unique('ai_chatbot', 'sort_order')->ignore($id),
+            ],
             'is_active' => 'boolean',
-            'sort_order' => 'integer',
+        ], [
+            'sort_order.required' => 'กรุณาระบุลำดับการแสดงผล',
+            'sort_order.integer' => 'ลำดับการแสดงผลต้องเป็นตัวเลขจำนวนเต็ม',
+            'sort_order.min' => 'ลำดับการแสดงผลต้องมีค่าตั้งแต่ 1 ขึ้นไป',
+            'sort_order.unique' => 'ลำดับที่ระบุถูกใช้งานแล้ว กรุณาระบุลำดับที่ไม่ซ้ำกัน',
         ]);
 
         $item->update($validated);

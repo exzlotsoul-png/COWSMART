@@ -3,9 +3,11 @@ import { Plus, Edit, Trash2, Search, ArrowUpDown } from 'lucide-react';
 import api from '../lib/axios';
 import Pagination from '../components/layout/Pagination';
 import { useToast } from '../contexts/ToastContext';
+import { useConfirmModal } from '../contexts/ConfirmModalContext';
 
 const Units = () => {
   const { showToast } = useToast();
+  const { confirmDelete } = useConfirmModal();
   const [units, setUnits] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('newest');
@@ -89,7 +91,14 @@ const Units = () => {
   };
 
   const handleDelete = async (id, name = '') => {
-    if (window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลหน่วย "${name || id}"?`)) {
+    const isConfirmed = await confirmDelete({
+      title: 'ยืนยันการลบข้อมูลหน่วย',
+      itemType: 'หน่วย',
+      itemName: name || id,
+      description: 'การดำเนินการนี้ไม่สามารถย้อนกลับได้ และข้อมูลหน่วยนี้จะถูกลบออกจากระบบ',
+    });
+
+    if (isConfirmed) {
       try {
         await api.delete(`/units/${id}`);
         showToast(`ลบข้อมูลหน่วย "${name || id}" เรียบร้อยแล้ว`, "info");

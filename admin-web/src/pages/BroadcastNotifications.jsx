@@ -8,10 +8,12 @@ import {
 } from 'lucide-react';
 import api from '../lib/axios';
 import { useToast } from '../contexts/ToastContext';
+import { useConfirmModal } from '../contexts/ConfirmModalContext';
 import './BroadcastNotifications.css';
 
 const BroadcastNotifications = () => {
   const { showToast } = useToast();
+  const { confirmDelete } = useConfirmModal();
   const [broadcasts, setBroadcasts] = useState([]);
   const [stats, setStats] = useState({ total_users: 0, total_broadcasts: 0, total_notifications: 0 });
   const [loading, setLoading] = useState(true);
@@ -30,9 +32,6 @@ const BroadcastNotifications = () => {
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedBroadcast, setSelectedBroadcast] = useState(null);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState(null);
-  const [deleting, setDeleting] = useState(false);
 
   // Template Presets (Using Lucide icon components, NO raw emoji characters)
   const templates = [
@@ -134,27 +133,34 @@ const BroadcastNotifications = () => {
     }
   };
 
-  const handleDeleteBroadcast = async () => {
-    if (!itemToDelete) return;
-    setDeleting(true);
-    try {
-      const res = await api.post('/admin/broadcast-notifications/delete-group', {
-        broadcast_key: itemToDelete.broadcast_key,
-        id: itemToDelete.id,
-        title: itemToDelete.title,
-      });
+  const handleDeleteBroadcast = async (item) => {
+    if (!item) return;
+    const isConfirmed = await confirmDelete({
+      title: 'ยืนยันการลบประกาศ',
+      message: (
+        <>
+          คุณแน่ใจหรือไม่ที่จะลบประกาศ <strong>"{item.title}"</strong> ออกจากกล่องข้อความของผู้ใช้งานทั้งหมด?
+        </>
+      ),
+      description: 'การดำเนินการนี้จะนำประกาศออกจากกล่องข้อความของผู้ใช้งานทุกคนที่เคยได้รับ และไม่สามารถกู้คืนได้',
+    });
 
-      if (res.data && res.data.success) {
-        showToast('ลบประกาศแจ้งเตือนสำเร็จ', 'success');
-        setDeleteModalOpen(false);
-        setItemToDelete(null);
-        fetchBroadcasts();
+    if (isConfirmed) {
+      try {
+        const res = await api.post('/admin/broadcast-notifications/delete-group', {
+          broadcast_key: item.broadcast_key,
+          id: item.id,
+          title: item.title,
+        });
+
+        if (res.data && res.data.success) {
+          showToast('ลบประกาศแจ้งเตือนสำเร็จ', 'success');
+          fetchBroadcasts();
+        }
+      } catch (err) {
+        console.error('Error deleting broadcast:', err);
+        showToast('ไม่สามารถลบประกาศได้', 'error');
       }
-    } catch (err) {
-      console.error('Error deleting broadcast:', err);
-      showToast('ไม่สามารถลบประกาศได้', 'error');
-    } finally {
-      setDeleting(false);
     }
   };
 
@@ -510,10 +516,7 @@ const BroadcastNotifications = () => {
                           type="button"
                           className="btn-action-icon danger"
                           title="ลบประกาศนี้"
-                          onClick={() => {
-                            setItemToDelete(item);
-                            setDeleteModalOpen(true);
-                          }}
+                          onClick={() => handleDeleteBroadcast(item)}
                         >
                           <Trash2 size={16} />
                         </button>
@@ -639,41 +642,7 @@ const BroadcastNotifications = () => {
         </div>
       )}
 
-      {/* Delete Confirm Modal */}
-      {deleteModalOpen && itemToDelete && (
-        <div className="bc-modal-overlay">
-          <div className="bc-modal-card">
-            <div className="modal-header">
-              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#dc2626' }}>
-                <Trash2 size={22} color="#dc2626" />
-                ยืนยันการลบประกาศ
-              </h3>
-              <button type="button" className="modal-close-btn" onClick={() => setDeleteModalOpen(false)}>
-                <X size={20} />
-              </button>
-            </div>
-
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '16px' }}>
-              คุณแน่ใจหรือไม่ว่าต้องการลบประกาศ <strong>"{itemToDelete.title}"</strong> ออกจากกล่องข้อความของผู้ใช้งานทั้งหมด?
-            </p>
-
-            <div className="modal-actions">
-              <button type="button" className="btn btn-secondary" onClick={() => setDeleteModalOpen(false)} disabled={deleting}>
-                ยกเลิก
-              </button>
-              <button
-                type="button"
-                className="btn btn-danger"
-                style={{ background: '#dc2626', color: '#fff' }}
-                onClick={handleDeleteBroadcast}
-                disabled={deleting}
-              >
-                {deleting ? 'กำลังลบ...' : 'ยืนยันการลบ'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Delete Confirm Modal is handled by useConfirmModal */}
     </div>
   );
 };

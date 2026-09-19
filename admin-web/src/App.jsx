@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
+import { ConfirmModalProvider } from './contexts/ConfirmModalContext';
 import AdminLayout from './components/layout/AdminLayout';
 import Login from './pages/Login';
 
@@ -26,7 +27,8 @@ function App() {
   return (
     <AuthProvider>
       <ToastProvider>
-        <Router>
+        <ConfirmModalProvider>
+          <Router>
           <Routes>
             <Route path="/login" element={<Login />} />
             
@@ -49,6 +51,7 @@ function App() {
             </Route>
           </Routes>
         </Router>
+        </ConfirmModalProvider>
       </ToastProvider>
     </AuthProvider>
   );

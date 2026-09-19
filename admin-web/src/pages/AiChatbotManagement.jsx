@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Bot, Plus, Edit, Trash2, Search, Filter, CheckCircle2,
   AlertCircle, Sparkles, MessageSquare, BookOpen, Check, X,
@@ -28,7 +28,7 @@ const AiChatbotManagement = () => {
     answer: '',
     suggested_actions: ['create_appointment', 'record_health'],
     is_active: true,
-    sort_order: 0
+    sort_order: 1
   });
 
   // Delete Confirm Modal State
@@ -90,9 +90,13 @@ const AiChatbotManagement = () => {
         answer: item.answer || '',
         suggested_actions: item.suggested_actions || ['create_appointment', 'record_health'],
         is_active: item.is_active !== undefined ? Boolean(item.is_active) : true,
-        sort_order: item.sort_order || 0
+        sort_order: item.sort_order !== undefined ? item.sort_order : 1
       });
     } else {
+      // Calculate next available unique sort_order
+      const existingOrders = knowledges.map(k => Number(k.sort_order) || 0);
+      const nextSortOrder = existingOrders.length > 0 ? Math.max(...existingOrders) + 1 : 1;
+
       setEditingItem(null);
       setFormData({
         category: categories.length > 0 ? categories[0] : 'อาการทางเดินอาหาร',
@@ -102,7 +106,7 @@ const AiChatbotManagement = () => {
         answer: '',
         suggested_actions: ['create_appointment', 'record_health'],
         is_active: true,
-        sort_order: knowledges.length + 1
+        sort_order: nextSortOrder
       });
     }
     setIsModalOpen(true);
@@ -120,6 +124,23 @@ const AiChatbotManagement = () => {
       return;
     }
 
+    const sortOrderNum = Number(formData.sort_order);
+    if (!formData.sort_order || isNaN(sortOrderNum) || sortOrderNum < 1) {
+      showNotification('กรุณาระบุลำดับการแสดงผลเป็นตัวเลขตั้งแต่ 1 ขึ้นไป', 'error');
+      return;
+    }
+
+    // Check duplicate sort_order
+    const duplicateItem = knowledges.find(k =>
+      (!editingItem || k.id !== editingItem.id) &&
+      Number(k.sort_order) === sortOrderNum
+    );
+
+    if (duplicateItem) {
+      showNotification(`ลำดับที่ ${sortOrderNum} ซ้ำกับหัวข้อ "${duplicateItem.title}" กรุณาระบุลำดับที่ไม่ซ้ำกัน`, 'error');
+      return;
+    }
+
     try {
       if (editingItem) {
         await api.put(`/ai_chatbot/${editingItem.id}`, formData);
@@ -132,7 +153,10 @@ const AiChatbotManagement = () => {
       fetchKnowledges();
     } catch (error) {
       console.error('Error saving AI chatbot knowledge:', error);
-      showNotification('เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error');
+      const serverMsg = error.response?.data?.errors?.sort_order?.[0] ||
+                        error.response?.data?.message ||
+                        'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
+      showNotification(serverMsg, 'error');
     }
   };
 
@@ -207,22 +231,48 @@ const AiChatbotManagement = () => {
     }
   };
 
-  // Filtered List
-  const filteredKnowledges = knowledges.filter(item => {
-    const matchesSearch =
-      (item.title && item.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (item.keywords && item.keywords.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (item.prompt && item.prompt.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (item.answer && item.answer.toLowerCase().includes(searchTerm.toLowerCase()));
+  // Real-time duplicate check inside modal
+  const currentModalOrderNum = Number(formData.sort_order);
+  const duplicateModalItem = currentModalOrderNum > 0
+    ? knowledges.find(k => (!editingItem || k.id !== editingItem.id) && Number(k.sort_order) === currentModalOrderNum)
+    : null;
 
-    const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
-    const matchesStatus =
-      selectedStatus === 'all' ||
-      (selectedStatus === 'active' && item.is_active) ||
-      (selectedStatus === 'inactive' && !item.is_active);
+  // Duplicate tracking across all knowledges for table display
+  const duplicateOrderMap = useMemo(() => {
+    const counts = {};
+    knowledges.forEach(k => {
+      const ord = Number(k.sort_order);
+      if (ord > 0) {
+        counts[ord] = (counts[ord] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [knowledges]);
 
-    return matchesSearch && matchesCategory && matchesStatus;
-  });
+  const duplicateOrderList = useMemo(() => {
+    return Object.keys(duplicateOrderMap)
+      .filter(ord => duplicateOrderMap[ord] > 1)
+      .sort((a, b) => Number(a) - Number(b));
+  }, [duplicateOrderMap]);
+
+  // Filtered and Sorted List (ordered numerically by sort_order)
+  const filteredKnowledges = useMemo(() => {
+    return knowledges.filter(item => {
+      const matchesSearch =
+        (item.title && item.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (item.keywords && item.keywords.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (item.prompt && item.prompt.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (item.answer && item.answer.toLowerCase().includes(searchTerm.toLowerCase()));
+
+      const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
+      const matchesStatus =
+        selectedStatus === 'all' ||
+        (selectedStatus === 'active' && item.is_active) ||
+        (selectedStatus === 'inactive' && !item.is_active);
+
+      return matchesSearch && matchesCategory && matchesStatus;
+    }).sort((a, b) => (Number(a.sort_order) || 999999) - (Number(b.sort_order) || 999999));
+  }, [knowledges, searchTerm, selectedCategory, selectedStatus]);
 
   return (
     <div>
@@ -416,12 +466,33 @@ const AiChatbotManagement = () => {
           </button>
         </div>
 
+        {/* Warning Banner if Duplicates exist in DB */}
+        {duplicateOrderList.length > 0 && (
+          <div style={{
+            margin: '12px 24px',
+            padding: '12px 16px',
+            backgroundColor: '#fff1f2',
+            border: '1px solid #fecdd3',
+            borderRadius: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            color: '#be123c',
+            fontSize: '0.85rem'
+          }}>
+            <AlertTriangle size={18} color="#e11d48" style={{ flexShrink: 0 }} />
+            <div>
+              <strong>ตรวจพบลำดับซ้ำกันในระบบ:</strong> มีหัวข้อที่ใช้ลำดับซ้ำกันคือ ลำดับที่ <strong>{duplicateOrderList.join(', ')}</strong> กรุณากดแก้ไขแถวที่ซ้ำเพื่อปรับลำดับไม่ให้ซ้ำกัน
+            </div>
+          </div>
+        )}
+
         {/* Table Content */}
         <div style={{ overflowX: 'auto' }}>
           <table className="data-table">
             <thead>
               <tr>
-                <th style={{ width: '60px', textAlign: 'center' }}>ลำดับ</th>
+                <th style={{ width: '70px', textAlign: 'center' }}>ลำดับ</th>
                 <th style={{ width: '180px' }}>หมวดหมู่</th>
                 <th style={{ width: '220px' }}>หัวข้อ / อาการ</th>
                 <th>คำค้นหา / คีย์เวิร์ด (Keywords)</th>
@@ -447,8 +518,31 @@ const AiChatbotManagement = () => {
               ) : (
                 filteredKnowledges.map((item, idx) => (
                   <tr key={item.id}>
-                    <td style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                      {item.sort_order || idx + 1}
+                    <td style={{ textAlign: 'center', fontSize: '0.85rem' }}>
+                      {duplicateOrderMap[item.sort_order] > 1 ? (
+                        <span
+                          title={`ลำดับที่ ${item.sort_order} ซ้ำกับหัวข้ออื่น! กรุณากดแก้ไข`}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            backgroundColor: '#fee2e2',
+                            color: '#b91c1c',
+                            padding: '2px 8px',
+                            borderRadius: '999px',
+                            fontWeight: '700',
+                            fontSize: '0.78rem',
+                            cursor: 'help'
+                          }}
+                        >
+                          <AlertTriangle size={12} color="#dc2626" />
+                          {item.sort_order} (ซ้ำ)
+                        </span>
+                      ) : (
+                        <span style={{ fontWeight: '600', color: 'var(--text-main)' }}>
+                          {item.sort_order || idx + 1}
+                        </span>
+                      )}
                     </td>
                     <td>
                       <span style={{
@@ -577,13 +671,32 @@ const AiChatbotManagement = () => {
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">ลำดับการแสดงผล (Sort Order)</label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <label className="form-label" style={{ marginBottom: 0 }}>ลำดับการแสดงผล (Sort Order) *</label>
+                      {duplicateModalItem && (
+                        <span style={{ fontSize: '0.75rem', color: '#dc2626', fontWeight: '700' }}>
+                          ⚠️ ลำดับซ้ำ!
+                        </span>
+                      )}
+                    </div>
                     <input
                       type="number"
+                      min="1"
                       className="form-control"
                       value={formData.sort_order}
-                      onChange={(e) => setFormData({ ...formData, sort_order: parseInt(e.target.value, 10) || 0 })}
+                      onChange={(e) => setFormData({ ...formData, sort_order: e.target.value === '' ? '' : parseInt(e.target.value, 10) || 0 })}
+                      style={duplicateModalItem ? { borderColor: '#dc2626', backgroundColor: '#fef2f2' } : {}}
+                      required
                     />
+                    {duplicateModalItem ? (
+                      <span style={{ fontSize: '0.75rem', color: '#dc2626', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <AlertTriangle size={13} /> ลำดับที่ {formData.sort_order} ถูกใช้งานแล้วโดย: "{duplicateModalItem.title}"
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '3px', display: 'block' }}>
+                        กำหนดตัวเลขอันดับ เช่น 1, 2, 3... เพื่อเรียงลำดับการแสดงผล (ห้ามซ้ำกัน)
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -657,7 +770,12 @@ const AiChatbotManagement = () => {
                 <button type="button" className="btn btn-outline" onClick={handleCloseModal}>
                   ยกเลิก
                 </button>
-                <button type="submit" className="btn btn-primary">
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={Boolean(duplicateModalItem)}
+                  style={duplicateModalItem ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
+                >
                   บันทึกข้อมูล
                 </button>
               </div>

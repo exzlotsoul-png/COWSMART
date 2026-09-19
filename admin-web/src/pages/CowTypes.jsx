@@ -3,9 +3,11 @@ import { Plus, Edit, Trash2, Search, ArrowUpDown } from 'lucide-react';
 import api from '../lib/axios';
 import Pagination from '../components/layout/Pagination';
 import { useToast } from '../contexts/ToastContext';
+import { useConfirmModal } from '../contexts/ConfirmModalContext';
 
 const CowTypes = () => {
   const { showToast } = useToast();
+  const { confirmDelete } = useConfirmModal();
   const [cowTypes, setCowTypes] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('newest');
@@ -99,7 +101,14 @@ const CowTypes = () => {
   };
 
   const handleDelete = async (id, name = '') => {
-    if (window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบประเภทวัว "${name || id}"?`)) {
+    const isConfirmed = await confirmDelete({
+      title: 'ยืนยันการลบประเภทวัว',
+      itemType: 'ประเภทวัว',
+      itemName: name || id,
+      description: 'การดำเนินการนี้ไม่สามารถย้อนกลับได้ และข้อมูลประเภทวัวนี้จะถูกลบออกจากระบบ',
+    });
+
+    if (isConfirmed) {
       try {
         await api.delete(`/cow_types/${id}`);
         showToast(`ลบประเภทวัว "${name || id}" เรียบร้อยแล้ว`, "info");

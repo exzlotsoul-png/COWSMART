@@ -7,9 +7,11 @@ import {
 import api from '../lib/axios';
 import Pagination from '../components/layout/Pagination';
 import { useToast } from '../contexts/ToastContext';
+import { useConfirmModal } from '../contexts/ConfirmModalContext';
 
 const IssueReports = () => {
   const { showToast } = useToast();
+  const { confirmDelete } = useConfirmModal();
   const [reports, setReports] = useState([]);
   const [topics, setTopics] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -27,7 +29,6 @@ const IssueReports = () => {
   const [editingTopic, setEditingTopic] = useState(null);
   const [topicNameInput, setTopicNameInput] = useState('');
   const [isSavingTopic, setIsSavingTopic] = useState(false);
-  const [topicDeleteConfirm, setTopicDeleteConfirm] = useState(null);
 
   useEffect(() => {
     fetchReports();
@@ -89,8 +90,19 @@ const IssueReports = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("คุณแน่ใจหรือไม่ว่าต้องการลบรายงานนี้?")) {
+  const handleDelete = async (id, report = null) => {
+    const topicLabel = report?.topic_name ? ` "${report.topic_name}"` : '';
+    const isConfirmed = await confirmDelete({
+      title: 'ยืนยันการลบรายงานปัญหา',
+      message: (
+        <>
+          คุณแน่ใจหรือไม่ที่จะลบรายงาน{topicLabel} (ID: #{id}) ออกจากระบบฐานข้อมูล?
+        </>
+      ),
+      description: 'การลบนี้จะทำให้ข้อมูลรายงานและประวัติการดำเนินการถูกลบอย่างถาวร',
+    });
+
+    if (isConfirmed) {
       try {
         await api.delete(`/issue_reports/${id}`);
         fetchReports();
@@ -109,7 +121,6 @@ const IssueReports = () => {
   const handleOpenTopicModal = () => {
     setEditingTopic(null);
     setTopicNameInput('');
-    setTopicDeleteConfirm(null);
     setIsTopicModalOpen(true);
   };
 
@@ -149,15 +160,26 @@ const IssueReports = () => {
     }
   };
 
-  const handleDeleteTopic = async (topicId) => {
-    try {
-      await api.delete(`/report_topics/${topicId}`);
-      showNotification("ลบหัวข้อรายงานเรียบร้อยแล้ว");
-      setTopicDeleteConfirm(null);
-      await fetchTopics();
-    } catch (error) {
-      console.error("Error deleting topic:", error);
-      showNotification("เกิดข้อผิดพลาดในการลบหัวข้อ", "error");
+  const handleDeleteTopic = async (topic) => {
+    const isConfirmed = await confirmDelete({
+      title: 'ยืนยันการลบหัวข้อรายงาน',
+      message: (
+        <>
+          คุณแน่ใจหรือไม่ที่จะลบหัวข้อ <strong>"{topic.name}"</strong> ({topic.id}) ออกจากระบบฐานข้อมูล?
+        </>
+      ),
+      description: 'หากลบหัวข้อนี้ รายงานที่เกี่ยวข้องในอนาคตจะไม่สามารถเลือกหัวข้อนี้ได้อีก',
+    });
+
+    if (isConfirmed) {
+      try {
+        await api.delete(`/report_topics/${topic.id}`);
+        showNotification("ลบหัวข้อรายงานเรียบร้อยแล้ว");
+        await fetchTopics();
+      } catch (error) {
+        console.error("Error deleting topic:", error);
+        showNotification("เกิดข้อผิดพลาดในการลบหัวข้อ", "error");
+      }
     }
   };
 
@@ -388,7 +410,7 @@ const IssueReports = () => {
                               >
                                 <CheckCircle size={16} />
                               </button>
-                              <button className="action-btn delete" onClick={() => handleDelete(id)} title="ลบรายงาน">
+                              <button className="action-btn delete" onClick={() => handleDelete(id, report)} title="ลบรายงาน">
                                 <Trash2 size={16} />
                               </button>
                             </div>
@@ -697,7 +719,7 @@ const IssueReports = () => {
                               </button>
                               <button 
                                 className="action-btn delete"
-                                onClick={() => setTopicDeleteConfirm(t)}
+                                onClick={() => handleDeleteTopic(t)}
                                 title="ลบหัวข้อ"
                               >
                                 <Trash2 size={16} />
@@ -726,51 +748,6 @@ const IssueReports = () => {
               >
                 ปิดหน้าต่าง
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Topic Confirmation Modal */}
-      {topicDeleteConfirm && (
-        <div className="modal-overlay" onClick={() => setTopicDeleteConfirm(null)} style={{ zIndex: 1100 }}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px', textAlign: 'center' }}>
-            <div style={{ padding: '24px 20px' }}>
-              <div style={{ 
-                width: '52px', 
-                height: '52px', 
-                borderRadius: '50%', 
-                backgroundColor: '#fee2e2', 
-                color: '#dc2626', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                margin: '0 auto 16px auto' 
-              }}>
-                <Trash2 size={26} />
-              </div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: '0 0 8px 0', color: '#111827' }}>
-                ยืนยันการลบหัวข้อ
-              </h3>
-              <p style={{ fontSize: '0.9rem', color: '#6b7280', margin: '0 0 20px 0' }}>
-                คุณต้องการลบหัวข้อ <strong>"{topicDeleteConfirm.name}"</strong> ({topicDeleteConfirm.id}) หรือไม่?
-              </p>
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                <button 
-                  className="btn btn-outline" 
-                  onClick={() => setTopicDeleteConfirm(null)}
-                  style={{ flex: 1 }}
-                >
-                  ยกเลิก
-                </button>
-                <button 
-                  className="btn" 
-                  onClick={() => handleDeleteTopic(topicDeleteConfirm.id)}
-                  style={{ flex: 1, backgroundColor: '#dc2626', color: '#fff', border: 'none' }}
-                >
-                  ยืนยันการลบ
-                </button>
-              </div>
             </div>
           </div>
         </div>

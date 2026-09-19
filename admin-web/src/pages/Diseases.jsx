@@ -3,9 +3,11 @@ import { Plus, Edit, Trash2, Search, ArrowUpDown } from 'lucide-react';
 import api from '../lib/axios';
 import Pagination from '../components/layout/Pagination';
 import { useToast } from '../contexts/ToastContext';
+import { useConfirmModal } from '../contexts/ConfirmModalContext';
 
 const Diseases = () => {
   const { showToast } = useToast();
+  const { confirmDelete } = useConfirmModal();
   const [diseases, setDiseases] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('newest');
@@ -101,7 +103,14 @@ const Diseases = () => {
   };
 
   const handleDelete = async (id, name = '') => {
-    if (window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลโรค "${name || id}"?`)) {
+    const isConfirmed = await confirmDelete({
+      title: 'ยืนยันการลบข้อมูลโรค',
+      itemType: 'ข้อมูลโรค',
+      itemName: name || id,
+      description: 'การดำเนินการนี้ไม่สามารถย้อนกลับได้ และข้อมูลโรคนี้จะถูกลบออกจากระบบ',
+    });
+
+    if (isConfirmed) {
       try {
         await api.delete(`/diseases/${id}`);
         showToast(`ลบข้อมูลโรค "${name || id}" เรียบร้อยแล้ว`, "info");

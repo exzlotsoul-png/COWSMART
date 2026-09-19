@@ -3,9 +3,11 @@ import { Plus, Edit, Trash2, Search, ArrowUpDown } from 'lucide-react';
 import api from '../lib/axios';
 import Pagination from '../components/layout/Pagination';
 import { useToast } from '../contexts/ToastContext';
+import { useConfirmModal } from '../contexts/ConfirmModalContext';
 
 const AppointmentTypes = () => {
   const { showToast } = useToast();
+  const { confirmDelete } = useConfirmModal();
   const [types, setTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,24 +35,12 @@ const AppointmentTypes = () => {
     }
   };
 
-  const getNextId = () => {
-    let max = 0;
-    appointmentTypes.forEach(t => {
-      const match = String(t.id || '').match(/(\d+)/);
-      if (match) {
-        const num = parseInt(match[1], 10);
-        if (num > max) max = num;
-      }
-    });
-    return 'AT' + String(max + 1).padStart(2, '0');
-  };
-
   const handleOpenModal = (type = null) => {
     if (type) {
-      setCurrentType(type);
+      setCurrentType({ id: type.id, name: type.name });
       setIsEditing(true);
     } else {
-      setCurrentType({ id: getNextId(), name: '' });
+      setCurrentType({ id: '', name: '' });
       setIsEditing(false);
     }
     setIsModalOpen(true);
@@ -69,29 +59,21 @@ const AppointmentTypes = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Check for duplicate name
-    const newName = (currentType.name || '').replace(/\s+/g, '').toLowerCase();
-    const isDuplicate = types.some(item => {
-      if (isEditing && item.id === currentType.id) return false;
-      return (item.name || '').replace(/\s+/g, '').toLowerCase() === newName;
-    });
-
-    if (isDuplicate) {
-      showToast("ชื่อนี้มีอยู่ในระบบแล้ว", "error");
+    if (!currentType.name.trim()) {
+      showToast("กรุณากรอกชื่อประเภทนัดหมาย", "warning");
       return;
     }
 
     try {
       if (isEditing) {
-        await api.put(`/appointment_types/${currentType.id}`, currentType);
-        showToast(`แก้ไขข้อมูลประเภทนัดหมาย "${currentType.name}" สำเร็จ`, "success");
+        await api.put(`/appointment_types/${currentType.id}`, { name: currentType.name });
+        showToast("แก้ไขประเภทนัดหมายเรียบร้อยแล้ว", "success");
       } else {
-        await api.post('/appointment_types', currentType);
-        showToast(`เพิ่มประเภทนัดหมายใหม่ "${currentType.name}" สำเร็จ`, "success");
+        await api.post('/appointment_types', { name: currentType.name });
+        showToast("เพิ่มประเภทนัดหมายใหม่เรียบร้อยแล้ว", "success");
       }
-      fetchTypes();
       handleCloseModal();
+      fetchTypes();
     } catch (error) {
       console.error("Error saving appointment type:", error);
       showToast("เกิดข้อผิดพลาดในการบันทึกข้อมูลประเภทนัดหมาย", "error");
@@ -99,7 +81,14 @@ const AppointmentTypes = () => {
   };
 
   const handleDelete = async (id, name = '') => {
-    if (window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบประเภทนัดหมาย "${name || id}"?`)) {
+    const isConfirmed = await confirmDelete({
+      title: 'ยืนยันการลบประเภทนัดหมาย',
+      itemType: 'ประเภทนัดหมาย',
+      itemName: name || id,
+      description: 'การดำเนินการนี้ไม่สามารถย้อนกลับได้ และข้อมูลประเภทนัดหมายนี้จะถูกลบออกจากระบบ',
+    });
+
+    if (isConfirmed) {
       try {
         await api.delete(`/appointment_types/${id}`);
         showToast(`ลบประเภทนัดหมาย "${name || id}" เรียบร้อยแล้ว`, "info");

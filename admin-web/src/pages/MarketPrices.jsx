@@ -7,6 +7,7 @@ import {
 import api from '../lib/axios';
 import Pagination from '../components/layout/Pagination';
 import { useToast } from '../contexts/ToastContext';
+import { useConfirmModal } from '../contexts/ConfirmModalContext';
 
 const formatThaiDate = (dateString) => {
   if (!dateString) return '-';
@@ -22,6 +23,7 @@ const formatThaiDate = (dateString) => {
 
 const MarketPrices = () => {
   const { showToast } = useToast();
+  const { confirmDelete } = useConfirmModal();
   const [prices, setPrices] = useState([]);
   const [latestByCategory, setLatestByCategory] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -307,7 +309,14 @@ const MarketPrices = () => {
   };
 
   const handleDelete = async (id, category = '') => {
-    if (window.confirm(`คุณแน่ใจหรือไม่ที่จะลบรายการราคา "${category || id}"?`)) {
+    const isConfirmed = await confirmDelete({
+      title: 'ยืนยันการลบรายการราคา',
+      itemType: 'รายการราคา',
+      itemName: category || id,
+      description: 'การดำเนินการนี้ไม่สามารถย้อนกลับได้ และข้อมูลราคาตลาดนี้จะถูกลบออกจากระบบ',
+    });
+
+    if (isConfirmed) {
       try {
         await api.delete(`/market_prices/${id}`);
         showToast(`ลบรายการราคา "${category || id}" เรียบร้อยแล้ว`, "info");
