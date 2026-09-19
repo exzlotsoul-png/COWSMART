@@ -2145,7 +2145,7 @@ class _EventCard extends ConsumerWidget {
                 event.description!,
                 style: TextStyle(
                   fontSize: 14,
-                  color: AppColors.subText(context),
+                  color: AppColors.text(context),
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -2159,7 +2159,7 @@ class _EventCard extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     'วัวในกลุ่ม: ${event.cowCount} ตัว',
-                    style: const TextStyle(fontSize: 13, color: AppColors.textHint, fontWeight: FontWeight.w500),
+                    style: TextStyle(fontSize: 13, color: AppColors.text(context), fontWeight: FontWeight.w500),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -2181,7 +2181,7 @@ class _EventCard extends ConsumerWidget {
                   Expanded(
                     child: Text(
                       'วัว: $cowText',
-                      style: const TextStyle(fontSize: 13, color: AppColors.textHint, fontWeight: FontWeight.w500),
+                      style: TextStyle(fontSize: 13, color: AppColors.text(context), fontWeight: FontWeight.w500),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),

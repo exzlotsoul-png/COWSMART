@@ -263,7 +263,7 @@ class _AllZonesScreenState extends ConsumerState<AllZonesScreen> {
                     'จำนวนวัว ${zone.cowCount} ตัว',
                     style: TextStyle(
                       fontSize: 13,
-                      color: AppColors.subText(context),
+                      color: AppColors.text(context),
                     ),
                   ),
                 ],

@@ -891,7 +891,7 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                                         Expanded(
                                           child: Text(
                                             'สายพันธุ์: ' + breedDisplay,
-                                            style: TextStyle(fontSize: 13, color: AppColors.subText(context)),
+                                            style: TextStyle(fontSize: 13, color: AppColors.text(context)),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                           ),

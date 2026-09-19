@@ -694,7 +694,7 @@ class _GroupAppointmentScreenState extends ConsumerState<GroupAppointmentScreen>
                                       const SizedBox(height: 5),
                                       Text(
                                         'สายพันธุ์: $breedDisplay',
-                                        style: TextStyle(fontSize: 13, color: AppColors.subText(context)),
+                                        style: TextStyle(fontSize: 13, color: AppColors.text(context)),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),

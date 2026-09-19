@@ -1166,9 +1166,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   const SizedBox(height: 2),
                   Text(
                     'จำนวนวัว ${zone.cowCount} ตัว',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: AppColors.textSecondary,
+                      color: AppColors.text(context),
                     ),
                   ),
                 ],

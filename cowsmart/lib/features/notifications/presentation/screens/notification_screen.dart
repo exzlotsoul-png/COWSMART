@@ -763,7 +763,7 @@ class _NotificationCard extends StatelessWidget {
                           style: TextStyle(
                             fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
                             fontSize: 18,
-                            color: AppColors.text(context),
+                            color: isUnread ? AppColors.text(context) : AppColors.subText(context),
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -778,8 +778,8 @@ class _NotificationCard extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 16,
                             color: isUnread
-                                ? AppColors.subText(context)
-                                : AppColors.hint(context),
+                                ? AppColors.text(context)
+                                : AppColors.subText(context),
                             height: 1.4,
                           ),
                         ),

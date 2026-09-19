@@ -842,7 +842,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                                 child: Text(
                                   '$breedDisplay • ${cow.displayTypeName}',
                                   style: TextStyle(
-                                    color: AppColors.subText(context),
+                                    color: AppColors.text(context),
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -904,7 +904,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
     Color? bgColor,
     Color? borderColor,
   }) {
-    final chipColor = color ?? AppColors.subText(context);
+    final chipColor = color ?? AppColors.text(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(

@@ -427,7 +427,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                           const SizedBox(height: 2),
                           Text(
                             '${qty.toStringAsFixed(1)} กก. ($pct%)',
-                            style: TextStyle(fontSize: 13, color: AppColors.subText(context), fontWeight: FontWeight.w500),
+                            style: TextStyle(fontSize: 13, color: AppColors.text(context), fontWeight: FontWeight.w500),
                           ),
                         ],
                       ),

@@ -718,10 +718,10 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                     // Net Balance Title
                     Text(
                       financeState.filterMode == FinanceFilterMode.range ? 'คงเหลือสุทธิช่วงเวลานี้' : 'คงเหลือสุทธิเดือนนี้',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
+                        color: AppColors.text(context),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -781,9 +781,9 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text(
+                                      Text(
                                         'รายรับรวม',
-                                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                        style: TextStyle(fontSize: 12, color: AppColors.text(context)),
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
@@ -828,9 +828,9 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text(
+                                      Text(
                                         'รายจ่ายรวม',
-                                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                        style: TextStyle(fontSize: 12, color: AppColors.text(context)),
                                       ),
                                       const SizedBox(height: 2),
                                       Text(

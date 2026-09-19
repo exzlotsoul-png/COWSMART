@@ -819,9 +819,9 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                                               const SizedBox(height: 5),
                                               Text(
                                                 'สายพันธุ์: ' + breedDisplay + (cow.latestWeight > 0 ? ' • ' + cow.latestWeight.toStringAsFixed(0) + ' กก.' : ''),
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                     fontSize: 13,
-                                                    color: AppColors.textSecondary),
+                                                    color: AppColors.text(context)),
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                               ),

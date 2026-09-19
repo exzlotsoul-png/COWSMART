@@ -629,16 +629,16 @@ class _HistoryEventCard extends ConsumerWidget {
             const SizedBox(height: 4),
             Row(
               children: [
-                Icon(Icons.event_available_outlined, size: 13, color: AppColors.subText(context)),
+                Icon(Icons.event_available_outlined, size: 13, color: AppColors.text(context)),
                 const SizedBox(width: 4),
                 Text(
                   AppDateUtils.formatThaiDate(event.eventDatetime),
-                  style: TextStyle(fontSize: 12, color: AppColors.subText(context)),
+                  style: TextStyle(fontSize: 12, color: AppColors.text(context)),
                 ),
                 const SizedBox(width: 8),
                 Text(
                   DateFormat('HH:mm น.').format(event.eventDatetime),
-                  style: TextStyle(fontSize: 12, color: AppColors.hint(context)),
+                  style: TextStyle(fontSize: 12, color: AppColors.text(context)),
                 ),
               ],
             ),
@@ -654,7 +654,7 @@ class _HistoryEventCard extends ConsumerWidget {
                     : event.cowId;
                 return Text(
                   'วัว: $cowText',
-                  style: const TextStyle(fontSize: 12, color: AppColors.textHint),
+                  style: TextStyle(fontSize: 12, color: AppColors.text(context)),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 );
