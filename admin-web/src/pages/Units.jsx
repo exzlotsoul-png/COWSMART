@@ -33,24 +33,12 @@ const Units = () => {
     }
   };
 
-  const getNextId = () => {
-    let max = 0;
-    units.forEach(u => {
-      const match = String(u.unit_id || '').match(/(\d+)/);
-      if (match) {
-        const num = parseInt(match[1], 10);
-        if (num > max) max = num;
-      }
-    });
-    return 'U' + String(max + 1).padStart(3, '0');
-  };
-
   const handleOpenModal = (unit = null) => {
     if (unit) {
       setCurrentUnit(unit);
       setIsEditing(true);
     } else {
-      setCurrentUnit({ unit_id: getNextId(), name: '', type: '', abbreviation: '' });
+      setCurrentUnit({ unit_id: '', name: '', type: '', abbreviation: '' });
       setIsEditing(false);
     }
     setIsModalOpen(true);
@@ -87,7 +75,9 @@ const Units = () => {
         await api.put(`/units/${currentUnit.unit_id}`, currentUnit);
         showToast(`แก้ไขข้อมูลหน่วย "${currentUnit.name}" สำเร็จ`, "success");
       } else {
-        await api.post('/units', currentUnit);
+        const payload = { ...currentUnit };
+        delete payload.unit_id;
+        await api.post('/units', payload);
         showToast(`เพิ่มข้อมูลหน่วยใหม่ "${currentUnit.name}" สำเร็จ`, "success");
       }
       fetchUnits();
