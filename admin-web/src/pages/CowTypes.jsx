@@ -36,7 +36,7 @@ const CowTypes = () => {
   const getNextId = () => {
     let max = 0;
     cowTypes.forEach(t => {
-      const match = (t.cow_type_id || '').match(/(\d+)/);
+      const match = String(t.cow_type_id || '').match(/(\d+)/);
       if (match) {
         const num = parseInt(match[1], 10);
         if (num > max) max = num;
@@ -69,6 +69,19 @@ const CowTypes = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Check for duplicate name
+    const newName = (currentCowType.cow_type_name || '').replace(/\s+/g, '').toLowerCase();
+    const isDuplicate = cowTypes.some(item => {
+      if (isEditing && item.cow_type_id === currentCowType.cow_type_id) return false;
+      return (item.cow_type_name || '').replace(/\s+/g, '').toLowerCase() === newName;
+    });
+
+    if (isDuplicate) {
+      showToast("ชื่อนี้มีอยู่ในระบบแล้ว", "error");
+      return;
+    }
+
     try {
       if (isEditing) {
         await api.put(`/cow_types/${currentCowType.cow_type_id}`, currentCowType);

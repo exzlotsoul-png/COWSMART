@@ -36,7 +36,7 @@ const Units = () => {
   const getNextId = () => {
     let max = 0;
     units.forEach(u => {
-      const match = (u.unit_id || '').match(/(\d+)/);
+      const match = String(u.unit_id || '').match(/(\d+)/);
       if (match) {
         const num = parseInt(match[1], 10);
         if (num > max) max = num;
@@ -69,6 +69,19 @@ const Units = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Check for duplicate name
+    const newName = (currentUnit.name || '').replace(/\s+/g, '').toLowerCase();
+    const isDuplicate = units.some(item => {
+      if (isEditing && item.unit_id === currentUnit.unit_id) return false;
+      return (item.name || '').replace(/\s+/g, '').toLowerCase() === newName;
+    });
+
+    if (isDuplicate) {
+      showToast("ชื่อนี้มีอยู่ในระบบแล้ว", "error");
+      return;
+    }
+
     try {
       if (isEditing) {
         await api.put(`/units/${currentUnit.unit_id}`, currentUnit);

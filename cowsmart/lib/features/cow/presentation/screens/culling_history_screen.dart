@@ -166,69 +166,6 @@ class _CullingHistoryScreenState extends ConsumerState<CullingHistoryScreen> {
                 ),
               ),
 
-              // Status Filter Chips
-              SizedBox(
-                width: double.infinity,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-                  child: Row(
-                    children: [
-                      ChoiceChip(
-                        label: const Text('ทั้งหมด', style: TextStyle(fontSize: 13.5)),
-                        selected: _filterStatus == null,
-                        selectedColor: AppColors.primary,
-                        backgroundColor: AppColors.surfAlt(context),
-                        side: BorderSide(color: _filterStatus == null ? AppColors.primary : AppColors.brd(context)),
-                        labelStyle: TextStyle(
-                          color: _filterStatus == null ? Colors.white : AppColors.text(context),
-                          fontWeight: _filterStatus == null ? FontWeight.bold : FontWeight.w500,
-                        ),
-                        onSelected: (_) => setState(() => _filterStatus = null),
-                      ),
-                      const SizedBox(width: 6),
-                      ChoiceChip(
-                        label: const Text('ขาย', style: TextStyle(fontSize: 13.5)),
-                        selected: _filterStatus == 0,
-                        selectedColor: AppColors.success,
-                        backgroundColor: AppColors.surfAlt(context),
-                        side: BorderSide(color: _filterStatus == 0 ? AppColors.success : AppColors.brd(context)),
-                        labelStyle: TextStyle(
-                          color: _filterStatus == 0 ? Colors.white : AppColors.text(context),
-                          fontWeight: _filterStatus == 0 ? FontWeight.bold : FontWeight.w500,
-                        ),
-                        onSelected: (_) => setState(() => _filterStatus = _filterStatus == 0 ? null : 0),
-                      ),
-                      const SizedBox(width: 6),
-                      ChoiceChip(
-                        label: const Text('คัดออก', style: TextStyle(fontSize: 13.5)),
-                        selected: _filterStatus == 2,
-                        selectedColor: AppColors.warning,
-                        backgroundColor: AppColors.surfAlt(context),
-                        side: BorderSide(color: _filterStatus == 2 ? AppColors.warning : AppColors.brd(context)),
-                        labelStyle: TextStyle(
-                          color: _filterStatus == 2 ? Colors.white : AppColors.text(context),
-                          fontWeight: _filterStatus == 2 ? FontWeight.bold : FontWeight.w500,
-                        ),
-                        onSelected: (_) => setState(() => _filterStatus = _filterStatus == 2 ? null : 2),
-                      ),
-                      const SizedBox(width: 6),
-                      ChoiceChip(
-                        label: const Text('ตาย', style: TextStyle(fontSize: 13.5)),
-                        selected: _filterStatus == 1,
-                        selectedColor: AppColors.error,
-                        backgroundColor: AppColors.surfAlt(context),
-                        side: BorderSide(color: _filterStatus == 1 ? AppColors.error : AppColors.brd(context)),
-                        labelStyle: TextStyle(
-                          color: _filterStatus == 1 ? Colors.white : AppColors.text(context),
-                          fontWeight: _filterStatus == 1 ? FontWeight.bold : FontWeight.w500,
-                        ),
-                        onSelected: (_) => setState(() => _filterStatus = _filterStatus == 1 ? null : 1),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
 
               // Cow Type Filter Chips
               SizedBox(

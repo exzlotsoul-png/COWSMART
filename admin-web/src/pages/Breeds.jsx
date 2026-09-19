@@ -36,7 +36,7 @@ const Breeds = () => {
   const getNextId = () => {
     let max = 0;
     breeds.forEach(b => {
-      const match = (b.breed_id || '').match(/(\d+)/);
+      const match = String(b.breed_id || '').match(/(\d+)/);
       if (match) {
         const num = parseInt(match[1], 10);
         if (num > max) max = num;
@@ -69,6 +69,19 @@ const Breeds = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Check for duplicate name
+    const newName = (currentBreed.name || '').replace(/\s+/g, '').toLowerCase();
+    const isDuplicate = breeds.some(item => {
+      if (isEditing && item.breed_id === currentBreed.breed_id) return false;
+      return (item.name || '').replace(/\s+/g, '').toLowerCase() === newName;
+    });
+
+    if (isDuplicate) {
+      showToast("ชื่อนี้มีอยู่ในระบบแล้ว", "error");
+      return;
+    }
+
     try {
       if (isEditing) {
         await api.put(`/breeds/${currentBreed.breed_id}`, currentBreed);

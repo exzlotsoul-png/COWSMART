@@ -38,7 +38,7 @@ const Diseases = () => {
   const getNextId = () => {
     let max = 0;
     diseases.forEach(d => {
-      const match = (d.disease_id || '').match(/(\d+)/);
+      const match = String(d.disease_id || '').match(/(\d+)/);
       if (match) {
         const num = parseInt(match[1], 10);
         if (num > max) max = num;
@@ -71,6 +71,19 @@ const Diseases = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Check for duplicate name
+    const newName = (currentDisease.name || '').replace(/\s+/g, '').toLowerCase();
+    const isDuplicate = diseases.some(item => {
+      if (isEditing && item.disease_id === currentDisease.disease_id) return false;
+      return (item.name || '').replace(/\s+/g, '').toLowerCase() === newName;
+    });
+
+    if (isDuplicate) {
+      showToast("ชื่อนี้มีอยู่ในระบบแล้ว", "error");
+      return;
+    }
+
     try {
       if (isEditing) {
         await api.put(`/diseases/${currentDisease.disease_id}`, currentDisease);
@@ -215,22 +228,7 @@ const Diseases = () => {
                   <label className="form-label" htmlFor="name">ชื่อโรค/อาการป่วย</label>
                   <input id="name" name="name" type="text" className="form-control" value={currentDisease.name} onChange={handleChange} required />
                 </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="cause">สาเหตุการเกิดโรค</label>
-                  <textarea id="cause" name="cause" className="form-control" rows="2" value={currentDisease.cause || ''} onChange={handleChange} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="observation">วิธีสังเกตอาการ</label>
-                  <textarea id="observation" name="observation" className="form-control" rows="2" value={currentDisease.observation || ''} onChange={handleChange} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="treatment">วิธีดูแลรักษาเบื้องต้น</label>
-                  <textarea id="treatment" name="treatment" className="form-control" rows="2" value={currentDisease.treatment || ''} onChange={handleChange} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="prevention">การควบคุม/ป้องกัน</label>
-                  <textarea id="prevention" name="prevention" className="form-control" rows="2" value={currentDisease.prevention || ''} onChange={handleChange} />
-                </div>
+
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-outline" onClick={handleCloseModal}>ยกเลิก</button>

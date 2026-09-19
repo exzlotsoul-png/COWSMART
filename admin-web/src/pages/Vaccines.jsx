@@ -41,7 +41,7 @@ const Vaccines = () => {
   const getNextId = () => {
     let max = 0;
     vaccines.forEach(v => {
-      const match = (v.vaccine_id || '').match(/(\d+)/);
+      const match = String(v.vaccine_id || '').match(/(\d+)/);
       if (match) {
         const num = parseInt(match[1], 10);
         if (num > max) max = num;
@@ -78,6 +78,19 @@ const Vaccines = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Check for duplicate name
+    const newName = (currentVaccine.name || '').replace(/\s+/g, '').toLowerCase();
+    const isDuplicate = vaccines.some(item => {
+      if (isEditing && item.vaccine_id === currentVaccine.vaccine_id) return false;
+      return (item.name || '').replace(/\s+/g, '').toLowerCase() === newName;
+    });
+
+    if (isDuplicate) {
+      showToast("ชื่อนี้มีอยู่ในระบบแล้ว", "error");
+      return;
+    }
+
     try {
       if (isEditing) {
         await api.put(`/vaccines/${currentVaccine.vaccine_id}`, currentVaccine);
@@ -233,7 +246,12 @@ const Vaccines = () => {
                 </div>
                 <div className="form-group">
                   <label className="form-label" htmlFor="category">หมวดหมู่วัคซีน</label>
-                  <input id="category" name="category" type="text" className="form-control" value={currentVaccine.category || ''} onChange={handleChange} />
+                  <select id="category" name="category" className="form-control" value={currentVaccine.category || ''} onChange={handleChange} required>
+                    <option value="" disabled>เลือกหมวดหมู่วัคซีน</option>
+                    {uniqueCategories.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="form-group">
                   <label className="form-label" htmlFor="name">ชื่อวัคซีน</label>

@@ -10,6 +10,8 @@ class AppointmentType extends Model
 {
     use HasFactory, HasSequentialId;
     protected $table = 'appointment_types';
+    protected $keyType = 'string';
+    public $incrementing = false;
     protected $guarded = [];
 
     protected string $idPrefix = 'AT';

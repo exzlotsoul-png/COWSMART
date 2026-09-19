@@ -1947,25 +1947,43 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                   const SizedBox(height: 8),
                   SizedBox(
                     width: double.infinity,
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(bCtx),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(
-                        registeredCalves.length == totalCalves
-                            ? 'เสร็จสิ้น'
-                            : 'เสร็จสิ้น / ไว้ลงทะเบียนภายหลัง',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.text(ctx),
-                        ),
-                      ),
-                    ),
+                    child: registeredCalves.length == totalCalves
+                        ? ElevatedButton(
+                            onPressed: () => Navigator.pop(bCtx),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.success,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text(
+                              'เสร็จสิ้น',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          )
+                        : ElevatedButton(
+                            onPressed: () => Navigator.pop(bCtx),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.success,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text(
+                              'เสร็จสิ้น / ไว้ลงทะเบียนภายหลัง',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                   ),
                 ] else ...[
                   Row(

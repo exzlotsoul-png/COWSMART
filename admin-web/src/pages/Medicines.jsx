@@ -40,7 +40,7 @@ const Medicines = () => {
   const getNextId = () => {
     let max = 0;
     medicines.forEach(m => {
-      const match = (m.medicine_id || '').match(/(\d+)/);
+      const match = String(m.medicine_id || '').match(/(\d+)/);
       if (match) {
         const num = parseInt(match[1], 10);
         if (num > max) max = num;
@@ -77,6 +77,19 @@ const Medicines = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Check for duplicate name
+    const newName = (currentMedicine.name || '').replace(/\s+/g, '').toLowerCase();
+    const isDuplicate = medicines.some(item => {
+      if (isEditing && item.medicine_id === currentMedicine.medicine_id) return false;
+      return (item.name || '').replace(/\s+/g, '').toLowerCase() === newName;
+    });
+
+    if (isDuplicate) {
+      showToast("ชื่อนี้มีอยู่ในระบบแล้ว", "error");
+      return;
+    }
+
     try {
       if (isEditing) {
         await api.put(`/medicines/${currentMedicine.medicine_id}`, currentMedicine);
@@ -243,7 +256,15 @@ const Medicines = () => {
                 </div>
                 <div className="form-group">
                   <label className="form-label" htmlFor="category">หมวดหมู่ยา</label>
-                  <input id="category" name="category" type="text" className="form-control" value={currentMedicine.category || ''} onChange={handleChange} />
+                  <select id="category" name="category" className="form-control" value={currentMedicine.category || ''} onChange={handleChange} required>
+                    <option value="" disabled>เลือกหมวดหมู่ยา</option>
+                    <option value="ยาปฏิชีวนะ">ยาปฏิชีวนะ</option>
+                    <option value="ยาถ่ายพยาธิ">ยาถ่ายพยาธิ</option>
+                    <option value="ยาแก้ปวด/อักเสบ">ยาแก้ปวด/อักเสบ</option>
+                    <option value="วิตามินและแร่ธาตุ">วิตามินและแร่ธาตุ</option>
+                    <option value="ยาสมุนไพร/จุลินทรีย์">ยาสมุนไพร/จุลินทรีย์</option>
+                    <option value="ยากำจัดภายนอก">ยากำจัดภายนอก</option>
+                  </select>
                 </div>
                 <div className="form-group">
                   <label className="form-label" htmlFor="name">ชื่อยา</label>

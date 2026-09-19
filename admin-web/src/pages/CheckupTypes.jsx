@@ -36,7 +36,7 @@ const CheckupTypes = () => {
   const getNextId = () => {
     let max = 0;
     checkupTypes.forEach(t => {
-      const match = (t.checkup_types_id || '').match(/(\d+)/);
+      const match = String(t.checkup_types_id || '').match(/(\d+)/);
       if (match) {
         const num = parseInt(match[1], 10);
         if (num > max) max = num;
@@ -69,6 +69,19 @@ const CheckupTypes = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Check for duplicate name
+    const newName = (currentCheckupType.type_name || '').replace(/\s+/g, '').toLowerCase();
+    const isDuplicate = checkupTypes.some(item => {
+      if (isEditing && item.checkup_types_id === currentCheckupType.checkup_types_id) return false;
+      return (item.type_name || '').replace(/\s+/g, '').toLowerCase() === newName;
+    });
+
+    if (isDuplicate) {
+      showToast("ชื่อนี้มีอยู่ในระบบแล้ว", "error");
+      return;
+    }
+
     try {
       if (isEditing) {
         await api.put(`/checkup_types/${currentCheckupType.checkup_types_id}`, currentCheckupType);
