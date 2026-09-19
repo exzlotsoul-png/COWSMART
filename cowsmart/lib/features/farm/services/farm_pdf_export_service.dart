@@ -373,7 +373,7 @@ class FarmPdfExportService {
                 pw.Expanded(
                   child: _buildSummaryCard(
                     title: 'มูลค่าประเมินฝูงวัวรวม',
-                    value: '฿${numberFormat.format(totalHerdAssetValue)}',
+                    value: '${numberFormat.format(totalHerdAssetValue)} บาท',
                     subValue: 'อิงราคาตลาดกลาง DLD/สศก.',
                     bgColor: cardBgColor,
                     borderColor: borderColor,
@@ -384,8 +384,8 @@ class FarmPdfExportService {
                 pw.Expanded(
                   child: _buildSummaryCard(
                     title: 'ผลกำไรสุทธิฟาร์ม',
-                    value: '฿${numberFormat.format(netBalance)}',
-                    subValue: 'รายรับ ฿${numberFormat.format(totalIncome)} | รายจ่าย ฿${numberFormat.format(totalExpense)}',
+                    value: '${numberFormat.format(netBalance)} บาท',
+                    subValue: 'รายรับ ${numberFormat.format(totalIncome)} บาท | รายจ่าย ${numberFormat.format(totalExpense)} บาท',
                     bgColor: cardBgColor,
                     borderColor: borderColor,
                     textColor: netBalance >= 0 ? greenColor : redColor,
@@ -423,7 +423,7 @@ class FarmPdfExportService {
                               _tableHeaderCell('สายพันธุ์'),
                               _tableHeaderCell('จำนวน (ตัว)', align: pw.TextAlign.center),
                               _tableHeaderCell('สัดส่วน (%)', align: pw.TextAlign.center),
-                              _tableHeaderCell('มูลค่าประเมิน (฿)', align: pw.TextAlign.right),
+                              _tableHeaderCell('มูลค่าประเมิน (บาท)', align: pw.TextAlign.right),
                             ],
                           ),
                           ...breedCountMap.entries.map((e) {
@@ -434,7 +434,7 @@ class FarmPdfExportService {
                                 _tableBodyCell(e.key),
                                 _tableBodyCell(numberFormat.format(e.value), align: pw.TextAlign.center),
                                 _tableBodyCell('$pct%', align: pw.TextAlign.center),
-                                _tableBodyCell('฿${numberFormat.format(val)}', align: pw.TextAlign.right),
+                                _tableBodyCell('${numberFormat.format(val)} บาท', align: pw.TextAlign.right),
                               ],
                             );
                           }),
@@ -525,7 +525,7 @@ class FarmPdfExportService {
                     _tableHeaderCell('น้ำหนัก (กก.)', align: pw.TextAlign.right),
                     _tableHeaderCell('โซน/คอก'),
                     _tableHeaderCell('สถานะ', align: pw.TextAlign.center),
-                    _tableHeaderCell('ราคาประเมิน (฿)', align: pw.TextAlign.right),
+                    _tableHeaderCell('ราคาประเมิน (บาท)', align: pw.TextAlign.right),
                   ],
                 ),
                 ...List.generate(cows.length, (idx) {
@@ -550,7 +550,7 @@ class FarmPdfExportService {
                       _tableBodyCell(cow.latestWeight > 0 ? cow.latestWeight.toStringAsFixed(0) : '-', align: pw.TextAlign.right),
                       _tableBodyCell(zName),
                       _tableBodyCell(cow.status.label, align: pw.TextAlign.center),
-                      _tableBodyCell(estVal > 0 ? '฿${numberFormat.format(estVal)}' : '-', align: pw.TextAlign.right, isBold: true),
+                      _tableBodyCell(estVal > 0 ? '${numberFormat.format(estVal)} บาท' : '-', align: pw.TextAlign.right, isBold: true),
                     ],
                   );
                 }),
@@ -574,7 +574,7 @@ class FarmPdfExportService {
                     style: pw.TextStyle(fontSize: 8.5, color: textMutedColor, fontStyle: pw.FontStyle.italic),
                   ),
                   pw.Text(
-                    'รวมมูลค่าวัวทั้งฟาร์ม: ฿${numberFormat.format(totalHerdAssetValue)}',
+                    'รวมมูลค่าวัวทั้งฟาร์ม: ${numberFormat.format(totalHerdAssetValue)} บาท',
                     style: pw.TextStyle(fontSize: 10.5, fontWeight: pw.FontWeight.bold, color: primaryColor),
                   ),
                 ],

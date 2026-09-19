@@ -289,7 +289,7 @@ class _MarketPriceHistoryScreenState extends ConsumerState<MarketPriceHistoryScr
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  '฿ ${formatter.format(price.pricePerKg)} / กก.',
+                  '${formatter.format(price.pricePerKg)} บาท/กก.',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 13,

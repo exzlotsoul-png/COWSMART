@@ -261,7 +261,7 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '฿ $nabcPrice',
+                      nabcPrice,
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -409,7 +409,7 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
           Expanded(
             flex: 3,
             child: Text(
-              '฿ $price',
+              '$price บาท',
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 17,
@@ -669,11 +669,11 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
           if (currentHistory.isNotEmpty) ...[
             Row(
               children: [
-                _buildStatPill('ต่ำสุด', '฿${minPrice.toStringAsFixed(2)}', const Color(0xFFDC2626)),
+                _buildStatPill('ต่ำสุด', '${minPrice.toStringAsFixed(2)} บาท', const Color(0xFFDC2626)),
                 const SizedBox(width: 8),
-                _buildStatPill('เฉลี่ย', '฿${avgPrice.toStringAsFixed(2)}', const Color(0xFF2563EB)),
+                _buildStatPill('เฉลี่ย', '${avgPrice.toStringAsFixed(2)} บาท', const Color(0xFF2563EB)),
                 const SizedBox(width: 8),
-                _buildStatPill('สูงสุด', '฿${maxPrice.toStringAsFixed(2)}', const Color(0xFF059669)),
+                _buildStatPill('สูงสุด', '${maxPrice.toStringAsFixed(2)} บาท', const Color(0xFF059669)),
               ],
             ),
             const SizedBox(height: 14),
@@ -721,7 +721,7 @@ class _MarketPriceScreenState extends ConsumerState<MarketPriceScreen> {
                       ),
                     ),
                     Text(
-                      '฿ ${selectedItem.pricePerKg.toStringAsFixed(2)}',
+                      '${selectedItem.pricePerKg.toStringAsFixed(2)} บาท/กก.',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -1124,7 +1124,7 @@ class _PriceCalculatorModalState extends State<_PriceCalculatorModal> {
                             ),
                           ),
                           Text(
-                            '฿${(cat['price'] as num).toStringAsFixed(2)} /กก.',
+                            '${(cat['price'] as num).toStringAsFixed(2)} บาท/กก.',
                             style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primary),
                           ),
                         ],
@@ -1278,7 +1278,7 @@ class _PriceCalculatorModalState extends State<_PriceCalculatorModal> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '฿ ${formatter.format(totalPrice)}',
+                        '${formatter.format(totalPrice)} บาท',
                         style: TextStyle(
                           fontSize: 30,
                           fontWeight: FontWeight.bold,

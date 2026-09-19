@@ -130,13 +130,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               // ── 1. Top Bar (minimal) ──
               _buildTopBar(context),
 
-              // ── 2. Farm Hero Banner Card ──
+              // ── 2. Farm Hero Banner ──
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
                 child: _buildFarmHeroBanner(context, currentFarm),
               ),
 
-              // ── 3. Stats Unified Card ──
+              // ── 3. Stats Unified Card (ภาพรวมฟาร์ม) ──
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                 child: _buildUnifiedStatsCard(
@@ -148,22 +148,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
               ),
 
-              // ── 4. Finance Dual Cards ──
+              // ── 4. Quick Actions (App Grid 4 Columns) ──
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: _buildQuickActionsSection(context),
+              ),
+
+              // ── 5. Finance Dual Cards ──
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                 child: _buildFinanceDualCards(context, ref),
               ),
 
-              // ── 5. Zone List ──
+              // ── 6. Zone List ──
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
                 child: _buildZoneList(context, ref),
-              ),
-
-              // ── 6. Quick Actions ──
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-                child: _buildQuickActionsSection(context),
               ),
             ],
           ),
@@ -667,7 +667,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '฿${formatter.format(totalValue)}',
+                  '${formatter.format(totalValue)} บาท',
                   style: TextStyle(
                     fontSize: 18.5,
                     fontWeight: FontWeight.bold,
@@ -812,7 +812,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               Row(
                 children: [
                   Text(
-                    '฿${formatter.format(balance)}',
+                    '${formatter.format(balance)} บาท',
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
@@ -901,7 +901,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: Text(
-                        '฿${formatter.format(income)}',
+                        '${formatter.format(income)} บาท',
                         style: const TextStyle(
                           fontSize: 21,
                           fontWeight: FontWeight.bold,
@@ -960,7 +960,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: Text(
-                        '฿${formatter.format(expense)}',
+                        '${formatter.format(expense)} บาท',
                         style: const TextStyle(
                           fontSize: 21,
                           fontWeight: FontWeight.bold,
@@ -1202,182 +1202,243 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   // ────────────────────────────────────────────────────────
-  //  6. QUICK ACTIONS — 2 columns with subtitles
+  //  6. QUICK ACTIONS — Modern App Grid (4 Columns)
   // ────────────────────────────────────────────────────────
   Widget _buildQuickActionsSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              width: 4,
-              height: 18,
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'เมนูหลัก',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColors.text(context),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 1.65,
-          children: [
-            _buildActionTile(
-              context,
-              icon: Icons.chat_bubble_outline_rounded,
-              label: 'ผู้ช่วยหมอ',
-              subtitle: 'ปรึกษาอาการวัว',
-              color: AppColors.info,
-              onTap: () => context.push('/ai_chat'),
-            ),
-            _buildActionTile(
-              context,
-              icon: Icons.health_and_safety_rounded,
-              label: 'สุขภาพ (กลุ่ม)',
-              subtitle: 'บันทึกสุขภาพรายกลุ่ม',
-              color: AppColors.primary,
-              onTap: () => context.push('/group_health'),
-            ),
-            _buildActionTile(
-              context,
-              icon: Icons.delete_sweep_outlined,
-              label: 'คัดออก (กลุ่ม)',
-              subtitle: 'จำหน่ายวัวแบบกลุ่ม',
-              color: AppColors.error,
-              onTap: () => context.push('/group_cull'),
-            ),
-            _buildActionTile(
-              context,
-              icon: Icons.event_available_rounded,
-              label: 'นัดหมาย (กลุ่ม)',
-              subtitle: 'สร้างนัดหมายแบบกลุ่ม',
-              color: Colors.orange[800]!,
-              onTap: () => context.push('/group_appointment'),
-            ),
-            _buildActionTile(
-              context,
-              icon: Icons.calendar_month_rounded,
-              label: 'ปฏิทินกิจกรรม',
-              subtitle: 'ตารางนัดหมาย',
-              color: AppColors.secondary,
-              onTap: () => context.push('/calendar'),
-            ),
-            _buildActionTile(
-              context,
-              icon: Icons.show_chart_rounded,
-              label: 'ราคาตลาด',
-              subtitle: 'ติดตามราคาวัว',
-              color: AppColors.accent,
-              onTap: () => context.push('/market_price'),
-            ),
-            _buildActionTile(
-              context,
-              icon: Icons.picture_as_pdf_rounded,
-              label: 'รายงานฟาร์ม',
-              subtitle: 'ส่งออกไฟล์ PDF',
-              color: const Color(0xFFC2410C),
-              onTap: _exportFarmPdfReport,
-            ),
-            _buildActionTile(
-              context,
-              icon: Icons.add_business_rounded,
-              label: 'เพิ่มฟาร์ม',
-              subtitle: 'สร้างฟาร์มใหม่',
-              color: AppColors.secondaryDark,
-              onTap: () => context.push('/create_farm'),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
+    final isDark = AppColors.isDark(context);
 
-  Widget _buildActionTile(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required String subtitle,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.cardBg(context),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: AppColors.brd(context).withValues(alpha: 0.5),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(
-                alpha: AppColors.isDark(context) ? 0.2 : 0.03,
-              ),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+      decoration: BoxDecoration(
+        color: AppColors.cardBg(context),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: AppColors.brd(context).withValues(alpha: 0.6),
         ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(9),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
                 children: [
+                  Container(
+                    width: 3.5,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   Text(
-                    label,
+                    'เมนูหลัก',
                     style: TextStyle(
-                      fontWeight: FontWeight.bold,
                       fontSize: 15,
+                      fontWeight: FontWeight.w700,
                       color: AppColors.text(context),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AppColors.subText(context),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(
+                    alpha: isDark ? 0.2 : 0.08,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'ทางลัดด่วน',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          GridView.count(
+            crossAxisCount: 4,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 6,
+            childAspectRatio: 0.82,
+            children: [
+              _buildAppMenuItem(
+                context,
+                icon: Icons.auto_awesome_rounded,
+                label: 'ผู้ช่วยหมอ',
+                color: const Color(0xFF0284C7), // Blue (AI Chatbot)
+                badgeText: 'AI',
+                onTap: () => context.push('/ai_chat'),
+              ),
+              _buildAppMenuItem(
+                context,
+                icon: Icons.health_and_safety_rounded,
+                label: 'สุขภาพกลุ่ม',
+                color: AppColors.primary, // Green
+                onTap: () => context.push('/group_health'),
+              ),
+              _buildAppMenuItem(
+                context,
+                icon: Icons.assignment_late_outlined,
+                label: 'คัดออกกลุ่ม',
+                color: AppColors.primary, // Green
+                onTap: () => context.push('/group_cull'),
+              ),
+              _buildAppMenuItem(
+                context,
+                icon: Icons.event_available_rounded,
+                label: 'นัดหมายกลุ่ม',
+                color: AppColors.primary, // Green
+                onTap: () => context.push('/group_appointment'),
+              ),
+              _buildAppMenuItem(
+                context,
+                icon: Icons.qr_code_2_rounded,
+                label: 'สร้างQRกลุ่ม',
+                color: AppColors.primary, // Green
+                onTap: () => context.push('/group_qr'),
+              ),
+              _buildAppMenuItem(
+                context,
+                icon: Icons.trending_up_rounded,
+                label: 'ราคาตลาด',
+                color: AppColors.primary, // Green
+                onTap: () => context.push('/market_price'),
+              ),
+              _buildAppMenuItem(
+                context,
+                icon: Icons.picture_as_pdf_rounded,
+                label: 'รายงานฟาร์ม',
+                color: AppColors.primary, // Green
+                onTap: _exportFarmPdfReport,
+              ),
+              _buildAppMenuItem(
+                context,
+                icon: Icons.add_business_rounded,
+                label: 'เพิ่มฟาร์ม',
+                color: AppColors.primary, // Green
+                onTap: () => context.push('/create_farm'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAppMenuItem(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required Color color,
+    String? badgeText,
+    required VoidCallback onTap,
+  }) {
+    final isDark = AppColors.isDark(context);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Squircle icon container
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      color.withValues(alpha: isDark ? 0.25 : 0.14),
+                      color.withValues(alpha: isDark ? 0.10 : 0.05),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: color.withValues(alpha: isDark ? 0.35 : 0.22),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: isDark ? 0.2 : 0.08),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Center(child: Icon(icon, color: color, size: 25)),
+              ),
+
+              // Optional badge (e.g. AI)
+              if (badgeText != null)
+                Positioned(
+                  top: -4,
+                  right: -4,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 1.5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: color,
+                      borderRadius: BorderRadius.circular(6),
+                      boxShadow: [
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.4),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      badgeText,
+                      style: const TextStyle(
+                        fontSize: 8.5,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 7),
+          // Label text
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.text(context),
             ),
-          ],
-        ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }
@@ -1799,10 +1860,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       ),
                     ),
                     subtitle: Text(
-                      AppDateUtils.formatThaiDate(
-                        selectedDate,
-                        useFullMonth: true,
-                      ),
+                      AppDateUtils.formatThaiDate(selectedDate),
                       style: TextStyle(
                         fontSize: 14,
                         color: AppColors.text(context),

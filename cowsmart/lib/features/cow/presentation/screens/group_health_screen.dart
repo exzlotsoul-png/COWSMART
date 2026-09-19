@@ -63,6 +63,7 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
   // Form fields for Step 2
   String _selectedType = 'CT01'; // CT01: ตรวจสุขภาพ, CT02: ฉีดวัคซีน, CT03: ให้ยา
   DateTime _selectedDate = DateTime.now();
+  TimeOfDay _selectedTime = TimeOfDay.now();
   String _selectedHealthStatus = 'normal'; // normal, sick, injured
 
   // Multi-select Sets
@@ -121,6 +122,21 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
     }
   }
 
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime,
+      helpText: 'ระบุเวลา (24 ชั่วโมง)',
+      cancelText: 'ยกเลิก',
+      confirmText: 'ตกลง',
+      hourLabelText: 'ชั่วโมง',
+      minuteLabelText: 'นาที',
+    );
+    if (picked != null && picked != _selectedTime) {
+      setState(() => _selectedTime = picked);
+    }
+  }
+
   void _submitGroupHealthRecord() async {
     if (_selectedCowIds.isEmpty) {
       AppFeedback.showError(context, 'กรุณาเลือกวัวอย่างน้อย 1 ตัวที่ต้องการบันทึกสุขภาพ');
@@ -142,6 +158,15 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
     try {
       final api = ref.read(apiClientProvider);
       final masterData = ref.read(masterDataProvider);
+
+      final dt = DateTime(
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day,
+        _selectedTime.hour,
+        _selectedTime.minute,
+      );
+      final String formattedDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(dt);
 
       // 1. Build Base items_json
       final List<Map<String, dynamic>> baseItemsPayload = [];
@@ -242,7 +267,6 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
         noteText = noteText.isNotEmpty ? '$noteText ($extraStr)' : extraStr;
       }
 
-      final String formattedDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(_selectedDate);
       final List<Map<String, dynamic>> recordsPayload = [];
 
       // ── MODE 1: EQUAL RATE PER COW (เท่ากันทุกตัว ไม่หาร) ──
@@ -1075,7 +1099,13 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
               labelText: 'ราคาเฉพาะรายการนี้ (บาท)',
               hintText: 'เช่น 150',
               hintStyle: TextStyle(color: AppColors.hint(context)),
-              prefixIcon: const Icon(Icons.attach_money_rounded, size: 16, color: AppColors.secondaryDark),
+              suffixText: 'บาท',
+              suffixStyle: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.subText(context),
+              ),
+              prefixIcon: const Icon(Icons.payments_rounded, size: 16, color: AppColors.secondaryDark),
               filled: true,
               fillColor: AppColors.surfAlt(context),
               isDense: true,
@@ -1141,34 +1171,77 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
             ),
             const SizedBox(height: 18),
 
-            // Date Picker
-            InkWell(
-              onTap: () => _selectDate(context),
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppColors.cardBg(context),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.brd(context)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.calendar_today_rounded, size: 18, color: AppColors.primary),
-                        const SizedBox(width: 10),
-                        Text('วันที่บันทึก:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.text(context))),
-                      ],
+            // Date & Time Picker
+            Row(
+              children: [
+                Expanded(
+                  flex: 6,
+                  child: InkWell(
+                    onTap: () => _selectDate(context),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: AppColors.cardBg(context),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.brd(context)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.calendar_today_rounded, size: 16, color: AppColors.primary),
+                              const SizedBox(width: 6),
+                              Text('วันที่บันทึก', style: TextStyle(fontSize: 12, color: AppColors.subText(context))),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            AppDateUtils.formatThaiDate(_selectedDate),
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.primary),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
                     ),
-                    Text(
-                      AppDateUtils.formatThaiDate(_selectedDate),
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.primary),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 4,
+                  child: InkWell(
+                    onTap: () => _selectTime(context),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: AppColors.cardBg(context),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.brd(context)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.access_time_rounded, size: 16, color: AppColors.primary),
+                              const SizedBox(width: 6),
+                              Text('เวลา', style: TextStyle(fontSize: 12, color: AppColors.subText(context))),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')} น.',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.primary),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 18),
 
@@ -1407,9 +1480,15 @@ class _GroupHealthScreenState extends ConsumerState<GroupHealthScreen> {
                   decoration: InputDecoration(
                     labelText: 'ค่าตรวจสุขภาพต่อตัว (บาท)',
                     hintText: 'บันทึกราคานี้ให้กับวัวทั้ง ${_selectedCowIds.length} ตัวเท่ากันหมด',
+                    suffixText: 'บาท',
+                    suffixStyle: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.subText(context),
+                    ),
                     filled: true,
                     fillColor: AppColors.surfAlt(context),
-                    prefixIcon: const Icon(Icons.attach_money_rounded, color: AppColors.primary),
+                    prefixIcon: const Icon(Icons.payments_rounded, color: AppColors.primary),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),

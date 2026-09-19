@@ -544,7 +544,12 @@ class _EditCowScreenState extends ConsumerState<EditCowScreen> {
                           controller: _purchasePriceController,
                           style: TextStyle(fontSize: 15.5, color: AppColors.text(context)),
                           keyboardType: TextInputType.number,
-                          decoration: _buildInputDecoration('ราคาที่ซื้อมา (บาท)', Icons.payments_rounded, hintText: '0.00'),
+                          decoration: _buildInputDecoration(
+                            'ราคาที่ซื้อมา (บาท)',
+                            Icons.payments_rounded,
+                            hintText: '0.00',
+                            suffixText: 'บาท',
+                          ),
                         ),
                       ],
                     ),

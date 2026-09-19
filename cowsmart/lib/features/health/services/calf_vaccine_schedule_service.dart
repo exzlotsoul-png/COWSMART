@@ -19,7 +19,7 @@ class CalfVaccineScheduleItem {
     required this.daysAfterBirth,
     required this.scheduledDate,
     required this.targetGender,
-    this.isSelected = true,
+    this.isSelected = false,
   });
 
   /// Description text used when saving the appointment
@@ -108,7 +108,7 @@ class CalfVaccineScheduleService {
         daysAfterBirth: 60,
         scheduledDate: cleanBirth.add(const Duration(days: 60)),
         targetGender: 'all',
-        isSelected: true,
+        isSelected: false,
       ),
 
       // 2. Brucellosis (3 months / 90 days) - เฉพาะเพศเมียเท่านั้น
@@ -120,7 +120,7 @@ class CalfVaccineScheduleService {
         daysAfterBirth: 90,
         scheduledDate: cleanBirth.add(const Duration(days: 90)),
         targetGender: 'female',
-        isSelected: isFemale,
+        isSelected: false,
       ),
 
       // 3. FMD dose 1 (4 months / 120 days)
@@ -132,7 +132,7 @@ class CalfVaccineScheduleService {
         daysAfterBirth: 120,
         scheduledDate: cleanBirth.add(const Duration(days: 120)),
         targetGender: 'all',
-        isSelected: true,
+        isSelected: false,
       ),
 
       // 4. Haemorrhagic Septicaemia (4 months / 120 days)
@@ -144,7 +144,7 @@ class CalfVaccineScheduleService {
         daysAfterBirth: 120,
         scheduledDate: cleanBirth.add(const Duration(days: 120)),
         targetGender: 'all',
-        isSelected: true,
+        isSelected: false,
       ),
 
       // 5. FMD Booster (5 months / 150 days)
@@ -156,7 +156,7 @@ class CalfVaccineScheduleService {
         daysAfterBirth: 150,
         scheduledDate: cleanBirth.add(const Duration(days: 150)),
         targetGender: 'all',
-        isSelected: true,
+        isSelected: false,
       ),
 
       // 6. Blackleg Booster (6 months / 180 days)
@@ -168,7 +168,7 @@ class CalfVaccineScheduleService {
         daysAfterBirth: 180,
         scheduledDate: cleanBirth.add(const Duration(days: 180)),
         targetGender: 'all',
-        isSelected: true,
+        isSelected: false,
       ),
     ];
 

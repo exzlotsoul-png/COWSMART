@@ -421,7 +421,7 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                         border: OutlineInputBorder(),
                       ),
                       child: Text(
-                        DateFormat('dd/MM/yyyy').format(selectedDate),
+                        AppDateUtils.formatThaiDate(selectedDate),
                         style: const TextStyle(fontSize: 16),
                       ),
                     ),

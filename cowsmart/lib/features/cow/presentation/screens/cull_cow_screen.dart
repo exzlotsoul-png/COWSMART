@@ -265,11 +265,17 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
     }
   }
 
-  InputDecoration _buildInputDecoration(BuildContext context, String label, IconData icon, {String? hintText}) {
+  InputDecoration _buildInputDecoration(BuildContext context, String label, IconData icon, {String? hintText, String? suffixText}) {
     final isDark = AppColors.isDark(context);
     return InputDecoration(
       labelText: label,
       hintText: hintText,
+      suffixText: suffixText,
+      suffixStyle: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: AppColors.subText(context),
+      ),
       labelStyle: TextStyle(fontSize: 15, color: AppColors.subText(context)),
       hintStyle: TextStyle(fontSize: 14, color: isDark ? AppColors.darkTextSecondary.withValues(alpha: 0.6) : AppColors.hint(context)),
       prefixIcon: Icon(icon, color: isDark ? AppColors.primaryLight : AppColors.primary, size: 22),
@@ -508,7 +514,7 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  'ราคาประเมินเบื้องต้น: ฿${NumberFormat('#,##0').format(estimatedVal)}',
+                                                  'ราคาประเมินเบื้องต้น: ${NumberFormat('#,##0').format(estimatedVal)} บาท',
                                                   style: TextStyle(
                                                     fontWeight: FontWeight.bold,
                                                     fontSize: 15,
@@ -517,7 +523,7 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
                                                 ),
                                                 const SizedBox(height: 2),
                                                 Text(
-                                                  'คำนวณจากน้ำหนัก ${weight.toStringAsFixed(0)} กก. × ${pricePerKg.toStringAsFixed(2)} ฿/กก.',
+                                                  'คำนวณจากน้ำหนัก ${weight.toStringAsFixed(0)} กก. × ${pricePerKg.toStringAsFixed(2)} บาท/กก.',
                                                   style: TextStyle(
                                                     fontSize: 13,
                                                     color: AppColors.subText(ctx),
@@ -561,7 +567,13 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
                                 controller: _priceController,
                                 keyboardType: TextInputType.number,
                                 style: TextStyle(fontSize: 15, color: AppColors.text(context)),
-                                decoration: _buildInputDecoration(context, 'ราคาที่ขายได้ (บาท)', Icons.payments_rounded, hintText: '0.00'),
+                                decoration: _buildInputDecoration(
+                                  context,
+                                  'ราคาที่ขายได้ (บาท)',
+                                  Icons.payments_rounded,
+                                  hintText: '0.00',
+                                  suffixText: 'บาท',
+                                ),
                                 validator: (value) {
                                   if (_selectedType == CullType.sold &&
                                       (value == null || value.isEmpty)) {

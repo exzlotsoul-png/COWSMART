@@ -391,7 +391,7 @@ class _CalendarHistoryScreenState extends ConsumerState<CalendarHistoryScreen> {
                     _buildDetailRow(
                       Icons.calendar_today_rounded,
                       'วันที่ดำเนินการ',
-                      AppDateUtils.formatThaiDate(event.eventDatetime, useFullMonth: true),
+                      AppDateUtils.formatThaiDate(event.eventDatetime),
                       typeColor,
                     ),
                     const SizedBox(height: 12),

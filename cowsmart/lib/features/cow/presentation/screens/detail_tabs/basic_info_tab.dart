@@ -189,7 +189,7 @@ class BasicInfoTab extends ConsumerWidget {
                 icon: Icons.monetization_on_outlined,
                 label: 'มูลค่าประเมินในตลาด',
                 value: latestWeight > 0
-                    ? '฿${NumberFormat('#,##0').format(estimatedValue)}'
+                    ? '${NumberFormat('#,##0').format(estimatedValue)} บาท'
                     : '-',
                 valueColor: AppColors.primary,
               ),
@@ -305,7 +305,7 @@ class BasicInfoTab extends ConsumerWidget {
             child: _buildQuickStatItem(
               icon: Icons.payments_rounded,
               label: 'มูลค่าประเมิน',
-              value: weight > 0 ? '฿${NumberFormat('#,##0').format(value)}' : '-',
+              value: weight > 0 ? '${NumberFormat('#,##0').format(value)} บาท' : '-',
             ),
           ),
           Container(width: 1, height: 42, color: Colors.white.withValues(alpha: 0.2)),

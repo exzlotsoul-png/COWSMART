@@ -247,6 +247,51 @@ class _CalfVaccineDialogState extends ConsumerState<CalfVaccineDialog> {
               ),
             ),
 
+            if (_scheduleItems.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 6, 16, 2),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'เลือกแล้ว $_selectedCount จาก ${_scheduleItems.length} รายการ',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: () {
+                        final allSelected = _scheduleItems.every((i) => i.isSelected);
+                        setState(() {
+                          for (var i in _scheduleItems) {
+                            i.isSelected = !allSelected;
+                          }
+                        });
+                      },
+                      icon: Icon(
+                        _scheduleItems.every((i) => i.isSelected)
+                            ? Icons.deselect_rounded
+                            : Icons.select_all_rounded,
+                        size: 18,
+                        color: AppColors.primary,
+                      ),
+                      label: Text(
+                        _scheduleItems.every((i) => i.isSelected)
+                            ? 'ยกเลิกทั้งหมด'
+                            : 'เลือกทั้งหมด',
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
             // ── Vaccine List ──
             Flexible(
               child: _scheduleItems.isEmpty
@@ -350,6 +395,7 @@ class _CalfVaccineDialogState extends ConsumerState<CalfVaccineDialog> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
+                          minimumSize: const Size(0, 44),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           elevation: 0,
@@ -364,6 +410,7 @@ class _CalfVaccineDialogState extends ConsumerState<CalfVaccineDialog> {
                           child: OutlinedButton(
                             onPressed: _isSaving ? null : () => Navigator.of(context).pop(false),
                             style: OutlinedButton.styleFrom(
+                              minimumSize: const Size(0, 44),
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               side: BorderSide(
@@ -382,7 +429,7 @@ class _CalfVaccineDialogState extends ConsumerState<CalfVaccineDialog> {
                         Expanded(
                           flex: 3,
                           child: ElevatedButton.icon(
-                            onPressed: _isSaving ? null : _saveAppointments,
+                            onPressed: (_isSaving || _selectedCount == 0) ? null : _saveAppointments,
                             icon: _isSaving
                                 ? const SizedBox(
                                     width: 18,
@@ -394,12 +441,15 @@ class _CalfVaccineDialogState extends ConsumerState<CalfVaccineDialog> {
                                   )
                                 : const Icon(Icons.check_circle_outline, size: 18),
                             label: Text(
-                              _isSaving ? 'กำลังบันทึก...' : 'บันทึกนัดหมาย ($_selectedCount)',
+                              _isSaving
+                                  ? 'กำลังบันทึก...'
+                                  : (_selectedCount > 0 ? 'บันทึกนัดหมาย ($_selectedCount)' : 'เลือกวัคซีนที่ต้องการ'),
                               style: const TextStyle(fontWeight: FontWeight.bold),
                             ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
+                              minimumSize: const Size(0, 44),
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               elevation: 0,
@@ -433,22 +483,29 @@ class _CalfVaccineDialogState extends ConsumerState<CalfVaccineDialog> {
           width: item.isSelected ? 1.4 : 1.0,
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Checkbox
-            Checkbox(
-              value: item.isSelected,
-              activeColor: AppColors.primary,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-              onChanged: (val) {
-                setState(() {
-                  _scheduleItems[index].isSelected = val ?? false;
-                });
-              },
-            ),
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _scheduleItems[index].isSelected = !_scheduleItems[index].isSelected;
+          });
+        },
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Checkbox
+              Checkbox(
+                value: item.isSelected,
+                activeColor: AppColors.primary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+                onChanged: (val) {
+                  setState(() {
+                    _scheduleItems[index].isSelected = val ?? false;
+                  });
+                },
+              ),
 
             // Vaccine Info
             Expanded(
@@ -563,6 +620,7 @@ class _CalfVaccineDialogState extends ConsumerState<CalfVaccineDialog> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

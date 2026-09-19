@@ -44,10 +44,13 @@ class FinanceState {
         59,
         59,
       );
-      return transactions.where((t) {
+      final list = transactions.where((t) {
         return (t.date.isAfter(start) || t.date.isAtSameMomentAs(start)) &&
             (t.date.isBefore(end) || t.date.isAtSameMomentAs(end));
       }).toList();
+      // เมื่อผู้ใช้เลือกช่วงเวลา จัดเรียงจากวันเริ่มไล่ลงมาจนถึงวันสิ้นสุด (Ascending: วันที่เริ่ม -> สิ้นสุด)
+      list.sort((a, b) => a.date.compareTo(b.date));
+      return list;
     }
 
     return transactions

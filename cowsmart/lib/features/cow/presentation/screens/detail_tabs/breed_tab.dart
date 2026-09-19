@@ -181,12 +181,12 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                 decoration: BoxDecoration(
                   color: AppColors.isDark(ctx)
                       ? AppColors.darkSurface
-                      : const Color(0xFF2563EB).withValues(alpha: 0.12),
+                      : const Color(0xFF0284C7).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
                     color: AppColors.isDark(ctx)
-                        ? const Color(0xFF3B82F6).withValues(alpha: 0.35)
-                        : const Color(0xFF2563EB).withValues(alpha: 0.3),
+                        ? const Color(0xFF0284C7).withValues(alpha: 0.35)
+                        : const Color(0xFF0284C7).withValues(alpha: 0.3),
                   ),
                 ),
                 child: Column(
@@ -197,8 +197,8 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                         Icon(
                           Icons.hotel_rounded,
                           color: AppColors.isDark(ctx)
-                              ? const Color(0xFF60A5FA)
-                              : const Color(0xFF2563EB),
+                              ? const Color(0xFF38BDF8)
+                              : const Color(0xFF0284C7),
                           size: 22,
                         ),
                         const SizedBox(width: 10),
@@ -210,7 +210,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                               fontWeight: FontWeight.bold,
                               color: AppColors.isDark(ctx)
                                   ? AppColors.text(ctx)
-                                  : const Color(0xFF1E40AF),
+                                  : const Color(0xFF0369A1),
                             ),
                           ),
                         ),
@@ -247,7 +247,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                           ),
                         ),
                         style: TextButton.styleFrom(
-                          backgroundColor: const Color(0xFF2563EB),
+                          backgroundColor: AppColors.primary,
                           minimumSize: const Size(0, 32),
                           padding: const EdgeInsets.symmetric(
                             horizontal: 14,
@@ -266,10 +266,10 @@ class _BreedTabState extends ConsumerState<BreedTab> {
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.pink.withValues(alpha: 0.1),
+                  color: const Color(0xFFD97706).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.favorite_outline, color: Colors.pink),
+                child: const Icon(Icons.favorite_outline, color: Color(0xFFD97706)),
               ),
               title: const Text(
                 'บันทึกเป็นสัด',
@@ -286,7 +286,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
+                  color: AppColors.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const CowIcon(color: AppColors.primary, size: 24),
@@ -306,12 +306,12 @@ class _BreedTabState extends ConsumerState<BreedTab> {
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.purple.withValues(alpha: 0.1),
+                  color: const Color(0xFF0284C7).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
                   Icons.medical_services_outlined,
-                  color: Colors.purple,
+                  color: Color(0xFF0284C7),
                 ),
               ),
               title: const Text(
@@ -329,12 +329,12 @@ class _BreedTabState extends ConsumerState<BreedTab> {
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.teal.withValues(alpha: 0.1),
+                  color: AppColors.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
                   Icons.child_care_outlined,
-                  color: Colors.teal,
+                  color: AppColors.primary,
                 ),
               ),
               title: const Text(
@@ -367,7 +367,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
           ),
           title: const Row(
             children: [
-              Icon(Icons.favorite, color: Colors.pink, size: 22),
+              Icon(Icons.favorite, color: Color(0xFFD97706), size: 22),
               SizedBox(width: 8),
               Flexible(
                 child: Text(
@@ -384,8 +384,8 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                tileColor: Colors.pink.withValues(alpha: 0.05),
-                leading: const Icon(Icons.calendar_today, color: Colors.pink),
+                tileColor: const Color(0xFFD97706).withValues(alpha: 0.08),
+                leading: const Icon(Icons.calendar_today, color: Color(0xFFD97706)),
                 title: const Text(
                   'วันที่และเวลาที่เป็นสัด',
                   style: TextStyle(fontSize: 14),
@@ -549,15 +549,15 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.pink.withValues(alpha: 0.08),
+                    color: const Color(0xFFD97706).withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Colors.pink.withValues(alpha: 0.2),
+                      color: const Color(0xFFD97706).withValues(alpha: 0.25),
                     ),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.favorite, color: Colors.pink, size: 20),
+                      const Icon(Icons.favorite, color: Color(0xFFD97706), size: 20),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(
@@ -567,7 +567,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                               'รายการเป็นสัดรอบปัจจุบัน',
                               style: TextStyle(
                                 fontSize: 13,
-                                color: Colors.pink,
+                                color: Color(0xFFD97706),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -856,7 +856,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
             children: [
               Icon(
                 Icons.medical_services_outlined,
-                color: Colors.purple,
+                color: Color(0xFF0284C7),
                 size: 22,
               ),
               SizedBox(width: 8),
@@ -878,17 +878,17 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.08),
+                    color: const Color(0xFF0284C7).withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Colors.blue.withValues(alpha: 0.2),
+                      color: const Color(0xFF0284C7).withValues(alpha: 0.2),
                     ),
                   ),
                   child: Row(
                     children: [
                       const Icon(
                         Icons.smart_toy_outlined,
-                        color: Colors.blue,
+                        color: Color(0xFF0284C7),
                         size: 20,
                       ),
                       const SizedBox(width: 10),
@@ -981,20 +981,14 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    tileColor:
-                        (AppColors.isDark(ctx)
-                                ? const Color(0xFFC084FC)
-                                : Colors.purple)
-                            .withValues(alpha: 0.08),
+                    tileColor: const Color(0xFF0284C7).withValues(alpha: 0.08),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 4,
                     ),
-                    leading: Icon(
+                    leading: const Icon(
                       Icons.calendar_today,
-                      color: AppColors.isDark(ctx)
-                          ? const Color(0xFFC084FC)
-                          : Colors.purple,
+                      color: Color(0xFF0284C7),
                     ),
                     title: Text(
                       'กำหนดคลอดโดยประมาณ',
@@ -1007,11 +1001,9 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                       expectedCalving != null
                           ? AppDateUtils.formatThaiDate(expectedCalving!)
                           : 'เลือกวันที่',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: AppColors.isDark(ctx)
-                            ? const Color(0xFFC084FC)
-                            : Colors.purple,
+                        color: Color(0xFF0284C7),
                         fontSize: 16,
                       ),
                     ),
@@ -1282,7 +1274,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
           ),
           title: const Row(
             children: [
-              Icon(Icons.child_care_outlined, color: Colors.teal, size: 22),
+              Icon(Icons.child_care_outlined, color: AppColors.primary, size: 22),
               SizedBox(width: 8),
               Flexible(
                 child: Text(
@@ -1302,17 +1294,17 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.purple.withValues(alpha: 0.08),
+                    color: const Color(0xFF0284C7).withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Colors.purple.withValues(alpha: 0.2),
+                      color: const Color(0xFF0284C7).withValues(alpha: 0.2),
                     ),
                   ),
                   child: Row(
                     children: [
                       const Icon(
                         Icons.pregnant_woman,
-                        color: Colors.purple,
+                        color: Color(0xFF0284C7),
                         size: 20,
                       ),
                       const SizedBox(width: 10),
@@ -1324,7 +1316,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                               'รายการตั้งท้องปัจจุบัน',
                               style: TextStyle(
                                 fontSize: 13,
-                                color: Colors.purple,
+                                color: Color(0xFF0284C7),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -1333,10 +1325,10 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                               activePregnancy.expectedCalving != null
                                   ? 'กำหนดคลอด: ${AppDateUtils.formatThaiDate(activePregnancy.expectedCalving!)}'
                                   : 'ผสมวันที่: ${AppDateUtils.formatThaiDate(activePregnancy.matingDate!)}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
+                                color: AppColors.text(ctx),
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -1352,12 +1344,12 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  tileColor: Colors.teal.withValues(alpha: 0.05),
+                  tileColor: AppColors.primary.withValues(alpha: 0.06),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 4,
                   ),
-                  leading: const Icon(Icons.calendar_today, color: Colors.teal),
+                  leading: const Icon(Icons.calendar_today, color: AppColors.primary),
                   title: const Text(
                     'วันที่และเวลาที่คลอด',
                     style: TextStyle(fontSize: 14),
@@ -1410,18 +1402,18 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.orange.withValues(alpha: 0.1),
+                      color: const Color(0xFFD97706).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                      border: Border.all(color: const Color(0xFFD97706).withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.lock, color: Colors.orange, size: 20),
+                        const Icon(Icons.lock, color: Color(0xFFD97706), size: 20),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             'ไม่สามารถแก้ไขผลการคลอดได้ เนื่องจากมีการลงทะเบียนลูกวัวไปแล้ว $registeredCount ตัว (แก้ไขได้เฉพาะวันที่)',
-                            style: const TextStyle(color: Colors.orange, fontSize: 13),
+                            style: const TextStyle(color: Color(0xFFD97706), fontSize: 13),
                           ),
                         ),
                       ],
@@ -1465,17 +1457,17 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                       vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.teal.withValues(alpha: 0.08),
+                      color: AppColors.primary.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: Colors.teal.withValues(alpha: 0.25),
+                        color: AppColors.primary.withValues(alpha: 0.25),
                       ),
                     ),
                     child: Row(
                       children: [
                         const Icon(
                           Icons.people_alt_outlined,
-                          color: Colors.teal,
+                          color: AppColors.primary,
                           size: 22,
                         ),
                         const SizedBox(width: 10),
@@ -1506,7 +1498,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                             color: AppColors.cardBg(ctx),
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
-                              color: Colors.teal.withValues(alpha: 0.3),
+                              color: AppColors.primary.withValues(alpha: 0.3),
                             ),
                           ),
                           child: Row(
@@ -1516,7 +1508,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                                 icon: const Icon(
                                   Icons.remove,
                                   size: 18,
-                                  color: Colors.teal,
+                                  color: AppColors.primary,
                                 ),
                                 visualDensity: VisualDensity.compact,
                                 onPressed: (isResultLocked || twinCount <= 2)
@@ -1539,7 +1531,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                                 icon: const Icon(
                                   Icons.add,
                                   size: 18,
-                                  color: Colors.teal,
+                                  color: AppColors.primary,
                                 ),
                                 visualDensity: VisualDensity.compact,
                                 onPressed: (isResultLocked || twinCount >= 6)
@@ -1678,14 +1670,13 @@ class _BreedTabState extends ConsumerState<BreedTab> {
     int? _loadingCalfIndex;
 
     showModalBottomSheet(
-
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (bCtx) => StatefulBuilder(
         builder: (ctx, setModalState) {
           final isDark = AppColors.isDark(ctx);
-          final tealColor = isDark ? const Color(0xFF2DD4BF) : Colors.teal;
+          final primaryGreen = AppColors.primary;
 
           return Container(
             decoration: BoxDecoration(
@@ -1719,7 +1710,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                   children: [
                     Icon(
                       totalCalves > 1 ? Icons.people_alt : Icons.child_care,
-                      color: tealColor,
+                      color: primaryGreen,
                       size: 24,
                     ),
                     const SizedBox(width: 10),
@@ -1774,20 +1765,16 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                           ),
                           decoration: BoxDecoration(
                             color: isRegistered
-                                ? (isDark
-                                      ? Colors.green.withValues(alpha: 0.12)
-                                      : Colors.green.withValues(alpha: 0.05))
-                                : (isDark
-                                      ? tealColor.withValues(alpha: 0.1)
-                                      : Colors.teal.withValues(alpha: 0.05)),
+                                ? primaryGreen.withValues(alpha: isDark ? 0.15 : 0.08)
+                                : primaryGreen.withValues(alpha: isDark ? 0.08 : 0.04),
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
                               color: isRegistered
-                                  ? Colors.green.withValues(
+                                  ? primaryGreen.withValues(
                                       alpha: isDark ? 0.4 : 0.3,
                                     )
-                                  : tealColor.withValues(
-                                      alpha: isDark ? 0.35 : 0.2,
+                                  : primaryGreen.withValues(
+                                      alpha: isDark ? 0.25 : 0.15,
                                     ),
                             ),
                           ),
@@ -1795,21 +1782,15 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                             children: [
                               CircleAvatar(
                                 radius: 18,
-                                backgroundColor: isRegistered
-                                    ? Colors.green.withValues(
-                                        alpha: isDark ? 0.25 : 0.15,
-                                      )
-                                    : tealColor.withValues(
-                                        alpha: isDark ? 0.25 : 0.15,
-                                      ),
+                                backgroundColor: primaryGreen.withValues(
+                                  alpha: isRegistered
+                                      ? (isDark ? 0.3 : 0.2)
+                                      : (isDark ? 0.15 : 0.1),
+                                ),
                                 child: Text(
                                   '$calfNum',
                                   style: TextStyle(
-                                    color: isRegistered
-                                        ? (isDark
-                                              ? const Color(0xFF4ADE80)
-                                              : Colors.green)
-                                        : tealColor,
+                                    color: primaryGreen,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
                                   ),
@@ -1899,14 +1880,12 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                                         }
                                       },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: tealColor,
+                                  backgroundColor: primaryGreen,
                                   disabledBackgroundColor: isDark
                                       ? const Color(0xFF166534)
                                       : Colors.green.shade400,
                                   disabledForegroundColor: Colors.white,
-                                  foregroundColor: isDark
-                                      ? AppColors.darkBackground
-                                      : Colors.white,
+                                  foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 12,
                                     vertical: 8,
@@ -2038,10 +2017,8 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                             }
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: tealColor,
-                            foregroundColor: isDark
-                                ? AppColors.darkBackground
-                                : Colors.white,
+                            backgroundColor: primaryGreen,
+                            foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -2351,19 +2328,19 @@ class _BreedTabState extends ConsumerState<BreedTab> {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : const Color(0xFFEFF6FF),
+        color: isDark ? AppColors.darkSurface : const Color(0xFFF0F9FF),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isDark
-              ? const Color(0xFF3B82F6).withValues(alpha: 0.35)
-              : const Color(0xFFBFDBFE),
+              ? const Color(0xFF0284C7).withValues(alpha: 0.35)
+              : const Color(0xFFBAE6FD),
           width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
             color: isDark
                 ? Colors.black.withValues(alpha: 0.25)
-                : const Color(0xFF2563EB).withValues(alpha: 0.06),
+                : const Color(0xFF0284C7).withValues(alpha: 0.06),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -2378,15 +2355,15 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: isDark
-                      ? const Color(0xFF3B82F6).withValues(alpha: 0.2)
-                      : const Color(0xFF2563EB).withValues(alpha: 0.12),
+                      ? const Color(0xFF0284C7).withValues(alpha: 0.2)
+                      : const Color(0xFF0284C7).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   Icons.hotel_rounded,
                   color: isDark
-                      ? const Color(0xFF60A5FA)
-                      : const Color(0xFF1D4ED8),
+                      ? const Color(0xFF38BDF8)
+                      : const Color(0xFF0284C7),
                   size: 22,
                 ),
               ),
@@ -2396,8 +2373,8 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                   'อยู่ในช่วงพักฟื้นหลังคลอด',
                   style: TextStyle(
                     color: isDark
-                        ? const Color(0xFF93C5FD)
-                        : const Color(0xFF1E3A8A),
+                        ? const Color(0xFFBAE6FD)
+                        : const Color(0xFF0369A1),
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
                   ),
@@ -2413,12 +2390,12 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                 ),
                 decoration: BoxDecoration(
                   color: isDark
-                      ? const Color(0xFF1E293B)
-                      : const Color(0xFF2563EB).withValues(alpha: 0.15),
+                      ? const Color(0xFF0F172A)
+                      : const Color(0xFF0284C7).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                   border: isDark
                       ? Border.all(
-                          color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
+                          color: const Color(0xFF0284C7).withValues(alpha: 0.3),
                         )
                       : null,
                 ),
@@ -2426,8 +2403,8 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                   'เหลือพักอีก $remainingDays วัน',
                   style: TextStyle(
                     color: isDark
-                        ? const Color(0xFF93C5FD)
-                        : const Color(0xFF1D4ED8),
+                        ? const Color(0xFFBAE6FD)
+                        : const Color(0xFF0284C7),
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                   ),
@@ -2439,7 +2416,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
           Text(
             'แม่วัวคลอดเมื่อวันที่ ${AppDateUtils.formatThaiDate(calvingDate)} (พักฟื้นมาแล้ว $daysPassed วัน จาก $totalDays วัน)',
             style: TextStyle(
-              color: isDark ? AppColors.text(context) : const Color(0xFF1E40AF),
+              color: isDark ? AppColors.text(context) : const Color(0xFF0369A1),
               fontSize: 14.5,
               fontWeight: FontWeight.w500,
             ),
@@ -2452,8 +2429,8 @@ class _BreedTabState extends ConsumerState<BreedTab> {
               minHeight: 8,
               backgroundColor: isDark
                   ? AppColors.darkSurfaceAlt
-                  : const Color(0xFFDBEAFE),
-              color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
+                  : const Color(0xFFE0F2FE),
+              color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
             ),
           ),
           const SizedBox(height: 10),
@@ -2462,8 +2439,8 @@ class _BreedTabState extends ConsumerState<BreedTab> {
               Icon(
                 Icons.info_outline_rounded,
                 color: isDark
-                    ? const Color(0xFF60A5FA)
-                    : const Color(0xFF1D4ED8),
+                    ? const Color(0xFF38BDF8)
+                    : const Color(0xFF0284C7),
                 size: 17,
               ),
               const SizedBox(width: 6),
@@ -2473,7 +2450,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                   style: TextStyle(
                     color: isDark
                         ? AppColors.subText(context)
-                        : const Color(0xFF1E40AF),
+                        : const Color(0xFF0369A1),
                     fontSize: 13,
                   ),
                 ),
@@ -2503,7 +2480,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
               ),
               style: ElevatedButton.styleFrom(
                 foregroundColor: Colors.white,
-                backgroundColor: const Color(0xFF2563EB),
+                backgroundColor: AppColors.primary,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 8,
@@ -2527,7 +2504,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
   ) {
     final allCows = ref.watch(cowProvider).allCows;
     final isDark = AppColors.isDark(context);
-    final tealColor = isDark ? const Color(0xFF2DD4BF) : Colors.teal;
+    final primaryGreen = AppColors.primary;
 
     // Filter active cycle
     final activeRecords = records
@@ -2569,10 +2546,10 @@ class _BreedTabState extends ConsumerState<BreedTab> {
         decoration: BoxDecoration(
           color: isDark
               ? AppColors.darkSurface
-              : Colors.teal.withValues(alpha: 0.06),
+              : primaryGreen.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: tealColor.withValues(alpha: isDark ? 0.35 : 0.2),
+            color: primaryGreen.withValues(alpha: isDark ? 0.35 : 0.2),
           ),
         ),
         child: Row(
@@ -2580,12 +2557,12 @@ class _BreedTabState extends ConsumerState<BreedTab> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: tealColor.withValues(alpha: 0.12),
+                color: primaryGreen.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.check_circle_outline,
-                color: tealColor,
+                color: primaryGreen,
                 size: 24,
               ),
             ),
@@ -2599,7 +2576,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: tealColor,
+                      color: primaryGreen,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -2647,14 +2624,14 @@ class _BreedTabState extends ConsumerState<BreedTab> {
     // Determine current stage & step index (1: เป็นสัด, 2: รอตรวจท้อง, 3: ตั้งท้อง)
     String stageTitle = 'เป็นสัด';
     String stageSubtitle = '';
-    Color stageColor = Colors.pink;
+    Color stageColor = const Color(0xFFD97706);
     int currentStep = 1;
 
     if (current.matingDate == null) {
       stageTitle = 'เป็นสัด (รอผสมพันธุ์)';
       final days = DateTime.now().difference(current.heatDate!).inDays;
       stageSubtitle = days == 0 ? 'เป็นสัดวันนี้' : '$days วันที่แล้ว';
-      stageColor = Colors.pink;
+      stageColor = const Color(0xFFD97706);
       currentStep = 1;
     } else if (current.pregnancyResult == null ||
         current.pregnancyResult == 'รอตรวจ') {
@@ -2662,7 +2639,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
       final days = DateTime.now().difference(current.matingDate!).inDays;
       stageSubtitle =
           'ผสมแล้ว $days วัน ${days >= 60 ? "(ตรวจท้องได้แล้ว)" : "(รอครบ 60 วัน)"}';
-      stageColor = Colors.orange;
+      stageColor = const Color(0xFFD97706);
       currentStep = 2;
     } else if (current.pregnancyResult == 'ตั้งท้อง') {
       stageTitle = 'ตั้งท้อง (รอคลอด)';
@@ -2674,7 +2651,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
             ? 'คลอดประมาณอีก $daysLeft วัน'
             : 'ครบกำหนดคลอดแล้ว';
       }
-      stageColor = Colors.purple;
+      stageColor = const Color(0xFF0284C7);
       currentStep = 3;
     }
 
@@ -2794,9 +2771,9 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                         height: 56,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.indigo.withValues(alpha: 0.08),
+                          color: AppColors.primary.withValues(alpha: 0.08),
                           border: Border.all(
-                            color: Colors.indigo.withValues(alpha: 0.25),
+                            color: AppColors.primary.withValues(alpha: 0.25),
                             width: 2,
                           ),
                         ),
@@ -2817,11 +2794,11 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                                             ),
                                   fit: BoxFit.cover,
                                   errorBuilder: (_, __, ___) => const CowIcon(
-                                    color: Colors.indigo,
+                                    color: AppColors.primary,
                                     size: 28,
                                   ),
                                 )
-                              : const CowIcon(color: Colors.indigo, size: 28),
+                              : const CowIcon(color: AppColors.primary, size: 28),
                         ),
                       ),
                       const SizedBox(width: 14),
@@ -2945,10 +2922,10 @@ class _BreedTabState extends ConsumerState<BreedTab> {
 
     if (isMale) {
       final stageColor = record.pregnancyResult == 'ตั้งท้อง'
-          ? (isDark ? const Color(0xFFC084FC) : Colors.purple)
+          ? const Color(0xFF0284C7)
           : record.pregnancyResult == 'ไม่ตั้งท้อง'
-          ? Colors.red
-          : Colors.orange;
+          ? AppColors.error
+          : const Color(0xFFD97706);
 
       return Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -2995,7 +2972,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
+                     horizontal: 10,
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
@@ -3042,18 +3019,18 @@ class _BreedTabState extends ConsumerState<BreedTab> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.child_care_rounded,
                     size: 17,
-                    color: isDark ? const Color(0xFF2DD4BF) : Colors.teal,
+                    color: AppColors.primary,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'คลอดจริง: ${AppDateUtils.formatThaiDate(record.calvingDate!, includeTime: true)} (${record.calvingResult ?? "-"})',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: isDark ? const Color(0xFF2DD4BF) : Colors.teal,
+                        color: AppColors.primary,
                         fontSize: 13.5,
                       ),
                     ),
@@ -3067,15 +3044,13 @@ class _BreedTabState extends ConsumerState<BreedTab> {
     }
 
     final stageColor = record.calvingResult != null
-        ? (isDark ? const Color(0xFF2DD4BF) : Colors.teal)
+        ? AppColors.primary
         : record.pregnancyResult == 'ตั้งท้อง'
-        ? (isDark ? const Color(0xFFC084FC) : Colors.purple)
+        ? const Color(0xFF0284C7)
         : record.pregnancyResult == 'ไม่ตั้งท้อง' ||
               record.pregnancyResult == 'แท้ง'
-        ? Colors.red
-        : record.matingDate != null
-        ? Colors.orange
-        : Colors.pink;
+        ? AppColors.error
+        : const Color(0xFFD97706);
 
     final badgeText = record.calvingResult != null
         ? 'คลอดแล้ว'
@@ -3288,18 +3263,18 @@ class _BreedTabState extends ConsumerState<BreedTab> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.child_care_rounded,
                     size: 17,
-                    color: isDark ? const Color(0xFF2DD4BF) : Colors.teal,
+                    color: AppColors.primary,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'คลอดจริง: ${AppDateUtils.formatThaiDate(record.calvingDate!, includeTime: true)} (${record.calvingResult ?? "-"})',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: isDark ? const Color(0xFF2DD4BF) : Colors.teal,
+                        color: AppColors.primary,
                         fontSize: 13.5,
                       ),
                     ),
@@ -3341,7 +3316,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                   : 0;
 
               final bool isComplete = registeredCalves >= totalCalves;
-              final tealColor = isDark ? const Color(0xFF2DD4BF) : Colors.teal;
+              final primaryGreen = AppColors.primary;
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -3362,8 +3337,8 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                           style: const TextStyle(fontSize: 12),
                         ),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: tealColor,
-                          side: BorderSide(color: tealColor),
+                          foregroundColor: primaryGreen,
+                          side: BorderSide(color: primaryGreen),
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -3381,10 +3356,10 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: tealColor.withValues(alpha: 0.12),
+                        color: primaryGreen.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: tealColor.withValues(alpha: 0.3),
+                          color: primaryGreen.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Row(
@@ -3393,7 +3368,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                           Icon(
                             Icons.check_circle_outline,
                             size: 15,
-                            color: tealColor,
+                            color: primaryGreen,
                           ),
                           const SizedBox(width: 6),
                           Flexible(
@@ -3406,7 +3381,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: tealColor,
+                                color: primaryGreen,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),

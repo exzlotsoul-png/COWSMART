@@ -387,7 +387,7 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        '${NumberFormat('#,##0').format(record.cost)} ฿',
+                        '${NumberFormat('#,##0').format(record.cost)} บาท',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: AppColors.isDark(context) ? const Color(0xFFFBBF24) : AppColors.secondaryDark,
@@ -423,7 +423,7 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                           }
                           String costStr = '';
                           if (item.cost != null && item.cost! > 0) {
-                            costStr = ' - ${NumberFormat('#,##0').format(item.cost)} ฿';
+                            costStr = ' - ${NumberFormat('#,##0').format(item.cost)} บาท';
                           }
 
                           IconData iconData = Icons.medication_outlined;

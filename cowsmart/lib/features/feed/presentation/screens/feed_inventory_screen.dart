@@ -188,7 +188,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
               child: _buildSummaryCard(
                 context,
                 title: 'มูลค่ารวม',
-                value: '${NumberFormat('#,##0').format(totalCost)} ฿',
+                value: '${NumberFormat('#,##0').format(totalCost)} บาท',
                 icon: Icons.payments_rounded,
                 color: Colors.green[700]!,
               ),
@@ -199,8 +199,8 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                 context,
                 title: 'ราคาเฉลี่ย/กก.',
                 value: totalQuantity > 0
-                    ? '${(totalCost / totalQuantity).toStringAsFixed(1)} ฿'
-                    : '- ฿',
+                    ? '${(totalCost / totalQuantity).toStringAsFixed(1)} บาท'
+                    : '- บาท',
                 icon: Icons.analytics_rounded,
                 color: Colors.orange[800]!,
               ),
@@ -434,7 +434,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      '${NumberFormat('#,##0').format(cost)} ฿',
+                      '${NumberFormat('#,##0').format(cost)} บาท',
                       style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.text(context)),
                     ),
                   ],
@@ -667,7 +667,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '${NumberFormat('#,##0').format(item.cost)} ฿',
+                      '${NumberFormat('#,##0').format(item.cost)} บาท',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
@@ -1576,6 +1576,12 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                         style: TextStyle(color: AppColors.text(context)),
                         decoration: InputDecoration(
                           labelText: 'มูลค่า (บาท)',
+                          suffixText: 'บาท',
+                          suffixStyle: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.subText(context),
+                          ),
                           prefixIcon: const Icon(Icons.payments_outlined, color: AppColors.primary),
                           filled: true,
                           fillColor: AppColors.surfAlt(context),

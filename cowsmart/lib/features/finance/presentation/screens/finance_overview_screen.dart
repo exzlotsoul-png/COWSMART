@@ -83,7 +83,10 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                           ),
                           IconButton(
                             onPressed: () => Navigator.pop(modalContext),
-                            icon: Icon(Icons.close_rounded, color: AppColors.subText(modalContext)),
+                            icon: Icon(
+                              Icons.close_rounded,
+                              color: AppColors.subText(modalContext),
+                            ),
                           ),
                         ],
                       ),
@@ -94,13 +97,27 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                         segments: const [
                           ButtonSegment(
                             value: TransactionType.income,
-                            label: Text('รายรับ (+)', style: TextStyle(fontWeight: FontWeight.bold)),
-                            icon: Icon(Icons.arrow_circle_down_rounded, color: AppColors.success, size: 18),
+                            label: Text(
+                              'รายรับ (+)',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            icon: Icon(
+                              Icons.arrow_circle_down_rounded,
+                              color: AppColors.success,
+                              size: 18,
+                            ),
                           ),
                           ButtonSegment(
                             value: TransactionType.expense,
-                            label: Text('รายจ่าย (-)', style: TextStyle(fontWeight: FontWeight.bold)),
-                            icon: Icon(Icons.arrow_circle_up_rounded, color: AppColors.error, size: 18),
+                            label: Text(
+                              'รายจ่าย (-)',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            icon: Icon(
+                              Icons.arrow_circle_up_rounded,
+                              color: AppColors.error,
+                              size: 18,
+                            ),
                           ),
                         ],
                         selected: <TransactionType>{selectedType},
@@ -120,8 +137,14 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                       // Title Field
                       TextFormField(
                         controller: titleController,
-                        decoration: _buildModalInputDecoration('ชื่อรายการ', Icons.title_rounded, hintText: 'เช่น ค่าอาหารเม็ด, ขายวัว TH-001'),
-                        validator: (val) => val == null || val.trim().isEmpty ? 'กรุณากรอกชื่อรายการ' : null,
+                        decoration: _buildModalInputDecoration(
+                          'ชื่อรายการ',
+                          Icons.title_rounded,
+                          hintText: 'เช่น ค่าอาหารเม็ด, ขายวัว TH-001',
+                        ),
+                        validator: (val) => val == null || val.trim().isEmpty
+                            ? 'กรุณากรอกชื่อรายการ'
+                            : null,
                       ),
                       const SizedBox(height: 12),
 
@@ -129,10 +152,17 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                       TextFormField(
                         controller: amountController,
                         keyboardType: TextInputType.number,
-                        decoration: _buildModalInputDecoration('จำนวนเงิน (บาท)', Icons.payments_rounded, hintText: '0.00'),
+                        decoration: _buildModalInputDecoration(
+                          'จำนวนเงิน (บาท)',
+                          Icons.payments_rounded,
+                          hintText: '0.00',
+                          suffixText: 'บาท',
+                        ),
                         validator: (val) {
-                          if (val == null || val.trim().isEmpty) return 'กรุณากรอกจำนวนเงิน';
-                          if (double.tryParse(val) == null || double.parse(val) <= 0) {
+                          if (val == null || val.trim().isEmpty)
+                            return 'กรุณากรอกจำนวนเงิน';
+                          if (double.tryParse(val) == null ||
+                              double.parse(val) <= 0) {
                             return 'กรุณากรอกจำนวนเงินให้ถูกต้อง';
                           }
                           return null;
@@ -144,15 +174,22 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                       DropdownButtonFormField<TransactionCategory>(
                         initialValue: selectedCategory,
                         isExpanded: true,
-                        decoration: _buildModalInputDecoration('หมวดหมู่', Icons.category_rounded),
+                        decoration: _buildModalInputDecoration(
+                          'หมวดหมู่',
+                          Icons.category_rounded,
+                        ),
                         items: TransactionCategory.values.map((cat) {
                           return DropdownMenuItem(
                             value: cat,
-                            child: Text(cat.label, overflow: TextOverflow.ellipsis),
+                            child: Text(
+                              cat.label,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           );
                         }).toList(),
                         onChanged: (val) {
-                          if (val != null) setModalState(() => selectedCategory = val);
+                          if (val != null)
+                            setModalState(() => selectedCategory = val);
                         },
                       ),
                       const SizedBox(height: 12),
@@ -172,10 +209,16 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                         },
                         borderRadius: BorderRadius.circular(14),
                         child: InputDecorator(
-                          decoration: _buildModalInputDecoration('วันที่รายการ', Icons.calendar_today_rounded),
+                          decoration: _buildModalInputDecoration(
+                            'วันที่รายการ',
+                            Icons.calendar_today_rounded,
+                          ),
                           child: Text(
-                            DateFormat('dd/MM/yyyy').format(selectedDate),
-                            style: TextStyle(fontSize: 14, color: AppColors.text(modalContext)),
+                            AppDateUtils.formatThaiDate(selectedDate),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppColors.text(modalContext),
+                            ),
                           ),
                         ),
                       ),
@@ -184,7 +227,10 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                       // Notes Field
                       TextFormField(
                         controller: notesController,
-                        decoration: _buildModalInputDecoration('บันทึกเพิ่มเติม (ถ้ามี)', Icons.notes_rounded),
+                        decoration: _buildModalInputDecoration(
+                          'บันทึกเพิ่มเติม (ถ้ามี)',
+                          Icons.notes_rounded,
+                        ),
                       ),
                       const SizedBox(height: 20),
 
@@ -196,38 +242,63 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                             if (!formKey.currentState!.validate()) {
                               return;
                             }
-                            final currentFarm = ref.read(farmProvider).currentFarm;
+                            final currentFarm = ref
+                                .read(farmProvider)
+                                .currentFarm;
                             if (currentFarm == null) return;
 
                             final tx = FinancialTransaction(
                               id: '',
                               farmId: currentFarm.id,
                               title: titleController.text.trim(),
-                              amount: double.parse(amountController.text.trim()),
+                              amount: double.parse(
+                                amountController.text.trim(),
+                              ),
                               type: selectedType,
                               category: selectedCategory,
                               date: selectedDate,
-                              notes: notesController.text.trim().isEmpty ? null : notesController.text.trim(),
+                              notes: notesController.text.trim().isEmpty
+                                  ? null
+                                  : notesController.text.trim(),
                             );
 
                             Navigator.pop(modalContext);
                             try {
-                              await ref.read(financeProvider.notifier).addTransaction(tx);
+                              await ref
+                                  .read(financeProvider.notifier)
+                                  .addTransaction(tx);
                               if (context.mounted) {
-                                AppFeedback.showSuccess(context, 'บันทึกรายการรายรับ/รายจ่ายเรียบร้อยแล้ว');
+                                AppFeedback.showSuccess(
+                                  context,
+                                  'บันทึกรายการรายรับ/รายจ่ายเรียบร้อยแล้ว',
+                                );
                               }
                             } catch (e) {
                               if (context.mounted) {
-                                AppFeedback.showError(context, 'บันทึกรายการไม่สำเร็จ: $e');
+                                AppFeedback.showError(
+                                  context,
+                                  'บันทึกรายการไม่สำเร็จ: $e',
+                                );
                               }
                             }
                           },
-                          icon: const Icon(Icons.check_circle_rounded, size: 20),
-                          label: const Text('บันทึกรายการ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          icon: const Icon(
+                            Icons.check_circle_rounded,
+                            size: 20,
+                          ),
+                          label: const Text(
+                            'บันทึกรายการ',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                           ),
                         ),
                       ),
@@ -258,9 +329,18 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
     int tempYear = financeState.selectedMonth.year;
 
     final thaiMonths = [
-      'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน',
-      'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม',
-      'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+      'มกราคม',
+      'กุมภาพันธ์',
+      'มีนาคม',
+      'เมษายน',
+      'พฤษภาคม',
+      'มิถุนายน',
+      'กรกฎาคม',
+      'สิงหาคม',
+      'กันยายน',
+      'ตุลาคม',
+      'พฤศจิกายน',
+      'ธันวาคม',
     ];
 
     showModalBottomSheet(
@@ -297,7 +377,10 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                       ),
                       IconButton(
                         onPressed: () => Navigator.pop(modalContext),
-                        icon: const Icon(Icons.close_rounded, color: AppColors.textSecondary),
+                        icon: const Icon(
+                          Icons.close_rounded,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ],
                   ),
@@ -305,7 +388,10 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
 
                   // Year Selector
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.surfaceAlt,
                       borderRadius: BorderRadius.circular(14),
@@ -314,7 +400,10 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.chevron_left_rounded, color: AppColors.primaryDark),
+                          icon: const Icon(
+                            Icons.chevron_left_rounded,
+                            color: AppColors.primaryDark,
+                          ),
                           onPressed: tempYear > 2020
                               ? () => setModalState(() => tempYear--)
                               : null,
@@ -328,7 +417,10 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.chevron_right_rounded, color: AppColors.primaryDark),
+                          icon: const Icon(
+                            Icons.chevron_right_rounded,
+                            color: AppColors.primaryDark,
+                          ),
                           onPressed: tempYear < now.year
                               ? () => setModalState(() => tempYear++)
                               : null,
@@ -342,23 +434,30 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                   GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      childAspectRatio: 2.2,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          childAspectRatio: 2.2,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                        ),
                     itemCount: 12,
                     itemBuilder: (context, index) {
                       final monthNum = index + 1;
-                      final isSelected = (tempYear == financeState.selectedMonth.year && monthNum == financeState.selectedMonth.month);
-                      final isFuture = (tempYear > now.year) || (tempYear == now.year && monthNum > now.month);
+                      final isSelected =
+                          (tempYear == financeState.selectedMonth.year &&
+                          monthNum == financeState.selectedMonth.month);
+                      final isFuture =
+                          (tempYear > now.year) ||
+                          (tempYear == now.year && monthNum > now.month);
 
                       return InkWell(
                         onTap: isFuture
                             ? null
                             : () {
-                                ref.read(financeProvider.notifier).changeMonth(DateTime(tempYear, monthNum));
+                                ref
+                                    .read(financeProvider.notifier)
+                                    .changeMonth(DateTime(tempYear, monthNum));
                                 Navigator.pop(modalContext);
                               },
                         borderRadius: BorderRadius.circular(12),
@@ -366,21 +465,31 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? AppColors.primary
-                                : (isFuture ? Colors.grey[200] : AppColors.surfaceAlt),
+                                : (isFuture
+                                      ? Colors.grey[200]
+                                      : AppColors.surfaceAlt),
                             borderRadius: BorderRadius.circular(12),
                             border: isSelected
                                 ? null
-                                : Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                                : Border.all(
+                                    color: AppColors.border.withValues(
+                                      alpha: 0.5,
+                                    ),
+                                  ),
                           ),
                           alignment: Alignment.center,
                           child: Text(
                             thaiMonths[index],
                             style: TextStyle(
                               fontSize: 13,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.w600,
                               color: isSelected
                                   ? Colors.white
-                                  : (isFuture ? AppColors.textHint : AppColors.textPrimary),
+                                  : (isFuture
+                                        ? AppColors.textHint
+                                        : AppColors.textPrimary),
                             ),
                           ),
                         ),
@@ -397,10 +506,21 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
     );
   }
 
-  InputDecoration _buildModalInputDecoration(String label, IconData icon, {String? hintText}) {
+  InputDecoration _buildModalInputDecoration(
+    String label,
+    IconData icon, {
+    String? hintText,
+    String? suffixText,
+  }) {
     return InputDecoration(
       labelText: label,
       hintText: hintText,
+      suffixText: suffixText,
+      suffixStyle: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: AppColors.subText(context),
+      ),
       prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
       filled: true,
       fillColor: AppColors.surfaceAlt,
@@ -446,7 +566,8 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
 
     final filteredTransactions = currentTransactions.where((t) {
       if (_selectedFilter == 'income') return t.type == TransactionType.income;
-      if (_selectedFilter == 'expense') return t.type == TransactionType.expense;
+      if (_selectedFilter == 'expense')
+        return t.type == TransactionType.expense;
       return true;
     }).toList();
 
@@ -483,7 +604,11 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                         children: [
                           IconButton(
                             onPressed: () => context.pop(),
-                            icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 24),
+                            icon: const Icon(
+                              Icons.arrow_back_rounded,
+                              color: Colors.white,
+                              size: 24,
+                            ),
                           ),
                           const SizedBox(width: 4),
                           const Expanded(
@@ -519,13 +644,20 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                         children: [
                           InkWell(
                             onTap: () {
-                              ref.read(financeProvider.notifier).setFilterMode(FinanceFilterMode.month);
+                              ref
+                                  .read(financeProvider.notifier)
+                                  .setFilterMode(FinanceFilterMode.month);
                             },
                             borderRadius: BorderRadius.circular(20),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 6,
+                              ),
                               decoration: BoxDecoration(
-                                color: financeState.filterMode == FinanceFilterMode.month
+                                color:
+                                    financeState.filterMode ==
+                                        FinanceFilterMode.month
                                     ? Colors.white
                                     : Colors.white.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(20),
@@ -535,7 +667,9 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
-                                  color: financeState.filterMode == FinanceFilterMode.month
+                                  color:
+                                      financeState.filterMode ==
+                                          FinanceFilterMode.month
                                       ? AppColors.primaryDark
                                       : Colors.white,
                                 ),
@@ -545,8 +679,11 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                           const SizedBox(width: 8),
                           InkWell(
                             onTap: () {
-                              if (financeState.filterMode != FinanceFilterMode.range) {
-                                ref.read(financeProvider.notifier).setFilterMode(FinanceFilterMode.range);
+                              if (financeState.filterMode !=
+                                  FinanceFilterMode.range) {
+                                ref
+                                    .read(financeProvider.notifier)
+                                    .setFilterMode(FinanceFilterMode.range);
                               }
                               if (financeState.customDateRange == null) {
                                 _showCustomDateRangePicker(context);
@@ -554,9 +691,14 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                             },
                             borderRadius: BorderRadius.circular(20),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 6,
+                              ),
                               decoration: BoxDecoration(
-                                color: financeState.filterMode == FinanceFilterMode.range
+                                color:
+                                    financeState.filterMode ==
+                                        FinanceFilterMode.range
                                     ? Colors.white
                                     : Colors.white.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(20),
@@ -568,14 +710,21 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                                     style: TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.bold,
-                                      color: financeState.filterMode == FinanceFilterMode.range
+                                      color:
+                                          financeState.filterMode ==
+                                              FinanceFilterMode.range
                                           ? AppColors.primaryDark
                                           : Colors.white,
                                     ),
                                   ),
-                                  if (financeState.filterMode == FinanceFilterMode.range) ...[
+                                  if (financeState.filterMode ==
+                                      FinanceFilterMode.range) ...[
                                     const SizedBox(width: 4),
-                                    const Icon(Icons.edit_calendar_rounded, size: 14, color: AppColors.primaryDark),
+                                    const Icon(
+                                      Icons.edit_calendar_rounded,
+                                      size: 14,
+                                      color: AppColors.primaryDark,
+                                    ),
                                   ],
                                 ],
                               ),
@@ -586,9 +735,13 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                       const SizedBox(height: 10),
 
                       // Month Navigator Bar OR Custom Range Bar
-                      if (financeState.filterMode == FinanceFilterMode.month) ...[
+                      if (financeState.filterMode ==
+                          FinanceFilterMode.month) ...[
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(14),
@@ -597,26 +750,42 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.chevron_left_rounded, color: Colors.white, size: 28),
+                                icon: const Icon(
+                                  Icons.chevron_left_rounded,
+                                  color: Colors.white,
+                                  size: 28,
+                                ),
                                 onPressed: () {
                                   final newDate = DateTime(
                                     financeState.selectedMonth.year,
                                     financeState.selectedMonth.month - 1,
                                   );
-                                  ref.read(financeProvider.notifier).changeMonth(newDate);
+                                  ref
+                                      .read(financeProvider.notifier)
+                                      .changeMonth(newDate);
                                 },
                               ),
                               InkWell(
                                 onTap: () => _showMonthYearPicker(context),
                                 borderRadius: BorderRadius.circular(10),
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 6,
+                                  ),
                                   child: Row(
                                     children: [
-                                      const Icon(Icons.calendar_month_rounded, color: Colors.white, size: 18),
+                                      const Icon(
+                                        Icons.calendar_month_rounded,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
                                       const SizedBox(width: 6),
                                       Text(
-                                        AppDateUtils.formatThaiMonthYear(financeState.selectedMonth),
+                                        AppDateUtils.formatThaiMonthYear(
+                                          financeState.selectedMonth,
+                                          useFullMonth: false,
+                                        ),
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontWeight: FontWeight.bold,
@@ -624,13 +793,21 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                                         ),
                                       ),
                                       const SizedBox(width: 4),
-                                      const Icon(Icons.arrow_drop_down_rounded, color: Colors.white, size: 22),
+                                      const Icon(
+                                        Icons.arrow_drop_down_rounded,
+                                        color: Colors.white,
+                                        size: 22,
+                                      ),
                                     ],
                                   ),
                                 ),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.chevron_right_rounded, color: Colors.white, size: 28),
+                                icon: const Icon(
+                                  Icons.chevron_right_rounded,
+                                  color: Colors.white,
+                                  size: 28,
+                                ),
                                 onPressed: () {
                                   final newDate = DateTime(
                                     financeState.selectedMonth.year,
@@ -638,8 +815,12 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                                   );
                                   if (newDate.isBefore(DateTime.now()) ||
                                       DateFormat('MM yyyy').format(newDate) ==
-                                          DateFormat('MM yyyy').format(DateTime.now())) {
-                                    ref.read(financeProvider.notifier).changeMonth(newDate);
+                                          DateFormat(
+                                            'MM yyyy',
+                                          ).format(DateTime.now())) {
+                                    ref
+                                        .read(financeProvider.notifier)
+                                        .changeMonth(newDate);
                                   }
                                 },
                               ),
@@ -651,16 +832,25 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                           onTap: () => _showCustomDateRangePicker(context),
                           borderRadius: BorderRadius.circular(14),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.18),
                               borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.3),
+                              ),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.date_range_rounded, color: Colors.white, size: 20),
+                                const Icon(
+                                  Icons.date_range_rounded,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
@@ -681,7 +871,11 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                                   ),
                                 ),
                                 const SizedBox(width: 6),
-                                const Icon(Icons.edit_calendar_rounded, color: Colors.white, size: 18),
+                                const Icon(
+                                  Icons.edit_calendar_rounded,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
                               ],
                             ),
                           ),
@@ -703,10 +897,14 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.cardBg(context),
                   borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
+                  border: Border.all(
+                    color: AppColors.brd(context).withValues(alpha: 0.5),
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: AppColors.isDark(context) ? 0.2 : 0.04),
+                      color: Colors.black.withValues(
+                        alpha: AppColors.isDark(context) ? 0.2 : 0.04,
+                      ),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -717,7 +915,9 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                   children: [
                     // Net Balance Title
                     Text(
-                      financeState.filterMode == FinanceFilterMode.range ? 'คงเหลือสุทธิช่วงเวลานี้' : 'คงเหลือสุทธิเดือนนี้',
+                      financeState.filterMode == FinanceFilterMode.range
+                          ? 'คงเหลือสุทธิช่วงเวลานี้'
+                          : 'คงเหลือสุทธิเดือนนี้',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -728,18 +928,27 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                     Row(
                       children: [
                         Text(
-                          '฿${NumberFormat('#,##0').format(balance)}',
+                          '${NumberFormat('#,##0').format(balance)} บาท',
                           style: TextStyle(
                             fontSize: 26,
                             fontWeight: FontWeight.bold,
-                            color: balance >= 0 ? AppColors.success : AppColors.error,
+                            color: balance >= 0
+                                ? AppColors.success
+                                : AppColors.error,
                           ),
                         ),
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
-                            color: (balance >= 0 ? AppColors.success : AppColors.error).withValues(alpha: 0.1),
+                            color:
+                                (balance >= 0
+                                        ? AppColors.success
+                                        : AppColors.error)
+                                    .withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -747,7 +956,9 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: balance >= 0 ? AppColors.success : AppColors.error,
+                              color: balance >= 0
+                                  ? AppColors.success
+                                  : AppColors.error,
                             ),
                           ),
                         ),
@@ -774,20 +985,28 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                                     color: AppColors.success,
                                     shape: BoxShape.circle,
                                   ),
-                                  child: const Icon(Icons.arrow_downward_rounded, color: Colors.white, size: 16),
+                                  child: const Icon(
+                                    Icons.arrow_downward_rounded,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'รายรับรวม',
-                                        style: TextStyle(fontSize: 12, color: AppColors.text(context)),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.text(context),
+                                        ),
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        '฿${NumberFormat('#,##0').format(income)}',
+                                        '${NumberFormat('#,##0').format(income)} บาท',
                                         style: const TextStyle(
                                           fontSize: 15,
                                           fontWeight: FontWeight.bold,
@@ -821,20 +1040,28 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                                     color: AppColors.error,
                                     shape: BoxShape.circle,
                                   ),
-                                  child: const Icon(Icons.arrow_upward_rounded, color: Colors.white, size: 16),
+                                  child: const Icon(
+                                    Icons.arrow_upward_rounded,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'รายจ่ายรวม',
-                                        style: TextStyle(fontSize: 12, color: AppColors.text(context)),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.text(context),
+                                        ),
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        '฿${NumberFormat('#,##0').format(expense)}',
+                                        '${NumberFormat('#,##0').format(expense)} บาท',
                                         style: const TextStyle(
                                           fontSize: 15,
                                           fontWeight: FontWeight.bold,
@@ -890,9 +1117,17 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                     children: [
                       _buildFilterChip('ทั้งหมด', 'all'),
                       const SizedBox(width: 6),
-                      _buildFilterChip('รายรับ', 'income', color: AppColors.success),
+                      _buildFilterChip(
+                        'รายรับ',
+                        'income',
+                        color: AppColors.success,
+                      ),
                       const SizedBox(width: 6),
-                      _buildFilterChip('รายจ่าย', 'expense', color: AppColors.error),
+                      _buildFilterChip(
+                        'รายจ่าย',
+                        'expense',
+                        color: AppColors.error,
+                      ),
                     ],
                   ),
                 ],
@@ -905,18 +1140,25 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
             const SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 60),
-                child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                child: Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                ),
               ),
             )
           else if (filteredTransactions.isEmpty)
             SliverToBoxAdapter(
               child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                margin: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 20,
+                ),
                 padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
                   color: AppColors.cardBg(context),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
+                  border: Border.all(
+                    color: AppColors.brd(context).withValues(alpha: 0.5),
+                  ),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -946,7 +1188,10 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                     Text(
                       'แตะปุ่มด้านล่างเพื่อเริ่มบันทึกรายรับหรือรายจ่ายใหม่',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: AppColors.subText(context), fontSize: 13),
+                      style: TextStyle(
+                        color: AppColors.subText(context),
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),
@@ -954,16 +1199,17 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
             )
           else
             SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final tx = filteredTransactions[index];
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                    child: _buildTransactionCard(context, tx),
-                  );
-                },
-                childCount: filteredTransactions.length,
-              ),
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final tx = filteredTransactions[index];
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                  child: _buildTransactionCard(
+                    context,
+                    tx,
+                    fullWidth: _selectedFilter != 'all',
+                  ),
+                );
+              }, childCount: filteredTransactions.length),
             ),
         ],
       ),
@@ -973,7 +1219,10 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
         heroTag: 'finance_overview_fab',
         onPressed: () => _showAddTransactionModal(context),
         icon: const Icon(Icons.add_rounded, size: 22),
-        label: const Text('บันทึกรายการ', style: TextStyle(fontWeight: FontWeight.bold)),
+        label: const Text(
+          'บันทึกรายการ',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 4,
@@ -1006,116 +1255,138 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
     );
   }
 
-  Widget _buildTransactionCard(BuildContext context, FinancialTransaction tx) {
+  Widget _buildTransactionCard(
+    BuildContext context,
+    FinancialTransaction tx, {
+    bool fullWidth = false,
+  }) {
     final isIncome = tx.type == TransactionType.income;
-    final color = isIncome ? AppColors.success : AppColors.error;
+    final isDark = AppColors.isDark(context);
+    final accentColor = isIncome ? AppColors.success : AppColors.error;
     final sign = isIncome ? '+' : '-';
     final categoryIcon = _getCategoryIcon(tx.category);
 
-    return Container(
+    final card = Container(
       decoration: BoxDecoration(
         color: AppColors.cardBg(context),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.brd(context).withValues(alpha: 0.5)),
+        borderRadius: BorderRadius.circular(14),
+        border: Border(
+          left: isIncome
+              ? BorderSide.none
+              : BorderSide(color: accentColor, width: 3.5),
+          right: isIncome
+              ? BorderSide(color: accentColor, width: 3.5)
+              : BorderSide.none,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: AppColors.isDark(context) ? 0.2 : 0.03),
+            color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.06),
             blurRadius: 8,
-            offset: const Offset(0, 3),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          children: [
-            // Category Icon Badge
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Icon
+              Container(
+                padding: const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(categoryIcon, color: accentColor, size: 20),
               ),
-              child: Icon(categoryIcon, color: color, size: 22),
-            ),
-            const SizedBox(width: 14),
+              const SizedBox(width: 12),
 
-            // Details Column
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    tx.title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: AppColors.text(context),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      Text(
-                        tx.category.label,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: color,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceAlt,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          DateFormat('dd/MM/yyyy').format(tx.date),
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (tx.notes != null && tx.notes!.isNotEmpty) ...[
-                    const SizedBox(height: 4),
+              // Content
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      tx.notes!,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textHint,
-                        fontStyle: FontStyle.italic,
+                      tx.title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: AppColors.text(context),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: accentColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            tx.category.label,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: accentColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          AppDateUtils.formatThaiDate(tx.date),
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: AppColors.subText(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (tx.notes != null && tx.notes!.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        tx.notes!,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: AppColors.subText(context),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
+              const SizedBox(width: 8),
 
-            // Amount Column
-            Text(
-              '$sign฿${NumberFormat('#,##0').format(tx.amount)}',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 17,
-                color: color,
+              // Amount
+              Text(
+                '$sign${NumberFormat('#,##0').format(tx.amount)} บาท',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                  color: accentColor,
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        );
+
+    if (fullWidth) {
+      return card;
+    }
+
+    return Align(
+      alignment: isIncome ? Alignment.centerRight : Alignment.centerLeft,
+      child: FractionallySizedBox(
+        widthFactor: 0.9,
+        child: card,
       ),
     );
   }
 }
+
+

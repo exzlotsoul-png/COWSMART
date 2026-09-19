@@ -412,7 +412,7 @@ class _CostTabState extends ConsumerState<CostTab> with AutomaticKeepAliveClient
             ),
             const SizedBox(height: 8),
             Text(
-              '${NumberFormat('#,##0').format(total)} ฿',
+              '${NumberFormat('#,##0').format(total)} บาท',
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 36,
@@ -440,7 +440,7 @@ class _CostTabState extends ConsumerState<CostTab> with AutomaticKeepAliveClient
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'รายได้: ${NumberFormat('#,##0').format(income)} ฿  |  สุทธิ: ${NumberFormat('#,##0').format(net)} ฿',
+                      'รายได้: ${NumberFormat('#,##0').format(income)} บาท  |  สุทธิ: ${NumberFormat('#,##0').format(net)} บาท',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,
@@ -541,7 +541,7 @@ class _CostTabState extends ConsumerState<CostTab> with AutomaticKeepAliveClient
               : FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
-                    '${NumberFormat('#,##0').format(amount)} ฿',
+                    '${NumberFormat('#,##0').format(amount)} บาท',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
@@ -782,7 +782,7 @@ class _CostTabState extends ConsumerState<CostTab> with AutomaticKeepAliveClient
                       ),
                     ),
                     child: Text(
-                      '${NumberFormat('#,##0').format(cost)} ฿',
+                      '${NumberFormat('#,##0').format(cost)} บาท',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706),
@@ -827,7 +827,7 @@ class _CostTabState extends ConsumerState<CostTab> with AutomaticKeepAliveClient
                         }
                         String costStr = '';
                         if (itemCost > 0) {
-                          costStr = ' - ${NumberFormat('#,##0').format(itemCost)} ฿';
+                          costStr = ' - ${NumberFormat('#,##0').format(itemCost)} บาท';
                         }
 
                         IconData iconData = Icons.medication;
@@ -979,7 +979,7 @@ class _CostTabState extends ConsumerState<CostTab> with AutomaticKeepAliveClient
             const SizedBox(width: 6),
             Flexible(
               child: Text(
-                '(ทั้งโซน ${NumberFormat('#,##0').format(totalCost)} ฿)',
+                '(ทั้งโซน ${NumberFormat('#,##0').format(totalCost)} บาท)',
                 style: TextStyle(fontSize: 11, color: AppColors.subText(context)),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -988,7 +988,7 @@ class _CostTabState extends ConsumerState<CostTab> with AutomaticKeepAliveClient
           ],
         ),
         trailing: Text(
-          '${NumberFormat('#,##0').format(costPerCow)} ฿',
+          '${NumberFormat('#,##0').format(costPerCow)} บาท',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: isDark ? const Color(0xFF4ADE80) : Colors.green,
@@ -1071,7 +1071,7 @@ class _CostTabState extends ConsumerState<CostTab> with AutomaticKeepAliveClient
           ],
         ),
         trailing: Text(
-          '${NumberFormat('#,##0').format(amount)} ฿',
+          '${NumberFormat('#,##0').format(amount)} บาท',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: isDark ? const Color(0xFF60A5FA) : Colors.blue,
@@ -1150,7 +1150,7 @@ class _CostTabState extends ConsumerState<CostTab> with AutomaticKeepAliveClient
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${NumberFormat('#,##0').format(estimatedValue)} ฿',
+                        '${NumberFormat('#,##0').format(estimatedValue)} บาท',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 20,
@@ -1158,7 +1158,7 @@ class _CostTabState extends ConsumerState<CostTab> with AutomaticKeepAliveClient
                         ),
                       ),
                       Text(
-                        '(${cow.latestWeight.toStringAsFixed(0)} กก. × ${pricePerKg.toStringAsFixed(2)} ฿/กก.)',
+                        '(${cow.latestWeight.toStringAsFixed(0)} กก. × ${pricePerKg.toStringAsFixed(2)} บาท/กก.)',
                         style: TextStyle(fontSize: 11, color: Colors.grey[500]),
                       ),
                     ],
@@ -1178,7 +1178,7 @@ class _CostTabState extends ConsumerState<CostTab> with AutomaticKeepAliveClient
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${NumberFormat('#,##0').format(totalCost)} ฿',
+                        '${NumberFormat('#,##0').format(totalCost)} บาท',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 20,
@@ -1211,8 +1211,8 @@ class _CostTabState extends ConsumerState<CostTab> with AutomaticKeepAliveClient
                   const SizedBox(width: 8),
                   Text(
                     isProfitable
-                        ? 'กำไรประมาณ ${NumberFormat('#,##0').format(profit)} ฿'
-                        : 'ขาดทุนประมาณ ${NumberFormat('#,##0').format(profit.abs())} ฿',
+                        ? 'กำไรประมาณ ${NumberFormat('#,##0').format(profit)} บาท'
+                        : 'ขาดทุนประมาณ ${NumberFormat('#,##0').format(profit.abs())} บาท',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,

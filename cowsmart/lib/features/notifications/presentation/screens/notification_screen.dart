@@ -60,6 +60,35 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       return true;
     }).toList();
 
+    // เมื่อดูทั้งหมด (all) หรือยังไม่อ่าน (unread): นำประกาศสำคัญจากแอดมินขึ้นมาแสดงด้านบนสุดก่อนเสมอ (Pin to top)
+    if (_selectedFilter == 'all' || _selectedFilter == 'unread') {
+      filteredNotifications.sort((a, b) {
+        final aIsBc = a.message.contains('[broadcast:') ||
+            a.title.contains('ประกาศ') ||
+            a.title.contains('admin') ||
+            a.title.contains('แอดมิน');
+        final bIsBc = b.message.contains('[broadcast:') ||
+            b.title.contains('ประกาศ') ||
+            b.title.contains('admin') ||
+            b.title.contains('แอดมิน');
+
+        // ถ้าฝ่ายหนึ่งเป็นประกาศ อีกฝ่ายไม่ใช่ ให้ประกาศขึ้นก่อน
+        if (aIsBc && !bIsBc) return -1;
+        if (!aIsBc && bIsBc) return 1;
+
+        // ถ้าทั้งคู่เป็นประกาศเหมือนกัน ให้ดู unread ก่อน
+        if (aIsBc && bIsBc) {
+          if (!a.isRead && b.isRead) return -1;
+          if (a.isRead && !b.isRead) return 1;
+        }
+
+        // เรียงตามเวลาล่าสุด
+        final aTime = a.notifyDatetime ?? a.createdAt ?? DateTime(2000);
+        final bTime = b.notifyDatetime ?? b.createdAt ?? DateTime(2000);
+        return bTime.compareTo(aTime);
+      });
+    }
+
     return Scaffold(
       backgroundColor: AppColors.bg(context),
       appBar: AppBar(
@@ -244,8 +273,18 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                             itemCount: filteredNotifications.length,
                             itemBuilder: (context, index) {
                               final notif = filteredNotifications[index];
+                              final t = notif.title.toLowerCase();
+                              final m = notif.message.toLowerCase();
+                              final isBroadcast = m.contains('[broadcast:') ||
+                                  t.contains('ประกาศ') ||
+                                  t.contains('ประชาสัมพันธ์') ||
+                                  t.contains('admin') ||
+                                  t.contains('แอดมิน') ||
+                                  t.contains('เตือนภัย');
+
                               return _NotificationCard(
                                 notification: notif,
+                                isBroadcast: isBroadcast,
                                 onTap: () => _onTap(notif),
                                 onDismiss: () => ref
                                     .read(notificationProvider.notifier)
@@ -435,29 +474,14 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                 Text(
                   unread > 0 ? 'ยังไม่อ่าน $unread รายการ' : 'อ่านครบทุกรายการแล้ว',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: unread > 0 ? const Color(0xFFFF6B6B) : Colors.white.withValues(alpha: 0.8),
                     fontSize: 14,
+                    fontWeight: unread > 0 ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
               ],
             ),
           ),
-          if (unread > 0)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.error,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                '$unread',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
         ],
       ),
     );
@@ -481,31 +505,63 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       builder: (_) => AlertDialog(
         scrollable: true,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+        titlePadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
         contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
         actionsPadding: const EdgeInsets.all(16),
-        title: Row(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: (isBroadcast ? const Color(0xFFD97706) : AppColors.primary).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+            if (isBroadcast) ...[
+              Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFD97706), Color(0xFFB45309)],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.campaign_rounded, size: 14, color: Colors.white),
+                    SizedBox(width: 5),
+                    Text(
+                      'ประกาศสำคัญจากผู้ดูแลระบบ',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              child: Icon(
-                isBroadcast
-                    ? Icons.campaign_rounded
-                    : (isCalendarNotif ? Icons.calendar_month : Icons.notifications_active),
-                color: isBroadcast ? const Color(0xFFD97706) : AppColors.primary,
-                size: 26,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                notif.title,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
+            ],
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: (isBroadcast ? const Color(0xFFD97706) : AppColors.primary).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    isBroadcast
+                        ? Icons.campaign_rounded
+                        : (isCalendarNotif ? Icons.calendar_month : Icons.notifications_active),
+                    color: isBroadcast ? const Color(0xFFD97706) : AppColors.primary,
+                    size: 26,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    notif.title,
+                    style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -516,7 +572,10 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
             const Divider(),
             const SizedBox(height: 8),
             Text(
-              notif.message.replaceAll(RegExp(r'\[ref:.*?\]'), '').trim(),
+              notif.message
+                  .replaceAll(RegExp(r'\[ref:.*?\]'), '')
+                  .replaceAll(RegExp(r'\[broadcast:.*?\]'), '')
+                  .trim(),
               style: const TextStyle(fontSize: 16, height: 1.5, color: AppColors.textPrimary),
             ),
             if (notif.notifyDatetime != null) ...[
@@ -681,11 +740,13 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
 
 class _NotificationCard extends StatelessWidget {
   final AppNotification notification;
+  final bool isBroadcast;
   final VoidCallback onTap;
   final VoidCallback onDismiss;
 
   const _NotificationCard({
     required this.notification,
+    this.isBroadcast = false,
     required this.onTap,
     required this.onDismiss,
   });
@@ -693,9 +754,16 @@ class _NotificationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUnread = !notification.isRead;
+    final isDark = AppColors.isDark(context);
+
+    // Custom gradient/colors for Admin Broadcast
+    final broadcastBg = isDark
+        ? const Color(0xFF261D10)
+        : const Color(0xFFFFFBEB); // Warm amber-50
+    final broadcastBorder = const Color(0xFFF59E0B); // Amber 500
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Dismissible(
         key: Key(notification.id),
         direction: DismissDirection.endToStart,
@@ -705,7 +773,7 @@ class _NotificationCard extends StatelessWidget {
           padding: const EdgeInsets.only(right: 24),
           decoration: BoxDecoration(
             color: AppColors.error,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(18),
           ),
           child: const Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -716,133 +784,221 @@ class _NotificationCard extends StatelessWidget {
             ],
           ),
         ),
-        child: Material(
-          color: isUnread
-              ? (AppColors.isDark(context) ? AppColors.darkSurfaceAlt : AppColors.surface)
-              : AppColors.cardBg(context),
-          borderRadius: BorderRadius.circular(16),
-          elevation: isUnread ? 2 : 1,
-          shadowColor: isUnread
-              ? AppColors.primary.withValues(alpha: 0.2)
-              : Colors.black.withValues(alpha: 0.05),
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: isUnread
-                  ? BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.3),
-                        width: 1.5,
-                      ),
-                    )
-                  : BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: AppColors.brd(context),
-                        width: 1,
-                      ),
-                    ),
-              child: Row(
+        child: Opacity(
+          opacity: isUnread ? 1.0 : 0.75,
+          child: Material(
+            color: isUnread
+                ? (isBroadcast
+                    ? broadcastBg
+                    : (isDark ? AppColors.darkSurfaceAlt : AppColors.surface))
+                : AppColors.cardBg(context),
+            borderRadius: BorderRadius.circular(18),
+            elevation: isUnread ? (isBroadcast ? 4 : 2) : 0,
+            shadowColor: isBroadcast
+                ? const Color(0xFFD97706).withValues(alpha: isUnread ? 0.35 : 0.0)
+                : (isUnread
+                    ? AppColors.primary.withValues(alpha: 0.2)
+                    : Colors.black.withValues(alpha: 0.0)),
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(18),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: isUnread
+                        ? (isBroadcast
+                            ? broadcastBorder.withValues(alpha: 0.9)
+                            : AppColors.primary.withValues(alpha: 0.35))
+                        : AppColors.brd(context),
+                    width: isUnread ? (isBroadcast ? 1.8 : 1.4) : 1.0,
+                  ),
+                ),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Icon section
-                  _buildIconBadge(),
-                  const SizedBox(width: 14),
-
-                  // Content section
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  // VIP Broadcast Header Ribbon if broadcast
+                  if (isBroadcast) ...[
+                    Row(
                       children: [
-                        // Title
-                        Text(
-                          notification.title,
-                          style: TextStyle(
-                            fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
-                            fontSize: 18,
-                            color: isUnread ? AppColors.text(context) : AppColors.subText(context),
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 6),
-
-                        // Message
-                        Text(
-                          notification.message.replaceAll(RegExp(r'\[ref:.*?\]'), '').trim(),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 16,
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
                             color: isUnread
-                                ? AppColors.text(context)
-                                : AppColors.subText(context),
-                            height: 1.4,
+                                ? null
+                                : (isDark ? const Color(0xFF332717) : const Color(0xFFFEF3C7)),
+                            gradient: isUnread
+                                ? const LinearGradient(
+                                    colors: [Color(0xFFD97706), Color(0xFFB45309)],
+                                  )
+                                : null,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: isUnread
+                                ? [
+                                    BoxShadow(
+                                      color: const Color(0xFFD97706).withValues(alpha: 0.35),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ]
+                                : null,
                           ),
-                        ),
-                        const SizedBox(height: 10),
-
-                        // Time (เริ่มนับเวลาจากตอนที่แจ้งเตือนเข้า notifyDatetime ก่อน)
-                        if (notification.notifyDatetime != null ||
-                            notification.createdAt != null)
-                          Row(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                Icons.access_time_rounded,
-                                size: 16,
+                                Icons.campaign_rounded,
+                                size: 14,
                                 color: isUnread
-                                    ? AppColors.primary
-                                    : AppColors.textHint,
+                                    ? Colors.white
+                                    : (isDark ? const Color(0xFFFDE68A) : const Color(0xFFB45309)),
                               ),
                               const SizedBox(width: 5),
                               Text(
-                                _timeAgo(notification.notifyDatetime ??
-                                    notification.createdAt!),
+                                'ประกาศจากแอดมิน',
                                 style: TextStyle(
-                                  fontSize: 14,
                                   color: isUnread
-                                      ? AppColors.primary
-                                      : AppColors.textHint,
-                                  fontWeight: isUnread
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
+                                      ? Colors.white
+                                      : (isDark ? const Color(0xFFFDE68A) : const Color(0xFFB45309)),
+                                  fontSize: 11.5,
+                                  fontWeight: isUnread ? FontWeight.w800 : FontWeight.w600,
+                                  letterSpacing: 0.2,
                                 ),
                               ),
                             ],
                           ),
+                        ),
+                        const Spacer(),
+                        if (isUnread)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Text(
+                              'ใหม่',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                       ],
                     ),
-                  ),
+                    const SizedBox(height: 12),
+                  ],
 
-                  // Unread indicator
-                  if (isUnread)
-                    Container(
-                      margin: const EdgeInsets.only(top: 4),
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Text(
-                        'ใหม่',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Icon section
+                      _buildIconBadge(),
+                      const SizedBox(width: 14),
+
+                      // Content section
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Title
+                            Text(
+                              notification.title,
+                              style: TextStyle(
+                                fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
+                                fontSize: 17.5,
+                                color: isUnread
+                                    ? (isBroadcast
+                                        ? (isDark ? const Color(0xFFFDE68A) : const Color(0xFF92400E))
+                                        : AppColors.text(context))
+                                    : AppColors.subText(context),
+                                height: 1.25,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 6),
+
+                            // Message
+                            Text(
+                              notification.message.replaceAll(RegExp(r'\[ref:.*?\]'), '').replaceAll(RegExp(r'\[broadcast:.*?\]'), '').trim(),
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: isUnread
+                                    ? (isBroadcast
+                                        ? (isDark ? const Color(0xFFF3F4F6) : const Color(0xFF451A03))
+                                        : AppColors.text(context))
+                                    : AppColors.subText(context),
+                                height: 1.45,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+
+                            // Time
+                            if (notification.notifyDatetime != null ||
+                                notification.createdAt != null)
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.access_time_rounded,
+                                    size: 15,
+                                    color: isUnread
+                                        ? (isBroadcast ? const Color(0xFFD97706) : AppColors.primary)
+                                        : AppColors.textHint,
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    _timeAgo(notification.notifyDatetime ??
+                                        notification.createdAt!),
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: isUnread
+                                          ? (isBroadcast ? const Color(0xFFD97706) : AppColors.primary)
+                                          : AppColors.textHint,
+                                      fontWeight: isUnread
+                                          ? FontWeight.w600
+                                          : FontWeight.normal,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          ],
                         ),
                       ),
-                    ),
+
+                      // Normal unread indicator if not broadcast (at top-right of inner row)
+                      if (isUnread && !isBroadcast)
+                        Container(
+                          margin: const EdgeInsets.only(top: 2),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Text(
+                            'ใหม่',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ],
               ),
             ),
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildIconBadge() {
     final isBroadcast = notification.message.contains('[broadcast:') ||

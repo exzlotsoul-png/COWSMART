@@ -641,7 +641,12 @@ class _AddCowScreenState extends ConsumerState<AddCowScreen> {
                           controller: _purchasePriceController,
                           style: TextStyle(fontSize: 15.5, color: AppColors.text(context)),
                           keyboardType: TextInputType.number,
-                          decoration: _buildInputDecoration('ราคาซื้อมา (บาท)', Icons.payments_rounded, hintText: '0.00'),
+                          decoration: _buildInputDecoration(
+                            'ราคาซื้อมา (บาท)',
+                            Icons.payments_rounded,
+                            hintText: '0.00',
+                            suffixText: 'บาท',
+                          ),
                         ),
                       ],
                     ),

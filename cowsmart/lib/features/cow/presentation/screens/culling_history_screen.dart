@@ -557,7 +557,7 @@ class _CullingCard extends ConsumerWidget {
                               size: 13, color: AppColors.primary),
                           const SizedBox(width: 4),
                           Text(
-                            AppDateUtils.formatThaiDate(record.cullDate, useFullMonth: true),
+                            AppDateUtils.formatThaiDate(record.cullDate),
                             style: TextStyle(
                                 fontSize: 12, color: AppColors.subText(context), fontWeight: FontWeight.w600),
                           ),
@@ -571,7 +571,7 @@ class _CullingCard extends ConsumerWidget {
                                 size: 13, color: AppColors.textHint),
                             const SizedBox(width: 4),
                             Text(
-                              '฿${formatter.format(record.price)}',
+                              '${formatter.format(record.price)} บาท',
                               style: const TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,

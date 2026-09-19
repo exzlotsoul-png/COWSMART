@@ -232,7 +232,7 @@ class _CowAppointmentsListScreenState extends ConsumerState<CowAppointmentsListS
                           leading: Icon(Icons.calendar_today, color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary),
                           title: Text('วันนัดหมาย', style: TextStyle(fontSize: 15, color: AppColors.text(context))),
                           subtitle: Text(
-                            AppDateUtils.formatThaiDate(selectedDate, useFullMonth: true),
+                            AppDateUtils.formatThaiDate(selectedDate),
                             style: TextStyle(fontSize: 14, color: AppColors.text(context), fontWeight: FontWeight.bold),
                           ),
                           onTap: () async {

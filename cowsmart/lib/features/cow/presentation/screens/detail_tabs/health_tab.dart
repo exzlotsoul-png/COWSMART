@@ -330,7 +330,7 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                           leading: Icon(Icons.calendar_today, color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary),
                           title: Text('วันนัดหมาย', style: TextStyle(fontSize: 15, color: AppColors.text(context))),
                           subtitle: Text(
-                            AppDateUtils.formatThaiDate(selectedDate, useFullMonth: true),
+                            AppDateUtils.formatThaiDate(selectedDate),
                             style: TextStyle(fontSize: 14, color: AppColors.text(context), fontWeight: FontWeight.bold),
                           ),
                           onTap: () async {
@@ -1655,11 +1655,28 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                           Text(
                             AppDateUtils.formatThaiDate(record.recordDate),
                             style: TextStyle(
-                              fontSize: 13.5,
+                              fontSize: 13,
                               fontWeight: FontWeight.w600,
                               color: AppColors.subText(context),
                             ),
                           ),
+                          if (record.recordDate.hour != 0 || record.recordDate.minute != 0) ...[
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.access_time_rounded,
+                              size: 13,
+                              color: AppColors.subText(context),
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              '${record.recordDate.hour.toString().padLeft(2, '0')}:${record.recordDate.minute.toString().padLeft(2, '0')} น.',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.subText(context),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ],
@@ -1678,7 +1695,7 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                       ),
                     ),
                     child: Text(
-                      '${NumberFormat('#,##0').format(record.cost)} ฿',
+                      '${NumberFormat('#,##0').format(record.cost)} บาท',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: AppColors.isDark(context) ? const Color(0xFFFBBF24) : const Color(0xFFD97706),
@@ -1803,7 +1820,7 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                           }
                           String costStr = '';
                           if (item.cost != null && item.cost! > 0) {
-                            costStr = ' - ${NumberFormat('#,##0').format(item.cost)} ฿';
+                            costStr = ' - ${NumberFormat('#,##0').format(item.cost)} บาท';
                           }
 
                           IconData iconData = Icons.medication;
@@ -2061,6 +2078,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
   final amountController = TextEditingController();
   int? selectedUnitId;
   DateTime selectedDate = DateTime.now();
+  TimeOfDay selectedTime = TimeOfDay.now();
   String selectedType = 'CT01';
   CowStatus selectedHealthStatus = CowStatus.normal;
   List<String> selectedVaccineIds = [];
@@ -2115,6 +2133,7 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
     if (widget.initialRecord != null) {
       final r = widget.initialRecord!;
       selectedDate = r.recordDate;
+      selectedTime = TimeOfDay(hour: r.recordDate.hour, minute: r.recordDate.minute);
       selectedType = r.checkupTypeId;
       
       selectedVaccineIds = List<String>.from(r.vacIds);
@@ -2454,36 +2473,78 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
             if (currentStep == 1) ...[
-              InkWell(
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: selectedDate,
-                    firstDate: DateTime(2020),
-                    lastDate: DateTime.now(),
-                    helpText: 'เลือกวันที่',
-                    cancelText: 'ยกเลิก',
-                    confirmText: 'ตกลง',
-                  );
-                  if (picked != null) setState(() => selectedDate = picked);
-                },
-                borderRadius: BorderRadius.circular(12),
-                child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'วันที่ดำเนินการ',
-                    labelStyle: TextStyle(fontSize: 15),
-                    prefixIcon: Icon(Icons.calendar_today_rounded, size: 22),
-                    suffixIcon: Icon(Icons.edit_calendar_rounded, size: 20, color: AppColors.primary),
-                  ),
-                  child: Text(
-                    AppDateUtils.formatThaiDate(selectedDate, useFullMonth: true),
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.text(context),
+              Row(
+                children: [
+                  Expanded(
+                    flex: 6,
+                    child: InkWell(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: selectedDate,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now(),
+                          helpText: 'เลือกวันที่',
+                          cancelText: 'ยกเลิก',
+                          confirmText: 'ตกลง',
+                        );
+                        if (picked != null) setState(() => selectedDate = picked);
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'วันที่ดำเนินการ',
+                          labelStyle: TextStyle(fontSize: 14),
+                          prefixIcon: Icon(Icons.calendar_today_rounded, size: 20),
+                        ),
+                        child: Text(
+                          AppDateUtils.formatThaiDate(selectedDate),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.text(context),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 4,
+                    child: InkWell(
+                      onTap: () async {
+                        final picked = await showTimePicker(
+                          context: context,
+                          initialTime: selectedTime,
+                          helpText: 'ระบุเวลา (24 ชั่วโมง)',
+                          cancelText: 'ยกเลิก',
+                          confirmText: 'ตกลง',
+                          hourLabelText: 'ชั่วโมง',
+                          minuteLabelText: 'นาที',
+                        );
+                        if (picked != null) setState(() => selectedTime = picked);
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'เวลา',
+                          labelStyle: TextStyle(fontSize: 14),
+                          prefixIcon: Icon(Icons.access_time_rounded, size: 20),
+                        ),
+                        child: Text(
+                          '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')} น.',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.text(context),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
@@ -2866,11 +2927,17 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                           controller: costCtrl,
                           keyboardType: TextInputType.number,
                           style: TextStyle(fontSize: 14, color: AppColors.text(context)),
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: 'ราคา/ค่าใช้จ่าย (บาท)',
-                            labelStyle: TextStyle(fontSize: 13),
-                            prefixIcon: Icon(Icons.payments, size: 18),
-                            contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            labelStyle: const TextStyle(fontSize: 13),
+                            suffixText: 'บาท',
+                            suffixStyle: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.subText(context),
+                            ),
+                            prefixIcon: const Icon(Icons.payments, size: 18),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                           ),
                         ),
                       ],
@@ -2985,11 +3052,17 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                           controller: costCtrl,
                           keyboardType: TextInputType.number,
                           style: TextStyle(fontSize: 14, color: AppColors.text(context)),
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: 'ราคา/ค่าใช้จ่าย (บาท)',
-                            labelStyle: TextStyle(fontSize: 13),
-                            prefixIcon: Icon(Icons.payments, size: 18),
-                            contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            labelStyle: const TextStyle(fontSize: 13),
+                            suffixText: 'บาท',
+                            suffixStyle: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.subText(context),
+                            ),
+                            prefixIcon: const Icon(Icons.payments, size: 18),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                           ),
                         ),
                       ],
@@ -3002,10 +3075,16 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                   controller: costController,
                   keyboardType: TextInputType.number,
                   style: TextStyle(fontSize: 15, color: AppColors.text(context)),
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'ค่าใช้จ่ายรวม (บาท)',
-                    labelStyle: TextStyle(fontSize: 15),
-                    prefixIcon: Icon(Icons.payments, size: 22),
+                    labelStyle: const TextStyle(fontSize: 15),
+                    suffixText: 'บาท',
+                    suffixStyle: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.subText(context),
+                    ),
+                    prefixIcon: const Icon(Icons.payments, size: 22),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -3345,10 +3424,18 @@ class _HealthRecordDialogState extends ConsumerState<_HealthRecordDialog> {
                           }
                         }
 
+                        final finalRecordDate = DateTime(
+                          selectedDate.year,
+                          selectedDate.month,
+                          selectedDate.day,
+                          selectedTime.hour,
+                          selectedTime.minute,
+                        );
+
                         final record = HealthRecord(
                           id: widget.initialRecord?.id ?? 'HR${DateTime.now().millisecondsSinceEpoch % 1000000}',
                           cowId: widget.cow.id,
-                          recordDate: selectedDate,
+                          recordDate: finalRecordDate,
                           checkupTypeId: selectedType,
                           status: selectedHealthStatus.name,
                           diseaseId: primaryDiseaseId,

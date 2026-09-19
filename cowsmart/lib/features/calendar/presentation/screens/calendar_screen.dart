@@ -798,7 +798,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           ),
           const SizedBox(width: 8),
           Text(
-            AppDateUtils.formatThaiDate(_selectedDay, useFullMonth: true),
+            AppDateUtils.formatThaiDate(_selectedDay),
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
@@ -1084,7 +1084,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                           leading: const Icon(Icons.calendar_today, color: AppColors.primary),
                           title: Text('วันที่', style: TextStyle(fontSize: 14, color: AppColors.subText(context))),
                           subtitle: Text(
-                            AppDateUtils.formatThaiDate(selectedDate, useFullMonth: true),
+                            AppDateUtils.formatThaiDate(selectedDate),
                             style: TextStyle(fontSize: 15, color: AppColors.text(context), fontWeight: FontWeight.bold),
                           ),
                           onTap: () async {
@@ -1895,7 +1895,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     _buildDetailRow(
                       Icons.calendar_today_rounded,
                       'วันที่',
-                      AppDateUtils.formatThaiDate(event.eventDatetime, useFullMonth: true),
+                      AppDateUtils.formatThaiDate(event.eventDatetime),
                       typeColor,
                     ),
                     const SizedBox(height: 12),

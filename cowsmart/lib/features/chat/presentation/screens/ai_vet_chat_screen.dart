@@ -14,6 +14,7 @@ class AiVetChatScreen extends ConsumerStatefulWidget {
 
 class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
   final TextEditingController _textController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
 
@@ -30,6 +31,7 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
   @override
   void dispose() {
     _textController.dispose();
+    _focusNode.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -603,6 +605,14 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
     );
   }
 
+  void _onSelectSuggestedPrompt(String prompt) {
+    _textController.text = prompt;
+    _textController.selection = TextSelection.fromPosition(
+      TextPosition(offset: prompt.length),
+    );
+    _focusNode.requestFocus();
+  }
+
   Widget _buildSuggestedChipsBar() {
     final allItems = _suggestedCategories.expand((c) => c.items).toList();
     if (allItems.isEmpty) return const SizedBox.shrink();
@@ -630,7 +640,7 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
                 ),
                 const SizedBox(width: 5),
                 Text(
-                  'คำถามด่วน:',
+                  'คำถามด่วน (แตะเพื่อแก้ไขข้อความก่อนส่ง):',
                   style: TextStyle(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w600,
@@ -651,7 +661,7 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
               itemBuilder: (context, index) {
                 final item = allItems[index];
                 return InkWell(
-                  onTap: () => _sendMessage(item.prompt),
+                  onTap: () => _onSelectSuggestedPrompt(item.prompt),
                   borderRadius: BorderRadius.circular(20),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
@@ -664,13 +674,24 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
                       border: Border.all(color: AppColors.brd(context)),
                     ),
                     alignment: Alignment.center,
-                    child: Text(
-                      item.title,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.text(context),
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          item.title,
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.text(context),
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Icon(
+                          Icons.edit_note_rounded,
+                          size: 15,
+                          color: AppColors.subText(context),
+                        ),
+                      ],
                     ),
                   ),
                 );
@@ -707,6 +728,7 @@ class _AiVetChatScreenState extends ConsumerState<AiVetChatScreen> {
           Expanded(
             child: TextField(
               controller: _textController,
+              focusNode: _focusNode,
               style: TextStyle(fontSize: 14.5, color: AppColors.text(context)),
               maxLines: null,
               textInputAction: TextInputAction.send,

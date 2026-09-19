@@ -283,11 +283,17 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
   }
 
   InputDecoration _buildInputDecoration(String label, IconData icon,
-      {String? hintText}) {
+      {String? hintText, String? suffixText}) {
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(fontSize: 15, color: AppColors.textSecondary),
       hintText: hintText,
+      suffixText: suffixText,
+      suffixStyle: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: AppColors.subText(context),
+      ),
+      labelStyle: const TextStyle(fontSize: 15, color: AppColors.textSecondary),
       hintStyle: const TextStyle(fontSize: 14, color: AppColors.textHint),
       prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
       filled: true,
@@ -936,7 +942,7 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                                                           .spaceBetween,
                                                   children: [
                                                     Text(
-                                                      'ราคาประเมิน: ฿${NumberFormat('#,##0').format(estVal)} (${weight.toStringAsFixed(0)}กก. × ${pricePerKg.toStringAsFixed(2)}฿)',
+                                                      'ราคาประเมิน: ${NumberFormat('#,##0').format(estVal)} บาท (${weight.toStringAsFixed(0)} กก. × ${pricePerKg.toStringAsFixed(2)} บาท/กก.)',
                                                       style: const TextStyle(
                                                         fontSize: 12,
                                                         fontWeight:
@@ -993,6 +999,7 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                                                   'ราคาขายของวัวตัวนี้ (บาท)',
                                                   Icons.payments_rounded,
                                                   hintText: '0.00',
+                                                   suffixText: 'บาท',
                                                 ),
                                                 style: const TextStyle(
                                                     fontSize: 16,

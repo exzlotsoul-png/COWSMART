@@ -317,7 +317,7 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(
-                      'รวม ${totalQuantity.toStringAsFixed(1)} กก. (${NumberFormat('#,##0').format(totalCost)} ฿)',
+                      'รวม ${totalQuantity.toStringAsFixed(1)} กก. (${NumberFormat('#,##0').format(totalCost)} บาท)',
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.primary),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -517,7 +517,7 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '${NumberFormat('#,##0').format(item.cost)} ฿',
+                      '${NumberFormat('#,##0').format(item.cost)} บาท',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 17,
@@ -1459,6 +1459,12 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                         style: TextStyle(color: AppColors.text(context)),
                         decoration: InputDecoration(
                           labelText: 'มูลค่า (บาท)',
+                          suffixText: 'บาท',
+                          suffixStyle: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.subText(context),
+                          ),
                           prefixIcon: const Icon(Icons.payments_outlined, color: AppColors.primary),
                           filled: true,
                           fillColor: AppColors.surfAlt(context),
