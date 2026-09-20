@@ -126,6 +126,8 @@ class GroupQrPdfExportService {
     final theme = pw.ThemeData.withFont(
       base: thaiFont,
       bold: thaiFontBold,
+      italic: thaiFont,
+      boldItalic: thaiFontBold,
     );
 
     final primaryColor = PdfColor.fromHex('#334A2E');
@@ -238,6 +240,7 @@ class GroupQrPdfExportService {
                           width: 82,
                           height: 82,
                           color: primaryColor,
+                          textStyle: pw.TextStyle(font: thaiFont),
                         ),
                       ),
                       pw.SizedBox(width: 10),
@@ -296,7 +299,6 @@ class GroupQrPdfExportService {
                               style: pw.TextStyle(
                                 fontSize: 8,
                                 color: primaryColor,
-                                fontStyle: pw.FontStyle.italic,
                               ),
                             ),
                           ],
