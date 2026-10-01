@@ -1317,33 +1317,14 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 7, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: accentColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            tx.category.label,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: accentColor,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          AppDateUtils.formatThaiDate(tx.date),
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            color: AppColors.subText(context),
-                          ),
-                        ),
-                      ],
+                    Text(
+                      '${AppDateUtils.formatThaiDate(tx.date)} ${DateFormat('HH:mm น.').format(tx.date)}',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: AppColors.subText(context),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     if (tx.notes != null && tx.notes!.isNotEmpty) ...[
                       const SizedBox(height: 4),
@@ -1362,14 +1343,36 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
               ),
               const SizedBox(width: 8),
 
-              // Amount
-              Text(
-                '$sign${NumberFormat('#,##0').format(tx.amount)} บาท',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                  color: accentColor,
-                ),
+              // Right Section (Category Tag & Amount)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 7, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: accentColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      tx.category.label,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: accentColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '$sign${NumberFormat('#,##0').format(tx.amount)} บาท',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: accentColor,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

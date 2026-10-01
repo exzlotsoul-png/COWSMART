@@ -753,23 +753,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final formatter = NumberFormat('#,##0');
 
     final now = DateTime.now();
-    final fullThaiMonths = [
+    final shortThaiMonths = [
       '',
-      'มกราคม',
-      'กุมภาพันธ์',
-      'มีนาคม',
-      'เมษายน',
-      'พฤษภาคม',
-      'มิถุนายน',
-      'กรกฎาคม',
-      'สิงหาคม',
-      'กันยายน',
-      'ตุลาคม',
-      'พฤศจิกายน',
-      'ธันวาคม',
+      'ม.ค.',
+      'ก.พ.',
+      'มี.ค.',
+      'เม.ย.',
+      'พ.ค.',
+      'มิ.ย.',
+      'ก.ค.',
+      'ส.ค.',
+      'ก.ย.',
+      'ต.ค.',
+      'พ.ย.',
+      'ธ.ค.',
     ];
     final thaiYear = now.year > 2400 ? now.year : now.year + 543;
-    final currentMonthLabel = '${fullThaiMonths[now.month]} $thaiYear';
+    final currentMonthLabel = '${shortThaiMonths[now.month]} $thaiYear';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
