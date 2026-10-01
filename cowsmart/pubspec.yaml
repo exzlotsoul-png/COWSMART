@@ -97,3 +97,9 @@ flutter:
           weight: 600
         - asset: assets/fonts/Prompt-Bold.ttf
           weight: 700
+    - family: Sarabun
+      fonts:
+        - asset: assets/fonts/Sarabun-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Sarabun-Bold.ttf
+          weight: 700

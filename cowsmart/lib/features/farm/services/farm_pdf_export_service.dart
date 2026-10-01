@@ -32,6 +32,46 @@ const String cowSmartLogoSvg = '''
 ''';
 
 /// Custom TtfFont wrapper that dynamically binds standard Thai PUA Unicode codes
+/// (U+F700..U+F71A) to Sarabun's small/narrow glyph indices at runtime.
+class ThaiSarabunTtfFont extends pw.TtfFont {
+  ThaiSarabunTtfFont(super.data, {super.protect});
+
+  static const Map<int, int> _sarabunPuaMap = {
+    0xF700: 750, // uni0E47.narrow
+    0xF701: 753, // uni0E34.narrow
+    0xF702: 755, // uni0E35.narrow
+    0xF703: 757, // uni0E36.narrow
+    0xF704: 759, // uni0E37.narrow
+    0xF705: 737, // uni0E48.narrow
+    0xF706: 740, // uni0E49.narrow
+    0xF707: 743, // uni0E4A.narrow
+    0xF708: 771, // uni0E4B.narrow
+    0xF709: 748, // uni0E4C.narrow
+    0xF70A: 736, // uni0E48.small
+    0xF70B: 739, // uni0E49.small
+    0xF70C: 742, // uni0E4A.small
+    0xF70D: 745, // uni0E4B.small
+    0xF70E: 747, // uni0E4C.small
+    0xF70F: 772, // uni0E4D.narrow
+    0xF710: 734, // uni0E31.narrow
+    0xF718: 768, // uni0E38.small
+    0xF719: 770, // uni0E39.small
+    0xF71A: 766, // uni0E3A.small
+  };
+
+  @override
+  PdfFont buildFont(PdfDocument pdfDocument) {
+    final pdfFont = super.buildFont(pdfDocument);
+    if (pdfFont is PdfTtfFont) {
+      for (final entry in _sarabunPuaMap.entries) {
+        pdfFont.font.charToGlyphIndexMap[entry.key] = entry.value;
+      }
+    }
+    return pdfFont;
+  }
+}
+
+/// Custom TtfFont wrapper that dynamically binds standard Thai PUA Unicode codes
 /// (U+F700..U+F71A) to Prompt's small/narrow glyph indices at runtime.
 class ThaiPromptTtfFont extends pw.TtfFont {
   ThaiPromptTtfFont(super.data, {super.protect});
@@ -184,23 +224,25 @@ class FarmPdfExportService {
   }) async {
     final doc = pw.Document();
 
-    // Load Thai Font (Prompt from assets if available, fallback to Google Fonts)
+    // Load Thai Font with heads (Sarabun - ฟอนต์มีหัว)
     pw.Font thaiFont;
     pw.Font thaiFontBold;
     try {
-      final regData = await rootBundle.load('assets/fonts/Prompt-Regular.ttf');
-      final boldData = await rootBundle.load('assets/fonts/Prompt-Bold.ttf');
-      thaiFont = ThaiPromptTtfFont(regData);
-      thaiFontBold = ThaiPromptTtfFont(boldData);
+      final regData = await rootBundle.load('assets/fonts/Sarabun-Regular.ttf');
+      final boldData = await rootBundle.load('assets/fonts/Sarabun-Bold.ttf');
+      thaiFont = ThaiSarabunTtfFont(regData);
+      thaiFontBold = ThaiSarabunTtfFont(boldData);
     } catch (_) {
       try {
-        final reg = await PdfGoogleFonts.promptRegular();
-        final bold = await PdfGoogleFonts.promptBold();
-        thaiFont = reg is pw.TtfFont ? ThaiPromptTtfFont(reg.data) : reg;
-        thaiFontBold = bold is pw.TtfFont ? ThaiPromptTtfFont(bold.data) : bold;
+        final reg = await PdfGoogleFonts.sarabunRegular();
+        final bold = await PdfGoogleFonts.sarabunBold();
+        thaiFont = reg is pw.TtfFont ? ThaiSarabunTtfFont(reg.data) : reg;
+        thaiFontBold = bold is pw.TtfFont ? ThaiSarabunTtfFont(bold.data) : bold;
       } catch (_) {
-        thaiFont = await PdfGoogleFonts.sarabunRegular();
-        thaiFontBold = await PdfGoogleFonts.sarabunBold();
+        final regData = await rootBundle.load('assets/fonts/Prompt-Regular.ttf');
+        final boldData = await rootBundle.load('assets/fonts/Prompt-Bold.ttf');
+        thaiFont = ThaiPromptTtfFont(regData);
+        thaiFontBold = ThaiPromptTtfFont(boldData);
       }
     }
 

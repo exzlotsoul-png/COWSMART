@@ -107,19 +107,21 @@ class GroupQrPdfExportService {
     pw.Font thaiFont;
     pw.Font thaiFontBold;
     try {
-      final regData = await rootBundle.load('assets/fonts/Prompt-Regular.ttf');
-      final boldData = await rootBundle.load('assets/fonts/Prompt-Bold.ttf');
-      thaiFont = ThaiPromptTtfFont(regData);
-      thaiFontBold = ThaiPromptTtfFont(boldData);
+      final regData = await rootBundle.load('assets/fonts/Sarabun-Regular.ttf');
+      final boldData = await rootBundle.load('assets/fonts/Sarabun-Bold.ttf');
+      thaiFont = ThaiSarabunTtfFont(regData);
+      thaiFontBold = ThaiSarabunTtfFont(boldData);
     } catch (_) {
       try {
-        final reg = await PdfGoogleFonts.promptRegular();
-        final bold = await PdfGoogleFonts.promptBold();
-        thaiFont = reg is pw.TtfFont ? ThaiPromptTtfFont(reg.data) : reg;
-        thaiFontBold = bold is pw.TtfFont ? ThaiPromptTtfFont(bold.data) : bold;
+        final reg = await PdfGoogleFonts.sarabunRegular();
+        final bold = await PdfGoogleFonts.sarabunBold();
+        thaiFont = reg is pw.TtfFont ? ThaiSarabunTtfFont(reg.data) : reg;
+        thaiFontBold = bold is pw.TtfFont ? ThaiSarabunTtfFont(bold.data) : bold;
       } catch (_) {
-        thaiFont = await PdfGoogleFonts.sarabunRegular();
-        thaiFontBold = await PdfGoogleFonts.sarabunBold();
+        final regData = await rootBundle.load('assets/fonts/Prompt-Regular.ttf');
+        final boldData = await rootBundle.load('assets/fonts/Prompt-Bold.ttf');
+        thaiFont = ThaiPromptTtfFont(regData);
+        thaiFontBold = ThaiPromptTtfFont(boldData);
       }
     }
 
