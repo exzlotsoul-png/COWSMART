@@ -224,7 +224,7 @@ class _CostTabState extends ConsumerState<CostTab> with AutomaticKeepAliveClient
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: _buildMiniSummary('ค่าอาหาร', feedCost, Colors.green),
+                child: _buildMiniSummary('ค่าอาหาร', feedCost, AppColors.primary),
               ),
             ],
           ),
@@ -435,7 +435,7 @@ class _CostTabState extends ConsumerState<CostTab> with AutomaticKeepAliveClient
                   children: [
                     const Icon(
                       Icons.trending_up,
-                      color: Colors.greenAccent,
+                      color: AppColors.primaryLight,
                       size: 18,
                     ),
                     const SizedBox(width: 6),
@@ -931,7 +931,7 @@ class _CostTabState extends ConsumerState<CostTab> with AutomaticKeepAliveClient
         color: isDark ? AppColors.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: Colors.green.withValues(alpha: 0.35),
+          color: isDark ? AppColors.darkBorder : AppColors.primary.withValues(alpha: 0.35),
           width: 1.2,
         ),
         boxShadow: [
@@ -947,12 +947,12 @@ class _CostTabState extends ConsumerState<CostTab> with AutomaticKeepAliveClient
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.green.withValues(alpha: 0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: const Icon(
             Icons.grass_outlined,
-            color: Colors.green,
+            color: AppColors.primary,
             size: 20,
           ),
         ),
@@ -991,7 +991,7 @@ class _CostTabState extends ConsumerState<CostTab> with AutomaticKeepAliveClient
           '${NumberFormat('#,##0').format(costPerCow)} บาท',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: isDark ? const Color(0xFF4ADE80) : Colors.green,
+            color: isDark ? AppColors.primaryLight : AppColors.primary,
             fontSize: 16,
           ),
         ),
@@ -1150,15 +1150,15 @@ class _CostTabState extends ConsumerState<CostTab> with AutomaticKeepAliveClient
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${NumberFormat('#,##0').format(estimatedValue)} บาท',
-                        style: const TextStyle(
+                        '${NumberFormat('#,##0.00').format(estimatedValue)} บาท',
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 20,
-                          color: Colors.green,
+                          color: isDark ? AppColors.primaryLight : AppColors.primary,
                         ),
                       ),
                       Text(
-                        '(${cow.latestWeight.toStringAsFixed(0)} กก. × ${pricePerKg.toStringAsFixed(2)} บาท/กก.)',
+                        '(${cow.latestWeight.toStringAsFixed(2)} กก. × ${pricePerKg.toStringAsFixed(2)} บาท/กก.)',
                         style: TextStyle(fontSize: 11, color: Colors.grey[500]),
                       ),
                     ],
@@ -1178,7 +1178,7 @@ class _CostTabState extends ConsumerState<CostTab> with AutomaticKeepAliveClient
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${NumberFormat('#,##0').format(totalCost)} บาท',
+                        '${NumberFormat('#,##0.00').format(totalCost)} บาท',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 20,
@@ -1195,7 +1195,7 @@ class _CostTabState extends ConsumerState<CostTab> with AutomaticKeepAliveClient
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: (isProfitable ? Colors.green : Colors.red).withValues(
+                color: (isProfitable ? AppColors.primary : AppColors.error).withValues(
                   alpha: 0.08,
                 ),
                 borderRadius: BorderRadius.circular(10),
@@ -1205,18 +1205,22 @@ class _CostTabState extends ConsumerState<CostTab> with AutomaticKeepAliveClient
                 children: [
                   Icon(
                     isProfitable ? Icons.trending_up : Icons.trending_down,
-                    color: isProfitable ? Colors.green : AppColors.error,
+                    color: isProfitable
+                        ? (isDark ? AppColors.primaryLight : AppColors.primary)
+                        : AppColors.error,
                     size: 22,
                   ),
                   const SizedBox(width: 8),
                   Text(
                     isProfitable
-                        ? 'กำไรประมาณ ${NumberFormat('#,##0').format(profit)} บาท'
-                        : 'ขาดทุนประมาณ ${NumberFormat('#,##0').format(profit.abs())} บาท',
+                        ? 'กำไรประมาณ ${NumberFormat('#,##0.00').format(profit)} บาท'
+                        : 'ขาดทุนประมาณ ${NumberFormat('#,##0.00').format(profit.abs())} บาท',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
-                      color: isProfitable ? Colors.green : AppColors.error,
+                      color: isProfitable
+                          ? (isDark ? AppColors.primaryLight : AppColors.primary)
+                          : AppColors.error,
                     ),
                   ),
                 ],

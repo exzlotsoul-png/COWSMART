@@ -238,7 +238,7 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
 
   void _showAddWeightSheet(BuildContext context, {GrowthRecord? initialRecord}) {
     final weightCtrl = TextEditingController(
-      text: initialRecord != null ? initialRecord.weight.toStringAsFixed(1) : '',
+      text: initialRecord != null ? initialRecord.weight.toStringAsFixed(2) : '',
     );
     final girthCtrl = TextEditingController(
       text: initialRecord?.girth != null ? initialRecord!.girth!.toStringAsFixed(1) : '',
@@ -354,7 +354,7 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                         final g = double.parse(girthCtrl.text);
                         final estWeight = (g * g * g) / 27000;
                         setSheetState(() {
-                          weightCtrl.text = estWeight.toStringAsFixed(1);
+                          weightCtrl.text = estWeight.toStringAsFixed(2);
                         });
                       },
                       child: Container(
@@ -373,7 +373,7 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    'ประมาณการน้ำหนัก: ${((double.parse(girthCtrl.text) * double.parse(girthCtrl.text) * double.parse(girthCtrl.text)) / 27000).toStringAsFixed(1)} กก.',
+                                    'ประมาณการน้ำหนัก: ${((double.parse(girthCtrl.text) * double.parse(girthCtrl.text) * double.parse(girthCtrl.text)) / 27000).toStringAsFixed(2)} กก.',
                                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.amber[900]),
                                   ),
                                 ),
@@ -774,7 +774,7 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                                         crossAxisAlignment: CrossAxisAlignment.end,
                                         children: [
                                           Text(
-                                            '${r.weight.toStringAsFixed(1)} กก.',
+                                            '${r.weight.toStringAsFixed(2)} กก.',
                                             style: const TextStyle(
                                               fontSize: 20,
                                               fontWeight: FontWeight.bold,
@@ -794,7 +794,7 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                                                 borderRadius: BorderRadius.circular(8),
                                               ),
                                               child: Text(
-                                                '${diff >= 0 ? '+' : ''}${diff.toStringAsFixed(1)}',
+                                                '${diff >= 0 ? '+' : ''}${diff.toStringAsFixed(2)}',
                                                 style: TextStyle(
                                                   fontSize: 13,
                                                   fontWeight: FontWeight.bold,
@@ -947,7 +947,7 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
       if (evalAdg >= 1.0) {
         statusTitle = 'การเติบโตดีเยี่ยม';
         statusSubtitle = 'อัตราการเจริญเติบโตสูงกว่าเกณฑ์มาตรฐาน';
-        statusColor = const Color(0xFF2E7D32); // Emerald Green
+        statusColor = AppColors.primary;
         statusIcon = Icons.stars;
       } else if (evalAdg >= 0.6) {
         statusTitle = 'ตามเกณฑ์มาตรฐาน';
@@ -1028,7 +1028,7 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                   const SizedBox(height: 14),
                   Text(
                     latestWeight > 0
-                        ? '${latestWeight.toStringAsFixed(1)} กก.'
+                        ? '${latestWeight.toStringAsFixed(2)} กก.'
                         : '- กก.',
                     style: const TextStyle(
                       fontSize: 38,
@@ -1076,7 +1076,7 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                           ),
                           decoration: BoxDecoration(
                             color: (weightDiff >= 0
-                                    ? const Color(0xFF7BF562)
+                                    ? Colors.white
                                     : const Color(0xFFFF6B6B))
                                 .withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(20),
@@ -1089,16 +1089,16 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                                     ? Icons.trending_up
                                     : Icons.trending_down,
                                 color: weightDiff >= 0
-                                    ? const Color(0xFF7BF562)
+                                    ? Colors.white
                                     : const Color(0xFFFF6B6B),
                                 size: 18,
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                '${weightDiff >= 0 ? '+' : ''}${weightDiff.toStringAsFixed(1)} กก. จากครั้งก่อน',
+                                '${weightDiff >= 0 ? '+' : ''}${weightDiff.toStringAsFixed(2)} กก. จากครั้งก่อน',
                                 style: TextStyle(
                                   color: weightDiff >= 0
-                                      ? const Color(0xFF7BF562)
+                                      ? Colors.white
                                       : const Color(0xFFFF6B6B),
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -1435,7 +1435,7 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                         ),
                       ),
                       Text(
-                        '${widget.cow.latestWeight.toStringAsFixed(1)} กก.',
+                        '${widget.cow.latestWeight.toStringAsFixed(2)} กก.',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -1533,7 +1533,7 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Text(
-                                  '${r.weight.toStringAsFixed(1)} กก.',
+                                  '${r.weight.toStringAsFixed(2)} กก.',
                                   style: TextStyle(
                                     fontSize: 19,
                                     fontWeight: FontWeight.bold,
@@ -1553,7 +1553,7 @@ class _GrowthTabState extends ConsumerState<GrowthTab> {
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
-                                      '${diff >= 0 ? '+' : ''}${diff.toStringAsFixed(1)} กก.',
+                                      '${diff >= 0 ? '+' : ''}${diff.toStringAsFixed(2)} กก.',
                                       style: TextStyle(
                                         fontSize: 11.5,
                                         fontWeight: FontWeight.bold,

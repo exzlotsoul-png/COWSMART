@@ -473,14 +473,14 @@ class _CalfVaccineDialogState extends ConsumerState<CalfVaccineDialog> {
     return Container(
       decoration: BoxDecoration(
         color: item.isSelected
-            ? (isDark ? AppColors.darkSurfaceAlt : Colors.white)
-            : (isDark ? AppColors.darkSurface : const Color(0xFFF7F5F0)),
+            ? (isDark ? AppColors.darkSurfaceAlt : AppColors.primary.withValues(alpha: 0.04))
+            : (isDark ? AppColors.darkSurface : Colors.white),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: item.isSelected
-              ? AppColors.primary.withValues(alpha: 0.4)
+              ? AppColors.primary
               : (isDark ? AppColors.darkBorder : AppColors.border),
-          width: item.isSelected ? 1.4 : 1.0,
+          width: item.isSelected ? 1.8 : 1.0,
         ),
       ),
       child: InkWell(
@@ -507,117 +507,115 @@ class _CalfVaccineDialogState extends ConsumerState<CalfVaccineDialog> {
                 },
               ),
 
-            // Vaccine Info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Wrap(
-                    spacing: 4,
-                    runSpacing: 3,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          item.recommendedAgeLabel,
-                          style: const TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                      if (item.targetGender == 'female')
+              // Vaccine Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Wrap(
+                      spacing: 4,
+                      runSpacing: 3,
+                      children: [
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: Colors.pink.withValues(alpha: 0.12),
+                            color: AppColors.primary.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: const Text(
-                            'เฉพาะเพศเมีย',
-                            style: TextStyle(
+                          child: Text(
+                            item.recommendedAgeLabel,
+                            style: const TextStyle(
                               fontSize: 10.5,
                               fontWeight: FontWeight.bold,
-                              color: Colors.pink,
+                              color: AppColors.primary,
                             ),
                           ),
                         ),
-                    ],
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    item.vaccineName,
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.bold,
-                      color: item.isSelected
-                          ? (isDark ? AppColors.darkTextPrimary : AppColors.textPrimary)
-                          : (isDark ? AppColors.darkTextHint : AppColors.textHint),
+                        if (item.targetGender == 'female')
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.pink.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Text(
+                              'เฉพาะเพศเมีย',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.pink,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    item.doseLabel,
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(width: 6),
-
-            // Date picker button chip
-            InkWell(
-              onTap: item.isSelected ? () => _pickDateForItem(index) : null,
-              borderRadius: BorderRadius.circular(10),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                decoration: BoxDecoration(
-                  color: item.isSelected
-                      ? AppColors.primary.withValues(alpha: 0.08)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: item.isSelected
-                        ? AppColors.primary.withValues(alpha: 0.3)
-                        : (isDark ? AppColors.darkBorder : AppColors.divider),
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.calendar_month_outlined,
-                      size: 14,
-                      color: item.isSelected ? AppColors.primary : AppColors.textHint,
-                    ),
-                    const SizedBox(width: 4),
+                    const SizedBox(height: 3),
                     Text(
-                      AppDateUtils.formatThaiDate(item.scheduledDate),
+                      item.vaccineName,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      item.doseLabel,
                       style: TextStyle(
                         fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        color: item.isSelected
-                            ? (isDark ? AppColors.darkTextPrimary : AppColors.textPrimary)
-                            : (isDark ? AppColors.darkTextHint : AppColors.textHint),
+                        color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
-            ),
-          ],
+
+              const SizedBox(width: 6),
+
+              // Date picker button chip
+              InkWell(
+                onTap: () => _pickDateForItem(index),
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: item.isSelected
+                        ? AppColors.primary.withValues(alpha: 0.10)
+                        : (isDark ? AppColors.darkSurfaceAlt : const Color(0xFFF7F5F0)),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: item.isSelected
+                          ? AppColors.primary.withValues(alpha: 0.4)
+                          : (isDark ? AppColors.darkBorder : AppColors.divider),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.calendar_month_outlined,
+                        size: 14,
+                        color: item.isSelected ? AppColors.primary : (isDark ? AppColors.darkTextSecondary : AppColors.textSecondary),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        AppDateUtils.formatThaiDate(item.scheduledDate),
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: item.isSelected
+                              ? AppColors.primary
+                              : (isDark ? AppColors.darkTextPrimary : AppColors.textPrimary),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
         ),
       ),
     ),

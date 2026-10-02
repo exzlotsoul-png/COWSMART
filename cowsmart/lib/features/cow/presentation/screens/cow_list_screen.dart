@@ -913,7 +913,7 @@ class _CowListScreenState extends ConsumerState<CowListScreen> {
                               context,
                               Icons.scale_outlined,
                               cow.latestWeight > 0
-                                  ? '${cow.latestWeight.toStringAsFixed(0)} กก.'
+                                  ? '${cow.latestWeight.toStringAsFixed(2)} กก.'
                                   : '- กก.',
                             ),
                           ],

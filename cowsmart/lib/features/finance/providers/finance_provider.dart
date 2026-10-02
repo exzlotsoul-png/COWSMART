@@ -190,7 +190,7 @@ class FinanceNotifier extends Notifier<FinanceState> {
                 category: TransactionCategory.feed,
                 amount: feedItem.cost,
                 date: feedItem.recordedAt,
-                notes: feedItem.notes ?? 'บันทึกรายจ่ายจากการซื้ออาหารเข้าคลัง',
+                notes: feedItem.notes,
               ),
             );
           }
@@ -243,7 +243,7 @@ class FinanceNotifier extends Notifier<FinanceState> {
                   amount: record.price,
                   date: record.cullDate,
                   relatedCowId: record.cowId,
-                  notes: record.note.isNotEmpty ? record.note : 'ระบบบันทึกรายรับอัตโนมัติจากการขายวัว',
+                  notes: record.note.isNotEmpty ? record.note : null,
                 ),
               );
             }
@@ -297,7 +297,7 @@ class FinanceNotifier extends Notifier<FinanceState> {
                   amount: cow.purchasePrice,
                   date: cowDate,
                   relatedCowId: cow.id,
-                  notes: 'ระบบบันทึกรายจ่ายอัตโนมัติจากการซื้อวัวเข้าฟาร์ม',
+                  notes: null,
                 ),
               );
             }

@@ -17,7 +17,7 @@ import 'package:cowsmart/features/market/providers/market_price_provider.dart';
 import 'package:cowsmart/core/network/api_client.dart';
 
 enum CullType {
-  sold('ขาย', Icons.monetization_on_outlined, Colors.green),
+  sold('ขาย', Icons.monetization_on_outlined, AppColors.primary),
   removed('คัดออก', Icons.logout_outlined, Colors.orange),
   deceased('ตาย', Icons.warning_amber_rounded, Colors.red);
 
@@ -514,7 +514,7 @@ class _CullCowScreenState extends ConsumerState<CullCowScreen> {
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  'ราคาประเมินเบื้องต้น: ${NumberFormat('#,##0').format(estimatedVal)} บาท',
+                                                  'ราคาประเมินเบื้องต้น: ${NumberFormat('#,##0.00').format(estimatedVal)} บาท',
                                                   style: TextStyle(
                                                     fontWeight: FontWeight.bold,
                                                     fontSize: 15,

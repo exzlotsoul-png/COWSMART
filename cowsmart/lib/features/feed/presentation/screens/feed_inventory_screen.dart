@@ -190,7 +190,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
                 title: 'มูลค่ารวม',
                 value: '${NumberFormat('#,##0').format(totalCost)} บาท',
                 icon: Icons.payments_rounded,
-                color: Colors.green[700]!,
+                color: AppColors.primary,
               ),
             ),
             const SizedBox(width: 12),
@@ -345,7 +345,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
 
   Color _getCategoryColorByName(String name) {
     if (name.contains('หญ้า') || name.contains('หยาบ')) {
-      return Colors.green[700]!;
+      return AppColors.primary;
     } else if (name.contains('ข้น') || name.contains('เม็ด')) {
       return Colors.orange[800]!;
     } else if (name.contains('เสริม') || name.contains('แร่ธาตุ')) {
@@ -530,7 +530,7 @@ class _FeedInventoryScreenState extends ConsumerState<FeedInventoryScreen> {
     IconData categoryIcon;
     switch (item.category.id) {
       case 'grass':
-        categoryColor = Colors.green[700]!;
+        categoryColor = AppColors.primary;
         categoryIcon = Icons.grass_rounded;
         break;
       case 'concentrate':

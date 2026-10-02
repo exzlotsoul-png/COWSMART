@@ -1883,7 +1883,7 @@ class _BreedTabState extends ConsumerState<BreedTab> {
                                   backgroundColor: primaryGreen,
                                   disabledBackgroundColor: isDark
                                       ? const Color(0xFF166534)
-                                      : Colors.green.shade400,
+                                      : AppColors.primaryLight,
                                   disabledForegroundColor: Colors.white,
                                   foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(

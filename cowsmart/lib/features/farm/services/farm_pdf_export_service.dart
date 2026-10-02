@@ -237,9 +237,13 @@ class FarmPdfExportService {
         final reg = await PdfGoogleFonts.sarabunRegular();
         final bold = await PdfGoogleFonts.sarabunBold();
         thaiFont = reg is pw.TtfFont ? ThaiSarabunTtfFont(reg.data) : reg;
-        thaiFontBold = bold is pw.TtfFont ? ThaiSarabunTtfFont(bold.data) : bold;
+        thaiFontBold = bold is pw.TtfFont
+            ? ThaiSarabunTtfFont(bold.data)
+            : bold;
       } catch (_) {
-        final regData = await rootBundle.load('assets/fonts/Prompt-Regular.ttf');
+        final regData = await rootBundle.load(
+          'assets/fonts/Prompt-Regular.ttf',
+        );
         final boldData = await rootBundle.load('assets/fonts/Prompt-Bold.ttf');
         thaiFont = ThaiPromptTtfFont(regData);
         thaiFontBold = ThaiPromptTtfFont(boldData);
@@ -268,6 +272,15 @@ class FarmPdfExportService {
     final thaiYear = now.year + 543;
     final formattedDate =
         '${now.day} ${_getThaiMonth(now.month)} $thaiYear  ${DateFormat('HH:mm').format(now)} น.';
+
+    final String? farmCreatedDate;
+    if (farm.createdAt != null) {
+      final created = farm.createdAt!;
+      farmCreatedDate =
+          '${created.day} ${_getThaiMonth(created.month)} ${created.year + 543}';
+    } else {
+      farmCreatedDate = null;
+    }
 
     // Calculate Herd Stats
     final totalCows = cows.length;
@@ -327,7 +340,8 @@ class FarmPdfExportService {
       }
     }
 
-    final numberFormat = NumberFormat('#,##0');
+    final countFormat = NumberFormat('#,##0');
+    final currencyFormat = NumberFormat('#,##0.00');
 
     // Page 1: Overview, Summary Cards, Breed Breakdown & Health/Zone Breakdown
     doc.addPage(
@@ -392,13 +406,29 @@ class FarmPdfExportService {
                                 ],
                               ),
                               pw.SizedBox(height: 3),
-                              pw.Text(
-                                shapeThai('ฟาร์ม: ${farm.name}'),
-                                style: pw.TextStyle(
-                                  fontSize: 11.5,
-                                  fontWeight: pw.FontWeight.bold,
-                                  color: secondaryColor,
-                                ),
+                              pw.Row(
+                                children: [
+                                  pw.Text(
+                                    shapeThai('ฟาร์ม: ${farm.name}'),
+                                    style: pw.TextStyle(
+                                      fontSize: 11.5,
+                                      fontWeight: pw.FontWeight.bold,
+                                      color: secondaryColor,
+                                    ),
+                                  ),
+                                  if (farmCreatedDate != null) ...[
+                                    pw.SizedBox(width: 8),
+                                    pw.Text(
+                                      shapeThai(
+                                        '• วันที่สร้างฟาร์ม: $farmCreatedDate',
+                                      ),
+                                      style: pw.TextStyle(
+                                        fontSize: 9.5,
+                                        color: textMutedColor,
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
                             ],
                           ),
@@ -492,7 +522,7 @@ class FarmPdfExportService {
                 pw.Expanded(
                   child: _buildSummaryCard(
                     title: 'จำนวนวัวทั้งหมด',
-                    value: '${numberFormat.format(totalCows)} ตัว',
+                    value: '${countFormat.format(totalCows)} ตัว',
                     subValue: 'จำแนกใน $totalZones โซน/คอก',
                     bgColor: cardBgColor,
                     borderColor: borderColor,
@@ -580,26 +610,27 @@ class FarmPdfExportService {
                           ),
                           ...breedCountMap.entries.map((e) {
                             final pct = totalCows > 0
-                                ? (e.value / totalCows * 100).toStringAsFixed(1)
+                                ? (e.value / totalCows * 100).toStringAsFixed(0)
                                 : '0';
                             final val = breedValueMap[e.key] ?? 0.0;
                             return pw.TableRow(
                               children: [
                                 _tableBodyCell(e.key, font: thaiFont),
                                 _tableBodyCell(
-                                  numberFormat.format(e.value),
+                                  countFormat.format(e.value),
                                   font: thaiFont,
                                   align: pw.TextAlign.center,
                                 ),
                                 _tableBodyCell(
-                                  '$pct%',
+                                  pct,
                                   font: thaiFont,
                                   align: pw.TextAlign.center,
                                 ),
                                 _tableBodyCell(
-                                  _formatPrice(val),
-                                  font: thaiFont,
+                                  val > 0 ? currencyFormat.format(val) : '-',
+                                  font: thaiFontBold,
                                   align: pw.TextAlign.right,
+                                  isBold: true,
                                 ),
                               ],
                             );
@@ -632,8 +663,8 @@ class FarmPdfExportService {
                           width: 0.6,
                         ),
                         columnWidths: const {
-                          0: pw.FlexColumnWidth(1.5),
-                          1: pw.FixedColumnWidth(44),
+                          0: pw.FlexColumnWidth(1.1),
+                          1: pw.FixedColumnWidth(54),
                           2: pw.FixedColumnWidth(44),
                         },
                         children: [
@@ -650,18 +681,15 @@ class FarmPdfExportService {
                                 align: pw.TextAlign.center,
                               ),
                               _tableHeaderCell(
-                                'สัดส่วน',
+                                'สัดส่วน (%)',
                                 font: thaiFontBold,
-                                align: pw.TextAlign.right,
+                                align: pw.TextAlign.center,
                               ),
                             ],
                           ),
                           pw.TableRow(
                             children: [
-                              _tableBodyCell(
-                                'สุขภาพปกติ (Normal)',
-                                font: thaiFont,
-                              ),
+                              _tableBodyCell('สุขภาพปกติ', font: thaiFont),
                               _tableBodyCell(
                                 '$normalCount',
                                 font: thaiFont,
@@ -669,19 +697,17 @@ class FarmPdfExportService {
                               ),
                               _tableBodyCell(
                                 totalCows > 0
-                                    ? '${(normalCount / totalCows * 100).toStringAsFixed(0)}%'
-                                    : '0%',
+                                    ? (normalCount / totalCows * 100)
+                                          .toStringAsFixed(0)
+                                    : '0',
                                 font: thaiFont,
-                                align: pw.TextAlign.right,
+                                align: pw.TextAlign.center,
                               ),
                             ],
                           ),
                           pw.TableRow(
                             children: [
-                              _tableBodyCell(
-                                'ป่วย / บาดเจ็บ (Sick/Injured)',
-                                font: thaiFont,
-                              ),
+                              _tableBodyCell('ป่วย / บาดเจ็บ', font: thaiFont),
                               _tableBodyCell(
                                 '$sickCount',
                                 font: thaiFont,
@@ -689,17 +715,18 @@ class FarmPdfExportService {
                               ),
                               _tableBodyCell(
                                 totalCows > 0
-                                    ? '${(sickCount / totalCows * 100).toStringAsFixed(0)}%'
-                                    : '0%',
+                                    ? (sickCount / totalCows * 100)
+                                          .toStringAsFixed(0)
+                                    : '0',
                                 font: thaiFont,
-                                align: pw.TextAlign.right,
+                                align: pw.TextAlign.center,
                               ),
                             ],
                           ),
                           pw.TableRow(
                             children: [
                               _tableBodyCell(
-                                'ตั้งท้อง / เป็นสัด (Pregnant)',
+                                'ตั้งท้อง / เป็นสัด',
                                 font: thaiFont,
                               ),
                               _tableBodyCell(
@@ -709,17 +736,18 @@ class FarmPdfExportService {
                               ),
                               _tableBodyCell(
                                 totalCows > 0
-                                    ? '${(pregnantCount / totalCows * 100).toStringAsFixed(0)}%'
-                                    : '0%',
+                                    ? (pregnantCount / totalCows * 100)
+                                          .toStringAsFixed(0)
+                                    : '0',
                                 font: thaiFont,
-                                align: pw.TextAlign.right,
+                                align: pw.TextAlign.center,
                               ),
                             ],
                           ),
                           pw.TableRow(
                             children: [
                               _tableBodyCell(
-                                'สถานะอื่นๆ / พักฟื้น (Other)',
+                                'สถานะอื่นๆ / พักฟื้น',
                                 font: thaiFont,
                               ),
                               _tableBodyCell(
@@ -729,10 +757,11 @@ class FarmPdfExportService {
                               ),
                               _tableBodyCell(
                                 totalCows > 0
-                                    ? '${(otherStatusCount / totalCows * 100).toStringAsFixed(0)}%'
-                                    : '0%',
+                                    ? (otherStatusCount / totalCows * 100)
+                                          .toStringAsFixed(0)
+                                    : '0',
                                 font: thaiFont,
-                                align: pw.TextAlign.right,
+                                align: pw.TextAlign.center,
                               ),
                             ],
                           ),
@@ -781,7 +810,11 @@ class FarmPdfExportService {
                     ),
                     _tableHeaderCell('เบอร์หู (Tag)', font: thaiFontBold),
                     _tableHeaderCell('ชื่อวัว', font: thaiFontBold),
-                    _tableHeaderCell('ประเภทวัว', font: thaiFontBold),
+                    _tableHeaderCell(
+                      'ประเภทวัว',
+                      font: thaiFontBold,
+                      align: pw.TextAlign.center,
+                    ),
                     _tableHeaderCell('สายพันธุ์', font: thaiFontBold),
                     _tableHeaderCell(
                       'เพศ',
@@ -835,7 +868,11 @@ class FarmPdfExportService {
                         isBold: true,
                       ),
                       _tableBodyCell(cow.name, font: thaiFont),
-                      _tableBodyCell(cow.displayTypeName, font: thaiFont),
+                      _tableBodyCell(
+                        cow.displayTypeName,
+                        font: thaiFont,
+                        align: pw.TextAlign.center,
+                      ),
                       _tableBodyCell(bName, font: thaiFont),
                       _tableBodyCell(
                         isMale ? 'ผู้' : 'เมีย',
@@ -854,7 +891,7 @@ class FarmPdfExportService {
                         align: pw.TextAlign.center,
                       ),
                       _tableBodyCell(
-                        estVal > 0 ? _formatPrice(estVal) : '-',
+                        estVal > 0 ? currencyFormat.format(estVal) : '-',
                         font: thaiFontBold,
                         align: pw.TextAlign.right,
                         isBold: true,
@@ -919,12 +956,12 @@ class FarmPdfExportService {
   // ────────────────────────────────────────────────────────
   static String _formatWeight(double weight) {
     if (weight <= 0) return '-';
-    return NumberFormat('#,##0.0').format(weight);
+    return NumberFormat('#,##0.00').format(weight);
   }
 
   static String _formatPrice(double price) {
-    if (price == 0) return '0 บาท';
-    return '${NumberFormat('#,##0').format(price)} บาท';
+    if (price == 0) return '0.00 บาท';
+    return '${NumberFormat('#,##0.00').format(price)} บาท';
   }
 
   /// Shapes Thai Unicode text to use Thai PUA glyphs (level-2 elevated tone marks and narrow ascender-shifted glyphs)

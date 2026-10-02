@@ -180,7 +180,7 @@ class BasicInfoTab extends ConsumerWidget {
                 icon: Icons.scale_outlined,
                 label: 'น้ำหนักล่าสุด',
                 value: latestWeight > 0
-                    ? '${latestWeight.toStringAsFixed(1)} กก.'
+                    ? '${latestWeight.toStringAsFixed(0)} กก.'
                     : 'ยังไม่มีข้อมูล',
                 isHighlightValue: latestWeight > 0,
               ),
@@ -189,7 +189,7 @@ class BasicInfoTab extends ConsumerWidget {
                 icon: Icons.monetization_on_outlined,
                 label: 'มูลค่าประเมินในตลาด',
                 value: latestWeight > 0
-                    ? '${NumberFormat('#,##0').format(estimatedValue)} บาท'
+                    ? '${NumberFormat('#,##0.00').format(estimatedValue)} บาท'
                     : '-',
                 valueColor: AppColors.primary,
               ),
@@ -297,7 +297,7 @@ class BasicInfoTab extends ConsumerWidget {
             child: _buildQuickStatItem(
               icon: Icons.scale_rounded,
               label: 'น้ำหนักล่าสุด',
-              value: weight > 0 ? '${weight.toStringAsFixed(0)} กก.' : '-',
+              value: weight > 0 ? '${weight.toStringAsFixed(2)} กก.' : '-',
             ),
           ),
           Container(width: 1, height: 42, color: Colors.white.withValues(alpha: 0.2)),
@@ -305,7 +305,7 @@ class BasicInfoTab extends ConsumerWidget {
             child: _buildQuickStatItem(
               icon: Icons.payments_rounded,
               label: 'มูลค่าประเมิน',
-              value: weight > 0 ? '${NumberFormat('#,##0').format(value)} บาท' : '-',
+              value: weight > 0 ? '${NumberFormat('#,##0.00').format(value)} บาท' : '-',
             ),
           ),
           Container(width: 1, height: 42, color: Colors.white.withValues(alpha: 0.2)),

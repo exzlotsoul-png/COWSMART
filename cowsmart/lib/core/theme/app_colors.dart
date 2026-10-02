@@ -35,7 +35,7 @@ class AppColors {
   static const Color textHint = Color(0xFFB5A890);
 
   // Status Colors
-  static const Color success = Color(0xFF6B8E5A); // Earth green
+  static const Color success = Color(0xFF5D7052); // Sage/olive green (matches primary)
   static const Color warning = Color(0xFFD4A04C); // Mustard
   static const Color error = Color(0xFFB85A4A); // Terracotta
   static const Color info = Color(0xFF6B8BA4); // Muted blue

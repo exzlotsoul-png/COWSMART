@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/theme/app_colors.dart';
+import 'package:cowsmart/core/widgets/cowsmart_logo.dart';
 import 'package:cowsmart/core/widgets/cow_icon.dart';
 import 'package:cowsmart/core/utils/date_formatter.dart';
 import 'package:cowsmart/features/farm/providers/farm_provider.dart';
@@ -239,89 +240,68 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   // ────────────────────────────────────────────────────────
-  //  1. TOP BAR — minimal, no gradient
+  //  1. TOP BAR — Two-Tier Brand Header (Option 1)
   // ────────────────────────────────────────────────────────
   Widget _buildTopBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Greeting
-          Expanded(
-            child: Builder(
-              builder: (context) {
-                final hour = DateTime.now().hour;
-                final String greetingText;
-                final IconData greetingIcon;
-                final Color iconColor;
-
-                if (hour >= 5 && hour < 12) {
-                  greetingText = 'สวัสดีตอนเช้า';
-                  greetingIcon = Icons.wb_sunny_rounded;
-                  iconColor = const Color(0xFFF59E0B);
-                } else if (hour >= 12 && hour < 17) {
-                  greetingText = 'สวัสดีตอนบ่าย';
-                  greetingIcon = Icons.wb_twilight_rounded;
-                  iconColor = const Color(0xFFF97316);
-                } else if (hour >= 17 && hour < 20) {
-                  greetingText = 'สวัสดีตอนเย็น';
-                  greetingIcon = Icons.nights_stay_rounded;
-                  iconColor = const Color(0xFF6366F1);
-                } else {
-                  greetingText = 'สวัสดีตอนดึก';
-                  greetingIcon = Icons.dark_mode_rounded;
-                  iconColor = const Color(0xFF8B5CF6);
-                }
-                return Row(
-                  children: [
-                    Icon(greetingIcon, size: 22, color: iconColor),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        greetingText,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.text(context),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-          const SizedBox(width: 8),
-
-          // Action Buttons
+          // Row 1: Brand (Logo + App Name) on Left, Actions on Right
           Row(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildCircleAction(
-                context,
-                icon: Icons.picture_as_pdf_rounded,
-                onTap: _exportFarmPdfReport,
-                tooltip: 'ส่งออกรายงาน PDF',
+              // Brand: Logo + Name
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CowSmartLogo(
+                    size: 34,
+                    borderRadius: 10,
+                    showShadow: true,
+                  ),
+                  const SizedBox(width: 9),
+                  Text(
+                    'COWSMART',
+                    style: TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5,
+                      color: AppColors.text(context),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 4),
-              _buildCircleAction(
-                context,
-                icon: Icons.swap_horiz_rounded,
-                onTap: () => context.go('/select-farm'),
-                tooltip: 'สลับฟาร์ม',
+
+              // Action Buttons
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildCircleAction(
+                    context,
+                    icon: Icons.picture_as_pdf_rounded,
+                    onTap: _exportFarmPdfReport,
+                    tooltip: 'ส่งออกรายงาน PDF',
+                  ),
+                  const SizedBox(width: 4),
+                  _buildCircleAction(
+                    context,
+                    icon: Icons.swap_horiz_rounded,
+                    onTap: () => context.go('/select-farm'),
+                    tooltip: 'สลับฟาร์ม',
+                  ),
+                  const SizedBox(width: 4),
+                  _buildCircleAction(
+                    context,
+                    icon: Icons.calendar_month_rounded,
+                    onTap: () => context.push('/calendar'),
+                    tooltip: 'ปฏิทิน',
+                  ),
+                  const SizedBox(width: 4),
+                  _buildNotificationCircle(context),
+                ],
               ),
-              const SizedBox(width: 4),
-              _buildCircleAction(
-                context,
-                icon: Icons.calendar_month_rounded,
-                onTap: () => context.push('/calendar'),
-                tooltip: 'ปฏิทิน',
-              ),
-              const SizedBox(width: 4),
-              _buildNotificationCircle(context),
             ],
           ),
         ],
@@ -563,7 +543,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     double totalValue,
     int culledThisMonth,
   ) {
-    final formatter = NumberFormat('#,##0');
+    final formatter = NumberFormat('#,##0.00');
     final isDark = AppColors.isDark(context);
     return Container(
       padding: const EdgeInsets.all(14),
@@ -750,7 +730,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final income = financeState.totalIncomeCurrentActualMonth;
     final expense = financeState.totalExpenseCurrentActualMonth;
     final balance = income - expense;
-    final formatter = NumberFormat('#,##0');
+    final formatter = NumberFormat('#,##0.00');
 
     final now = DateTime.now();
     final shortThaiMonths = [
@@ -1249,23 +1229,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     ),
                   ),
                 ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(
-                    alpha: isDark ? 0.2 : 0.08,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  'ทางลัดด่วน',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
-                  ),
-                ),
               ),
             ],
           ),

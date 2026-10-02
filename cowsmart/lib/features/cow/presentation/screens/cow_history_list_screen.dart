@@ -612,7 +612,7 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                           child: Icon(Icons.scale_rounded, color: AppColors.isDark(context) ? AppColors.primaryLight : AppColors.primary, size: 22),
                         ),
                         title: Text(
-                          '${r.weight.toStringAsFixed(1)} กก.',
+                          '${r.weight.toStringAsFixed(0)} กก.',
                           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.text(context)),
                         ),
                         subtitle: Padding(
@@ -630,7 +630,7 @@ class _CowHistoryListScreenState extends ConsumerState<CowHistoryListScreen>
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  '${diff >= 0 ? "+" : ""}${diff.toStringAsFixed(1)} กก.',
+                                  '${diff >= 0 ? "+" : ""}${diff.toStringAsFixed(0)} กก.',
                                   style: TextStyle(
                                     color: diff >= 0 ? (AppColors.isDark(context) ? const Color(0xFF8FD475) : AppColors.success) : AppColors.error,
                                     fontWeight: FontWeight.bold,

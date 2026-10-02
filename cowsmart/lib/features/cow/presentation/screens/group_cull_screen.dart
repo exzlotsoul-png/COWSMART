@@ -942,7 +942,7 @@ class _GroupCullScreenState extends ConsumerState<GroupCullScreen> {
                                                           .spaceBetween,
                                                   children: [
                                                     Text(
-                                                      'ราคาประเมิน: ${NumberFormat('#,##0').format(estVal)} บาท (${weight.toStringAsFixed(0)} กก. × ${pricePerKg.toStringAsFixed(2)} บาท/กก.)',
+                                                      'ราคาประเมิน: ${NumberFormat('#,##0.00').format(estVal)} บาท (${weight.toStringAsFixed(2)} กก. × ${pricePerKg.toStringAsFixed(2)} บาท/กก.)',
                                                       style: const TextStyle(
                                                         fontSize: 12,
                                                         fontWeight:

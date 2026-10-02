@@ -514,24 +514,30 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
             if (isBroadcast) ...[
               Container(
                 margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFD97706), Color(0xFFB45309)],
+                  color: AppColors.isDark(context) ? const Color(0xFF2E2416) : const Color(0xFFFEF3C7),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: const Color(0xFFD97706).withValues(alpha: 0.25),
+                    width: 0.8,
                   ),
-                  borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.campaign_rounded, size: 14, color: Colors.white),
-                    SizedBox(width: 5),
+                    Icon(
+                      Icons.campaign_rounded,
+                      size: 14,
+                      color: AppColors.isDark(context) ? const Color(0xFFFBBF24) : const Color(0xFFB45309),
+                    ),
+                    const SizedBox(width: 4),
                     Text(
-                      'ประกาศสำคัญจากผู้ดูแลระบบ',
+                      'ประกาศจากแอดมิน',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: AppColors.isDark(context) ? const Color(0xFFFBBF24) : const Color(0xFFB45309),
                         fontSize: 11.5,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
@@ -756,14 +762,13 @@ class _NotificationCard extends StatelessWidget {
     final isUnread = !notification.isRead;
     final isDark = AppColors.isDark(context);
 
-    // Custom gradient/colors for Admin Broadcast
-    final broadcastBg = isDark
-        ? const Color(0xFF261D10)
-        : const Color(0xFFFFFBEB); // Warm amber-50
-    final broadcastBorder = const Color(0xFFF59E0B); // Amber 500
+    // Border tone for Admin Broadcast
+    final broadcastBorder = isDark
+        ? const Color(0xFFD97706).withValues(alpha: 0.7)
+        : const Color(0xFFD97706).withValues(alpha: 0.7);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Dismissible(
         key: Key(notification.id),
         direction: DismissDirection.endToStart,
@@ -773,7 +778,7 @@ class _NotificationCard extends StatelessWidget {
           padding: const EdgeInsets.only(right: 24),
           decoration: BoxDecoration(
             color: AppColors.error,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(16),
           ),
           child: const Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -784,86 +789,61 @@ class _NotificationCard extends StatelessWidget {
             ],
           ),
         ),
-        child: Opacity(
-          opacity: isUnread ? 1.0 : 0.75,
-          child: Material(
-            color: isUnread
-                ? (isBroadcast
-                    ? broadcastBg
-                    : (isDark ? AppColors.darkSurfaceAlt : AppColors.surface))
-                : AppColors.cardBg(context),
-            borderRadius: BorderRadius.circular(18),
-            elevation: isUnread ? (isBroadcast ? 4 : 2) : 0,
-            shadowColor: isBroadcast
-                ? const Color(0xFFD97706).withValues(alpha: isUnread ? 0.35 : 0.0)
-                : (isUnread
-                    ? AppColors.primary.withValues(alpha: 0.2)
-                    : Colors.black.withValues(alpha: 0.0)),
-            child: InkWell(
-              onTap: onTap,
-              borderRadius: BorderRadius.circular(18),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: isUnread
-                        ? (isBroadcast
-                            ? broadcastBorder.withValues(alpha: 0.9)
-                            : AppColors.primary.withValues(alpha: 0.35))
-                        : AppColors.brd(context),
-                    width: isUnread ? (isBroadcast ? 1.8 : 1.4) : 1.0,
-                  ),
+        child: Material(
+          color: AppColors.cardBg(context),
+          borderRadius: BorderRadius.circular(16),
+          elevation: isUnread ? (isDark ? 1 : 1.5) : 0,
+          shadowColor: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isUnread
+                      ? (isBroadcast
+                          ? broadcastBorder
+                          : (isDark
+                              ? AppColors.primaryLight.withValues(alpha: 0.6)
+                              : AppColors.primary.withValues(alpha: 0.7)))
+                      : AppColors.brd(context),
+                  width: isUnread ? 1.8 : 1.0,
                 ),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // VIP Broadcast Header Ribbon if broadcast
+                  // Toned down Broadcast Header Ribbon if broadcast
                   if (isBroadcast) ...[
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: isUnread
-                                ? null
-                                : (isDark ? const Color(0xFF332717) : const Color(0xFFFEF3C7)),
-                            gradient: isUnread
-                                ? const LinearGradient(
-                                    colors: [Color(0xFFD97706), Color(0xFFB45309)],
-                                  )
-                                : null,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: isUnread
-                                ? [
-                                    BoxShadow(
-                                      color: const Color(0xFFD97706).withValues(alpha: 0.35),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ]
-                                : null,
+                            color: isDark ? const Color(0xFF2E2416) : const Color(0xFFFEF3C7),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: const Color(0xFFD97706).withValues(alpha: 0.5),
+                              width: 1.0,
+                            ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
                                 Icons.campaign_rounded,
-                                size: 14,
-                                color: isUnread
-                                    ? Colors.white
-                                    : (isDark ? const Color(0xFFFDE68A) : const Color(0xFFB45309)),
+                                size: 13.5,
+                                color: isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309),
                               ),
-                              const SizedBox(width: 5),
+                              const SizedBox(width: 4),
                               Text(
                                 'ประกาศจากแอดมิน',
                                 style: TextStyle(
-                                  color: isUnread
-                                      ? Colors.white
-                                      : (isDark ? const Color(0xFFFDE68A) : const Color(0xFFB45309)),
+                                  color: isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309),
                                   fontSize: 11.5,
-                                  fontWeight: isUnread ? FontWeight.w800 : FontWeight.w600,
-                                  letterSpacing: 0.2,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],
@@ -872,23 +852,23 @@ class _NotificationCard extends StatelessWidget {
                         const Spacer(),
                         if (isUnread)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
                               color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(8),
                             ),
                             child: const Text(
                               'ใหม่',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 11.5,
+                                fontSize: 11,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                   ],
 
                   Row(
@@ -896,7 +876,7 @@ class _NotificationCard extends StatelessWidget {
                     children: [
                       // Icon section
                       _buildIconBadge(),
-                      const SizedBox(width: 14),
+                      const SizedBox(width: 12),
 
                       // Content section
                       Expanded(
@@ -908,35 +888,30 @@ class _NotificationCard extends StatelessWidget {
                               notification.title,
                               style: TextStyle(
                                 fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
-                                fontSize: 17.5,
-                                color: isUnread
-                                    ? (isBroadcast
-                                        ? (isDark ? const Color(0xFFFDE68A) : const Color(0xFF92400E))
-                                        : AppColors.text(context))
-                                    : AppColors.subText(context),
+                                fontSize: 16,
+                                color: AppColors.text(context),
                                 height: 1.25,
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 5),
 
                             // Message
                             Text(
-                              notification.message.replaceAll(RegExp(r'\[ref:.*?\]'), '').replaceAll(RegExp(r'\[broadcast:.*?\]'), '').trim(),
+                              notification.message
+                                  .replaceAll(RegExp(r'\[ref:.*?\]'), '')
+                                  .replaceAll(RegExp(r'\[broadcast:.*?\]'), '')
+                                  .trim(),
                               maxLines: 3,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                fontSize: 15,
-                                color: isUnread
-                                    ? (isBroadcast
-                                        ? (isDark ? const Color(0xFFF3F4F6) : const Color(0xFF451A03))
-                                        : AppColors.text(context))
-                                    : AppColors.subText(context),
-                                height: 1.45,
+                                fontSize: 14.5,
+                                color: isUnread ? AppColors.text(context) : AppColors.subText(context),
+                                height: 1.4,
                               ),
                             ),
-                            const SizedBox(height: 10),
+                            const SizedBox(height: 8),
 
                             // Time
                             if (notification.notifyDatetime != null ||
@@ -945,20 +920,20 @@ class _NotificationCard extends StatelessWidget {
                                 children: [
                                   Icon(
                                     Icons.access_time_rounded,
-                                    size: 15,
+                                    size: 14,
                                     color: isUnread
                                         ? (isBroadcast ? const Color(0xFFD97706) : AppColors.primary)
-                                        : AppColors.textHint,
+                                        : AppColors.subText(context),
                                   ),
-                                  const SizedBox(width: 5),
+                                  const SizedBox(width: 4),
                                   Text(
                                     _timeAgo(notification.notifyDatetime ??
                                         notification.createdAt!),
                                     style: TextStyle(
-                                      fontSize: 13,
+                                      fontSize: 12.5,
                                       color: isUnread
                                           ? (isBroadcast ? const Color(0xFFD97706) : AppColors.primary)
-                                          : AppColors.textHint,
+                                          : AppColors.subText(context),
                                       fontWeight: isUnread
                                           ? FontWeight.w600
                                           : FontWeight.normal,
@@ -974,16 +949,16 @@ class _NotificationCard extends StatelessWidget {
                       if (isUnread && !isBroadcast)
                         Container(
                           margin: const EdgeInsets.only(top: 2),
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
                             color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Text(
                             'ใหม่',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 11.5,
+                              fontSize: 11,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -996,9 +971,8 @@ class _NotificationCard extends StatelessWidget {
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildIconBadge() {
     final isBroadcast = notification.message.contains('[broadcast:') ||
@@ -1012,15 +986,19 @@ class _NotificationCard extends StatelessWidget {
     final iconColor = isBroadcast ? const Color(0xFFD97706) : _colorForTitle(notification.title);
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: iconColor.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(14),
+        color: iconColor.withValues(alpha: isUnread ? 0.12 : 0.08),
+        borderRadius: BorderRadius.circular(12),
         border: isUnread
-            ? Border.all(color: iconColor.withValues(alpha: 0.3), width: 1)
+            ? Border.all(color: iconColor.withValues(alpha: 0.25), width: 1)
             : null,
       ),
-      child: Icon(iconData, color: iconColor, size: 26),
+      child: Icon(
+        iconData,
+        color: iconColor.withValues(alpha: isUnread ? 1.0 : 0.8),
+        size: 24,
+      ),
     );
   }
 

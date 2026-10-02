@@ -253,9 +253,9 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                           ChoiceChip(
                             label: const Text('หญ้า', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                             selected: _selectedCategory == 'หญ้า',
-                            selectedColor: Colors.green[700]!,
+                            selectedColor: AppColors.primary,
                             backgroundColor: AppColors.surfAlt(context),
-                            side: BorderSide(color: _selectedCategory == 'หญ้า' ? Colors.green[700]! : AppColors.brd(context)),
+                            side: BorderSide(color: _selectedCategory == 'หญ้า' ? AppColors.primary : AppColors.brd(context)),
                             labelStyle: TextStyle(
                               color: _selectedCategory == 'หญ้า' ? Colors.white : AppColors.text(context),
                               fontWeight: FontWeight.bold,
@@ -381,7 +381,7 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
     IconData categoryIcon;
     switch (item.category.id) {
       case 'grass':
-        categoryColor = Colors.green[700]!;
+        categoryColor = AppColors.primary;
         categoryIcon = Icons.grass_rounded;
         break;
       case 'concentrate':
@@ -1157,10 +1157,10 @@ class _FeedHistoryScreenState extends ConsumerState<FeedHistoryScreen> {
                       child: ChoiceChip(
                         label: const Center(child: Text('หญ้า / อาหารหยาบ')),
                         selected: selectedCategory == 'grass',
-                        selectedColor: Colors.green[700]!,
+                        selectedColor: AppColors.primary,
                         backgroundColor: AppColors.surfAlt(context),
                         side: BorderSide(
-                          color: selectedCategory == 'grass' ? Colors.green[700]! : AppColors.brd(context),
+                          color: selectedCategory == 'grass' ? AppColors.primary : AppColors.brd(context),
                         ),
                         labelStyle: TextStyle(
                           color: selectedCategory == 'grass' ? Colors.white : AppColors.text(context),

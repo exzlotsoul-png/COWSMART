@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cowsmart/core/theme/app_colors.dart';
 
 class AppFeedback {
   /// Global scaffold messenger key so SnackBars persist across navigation/route changes
@@ -15,7 +16,7 @@ class AppFeedback {
       message: message,
       title: title,
       icon: Icons.check_circle_rounded,
-      backgroundColor: const Color(0xFF2E7D32),
+      backgroundColor: AppColors.primary,
       textColor: Colors.white,
     );
   }

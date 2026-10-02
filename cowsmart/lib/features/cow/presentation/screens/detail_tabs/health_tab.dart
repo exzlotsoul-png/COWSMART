@@ -1397,7 +1397,7 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                     'ตรวจสุขภาพ',
                     checkupCount.toString(),
                     Icons.health_and_safety,
-                    color: const Color(0xFF7BF562), // Bright green
+                    color: const Color(0xFFA8CCA0), // Primary light sage green
                   ),
                 ),
                 Container(width: 1, height: 40, color: Colors.white24),
@@ -1644,39 +1644,50 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 5),
-                      Row(
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 2,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          Icon(
-                            Icons.calendar_month_outlined,
-                            size: 14,
-                            color: AppColors.subText(context),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            AppDateUtils.formatThaiDate(record.recordDate),
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.subText(context),
-                            ),
-                          ),
-                          if (record.recordDate.hour != 0 || record.recordDate.minute != 0) ...[
-                            const SizedBox(width: 8),
-                            Icon(
-                              Icons.access_time_rounded,
-                              size: 13,
-                              color: AppColors.subText(context),
-                            ),
-                            const SizedBox(width: 3),
-                            Text(
-                              '${record.recordDate.hour.toString().padLeft(2, '0')}:${record.recordDate.minute.toString().padLeft(2, '0')} น.',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.calendar_month_outlined,
+                                size: 13.5,
                                 color: AppColors.subText(context),
                               ),
+                              const SizedBox(width: 4),
+                              Text(
+                                AppDateUtils.formatThaiDate(record.recordDate),
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.subText(context),
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (record.recordDate.hour != 0 || record.recordDate.minute != 0)
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.access_time_rounded,
+                                  size: 13,
+                                  color: AppColors.subText(context),
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  '${record.recordDate.hour.toString().padLeft(2, '0')}:${record.recordDate.minute.toString().padLeft(2, '0')} น.',
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.subText(context),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
                         ],
                       ),
                     ],
@@ -1685,7 +1696,7 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                 if (record.cost != null && record.cost! > 0) ...[
                   const SizedBox(width: 4),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
                     decoration: BoxDecoration(
                       color: (AppColors.isDark(context) ? AppColors.warning : const Color(0xFFF59E0B)).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
@@ -1699,13 +1710,15 @@ class _HealthTabState extends ConsumerState<HealthTab> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: AppColors.isDark(context) ? const Color(0xFFFBBF24) : const Color(0xFFD97706),
-                        fontSize: 13.5,
+                        fontSize: 13,
                       ),
                     ),
                   ),
                 ],
                 PopupMenuButton<String>(
-                  icon: Icon(Icons.more_vert, size: 22, color: AppColors.subText(context)),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  icon: Icon(Icons.more_vert, size: 20, color: AppColors.subText(context)),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   onSelected: (val) async {
                     if (val == 'edit') {

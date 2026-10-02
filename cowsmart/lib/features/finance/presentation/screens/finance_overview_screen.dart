@@ -103,7 +103,7 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                             ),
                             icon: Icon(
                               Icons.arrow_circle_down_rounded,
-                              color: AppColors.success,
+                              color: AppColors.primary,
                               size: 18,
                             ),
                           ),
@@ -933,7 +933,7 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                             fontSize: 26,
                             fontWeight: FontWeight.bold,
                             color: balance >= 0
-                                ? AppColors.success
+                                ? AppColors.primary
                                 : AppColors.error,
                           ),
                         ),
@@ -946,7 +946,7 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                           decoration: BoxDecoration(
                             color:
                                 (balance >= 0
-                                        ? AppColors.success
+                                        ? AppColors.primary
                                         : AppColors.error)
                                     .withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
@@ -957,7 +957,7 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                               color: balance >= 0
-                                  ? AppColors.success
+                                  ? AppColors.primary
                                   : AppColors.error,
                             ),
                           ),
@@ -974,7 +974,7 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                           child: Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.success.withValues(alpha: 0.08),
+                              color: AppColors.primary.withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Row(
@@ -982,7 +982,7 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: const BoxDecoration(
-                                    color: AppColors.success,
+                                    color: AppColors.primary,
                                     shape: BoxShape.circle,
                                   ),
                                   child: const Icon(
@@ -1010,7 +1010,7 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                                         style: const TextStyle(
                                           fontSize: 15,
                                           fontWeight: FontWeight.bold,
-                                          color: AppColors.success,
+                                          color: AppColors.primary,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -1120,7 +1120,7 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
                       _buildFilterChip(
                         'รายรับ',
                         'income',
-                        color: AppColors.success,
+                        color: AppColors.primary,
                       ),
                       const SizedBox(width: 6),
                       _buildFilterChip(
@@ -1262,7 +1262,7 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
   }) {
     final isIncome = tx.type == TransactionType.income;
     final isDark = AppColors.isDark(context);
-    final accentColor = isIncome ? AppColors.success : AppColors.error;
+    final accentColor = isIncome ? AppColors.primary : AppColors.error;
     final sign = isIncome ? '+' : '-';
     final categoryIcon = _getCategoryIcon(tx.category);
 
@@ -1287,96 +1287,78 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
         ],
       ),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Icon
-              Container(
-                padding: const EdgeInsets.all(9),
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(categoryIcon, color: accentColor, size: 20),
-              ),
-              const SizedBox(width: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Icon
+          Container(
+            padding: const EdgeInsets.all(9),
+            decoration: BoxDecoration(
+              color: accentColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(categoryIcon, color: accentColor, size: 20),
+          ),
+          const SizedBox(width: 12),
 
-              // Content
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      tx.title,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: AppColors.text(context),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${AppDateUtils.formatThaiDate(tx.date)} ${DateFormat('HH:mm น.').format(tx.date)}',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        color: AppColors.subText(context),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (tx.notes != null && tx.notes!.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        tx.notes!,
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          color: AppColors.subText(context),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-
-              // Right Section (Category Tag & Amount)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 7, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: accentColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      tx.category.label,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: accentColor,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+          // Content
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tx.title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: AppColors.text(context),
                   ),
-                  const SizedBox(height: 6),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${AppDateUtils.formatThaiDate(tx.date)} ${DateFormat('HH:mm น.').format(tx.date)}',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: AppColors.subText(context),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (tx.notes != null &&
+                    tx.notes!.isNotEmpty &&
+                    !tx.notes!.contains('อัตโนมัติ') &&
+                    !tx.notes!.contains('บันทึกรายจ่าย') &&
+                    !tx.notes!.contains('บันทึกรายรับ')) ...[
+                  const SizedBox(height: 4),
                   Text(
-                    '$sign${NumberFormat('#,##0').format(tx.amount)} บาท',
+                    tx.notes!,
                     style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                      color: accentColor,
+                      fontSize: 11.5,
+                      color: AppColors.subText(context),
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
-              ),
-            ],
+              ],
+            ),
           ),
-        );
+          const SizedBox(width: 8),
+
+          // Right Section (Amount only)
+          Text(
+            '$sign${NumberFormat('#,##0').format(tx.amount)} บาท',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+              color: accentColor,
+            ),
+          ),
+        ],
+      ),
+    );
 
     if (fullWidth) {
       return card;
@@ -1384,12 +1366,7 @@ class _FinanceOverviewScreenState extends ConsumerState<FinanceOverviewScreen> {
 
     return Align(
       alignment: isIncome ? Alignment.centerRight : Alignment.centerLeft,
-      child: FractionallySizedBox(
-        widthFactor: 0.9,
-        child: card,
-      ),
+      child: FractionallySizedBox(widthFactor: 0.9, child: card),
     );
   }
 }
-
-

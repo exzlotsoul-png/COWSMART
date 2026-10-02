@@ -311,13 +311,13 @@ class PdfExportSheet extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFE8F5E9),
+                            color: AppColors.primary.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             badge,
                             style: GoogleFonts.prompt(
-                              color: const Color(0xFF2E7D32),
+                              color: AppColors.primary,
                               fontSize: 9.5,
                               fontWeight: FontWeight.bold,
                             ),
