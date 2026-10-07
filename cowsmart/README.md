@@ -1,4 +1,4 @@
-# beef_farm
+# COWSMART
 
 A new Flutter project.
 
